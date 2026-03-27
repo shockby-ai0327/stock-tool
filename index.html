@@ -120,6 +120,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
       <button onclick="showPage('sentiment')">🧠 市場情緒</button>
       <button onclick="showPage('news')">📰 國際新聞</button>
       <button onclick="showPage('journal')">📝 交易日誌</button>
+      <button onclick="showPage('calc')">🧮 試算器</button>
     </nav>
   </div>
   <div class="mobile-nav" id="mobile-nav">
@@ -128,6 +129,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
     <button onclick="showPage('sentiment')">🧠 情緒</button>
     <button onclick="showPage('news')">📰 新聞</button>
     <button onclick="showPage('journal')">📝 日誌</button>
+    <button onclick="showPage('calc')">🧮 試算</button>
   </div>
   <div class="main">
     <div id="page-stock" class="page active">
@@ -166,6 +168,37 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
         </div>
       </div>
       <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+    </div>
+    <div id="page-calc" class="page">
+      <h2 style="margin-bottom:20px">股價試算器</h2>
+      <div class="card">
+        <h3>盈虧試算</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">快速計算買賣股票的實際盈虧，含手續費與證交稅。</p>
+        <div class="journal-form" style="grid-template-columns:1fr 1fr">
+          <div class="form-group"><label>市場</label><select id="calc-market" onchange="calcMarketChange()"><option value="tw">台股</option><option value="us">美股</option></select></div>
+          <div class="form-group"><label>股數</label><input type="number" id="calc-qty" value="1000" min="1" step="1"></div>
+          <div class="form-group"><label>買入價格</label><input type="number" id="calc-buy" step="0.01" placeholder="買入價"></div>
+          <div class="form-group"><label>賣出價格</label><input type="number" id="calc-sell" step="0.01" placeholder="賣出價"></div>
+          <div class="form-group" id="calc-fee-group"><label>手續費折扣 <span style="font-size:11px;color:var(--muted)">(台股券商折扣)</span></label><select id="calc-discount"><option value="1">牌價 (0.1425%)</option><option value="0.6">6折 (0.0855%)</option><option value="0.5">5折 (0.07125%)</option><option value="0.38">3.8折 (0.054%)</option><option value="0.28" selected>2.8折 (0.0399%)</option><option value="0.2">2折 (0.0285%)</option><option value="0.15">1.5折 (0.02138%)</option><option value="0">0 (免手續費)</option></select></div>
+          <div class="form-group" id="calc-us-fee-group" style="display:none"><label>美股手續費率</label><input type="number" id="calc-us-fee" value="0.3" step="0.01" min="0"><span style="font-size:11px;color:var(--muted)">% (買賣各收)</span></div>
+          <div class="form-group full" style="margin-top:8px"><button class="btn btn-primary" onclick="calcProfit()" style="width:100%;padding:14px;font-size:16px">計算盈虧</button></div>
+        </div>
+      </div>
+      <div id="calc-result"></div>
+      <div class="card" style="margin-top:16px">
+        <h3>📚 交易成本說明</h3>
+        <div class="edu-card">
+          <p><span class="edu-term">台股交易成本</span></p>
+          <p>① <b>手續費</b>：買進和賣出各收一次，牌價為成交金額的 <b>0.1425%</b>，但券商通常會打折（常見2.8折～6折），最低收 $20 元。</p>
+          <p>② <b>證交稅</b>：僅在<b>賣出</b>時收取，稅率為成交金額的 <b>0.3%</b>（ETF為0.1%），由政府徵收，無法打折。</p>
+          <p>③ 台股一張 = 1000 股。零股交易同樣收手續費和證交稅。</p>
+          <p style="margin-top:12px"><span class="edu-term">美股交易成本</span></p>
+          <p>① 多數海外券商（如複委託）收取 <b>買賣各 0.3%</b> 左右的手續費，有些有最低手續費門檻。</p>
+          <p>② 美股<b>無證交稅</b>。</p>
+          <p>③ 使用海外券商（如Interactive Brokers）手續費可更低，但需自行處理海外所得稅務。</p>
+          <p>④ 美股以「股」為單位交易，無「張」的概念，1股即可買賣。</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -352,7 +385,7 @@ async function multiChart(symbols) {
 }
 
 // ============ NAVIGATION ============
-const PAGES = ['stock', 'indices', 'sentiment', 'news', 'journal'];
+const PAGES = ['stock', 'indices', 'sentiment', 'news', 'journal', 'calc'];
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar nav button').forEach(b => b.classList.remove('active'));
@@ -774,8 +807,9 @@ function renderBond(ticker, meta, ta, bva, bd, lt, st, cur, price, chg, chgP) {
 
 // ============ INDICES ============
 const IDX = [
-  ['^GSPC', 'S&P 500'], ['^DJI', '道瓊工業'], ['^IXIC', '那斯達克'], ['^SOX', '費城半導體'], ['^RUT', '羅素2000'],
-  ['^VIX', 'VIX恐慌指數'], ['^TWII', '台灣加權指數'], ['GC=F', '黃金期貨'], ['CL=F', '原油期貨'],
+  ['^GSPC', 'S&P 500'], ['ES=F', 'S&P 500期貨'], ['^DJI', '道瓊工業'], ['^IXIC', '那斯達克'], ['^SOX', '費城半導體'], ['^RUT', '羅素2000'],
+  ['^VIX', 'VIX恐慌指數'], ['^TWII', '台灣加權指數'], ['0050.TW', '元大台灣50'],
+  ['GC=F', '黃金期貨'], ['CL=F', '原油期貨'],
   ['DX-Y.NYB', '美元指數'], ['^TNX', '美10年債殖利率'], ['BTC-USD', '比特幣']
 ];
 
@@ -798,17 +832,105 @@ async function loadIndices() {
   }
 }
 
+function idxAnalysis(name, sym, price, chgPct, ta) {
+  const f = v => v != null ? v.toFixed(2) : 'N/A';
+  let trend = '', outlook = '', factors = [];
+  // Trend
+  if (ta.ma5 > ta.ma20 && ta.ma20 > (ta.ma60 || 0)) { trend = '多頭排列'; factors.push({n:'均線多頭排列 — 短中長期趨勢向上',i:'+'}); }
+  else if (ta.ma5 < ta.ma20 && ta.ma20 < (ta.ma60 || Infinity)) { trend = '空頭排列'; factors.push({n:'均線空頭排列 — 短中長期趨勢向下',i:'-'}); }
+  else { trend = '盤整格局'; factors.push({n:'均線糾結 — 方向不明，等待突破',i:'0'}); }
+  // RSI
+  if (ta.rsi > 70) factors.push({n:'RSI ' + f(ta.rsi) + ' 超買區 — 短線有過熱風險',i:'-'});
+  else if (ta.rsi < 30) factors.push({n:'RSI ' + f(ta.rsi) + ' 超賣區 — 短線有反彈契機',i:'+'});
+  else factors.push({n:'RSI ' + f(ta.rsi) + ' 中性區間',i:'0'});
+  // MACD
+  if (ta.macd > ta.signal) factors.push({n:'MACD 多方排列 — 動能偏多',i:'+'});
+  else factors.push({n:'MACD 空方排列 — 動能偏弱',i:'-'});
+  // KD
+  if (ta.kd.k > 80) factors.push({n:'KD 超買(' + f(ta.kd.k) + '/' + f(ta.kd.d) + ') — 注意回調',i:'-'});
+  else if (ta.kd.k < 20) factors.push({n:'KD 超賣(' + f(ta.kd.k) + '/' + f(ta.kd.d) + ') — 留意反彈',i:'+'});
+  else if (ta.kd.k > ta.kd.d) factors.push({n:'KD 金叉(' + f(ta.kd.k) + '/' + f(ta.kd.d) + ') — 短多',i:'+'});
+  else factors.push({n:'KD 死叉(' + f(ta.kd.k) + '/' + f(ta.kd.d) + ') — 短空',i:'-'});
+  // Bollinger
+  if (price > ta.bb.hi) factors.push({n:'突破布林上軌 — 強勢但有回測風險',i:'0'});
+  else if (price < ta.bb.lo) factors.push({n:'跌破布林下軌 — 弱勢但有反彈機會',i:'0'});
+  // Volume
+  if (ta.volRatio > 1.5) factors.push({n:'成交量放大(' + ta.volRatio.toFixed(1) + 'x) — 關注突破方向',i:'0'});
+  else if (ta.volRatio < 0.5) factors.push({n:'成交量萎縮(' + ta.volRatio.toFixed(1) + 'x) — 觀望氣氛濃',i:'0'});
+  // Support / Resistance
+  const s = ta.bb.lo, r = ta.bb.hi;
+  // Score-based outlook
+  if (ta.score >= 30) outlook = '技術面強勢偏多，短線仍有上攻動能，但需留意是否過熱。建議多方可續抱，空手者可等回測支撐再進場。';
+  else if (ta.score >= 10) outlook = '技術面偏多，趨勢尚可但動能不算強。適合順勢操作，回檔至支撐區可考慮佈局。';
+  else if (ta.score >= -10) outlook = '技術面中性偏整理，多空力道均衡。建議觀望為主，等待方向確認再行動。區間操作者可在支撐買、壓力賣。';
+  else if (ta.score >= -30) outlook = '技術面偏弱，空方稍佔優勢。反彈至壓力區可考慮減碼，不建議追多。';
+  else outlook = '技術面明顯偏空，均線空頭排列且動能持續下滑。建議保守觀望，等待止跌訊號出現再考慮進場。';
+  // Specific index context
+  let context = '';
+  if (/VIX/.test(sym)) {
+    if (price > 30) context = 'VIX 高於 30 代表市場極度恐慌，歷史上常是中長期股市底部的訊號，但短線波動劇烈。';
+    else if (price > 20) context = 'VIX 處於 20-30 區間，市場不確定性升高，投資人避險情緒增加。';
+    else context = 'VIX 低於 20 代表市場相對平靜，投資人信心充足，但也需留意過度自滿的風險。';
+  } else if (/TNX/.test(sym)) {
+    if (price > 4.5) context = '10年期美債殖利率偏高，對成長股和長天期債券構成壓力，但有利銀行和價值股。高利率環境可能持續影響房市和企業融資成本。';
+    else if (price > 3.5) context = '10年期美債殖利率處於中性偏高水位，反映市場對通膨和利率政策的預期。關注Fed政策方向。';
+    else context = '10年期美債殖利率偏低，有利成長股估值擴張，但可能反映經濟放緩預期。';
+  } else if (/TWII/.test(sym)) {
+    context = '台股與半導體產業高度連動，需同步關注費城半導體指數(SOX)和台積電(2330.TW)動態。外資買賣超和新台幣匯率也是影響台股的重要因素。';
+  } else if (/0050/.test(sym)) {
+    context = '元大台灣50(0050)追蹤台灣市值前50大企業，與加權指數高度連動（台積電佔比近5成）。是觀察台股大盤走勢的重要參考，也是長期投資人最常用的台股ETF。';
+  } else if (/GSPC|ES/.test(sym)) {
+    context = 'S&P 500 是全球最具代表性的股市指標，涵蓋美國500大企業。其走勢受Fed利率政策、企業獲利、通膨數據和地緣政治等因素影響。';
+  } else if (/DJI/.test(sym)) {
+    context = '道瓊工業指數由30檔藍籌股組成，偏重傳產和價值股。與科技股為主的那斯達克常出現分歧走勢。';
+  } else if (/IXIC/.test(sym)) {
+    context = '那斯達克以科技股為主，對利率變動敏感度高。AI、雲端、半導體等主題是近期推動指數的主要動力。';
+  } else if (/SOX/.test(sym)) {
+    context = '費城半導體指數追蹤全球半導體龍頭，與AI算力需求和晶片景氣週期密切相關。是科技股和台股的領先指標。';
+  } else if (/GC/.test(sym)) {
+    context = '黃金是傳統避險資產，在地緣政治緊張、通膨上升或美元走弱時受益。央行購金需求也是重要推升因素。';
+  } else if (/CL/.test(sym)) {
+    context = '原油價格受OPEC+產量決策、全球經濟需求和地緣政治（中東局勢）影響。是通膨的領先指標之一。';
+  } else if (/BTC/.test(sym)) {
+    context = '比特幣作為數位資產龍頭，波動性高但與傳統資產相關性漸增。機構資金流入和監管政策是影響價格的關鍵。';
+  } else if (/DX/.test(sym)) {
+    context = '美元指數反映美元對一籃子主要貨幣的強弱。美元走強不利新興市場和大宗商品，有利美國進口。';
+  } else if (/RUT/.test(sym)) {
+    context = '羅素2000代表美國小型股，對美國國內經濟敏感度高。小型股在經濟復甦初期通常表現優於大型股。';
+  }
+  return { trend, outlook, context, factors, score: ta.score, support: s, resistance: r };
+}
+
 async function showIdxChart(sym, name) {
   const area = document.getElementById('idx-chart-area');
-  area.innerHTML = '<div class="card"><h3>' + name + ' K線圖</h3><div class="loading"><div class="spinner"></div></div></div>';
+  area.innerHTML = '<div class="card"><h3>' + name + '</h3><div class="loading"><div class="spinner"></div><p style="margin-top:8px">載入分析中...</p></div></div>';
+  area.scrollIntoView({ behavior: 'smooth', block: 'start' });
   try {
     const chart = await yfChart(sym, '6mo', '1d');
     const q = chart.indicators.quote[0];
     const ohlcv = [];
     for (let i = 0; i < chart.timestamp.length; i++) if (q.close[i] != null) ohlcv.push({ t: chart.timestamp[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
-    area.innerHTML = '<div class="card"><h3>📈 ' + name + ' K線走勢（6個月）</h3><div id="idx-kline" class="chart-container"></div></div>';
+    const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
+    const price = chart.meta.regularMarketPrice;
+    const prev = chart.meta.chartPreviousClose || c[c.length - 2];
+    const chgPct = ((price - prev) / prev) * 100;
+    const ta = technicalAnalysis(c, h, l, v, price);
+    const analysis = idxAnalysis(name, sym, price, chgPct, ta);
+    const sc = v => v > 15 ? 'var(--green)' : v < -15 ? 'var(--red)' : 'var(--yellow)';
+    const tagC = i => i === '+' ? 'rgba(16,185,129,.15);color:var(--green)' : i === '-' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)';
+    const tagI = i => i === '+' ? '✓' : i === '-' ? '✗' : '◌';
+    const f = v => v != null ? v.toFixed(2) : 'N/A';
+    area.innerHTML =
+      '<div class="card"><h3>📈 ' + name + ' K線走勢（6個月）</h3><div id="idx-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+      '<div class="card"><h3>🔍 ' + name + ' 專業技術分析</h3>' +
+      '<div style="display:flex;align-items:center;gap:12px;margin:12px 0"><span style="font-size:13px;color:var(--muted)">技術評分</span><span style="font-size:28px;font-weight:700;color:' + sc(analysis.score) + '">' + (analysis.score > 0 ? '+' : '') + analysis.score + '</span><span style="font-size:14px;font-weight:600;color:' + sc(analysis.score) + '">' + analysis.trend + '</span></div>' +
+      '<div style="font-size:14px;line-height:1.8;color:var(--text);margin:12px 0;padding:12px 16px;background:var(--bg);border-radius:10px;border-left:3px solid ' + sc(analysis.score) + '">' + analysis.outlook + '</div>' +
+      (analysis.context ? '<div style="font-size:13px;line-height:1.7;color:var(--muted);margin:10px 0;padding:10px 14px;background:rgba(59,130,246,.05);border-radius:8px">💡 ' + analysis.context + '</div>' : '') +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">' + analysis.factors.map(ff => '<span class="tag" style="background:' + tagC(ff.i) + '">' + tagI(ff.i) + ' ' + ff.n + '</span>').join('') + '</div>' +
+      '<div style="margin-top:14px;display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--muted)"><span>支撐: <b style="color:var(--green)">' + f(analysis.support) + '</b></span><span>壓力: <b style="color:var(--red)">' + f(analysis.resistance) + '</b></span><span>MA5: <b>' + f(ta.ma5) + '</b></span><span>MA20: <b>' + f(ta.ma20) + '</b></span><span>RSI: <b>' + f(ta.rsi) + '</b></span></div>' +
+      '</div>';
     setTimeout(() => renderKline('idx-kline', ohlcv), 50);
-  } catch (e) { area.innerHTML = '<div class="card" style="color:var(--red)">無法載入' + name + '圖表</div>'; }
+  } catch (e) { area.innerHTML = '<div class="card" style="color:var(--red)">無法載入' + name + '圖表：' + e.message + '</div>'; }
 }
 
 // ============ SENTIMENT ============
@@ -957,6 +1079,64 @@ function bollinger(d, p, m) { const u = sma(d, p); if (u == null) return { hi: n
 function stoch(c, h, l, kP, kS, dS) { const n = c.length; if (n < kP) return { k: 50, d: 50 }; let kV = []; for (let i = kP - 1; i < n; i++) { const hh = Math.max(...h.slice(i - kP + 1, i + 1)), ll = Math.min(...l.slice(i - kP + 1, i + 1)); kV.push(hh === ll ? 50 : ((c[i] - ll) / (hh - ll)) * 100); } let sk = []; for (let i = kS - 1; i < kV.length; i++) sk.push(kV.slice(i - kS + 1, i + 1).reduce((a, b) => a + b) / kS); let dv = []; for (let i = dS - 1; i < sk.length; i++) dv.push(sk.slice(i - dS + 1, i + 1).reduce((a, b) => a + b) / dS); return { k: sk[sk.length - 1] || 50, d: dv[dv.length - 1] || 50 }; }
 function calcATR(c, h, l, p) { if (c.length < p + 1) return 0; let t = []; for (let i = 1; i < c.length; i++) t.push(Math.max(h[i] - l[i], Math.abs(h[i] - c[i - 1]), Math.abs(l[i] - c[i - 1]))); return t.slice(-p).reduce((a, b) => a + b) / p; }
 function avg(a) { return a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0; }
+
+// ============ CALCULATOR ============
+function calcMarketChange() {
+  const isTW = document.getElementById('calc-market').value === 'tw';
+  document.getElementById('calc-fee-group').style.display = isTW ? '' : 'none';
+  document.getElementById('calc-us-fee-group').style.display = isTW ? 'none' : '';
+}
+function calcProfit() {
+  const market = document.getElementById('calc-market').value;
+  const qty = parseFloat(document.getElementById('calc-qty').value) || 0;
+  const buyPrice = parseFloat(document.getElementById('calc-buy').value) || 0;
+  const sellPrice = parseFloat(document.getElementById('calc-sell').value) || 0;
+  if (!qty || !buyPrice || !sellPrice) { document.getElementById('calc-result').innerHTML = '<div class="card" style="color:var(--red);text-align:center">請填寫完整的股數、買入價和賣出價</div>'; return; }
+  const buyAmt = buyPrice * qty;
+  const sellAmt = sellPrice * qty;
+  let buyFee, sellFee, sellTax, totalCost, netProfit, returnPct;
+  const cur = market === 'tw' ? 'NT$' : '$';
+  const fd = market === 'tw' ? 0 : 2;
+  const fmt = v => cur + v.toLocaleString(undefined, {minimumFractionDigits: fd, maximumFractionDigits: fd});
+  if (market === 'tw') {
+    const disc = parseFloat(document.getElementById('calc-discount').value);
+    const feeRate = 0.001425 * disc;
+    buyFee = Math.max(buyAmt * feeRate, disc > 0 ? 20 : 0);
+    sellFee = Math.max(sellAmt * feeRate, disc > 0 ? 20 : 0);
+    sellTax = sellAmt * 0.003;
+    totalCost = buyFee + sellFee + sellTax;
+    netProfit = (sellAmt - buyAmt) - totalCost;
+    returnPct = ((netProfit) / (buyAmt + buyFee)) * 100;
+  } else {
+    const usFeeRate = (parseFloat(document.getElementById('calc-us-fee').value) || 0) / 100;
+    buyFee = buyAmt * usFeeRate;
+    sellFee = sellAmt * usFeeRate;
+    sellTax = 0;
+    totalCost = buyFee + sellFee;
+    netProfit = (sellAmt - buyAmt) - totalCost;
+    returnPct = ((netProfit) / (buyAmt + buyFee)) * 100;
+  }
+  const up = netProfit >= 0;
+  const priceDiff = sellPrice - buyPrice;
+  const grossProfit = sellAmt - buyAmt;
+  document.getElementById('calc-result').innerHTML =
+    '<div class="card"><h3>📊 試算結果</h3>' +
+    '<div style="text-align:center;padding:20px 0"><div style="font-size:14px;color:var(--muted);margin-bottom:8px">淨損益</div><div style="font-size:42px;font-weight:700;color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + fmt(netProfit) + '</div><div style="font-size:16px;color:' + (up ? 'var(--green)' : 'var(--red)') + ';margin-top:4px">' + (up ? '+' : '') + returnPct.toFixed(2) + '% 報酬率</div></div>' +
+    '<div class="table-wrap"><table>' +
+    '<tr><td style="color:var(--muted)">買入總額</td><td style="text-align:right"><b>' + fmt(buyAmt) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">賣出總額</td><td style="text-align:right"><b>' + fmt(sellAmt) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">價差</td><td style="text-align:right;color:' + (priceDiff >= 0 ? 'var(--green)' : 'var(--red)') + '"><b>' + (priceDiff >= 0 ? '+' : '') + fmt(priceDiff) + ' / 股</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">毛損益</td><td style="text-align:right;color:' + (grossProfit >= 0 ? 'var(--green)' : 'var(--red)') + '"><b>' + (grossProfit >= 0 ? '+' : '') + fmt(grossProfit) + '</b></td></tr>' +
+    '<tr style="border-top:2px solid var(--border)"><td style="color:var(--muted)">買入手續費</td><td style="text-align:right"><b>' + fmt(buyFee) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">賣出手續費</td><td style="text-align:right"><b>' + fmt(sellFee) + '</b></td></tr>' +
+    (market === 'tw' ? '<tr><td style="color:var(--muted)">證交稅 (0.3%)</td><td style="text-align:right"><b>' + fmt(sellTax) + '</b></td></tr>' : '') +
+    '<tr style="border-top:2px solid var(--border)"><td style="color:var(--muted)"><b>總交易成本</b></td><td style="text-align:right;color:var(--red)"><b>' + fmt(totalCost) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)"><b>淨損益</b></td><td style="text-align:right;color:' + (up ? 'var(--green)' : 'var(--red)') + '"><b>' + (up ? '+' : '') + fmt(netProfit) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)"><b>實際報酬率</b></td><td style="text-align:right;color:' + (up ? 'var(--green)' : 'var(--red)') + '"><b>' + (up ? '+' : '') + returnPct.toFixed(2) + '%</b></td></tr>' +
+    '</table></div>' +
+    (market === 'tw' ? '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">※ 手續費最低收 NT$20（折扣後仍適用）· 證交稅 0.3% 僅賣出時收取 · ETF 證交稅為 0.1%</div>' : '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">※ 美股無證交稅 · 手續費依券商而異 · 複委託通常為 0.15%~0.5%</div>') +
+    '</div>';
+}
 
 // ============ INIT ============
 document.getElementById('j-date').valueAsDate = new Date();
