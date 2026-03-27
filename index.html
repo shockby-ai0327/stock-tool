@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>台美股智慧選股工具</title>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+:root{--bg:#0a0e17;--card:#131928;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{display:flex;height:100vh;flex-direction:row}
+@media(max-width:700px){.app{flex-direction:column}}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar .logo{padding:20px;font-size:18px;font-weight:700;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--accent),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar nav{flex:1;padding:10px 0}
+.sidebar nav button{width:100%;padding:12px 20px;background:none;border:none;color:var(--muted);text-align:left;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;gap:10px}
+.sidebar nav button:hover{background:rgba(59,130,246,.1);color:var(--text)}
+.sidebar nav button.active{background:rgba(59,130,246,.15);color:var(--accent);border-right:3px solid var(--accent)}
+.main{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+.search-box{display:flex;gap:12px;margin-bottom:24px}
+.search-box input{flex:1;padding:14px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;outline:none}
+.search-box input:focus{border-color:var(--accent)}
+.search-box button{padding:14px 28px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:15px;cursor:pointer;font-weight:600}
+.search-box button:hover{background:#2563eb}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:14px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.stock-header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.stock-name{font-size:26px;font-weight:700}
+.stock-price{font-size:34px;font-weight:700}
+.stock-change{font-size:16px;font-weight:600;padding:4px 12px;border-radius:6px}
+.stock-change.up{background:rgba(16,185,129,.15);color:var(--green)}
+.stock-change.down{background:rgba(239,68,68,.15);color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1100px){.grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.mobile-nav{display:none;padding:8px;gap:4px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
+.mobile-nav button{padding:10px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;flex:1;min-width:0;white-space:nowrap;touch-action:manipulation}
+.mobile-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media(max-width:700px){.sidebar{display:none}.mobile-nav{display:flex}.main{flex:1;overflow-y:auto;padding:12px}
+.stock-header{gap:10px}.stock-name{font-size:18px}.stock-price{font-size:24px}.stock-change{font-size:13px}
+.search-box{flex-direction:column}.search-box input{font-size:16px;padding:12px 16px}.search-box button{padding:12px;font-size:15px}
+.chart-container{height:250px}
+.rec-box .rec-price{font-size:18px}.rec-box{padding:14px}
+.journal-form{grid-template-columns:1fr 1fr}
+.modal{margin:8px;padding:16px;max-height:90vh}
+.index-card .idx-value{font-size:17px}
+th,td{padding:7px 8px;font-size:12px}
+.card{padding:14px;margin-bottom:12px}
+.card h3{font-size:13px}
+}
+.signal{display:inline-block;padding:6px 16px;border-radius:20px;font-weight:600;font-size:14px}
+.signal.buy{background:rgba(16,185,129,.15);color:var(--green)}
+.signal.sell{background:rgba(239,68,68,.15);color:var(--red)}
+.signal.hold{background:rgba(245,158,11,.15);color:var(--yellow)}
+.signal.strong-buy{background:rgba(16,185,129,.3);color:var(--green)}
+.signal.strong-sell{background:rgba(239,68,68,.3);color:var(--red)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
+.journal-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;align-items:end}
+.journal-form .full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:var(--muted)}
+.form-group input,.form-group select,.form-group textarea{padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none}
+.form-group textarea{resize:vertical;min-height:60px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;touch-action:manipulation}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.news-item{padding:16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+.news-item:hover{background:rgba(59,130,246,.05)}
+.news-item:last-child{border-bottom:none}
+.news-item h4{font-size:15px;margin-bottom:6px}
+.news-item .meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+.news-item p{font-size:13px;color:var(--muted);line-height:1.5}
+.index-card{padding:16px;text-align:center;cursor:pointer;transition:background .2s}
+.index-card:hover{background:rgba(59,130,246,.08)}
+.index-card .idx-name{font-size:13px;color:var(--muted);margin-bottom:4px}
+.index-card .idx-value{font-size:20px;font-weight:700;margin-bottom:2px}
+.index-card .idx-change{font-size:14px;font-weight:600}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin:2px}
+.rec-box{padding:20px;border-radius:12px;text-align:center}
+.rec-box .rec-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+.rec-box .rec-price{font-size:22px;font-weight:700}
+.rec-box .rec-note{font-size:12px;color:var(--muted);margin-top:6px}
+.tab-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab-bar button{padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px}
+.tab-bar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tip{cursor:help;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;background:rgba(59,130,246,.15);color:var(--accent);border-radius:50%;font-size:10px;margin-left:4px;vertical-align:middle}
+.bond-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(59,130,246,.15);color:var(--accent)}
+.edu-card{line-height:1.8;font-size:13px;color:var(--muted)}
+.edu-card b{color:var(--text)}
+.edu-card .edu-term{color:var(--accent);font-weight:600}
+.disclaimer{font-size:11px;color:var(--muted);text-align:center;padding:16px;margin-top:20px;border-top:1px solid var(--border)}
+.chart-container{width:100%;height:350px;margin:12px 0}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:800px;width:100%;max-height:80vh;overflow-y:auto;padding:24px}
+.modal-close{float:right;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">📊 智慧選股</div>
+    <nav>
+      <button class="active" onclick="showPage('stock')">📈 個股分析</button>
+      <button onclick="showPage('indices')">🏛️ 大盤指數</button>
+      <button onclick="showPage('sentiment')">🧠 市場情緒</button>
+      <button onclick="showPage('news')">📰 國際新聞</button>
+      <button onclick="showPage('journal')">📝 交易日誌</button>
+    </nav>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <button class="active" onclick="showPage('stock')">📈 個股</button>
+    <button onclick="showPage('indices')">🏛️ 指數</button>
+    <button onclick="showPage('sentiment')">🧠 情緒</button>
+    <button onclick="showPage('news')">📰 新聞</button>
+    <button onclick="showPage('journal')">📝 日誌</button>
+  </div>
+  <div class="main">
+    <div id="page-stock" class="page active">
+      <div class="search-box">
+        <input id="ticker-input" placeholder="輸入代號（美股: AAPL｜台股: 2330.TW｜債券: TLT）" onkeydown="if(event.key==='Enter')analyzeStock()">
+        <button onclick="analyzeStock()">分析</button>
+      </div>
+      <div id="stock-result"></div>
+    </div>
+    <div id="page-indices" class="page"><h2 style="margin-bottom:20px">台美股大盤指數</h2><div id="indices-content"></div></div>
+    <div id="page-sentiment" class="page"><h2 style="margin-bottom:20px">市場情緒指數</h2><div id="sentiment-content"></div></div>
+    <div id="page-news" class="page">
+      <h2 style="margin-bottom:20px">每日國際財經新聞</h2>
+      <div class="tab-bar" id="news-tabs">
+        <button class="active" onclick="loadNews('general')">綜合</button>
+        <button onclick="loadNews('us')">美股</button>
+        <button onclick="loadNews('tw')">台股</button>
+        <button onclick="loadNews('crypto')">加密貨幣</button>
+      </div>
+      <div id="news-content"></div>
+    </div>
+    <div id="page-journal" class="page">
+      <h2 style="margin-bottom:20px">交易日誌</h2>
+      <div class="card">
+        <h3>新增交易紀錄</h3>
+        <div class="journal-form">
+          <div class="form-group"><label>日期</label><input type="date" id="j-date"></div>
+          <div class="form-group"><label>股票代號</label><input id="j-ticker" placeholder="AAPL"></div>
+          <div class="form-group"><label>買/賣</label><select id="j-action"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
+          <div class="form-group"><label>價格</label><input type="number" id="j-price" step="0.01" placeholder="150.00"></div>
+          <div class="form-group"><label>數量</label><input type="number" id="j-qty" placeholder="100"></div>
+          <div class="form-group"><label>策略</label><select id="j-strategy"><option value="value">價值投資</option><option value="swing">波段交易</option><option value="day">當沖</option><option value="other">其他</option></select></div>
+          <div class="form-group"><label>手續費率</label><input type="text" value="買賣各 0.3%（自動計算）" disabled style="color:var(--orange);font-size:12px"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addJournal()">新增紀錄</button></div>
+          <div class="form-group full"><label>備註</label><textarea id="j-notes" placeholder="交易理由、觀察..."></textarea></div>
+        </div>
+      </div>
+      <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+    </div>
+  </div>
+</div>
+<div id="news-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()"><div class="modal"><div id="news-modal-content"></div></div></div>
+
+<script>
+// ============ PROXY + CACHE + RETRY ============
+const PROXY = url => 'https://corsproxy.io/?' + encodeURIComponent(url);
+const _cache = {};
+const CACHE_TTL = 60000; // 1 min cache
+
+// ============ BOND ETF DETECTION ============
+const BOND_ETFS = new Set(['TLT','IEF','SHY','AGG','BND','LQD','HYG','JNK','VCSH','VCIT','VCLT','GOVT','BNDX','EMB','TIP','SCHZ','MUB','VGSH','VGIT','VGLT','IGSB','IGIB','IGLB','SPAB','SPTL','SPLB','SPTS','BWX','PCY','ZROZ','EDV','FLOT','SHV','BIL','SGOV','SCHO','SCHR','STIP','VTIP','IAGG','USIG','LQDH','SJNK','SHYG','ANGL','BKLN','SRLN','NEAR','MINT','JPST','GSY','FBND','FTSL','BOND','TLTW','PIMIX']);
+const BOND_META = {
+  TLT:{dur:17,credit:'美國公債(AAA)',type:'gov-long',desc:'20年期以上美國國債'},
+  IEF:{dur:7.5,credit:'美國公債(AAA)',type:'gov-mid',desc:'7-10年期美國國債'},
+  SHY:{dur:2,credit:'美國公債(AAA)',type:'gov-short',desc:'1-3年期美國國債'},
+  AGG:{dur:6.2,credit:'綜合債券(IG為主)',type:'aggregate',desc:'美國投資等級綜合債券'},
+  BND:{dur:6.5,credit:'綜合債券(IG為主)',type:'aggregate',desc:'美國全市場債券'},
+  LQD:{dur:8.5,credit:'投資等級公司債(A/BBB)',type:'ig-corp',desc:'投資等級公司債券'},
+  HYG:{dur:3.8,credit:'高收益債(BB/B)',type:'hy',desc:'高收益公司債券(非投資等級)'},
+  JNK:{dur:3.5,credit:'高收益債(BB/B)',type:'hy',desc:'高收益公司債券'},
+  VCSH:{dur:2.7,credit:'投資等級短期公司債(A/BBB)',type:'ig-short',desc:'短期投資等級公司債'},
+  VCIT:{dur:6.2,credit:'投資等級中期公司債(A/BBB)',type:'ig-mid',desc:'中期投資等級公司債'},
+  VCLT:{dur:14,credit:'投資等級長期公司債(A/BBB)',type:'ig-long',desc:'長期投資等級公司債'},
+  GOVT:{dur:6,credit:'美國公債(AAA)',type:'gov-mid',desc:'全天期美國國債'},
+  BNDX:{dur:7,credit:'國際投資等級(A/BBB)',type:'intl',desc:'國際(非美)投資等級債券'},
+  EMB:{dur:7,credit:'新興市場主權債(BB)',type:'em',desc:'新興市場美元計價政府債券'},
+  TIP:{dur:6.5,credit:'美國公債(AAA)',type:'tips',desc:'美國抗通膨國債(TIPS)'},
+  MUB:{dur:5.5,credit:'市政債(AA)',type:'muni',desc:'美國免稅市政債券'},
+  VGSH:{dur:2,credit:'美國公債(AAA)',type:'gov-short',desc:'短期美國國債'},
+  VGIT:{dur:5.5,credit:'美國公債(AAA)',type:'gov-mid',desc:'中期美國國債'},
+  VGLT:{dur:16,credit:'美國公債(AAA)',type:'gov-long',desc:'長期美國國債'},
+  ZROZ:{dur:27,credit:'美國公債(AAA)',type:'gov-long',desc:'25年以上零息美國國債'},
+  EDV:{dur:24,credit:'美國公債(AAA)',type:'gov-long',desc:'延長天期美國國債'},
+  FLOT:{dur:0.1,credit:'投資等級浮動利率(A)',type:'float',desc:'浮動利率投資等級債券'},
+  SHV:{dur:0.3,credit:'美國公債(AAA)',type:'gov-short',desc:'超短期美國國債'},
+  BIL:{dur:0.1,credit:'美國公債(AAA)',type:'gov-short',desc:'美國短期國庫券(T-Bill)'},
+  SGOV:{dur:0.1,credit:'美國公債(AAA)',type:'gov-short',desc:'0-3月美國國庫券'},
+};
+function isBondETF(ticker, fundamentals) {
+  if (BOND_ETFS.has(ticker)) return true;
+  if (!fundamentals) return false;
+  const cat = (fundamentals.fundProfile && fundamentals.fundProfile.categoryName) || '';
+  const qt = (fundamentals.quoteType && fundamentals.quoteType.quoteType) || '';
+  if (qt !== 'ETF') return false;
+  return /bond|government|treasury|corporate|fixed.income|aggregate|credit|high.yield|inflation|municipal/i.test(cat);
+}
+function extractBondData(ticker, fundamentals, meta, price) {
+  const bm = BOND_META[ticker] || {};
+  const sd = (fundamentals && fundamentals.summaryDetail) || {};
+  const dk = (fundamentals && fundamentals.defaultKeyStatistics) || {};
+  const fp = (fundamentals && fundamentals.fundProfile) || {};
+  const rawYield = (sd.yield && sd.yield.raw) || (dk.yield && dk.yield.raw) || null;
+  const yld = rawYield != null ? rawYield * 100 : null;
+  const dur = bm.dur || (function(){
+    const cat = (fp.categoryName || '').toLowerCase();
+    if (/ultra.?short|money|t.?bill|0.?3/i.test(cat)) return 0.2;
+    if (/short/i.test(cat)) return 2.5;
+    if (/intermediate|mid/i.test(cat)) return 6;
+    if (/long|extend/i.test(cat)) return 15;
+    return 6;
+  })();
+  const credit = bm.credit || (function(){
+    const cat = (fp.categoryName || '').toLowerCase();
+    if (/government|treasury/i.test(cat)) return '政府公債(AAA)';
+    if (/high.yield/i.test(cat)) return '高收益債(BB/B)';
+    if (/emerging/i.test(cat)) return '新興市場債(BB)';
+    if (/municipal/i.test(cat)) return '市政債(AA)';
+    return '投資等級(A/BBB)';
+  })();
+  const type = bm.type || 'unknown';
+  const desc = bm.desc || (fp.categoryName || '債券ETF');
+  const sensitivity = dur > 12 ? '高' : dur > 5 ? '中' : '低';
+  const er = (fp.feesExpensesInvestment && fp.feesExpensesInvestment.annualReportExpenseRatio && fp.feesExpensesInvestment.annualReportExpenseRatio.raw) || (dk.annualReportExpenseRatio && dk.annualReportExpenseRatio.raw) || null;
+  const ta = (sd.totalAssets && sd.totalAssets.raw) || null;
+  const cat = (fp.categoryName) || '';
+  const coupon = yld != null ? yld + 0.3 : null;
+  return { yield: yld, couponRate: coupon, duration: dur, creditRating: credit, type, desc, rateSensitivity: sensitivity, distributionRate: yld, expenseRatio: er != null ? er * 100 : null, totalAssets: ta, category: cat };
+}
+
+async function pFetch(url, useCache) {
+  if (useCache && _cache[url] && Date.now() - _cache[url].ts < CACHE_TTL) return _cache[url].resp.clone();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const r = await fetch(PROXY(url));
+      if (!r.ok) { const t = await r.text(); if (t.includes('Too Many Requests')) { await delay(2000 * (attempt + 1)); continue; } throw new Error('HTTP ' + r.status); }
+      if (useCache) { const blob = await r.blob(); _cache[url] = { ts: Date.now(), resp: new Response(blob, { headers: r.headers }) }; return _cache[url].resp.clone(); }
+      return r;
+    } catch (e) { if (attempt === 2) throw e; await delay(1500 * (attempt + 1)); }
+  }
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============ YAHOO FINANCE ============
+// Strategy: v8 chart for OHLCV, page scrape for fundamentals
+
+async function yfChart(ticker, range, interval) {
+  range = range || '6mo'; interval = interval || '1d';
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
+  const r = await pFetch(url, true);
+  const j = await r.json();
+  if (!j.chart || !j.chart.result || !j.chart.result[0]) throw new Error('No data for ' + ticker);
+  return j.chart.result[0];
+}
+
+async function yfPageFundamentals(ticker) {
+  try {
+    // Taiwan stocks: use tw.stock.yahoo.com which has different data structure
+    if (ticker.endsWith('.TW') || ticker.endsWith('.TWO')) {
+      return await twPageFundamentals(ticker);
+    }
+    const r = await pFetch('https://finance.yahoo.com/quote/' + encodeURIComponent(ticker), true);
+    const html = await r.text();
+    const regex = /<script type="application\/json" data-sveltekit-fetched data-url="https:\/\/query1\.finance\.yahoo\.com\/v10\/finance\/quoteSummary[^"]*"[^>]*>([\s\S]*?)<\/script>/;
+    const match = html.match(regex);
+    if (!match) return null;
+    const data = JSON.parse(match[1]);
+    const body = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+    return body.quoteSummary.result[0];
+  } catch (e) { console.warn('Page scrape failed:', e); return null; }
+}
+
+async function twPageFundamentals(ticker) {
+  try {
+    const r = await pFetch('https://tw.stock.yahoo.com/quote/' + encodeURIComponent(ticker), true);
+    const html = await r.text();
+    const appMainMatch = html.match(/root\.App\.main\s*=\s*(\{[\s\S]*?\});\s*\n/);
+    if (!appMainMatch) return null;
+    const fixed = appMainMatch[1].replace(/undefined/g, 'null');
+    const data = JSON.parse(fixed);
+    const stores = data.context?.dispatcher?.stores;
+    const qf = stores?.QuoteFundamental;
+    if (!qf) return null;
+    const fd = qf.fundamental?.data || {};
+    const quoteData = qf.quote?.data || {};
+    const price = parseFloat(quoteData.price?.raw) || 0;
+    const pa = fd.profitAbility || {};
+    const incQ = fd.incomesQ || [];
+    const incY = fd.incomesY || [];
+    const eps = incY[0]?.eps ? parseFloat(incY[0].eps) : null;
+    const bps = incQ[0]?.bps ? parseFloat(incQ[0].bps) : null;
+    const pe = fd.per ? parseFloat(fd.per) : null;
+    const pb = bps && bps > 0 ? price / bps : null;
+    const dy = fd.avgYTM ? parseFloat(fd.avgYTM) / 100 : null; // convert % to decimal
+    const roe = pa.roe ? parseFloat(pa.roe) / 100 : null; // convert % to decimal
+    const pm = pa.operatingMargin ? parseFloat(pa.operatingMargin) / 100 : null;
+    const gm = pa.grossMargin ? parseFloat(pa.grossMargin) / 100 : null;
+    // Revenue growth: compare latest year EPS to previous year
+    let rg = null;
+    if (incY.length >= 2 && incY[1]?.eps) {
+      const epsNow = parseFloat(incY[0].eps), epsPrev = parseFloat(incY[1].eps);
+      if (epsPrev > 0) rg = (epsNow - epsPrev) / epsPrev;
+    }
+    // Map to same structure as US Yahoo quoteSummary
+    const w = v => v != null && !isNaN(v) ? { raw: v } : undefined;
+    return {
+      summaryDetail: { trailingPE: w(pe), priceToBook: w(pb), dividendYield: w(dy) },
+      defaultKeyStatistics: { pegRatio: undefined },
+      financialData: { returnOnEquity: w(roe), debtToEquity: undefined, profitMargins: w(pm), revenueGrowth: w(rg), targetMeanPrice: undefined },
+      _twData: { name: fd.name, sector: fd.sectorName, grossMargin: gm, eps, bps }
+    };
+  } catch (e) { console.warn('TW page scrape failed:', e); return null; }
+}
+
+// Load multiple quotes in staggered batches to avoid rate limiting
+async function multiChart(symbols) {
+  const all = [];
+  const batchSize = 4;
+  for (let i = 0; i < symbols.length; i += batchSize) {
+    const batch = symbols.slice(i, i + batchSize);
+    const results = await Promise.allSettled(batch.map(sym =>
+      yfChart(sym, '5d', '1d').then(chart => {
+        const m = chart.meta, q = chart.indicators.quote[0], c = q.close.filter(v => v != null);
+        const prev = m.chartPreviousClose || c[c.length - 2] || c[c.length - 1];
+        const price = m.regularMarketPrice;
+        return { symbol: m.symbol, name: m.shortName || m.symbol, price, change: price - prev, changePct: ((price - prev) / prev) * 100, currency: m.currency, exchange: m.exchangeName };
+      })
+    ));
+    all.push(...results.filter(r => r.status === 'fulfilled').map(r => r.value));
+    if (i + batchSize < symbols.length) await delay(300); // small delay between batches
+  }
+  return all;
+}
+
+// ============ NAVIGATION ============
+const PAGES = ['stock', 'indices', 'sentiment', 'news', 'journal'];
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const idx = PAGES.indexOf(name);
+  document.querySelectorAll('.sidebar nav button')[idx].classList.add('active');
+  document.querySelectorAll('#mobile-nav button')[idx].classList.add('active');
+  if (name === 'indices') loadIndices();
+  if (name === 'sentiment') loadSentiment();
+  if (name === 'news') loadNews('general');
+  if (name === 'journal') renderJournal();
+}
+
+// ============ STOCK ANALYSIS ============
+async function analyzeStock() {
+  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+  if (!ticker) return;
+  const rd = document.getElementById('stock-result');
+  rd.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在分析 ' + ticker + ' ...</p></div>';
+  try {
+    // Fetch chart + fundamentals in parallel
+    const [chart, fundamentals] = await Promise.all([
+      yfChart(ticker, '6mo', '1d'),
+      yfPageFundamentals(ticker)
+    ]);
+    const meta = chart.meta;
+    const q = chart.indicators.quote[0];
+    const ts = chart.timestamp;
+    const ohlcv = [];
+    for (let i = 0; i < ts.length; i++) {
+      if (q.close[i] != null && q.open[i] != null) {
+        ohlcv.push({ t: ts[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+      }
+    }
+    const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
+    const price = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose || c[c.length - 2];
+    const change = price - prev, changePct = (change / prev) * 100;
+    const currency = meta.currency || 'USD';
+
+    const ta = technicalAnalysis(c, h, l, v, price);
+
+    if (isBondETF(ticker, fundamentals)) {
+      const bondData = extractBondData(ticker, fundamentals, meta, price);
+      const bva = bondValueAnalysis(bondData, ta, price);
+      const ltEntry = bondLongTermEntry(bva, bondData, price, c, h, l, ta.atr);
+      const stEntry = bondShortTermEntry(ta, price, c, h, l);
+      rd.innerHTML = renderBond(ticker, meta, ta, bva, bondData, ltEntry, stEntry, currency, price, change, changePct);
+    } else {
+      const va = valueAnalysis(meta, fundamentals, price);
+      const ltEntry = longTermEntry(va, price, c, h, l, ta.atr);
+      const stEntry = shortTermEntry(ta, price, c, h, l);
+      rd.innerHTML = renderStock(ticker, meta, ta, va, ltEntry, stEntry, currency, price, change, changePct);
+    }
+    setTimeout(() => renderKline('stock-kline', ohlcv), 50);
+  } catch (e) {
+    console.error(e);
+    rd.innerHTML = '<div class="card" style="text-align:center;color:var(--red)"><h3>查詢失敗</h3><p style="margin-top:8px">無法取得 ' + ticker + ' 的資料。</p><p style="font-size:13px;color:var(--muted);margin-top:4px">台股請加 .TW（例：2330.TW），美股直接輸入（例：AAPL），債券ETF（例：TLT、AGG、HYG）</p><p style="font-size:12px;color:var(--muted);margin-top:8px">錯誤：' + e.message + '</p></div>';
+  }
+}
+
+// ============ K-LINE CHART ============
+function renderKline(id, ohlcv) {
+  const el = document.getElementById(id);
+  if (!el || !ohlcv.length) return;
+  el.innerHTML = '';
+  const ch = LightweightCharts.createChart(el, {
+    width: el.clientWidth, height: 350,
+    layout: { background: { color: '#131928' }, textColor: '#7a8ba5' },
+    grid: { vertLines: { color: '#1e2a3a' }, horzLines: { color: '#1e2a3a' } },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: '#1e2a3a' },
+    timeScale: { borderColor: '#1e2a3a', timeVisible: false }
+  });
+  const cs = ch.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderUpColor: '#10b981', borderDownColor: '#ef4444', wickUpColor: '#10b981', wickDownColor: '#ef4444' });
+  cs.setData(ohlcv.map(d => ({ time: d.t, open: d.o, high: d.h, low: d.l, close: d.c })));
+  const addMA = (period, color) => {
+    if (ohlcv.length < period) return;
+    const data = [];
+    for (let i = period - 1; i < ohlcv.length; i++) {
+      let s = 0; for (let j = i - period + 1; j <= i; j++) s += ohlcv[j].c;
+      data.push({ time: ohlcv[i].t, value: s / period });
+    }
+    ch.addLineSeries({ color, lineWidth: 1 }).setData(data);
+  };
+  addMA(5, '#f59e0b'); addMA(20, '#3b82f6'); addMA(60, '#8b5cf6');
+  const vs = ch.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: 'vol', scaleMargins: { top: 0.85, bottom: 0 } });
+  vs.setData(ohlcv.map(d => ({ time: d.t, value: d.v, color: d.c >= d.o ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)' })));
+  ch.timeScale().fitContent();
+  new ResizeObserver(() => ch.applyOptions({ width: el.clientWidth })).observe(el);
+}
+
+// ============ TECHNICAL ANALYSIS ============
+function technicalAnalysis(closes, highs, lows, volumes, price) {
+  const ma5 = sma(closes, 5), ma20 = sma(closes, 20), ma60 = sma(closes, 60);
+  const e12 = emaArr(closes, 12), e26 = emaArr(closes, 26);
+  const macdLine = []; for (let i = 0; i < e12.length; i++) if (e12[i] != null && e26[i] != null) macdLine.push(e12[i] - e26[i]);
+  const sigLine = emaArr(macdLine, 9);
+  const hist = macdLine.map((v, i) => sigLine[i] != null ? v - sigLine[i] : null);
+  const macdV = macdLine[macdLine.length - 1], sigV = sigLine[sigLine.length - 1];
+  const histV = hist[hist.length - 1], histP = hist[hist.length - 2];
+  const rsiV = rsi(closes, 14), bb = bollinger(closes, 20, 2), kdV = stoch(closes, highs, lows, 9, 3, 3), atrV = calcATR(closes, highs, lows, 14);
+  const avgVol = avg(volumes.slice(-20)), volRatio = avgVol > 0 ? volumes[volumes.length - 1] / avgVol : 1;
+
+  let sigs = [], score = 0;
+  if (ma5 > ma20 && ma20 > ma60) { sigs.push({ n: '均線多頭排列', t: 'b' }); score += 15; }
+  else if (ma5 < ma20 && ma20 < ma60) { sigs.push({ n: '均線空頭排列', t: 's' }); score -= 15; }
+  const pma5 = sma(closes.slice(0, -1), 5), pma20 = sma(closes.slice(0, -1), 20);
+  if (ma5 > ma20 && pma5 && pma20 && pma5 <= pma20) { sigs.push({ n: 'MA5/MA20 黃金交叉', t: 'b' }); score += 20; }
+  if (ma5 < ma20 && pma5 && pma20 && pma5 >= pma20) { sigs.push({ n: 'MA5/MA20 死亡交叉', t: 's' }); score -= 20; }
+  if (histV > 0 && histP != null && histP <= 0) { sigs.push({ n: 'MACD 柱狀翻正', t: 'b' }); score += 15; }
+  if (histV < 0 && histP != null && histP >= 0) { sigs.push({ n: 'MACD 柱狀翻負', t: 's' }); score -= 15; }
+  if (macdV > sigV) score += 5; else score -= 5;
+  if (rsiV < 30) { sigs.push({ n: 'RSI 超賣 (' + rsiV.toFixed(1) + ')', t: 'b' }); score += 15; }
+  else if (rsiV > 70) { sigs.push({ n: 'RSI 超買 (' + rsiV.toFixed(1) + ')', t: 's' }); score -= 15; }
+  else if (rsiV < 40) score += 5; else if (rsiV > 60) score -= 5;
+  if (bb.lo != null && price <= bb.lo) { sigs.push({ n: '觸及布林下軌', t: 'b' }); score += 10; }
+  if (bb.hi != null && price >= bb.hi) { sigs.push({ n: '觸及布林上軌', t: 's' }); score -= 10; }
+  if (kdV.k < 20 && kdV.d < 20) { sigs.push({ n: 'KD 超賣區', t: 'b' }); score += 10; }
+  if (kdV.k > 80 && kdV.d > 80) { sigs.push({ n: 'KD 超買區', t: 's' }); score -= 10; }
+  if (kdV.k > kdV.d && kdV.k < 30) { sigs.push({ n: 'KD 低檔黃金交叉', t: 'b' }); score += 15; }
+  if (kdV.k < kdV.d && kdV.k > 70) { sigs.push({ n: 'KD 高檔死亡交叉', t: 's' }); score -= 15; }
+  if (volRatio > 1.5 && price > closes[closes.length - 2]) { sigs.push({ n: '放量上漲', t: 'b' }); score += 10; }
+  if (volRatio > 1.5 && price < closes[closes.length - 2]) { sigs.push({ n: '放量下跌', t: 's' }); score -= 10; }
+  score = Math.max(-100, Math.min(100, score));
+  let sig = score >= 40 ? 'strong-buy' : score >= 15 ? 'buy' : score <= -40 ? 'strong-sell' : score <= -15 ? 'sell' : 'hold';
+  return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig };
+}
+
+// ============ VALUE ANALYSIS ============
+function valueAnalysis(meta, fund, price) {
+  const sd = fund?.summaryDetail || {}, ks = fund?.defaultKeyStatistics || {}, fd = fund?.financialData || {};
+  const r = v => v?.raw;
+  const pe = r(sd.trailingPE), fpe = r(sd.forwardPE), pb = r(sd.priceToBook) || r(ks.priceToBook);
+  const dy = (r(sd.dividendYield) || 0) * 100, roe = r(fd.returnOnEquity) ? r(fd.returnOnEquity) * 100 : null;
+  const debt = r(fd.debtToEquity), pm = r(fd.profitMargins) ? r(fd.profitMargins) * 100 : null;
+  const rg = r(fd.revenueGrowth) ? r(fd.revenueGrowth) * 100 : null;
+  const tp = r(fd.targetMeanPrice), peg = r(ks.pegRatio);
+
+  let score = 0, factors = [];
+  if (pe != null) {
+    if (pe < 10) { score += 20; factors.push({ n: '本益比偏低(' + pe.toFixed(1) + ')', i: '+' }); }
+    else if (pe < 15) { score += 10; factors.push({ n: '本益比合理(' + pe.toFixed(1) + ')', i: '+' }); }
+    else if (pe > 50) { score -= 25; factors.push({ n: '本益比過高(' + pe.toFixed(1) + ')', i: '-' }); }
+    else if (pe > 30) { score -= 15; factors.push({ n: '本益比偏高(' + pe.toFixed(1) + ')', i: '-' }); }
+  }
+  if (pb != null) {
+    if (pb < 1) { score += 20; factors.push({ n: 'PB<1 低於淨值(' + pb.toFixed(2) + ')', i: '+' }); }
+    else if (pb < 2) { score += 10; factors.push({ n: 'PB合理(' + pb.toFixed(2) + ')', i: '+' }); }
+    else if (pb > 10) { score -= 10; factors.push({ n: 'PB偏高(' + pb.toFixed(2) + ')', i: '-' }); }
+  }
+  if (peg != null) {
+    if (peg > 0 && peg < 1) { score += 15; factors.push({ n: 'PEG<1 成長被低估(' + peg.toFixed(2) + ')', i: '+' }); }
+    else if (peg > 2) { score -= 10; factors.push({ n: 'PEG偏高(' + peg.toFixed(2) + ')', i: '-' }); }
+  }
+  if (dy > 4) { score += 15; factors.push({ n: '高殖利率(' + dy.toFixed(2) + '%)', i: '+' }); }
+  else if (dy > 2) { score += 5; factors.push({ n: '殖利率尚可(' + dy.toFixed(2) + '%)', i: '0' }); }
+  if (roe != null) {
+    if (roe > 20) { score += 15; factors.push({ n: '高ROE(' + roe.toFixed(1) + '%)', i: '+' }); }
+    else if (roe > 15) { score += 10; factors.push({ n: 'ROE良好(' + roe.toFixed(1) + '%)', i: '+' }); }
+    else if (roe < 5 && roe >= 0) { score -= 10; factors.push({ n: 'ROE偏低(' + roe.toFixed(1) + '%)', i: '-' }); }
+  }
+  if (debt != null) {
+    if (debt < 50) { score += 10; factors.push({ n: '低負債(' + debt.toFixed(0) + '%)', i: '+' }); }
+    else if (debt > 150) { score -= 15; factors.push({ n: '高負債(' + debt.toFixed(0) + '%)', i: '-' }); }
+  }
+  if (pm != null) {
+    if (pm > 20) { score += 10; factors.push({ n: '高利潤率(' + pm.toFixed(1) + '%)', i: '+' }); }
+    else if (pm < 5 && pm >= 0) { score -= 10; factors.push({ n: '低利潤率(' + pm.toFixed(1) + '%)', i: '-' }); }
+  }
+  if (rg != null && rg > 15) { score += 10; factors.push({ n: '營收高成長(' + rg.toFixed(1) + '%)', i: '+' }); }
+  let upside = null;
+  if (tp && price) { upside = ((tp - price) / price) * 100; if (upside > 30) { score += 15; factors.push({ n: '目標價上行空間大(' + upside.toFixed(1) + '%)', i: '+' }); } else if (upside < -10) { score -= 10; factors.push({ n: '目標價下行(' + upside.toFixed(1) + '%)', i: '-' }); } }
+  score = Math.max(-100, Math.min(100, score));
+  let verdict = score >= 40 ? '嚴重低估 — 強烈建議買入' : score >= 20 ? '相對低估 — 建議逢低買入' : score >= 0 ? '估值合理 — 可持有觀望' : score >= -20 ? '略為高估 — 謹慎操作' : '嚴重高估 — 建議迴避';
+  return { pe, fpe, pb, dy, roe, debt, pm, rg, tp, peg, score, factors, verdict, upside };
+}
+
+// ============ ENTRY/EXIT ============
+// Long-term value investing entry/exit
+function longTermEntry(va, price, c, h, l, atr) {
+  let entry = null, exit = null, stop = null, reasons = [];
+  const sc = va.score;
+  if (sc >= 40) {
+    entry = price * 0.97; // slight discount for margin of safety
+    reasons.push('價值嚴重低估，建議積極佈局');
+    if (va.pe != null && va.pe < 12) reasons.push('PE僅' + va.pe.toFixed(1) + '，歷史低位');
+    if (va.pb != null && va.pb < 1.5) reasons.push('PB ' + va.pb.toFixed(2) + '，接近淨值');
+    if (va.dy > 4) reasons.push('殖利率' + va.dy.toFixed(1) + '%，高配息');
+  } else if (sc >= 20) {
+    entry = price * 0.93; // wait for 7% pullback
+    reasons.push('估值相對低估，建議逢低分批佈局');
+    if (va.roe != null && va.roe > 15) reasons.push('ROE ' + va.roe.toFixed(1) + '%，獲利能力優');
+    if (va.rg != null && va.rg > 15) reasons.push('營收成長' + va.rg.toFixed(1) + '%');
+  } else if (sc >= 0) {
+    entry = price * 0.90; // wait for 10% pullback
+    reasons.push('估值合理，建議等待明顯回檔再進場');
+  } else {
+    entry = null;
+    reasons.push('估值偏高，長期投資人暫不建議進場');
+    if (va.pe != null && va.pe > 40) reasons.push('PE高達' + va.pe.toFixed(1) + '，風險偏高');
+  }
+  // Target price as exit if available
+  if (va.tp != null && va.tp > price) { exit = va.tp; reasons.push('分析師目標價 ' + va.tp.toFixed(2)); }
+  else if (entry) { exit = entry * 1.3; } // 30% gain target
+  // Stop loss: 20% below entry or fundamental deterioration
+  if (entry) { stop = entry * 0.80; }
+  const rr = entry && stop && exit && (entry - stop) > 0 ? ((exit - entry) / (entry - stop)).toFixed(2) : null;
+  return { entry, exit, stop, rr, reasons };
+}
+
+// Short-term technical analysis entry/exit
+function shortTermEntry(ta, price, c, h, l) {
+  const a = ta.atr, s1 = Math.min(...l.slice(-20)), s2 = ta.bb.lo, r1 = Math.max(...h.slice(-20)), r2 = ta.bb.hi;
+  let entry = null, exit = null, stop = null, reasons = [];
+  if (ta.sig === 'strong-buy' || ta.sig === 'buy') {
+    entry = Math.max(s1, price - a * 0.5);
+    stop = s1 - a * 0.5;
+    exit = price + a * 3;
+    if (ta.rsi < 35) reasons.push('RSI ' + ta.rsi.toFixed(1) + ' 進入超賣區');
+    if (ta.macd > ta.signal) reasons.push('MACD多頭交叉');
+    if (ta.kd.k < 25) reasons.push('KD低檔(' + ta.kd.k.toFixed(1) + ')，反彈機率高');
+    if (price <= s2 * 1.01) reasons.push('觸及布林下軌，支撐強');
+    if (ta.sigs.length) reasons.push(...ta.sigs.filter(s => s.t === 'b').map(s => s.n));
+  } else if (ta.sig === 'strong-sell' || ta.sig === 'sell') {
+    entry = null; stop = price - a; exit = price;
+    if (ta.rsi > 65) reasons.push('RSI ' + ta.rsi.toFixed(1) + ' 偏高');
+    if (ta.macd < ta.signal) reasons.push('MACD空頭排列');
+    if (ta.kd.k > 75) reasons.push('KD高檔(' + ta.kd.k.toFixed(1) + ')，回調風險');
+    reasons.push('技術面偏空，短線暫不建議進場');
+    if (ta.sigs.length) reasons.push(...ta.sigs.filter(s => s.t === 's').map(s => s.n));
+  } else {
+    entry = s1 + a * 0.2; stop = s1 - a * 0.5; exit = r1 - a * 0.2;
+    reasons.push('技術面中性，可於支撐附近輕倉試單');
+    if (ta.rsi >= 40 && ta.rsi <= 60) reasons.push('RSI中性(' + ta.rsi.toFixed(1) + ')');
+  }
+  if (!reasons.length) reasons.push('目前無明顯短線訊號');
+  const rr = entry && stop && exit && (entry - stop) > 0 ? ((exit - entry) / (entry - stop)).toFixed(2) : null;
+  return { entry, exit, stop, s1, s2, r1, r2, rr, atr: a, reasons };
+}
+
+// ============ BOND ANALYSIS ============
+function bondValueAnalysis(bd, ta, price) {
+  let score = 0, factors = [];
+  // Yield attractiveness (±30)
+  if (bd.yield != null) {
+    if (bd.yield > 5.5) { score += 30; factors.push({n:'殖利率 '+bd.yield.toFixed(2)+'% — 極具吸引力',i:'+'}); }
+    else if (bd.yield > 4) { score += 15; factors.push({n:'殖利率 '+bd.yield.toFixed(2)+'% — 良好',i:'+'}); }
+    else if (bd.yield > 2.5) { score += 5; factors.push({n:'殖利率 '+bd.yield.toFixed(2)+'% — 一般',i:'0'}); }
+    else { score -= 10; factors.push({n:'殖利率 '+bd.yield.toFixed(2)+'% — 偏低',i:'-'}); }
+  }
+  // Duration / rate risk (±25)
+  if (bd.duration != null) {
+    if (bd.duration < 3) { score += 15; factors.push({n:'存續期間 '+bd.duration.toFixed(1)+'年 — 利率風險低',i:'+'}); }
+    else if (bd.duration <= 7) { score += 5; factors.push({n:'存續期間 '+bd.duration.toFixed(1)+'年 — 利率風險適中',i:'0'}); }
+    else if (bd.duration <= 12) { score -= 5; factors.push({n:'存續期間 '+bd.duration.toFixed(1)+'年 — 利率風險偏高',i:'-'}); }
+    else { score -= 15; factors.push({n:'存續期間 '+bd.duration.toFixed(1)+'年 — 利率風險高',i:'-'}); }
+  }
+  // Credit quality (±20)
+  const ct = bd.type;
+  if (/^gov/.test(ct) || ct === 'tips') { score += 10; factors.push({n:bd.creditRating+' — 信用風險極低',i:'+'}); }
+  else if (/^ig/.test(ct) || ct === 'aggregate' || ct === 'muni') { score += 5; factors.push({n:bd.creditRating+' — 信用風險可控',i:'+'}); }
+  else if (ct === 'hy') { score -= 10; factors.push({n:bd.creditRating+' — 信用風險較高',i:'-'}); }
+  else if (ct === 'em') { score -= 5; factors.push({n:bd.creditRating+' — 新興市場風險',i:'-'}); }
+  else { factors.push({n:bd.creditRating+' — 信用風險未知',i:'0'}); }
+  // Technical price position (±15)
+  const taPts = Math.round(ta.score * 0.15);
+  score += taPts;
+  if (taPts > 5) factors.push({n:'技術面偏多(+'+taPts+')',i:'+'});
+  else if (taPts < -5) factors.push({n:'技術面偏空('+taPts+')',i:'-'});
+  else factors.push({n:'技術面中性('+taPts+')',i:'0'});
+  // Expense ratio (±10)
+  if (bd.expenseRatio != null) {
+    if (bd.expenseRatio < 0.1) { score += 10; factors.push({n:'費用率 '+bd.expenseRatio.toFixed(2)+'% — 超低',i:'+'}); }
+    else if (bd.expenseRatio < 0.2) { score += 5; factors.push({n:'費用率 '+bd.expenseRatio.toFixed(2)+'% — 低',i:'+'}); }
+    else if (bd.expenseRatio > 0.4) { score -= 5; factors.push({n:'費用率 '+bd.expenseRatio.toFixed(2)+'% — 偏高',i:'-'}); }
+    else { factors.push({n:'費用率 '+bd.expenseRatio.toFixed(2)+'%',i:'0'}); }
+  }
+  score = Math.max(-100, Math.min(100, score));
+  let verdict;
+  if (score >= 35) verdict = '債券價值突出 — 建議積極配置';
+  else if (score >= 15) verdict = '債券價值良好 — 適合逢低佈局';
+  else if (score >= 0) verdict = '債券價值中性 — 可適度配置';
+  else if (score >= -15) verdict = '債券價值偏弱 — 建議觀望';
+  else verdict = '債券吸引力低 — 暫不建議';
+  return { score, factors, verdict };
+}
+
+function bondLongTermEntry(bva, bd, price, c, h, l, atr) {
+  let entry = null, exit = null, stop = null, reasons = [];
+  const sc = bva.score;
+  const durUpside = bd.duration ? bd.duration * 0.005 : 0.03; // price change per 0.5% rate drop
+  if (sc >= 35) {
+    entry = price * 0.99;
+    exit = price * (1 + durUpside);
+    stop = price * 0.95;
+    reasons.push('債券殖利率極具吸引力，建議積極配置');
+    if (bd.yield > 5) reasons.push('殖利率 ' + bd.yield.toFixed(2) + '%，收益優異');
+    if (bd.duration < 5) reasons.push('短天期，利率風險有限');
+  } else if (sc >= 15) {
+    entry = price * 0.97;
+    exit = price * (1 + durUpside * 0.7);
+    stop = price * 0.93;
+    reasons.push('債券配置價值浮現，建議分批進場');
+    if (bd.yield > 4) reasons.push('殖利率 ' + bd.yield.toFixed(2) + '%，具配息優勢');
+  } else if (sc >= 0) {
+    entry = price * 0.95;
+    exit = price * 1.05;
+    stop = price * 0.90;
+    reasons.push('債券價值中性，建議等待更佳進場時機');
+  } else {
+    entry = null;
+    reasons.push('當前環境不利此類債券，暫不建議長期配置');
+    if (bd.duration > 12) reasons.push('長天期債券在升息週期風險較大');
+  }
+  const rr = entry && stop && exit && (entry - stop) > 0 ? ((exit - entry) / (entry - stop)).toFixed(2) : null;
+  return { entry, exit, stop, rr, reasons };
+}
+
+function bondShortTermEntry(ta, price, c, h, l) {
+  const a = ta.atr, s1 = Math.min(...l.slice(-20)), s2 = ta.bb.lo, r1 = Math.max(...h.slice(-20)), r2 = ta.bb.hi;
+  let entry = null, exit = null, stop = null, reasons = [];
+  if (ta.sig === 'strong-buy' || ta.sig === 'buy') {
+    entry = Math.max(s1, price - a * 0.3);
+    stop = s1 - a * 0.3;
+    exit = price + a * 2;
+    if (ta.rsi < 35) reasons.push('RSI ' + ta.rsi.toFixed(1) + ' 進入超賣區');
+    if (ta.macd > ta.signal) reasons.push('MACD多頭交叉');
+    if (price <= s2 * 1.01) reasons.push('觸及布林下軌');
+    if (ta.sigs.length) reasons.push(...ta.sigs.filter(s => s.t === 'b').map(s => s.n));
+  } else if (ta.sig === 'strong-sell' || ta.sig === 'sell') {
+    entry = null; stop = price - a; exit = price;
+    reasons.push('技術面偏空，短線暫不建議進場');
+    if (ta.sigs.length) reasons.push(...ta.sigs.filter(s => s.t === 's').map(s => s.n));
+  } else {
+    entry = s1 + a * 0.1; stop = s1 - a * 0.3; exit = r1 - a * 0.1;
+    reasons.push('技術面中性，可於支撐附近輕倉試單');
+  }
+  if (!reasons.length) reasons.push('目前無明顯短線訊號');
+  const rr = entry && stop && exit && (entry - stop) > 0 ? ((exit - entry) / (entry - stop)).toFixed(2) : null;
+  return { entry, exit, stop, s1, s2, r1, r2, rr, atr: a, reasons };
+}
+
+// ============ RENDER STOCK ============
+function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
+  const up = chg >= 0, f = (v, d) => v != null ? v.toFixed(d == null ? 2 : d) : 'N/A';
+  const fp = v => v != null ? (cur === 'TWD' ? 'NT$' : '$') + f(v, cur === 'TWD' ? 0 : 2) : 'N/A';
+  const sigL = { 'strong-buy': '強烈買入', 'buy': '建議買入', 'hold': '觀望持有', 'sell': '建議賣出', 'strong-sell': '強烈賣出' };
+  const sc = v => v > 15 ? 'var(--green)' : v < -15 ? 'var(--red)' : 'var(--yellow)';
+  const tagC = i => i === '+' ? 'rgba(16,185,129,.15);color:var(--green)' : i === '-' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)';
+  const tagI = i => i === '+' ? '✓' : i === '-' ? '✗' : '◌';
+  const reasonList = arr => arr.length ? '<div style="margin-top:10px;font-size:12px;line-height:1.8">' + arr.map(r => '<div style="color:var(--muted)">• ' + r + '</div>').join('') + '</div>' : '';
+
+  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '">' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
+    '<div class="card"><h3>📈 K線走勢圖（6個月）</h3><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+    '<div class="grid2"><div class="card"><h3>📊 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div>' +
+    '<div class="card"><h3>💎 價值面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(va.score) + '">' + (va.score > 0 ? '+' : '') + va.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((va.score + 100) / 2) + '%;background:' + sc(va.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + va.verdict + '</div></div></div></div>' +
+    // Long-term value investing entry/exit
+    '<div class="card"><h3>📈 長期投資建議（價值投資）</h3><div class="grid4" style="margin-top:12px"><div class="rec-box" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)"><div class="rec-title">長期進場價</div><div class="rec-price" style="color:var(--green)">' + (lt.entry ? fp(lt.entry) : '暫不建議進場') + '</div><div class="rec-note">' + (lt.entry ? '具安全邊際的佈局價位' : '估值偏高，等待回檔') + '</div></div><div class="rec-box" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)"><div class="rec-title">長期停損價</div><div class="rec-price" style="color:var(--red)">' + (lt.stop ? fp(lt.stop) : 'N/A') + '</div><div class="rec-note">基本面惡化停損線</div></div><div class="rec-box" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3)"><div class="rec-title">長期目標價</div><div class="rec-price" style="color:var(--accent)">' + (lt.exit ? fp(lt.exit) : 'N/A') + '</div><div class="rec-note">基於估值的合理目標</div></div><div class="rec-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3)"><div class="rec-title">風險報酬比</div><div class="rec-price" style="color:var(--yellow)">' + (lt.rr || 'N/A') + '</div><div class="rec-note">' + (lt.rr && lt.rr >= 2 ? '✓ 值得長期佈局' : '建議 ≥ 2.0') + '</div></div></div>' + reasonList(lt.reasons) + '</div>' +
+    // Short-term technical entry/exit
+    '<div class="card"><h3>⚡ 短期交易建議（技術分析）</h3><div class="grid4" style="margin-top:12px"><div class="rec-box" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)"><div class="rec-title">短線進場價</div><div class="rec-price" style="color:var(--green)">' + (st.entry ? fp(st.entry) : '暫不建議進場') + '</div><div class="rec-note">' + (st.entry ? '技術面支撐位附近' : '訊號偏空，觀望為主') + '</div></div><div class="rec-box" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)"><div class="rec-title">短線停損價</div><div class="rec-price" style="color:var(--red)">' + (st.stop ? fp(st.stop) : 'N/A') + '</div><div class="rec-note">跌破支撐即停損</div></div><div class="rec-box" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3)"><div class="rec-title">短線目標價</div><div class="rec-price" style="color:var(--accent)">' + (st.exit ? fp(st.exit) : 'N/A') + '</div><div class="rec-note">壓力位獲利了結</div></div><div class="rec-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3)"><div class="rec-title">風險報酬比</div><div class="rec-price" style="color:var(--yellow)">' + (st.rr || 'N/A') + '</div><div class="rec-note">' + (st.rr && st.rr >= 2 ? '✓ 值得交易' : '建議 ≥ 2.0') + '</div></div></div>' + reasonList(st.reasons) + '<div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)"><span>支撐: <b style="color:var(--green)">' + fp(st.s1) + '</b> / <b style="color:var(--green)">' + fp(st.s2) + '</b></span><span>壓力: <b style="color:var(--red)">' + fp(st.r1) + '</b> / <b style="color:var(--red)">' + fp(st.r2) + '</b></span><span>ATR(14): <b>' + f(st.atr) + '</b></span></div></div>' +
+    '<div class="card"><h3>📡 技術訊號</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + (ta.sigs.length ? ta.sigs.map(s => '<span class="tag" style="background:' + (s.t === 'b' ? 'rgba(16,185,129,.15);color:var(--green)' : 'rgba(239,68,68,.15);color:var(--red)') + '">' + (s.t === 'b' ? '▲' : '▼') + ' ' + s.n + '</span>').join('') : '<span style="color:var(--muted)">目前無明顯訊號</span>') + '</div></div>' +
+    '<div class="grid2"><div class="card"><h3>技術指標明細</h3><div class="table-wrap"><table><tr><td style="color:var(--muted)">MA5</td><td><b>' + f(ta.ma5) + '</b></td><td>' + (price > ta.ma5 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') + '</td></tr><tr><td style="color:var(--muted)">MA20</td><td><b>' + f(ta.ma20) + '</b></td><td>' + (price > ta.ma20 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') + '</td></tr><tr><td style="color:var(--muted)">MA60</td><td><b>' + f(ta.ma60) + '</b></td><td>' + (ta.ma60 ? (price > ta.ma60 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') : 'N/A') + '</td></tr><tr><td style="color:var(--muted)">RSI(14)</td><td><b>' + f(ta.rsi, 1) + '</b></td><td>' + (ta.rsi < 30 ? '<span style="color:var(--green)">超賣</span>' : ta.rsi > 70 ? '<span style="color:var(--red)">超買</span>' : '中性') + '</td></tr><tr><td style="color:var(--muted)">MACD</td><td><b>' + f(ta.macd, 4) + '</b></td><td>' + (ta.macd > ta.signal ? '<span style="color:var(--green)">多方</span>' : '<span style="color:var(--red)">空方</span>') + '</td></tr><tr><td style="color:var(--muted)">K / D</td><td><b>' + f(ta.kd.k, 1) + ' / ' + f(ta.kd.d, 1) + '</b></td><td>' + (ta.kd.k > ta.kd.d ? '<span style="color:var(--green)">K>D</span>' : '<span style="color:var(--red)">K&lt;D</span>') + '</td></tr><tr><td style="color:var(--muted)">布林通道</td><td colspan="2"><b>' + f(ta.bb.hi) + ' / ' + f(ta.bb.lo) + '</b></td></tr><tr><td style="color:var(--muted)">量比</td><td><b>' + f(ta.volRatio, 2) + 'x</b></td><td>' + (ta.volRatio > 1.5 ? '<span style="color:var(--yellow)">放量</span>' : ta.volRatio < 0.5 ? '縮量' : '正常') + '</td></tr></table></div></div>' +
+    '<div class="card"><h3>基本面指標</h3><div class="table-wrap"><table><tr><td style="color:var(--muted)">本益比(PE)</td><td><b>' + (va.pe ? f(va.pe, 1) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">預估PE</td><td><b>' + (va.fpe ? f(va.fpe, 1) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">股價淨值比(PB)</td><td><b>' + (va.pb ? f(va.pb, 2) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">PEG</td><td><b>' + (va.peg ? f(va.peg, 2) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">殖利率</td><td><b>' + (va.dy ? f(va.dy, 2) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">ROE</td><td><b>' + (va.roe != null ? f(va.roe, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">負債比</td><td><b>' + (va.debt != null ? f(va.debt, 0) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">利潤率</td><td><b>' + (va.pm != null ? f(va.pm, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">營收成長</td><td><b>' + (va.rg != null ? f(va.rg, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">分析師目標價</td><td><b>' + (va.tp ? fp(va.tp) : 'N/A') + '</b> ' + (va.upside != null ? '<span style="color:' + (va.upside > 0 ? 'var(--green)' : 'var(--red)') + '">(' + f(va.upside, 1) + '%)</span>' : '') + '</td></tr></table></div></div></div>' +
+    '<div class="card"><h3>💡 價值投資分析因子</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + (va.factors.length ? va.factors.map(ff => '<span class="tag" style="background:' + tagC(ff.i) + '">' + tagI(ff.i) + ' ' + ff.n + '</span>').join('') : '<span style="color:var(--muted)">基本面資料不足</span>') + '</div></div>' +
+    '<div class="disclaimer">⚠️ 以上分析僅供參考，不構成投資建議。投資有風險，請依自身判斷做出決策。資料來源：Yahoo Finance</div>';
+}
+
+// ============ RENDER BOND ============
+function renderBond(ticker, meta, ta, bva, bd, lt, st, cur, price, chg, chgP) {
+  const up = chg >= 0, f = (v, d) => v != null ? v.toFixed(d == null ? 2 : d) : 'N/A';
+  const fp = v => v != null ? '$' + f(v, 2) : 'N/A';
+  const sigL = { 'strong-buy':'強烈買入','buy':'建議買入','hold':'觀望持有','sell':'建議賣出','strong-sell':'強烈賣出' };
+  const sc = v => v > 15 ? 'var(--green)' : v < -15 ? 'var(--red)' : 'var(--yellow)';
+  const tagC = i => i === '+' ? 'rgba(16,185,129,.15);color:var(--green)' : i === '-' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)';
+  const tagI = i => i === '+' ? '✓' : i === '-' ? '✗' : '◌';
+  const reasonList = arr => arr.length ? '<div style="margin-top:10px;font-size:12px;line-height:1.8">' + arr.map(r => '<div style="color:var(--muted)">• ' + r + '</div>').join('') + '</div>' : '';
+  const fmtAssets = v => { if (!v) return 'N/A'; if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B'; if (v >= 1e6) return '$' + (v/1e6).toFixed(0) + 'M'; return '$' + v.toLocaleString(); };
+  const tip = t => '<span class="tip" title="' + t + '">?</span>';
+
+  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + ' <span class="bond-badge">債券 ETF</span></div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="font-size:12px;color:var(--accent);margin-top:4px">' + bd.desc + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '">' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
+    // K-line
+    '<div class="card"><h3>📈 K線走勢圖（6個月）</h3><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+    // Score cards
+    '<div class="grid2"><div class="card"><h3>🏦 債券投資評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(bva.score) + '">' + (bva.score > 0 ? '+' : '') + bva.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((bva.score + 100) / 2) + '%;background:' + sc(bva.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + bva.verdict + '</div></div></div>' +
+    '<div class="card"><h3>📊 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div></div>' +
+    // Bond fundamentals table
+    '<div class="card"><h3>🏦 債券基本面指標</h3><div class="table-wrap"><table>' +
+    '<tr><td style="color:var(--muted)">殖利率 (Yield)' + tip('到期殖利率：持有債券至到期日，每年可獲得的平均年化報酬率。殖利率越高，代表債券收益越好。') + '</td><td><b style="color:var(--green)">' + (bd.yield != null ? bd.yield.toFixed(2) + '%' : 'N/A') + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">票面利率 (Coupon)' + tip('票面利率：債券每年支付的固定利息佔面額的比率。例如票面利率4%表示每$100面額每年支付$4利息。') + '</td><td><b>' + (bd.couponRate != null ? '~' + bd.couponRate.toFixed(2) + '%' : 'N/A') + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">存續期間 (Duration)' + tip('存續期間：衡量債券價格對利率變動的敏感度，以「年」表示。存續期間10年表示利率每變動1%，債券價格約變動10%。天期越長，價格波動越大。') + '</td><td><b>' + (bd.duration != null ? bd.duration.toFixed(1) + ' 年' : 'N/A') + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">信用評等 (Credit)' + tip('信用評等：由信評機構（如S&P、Moody\'s）評定的償債能力等級。AAA為最高等級（幾乎無違約風險），BBB以上為投資等級，BB以下為高收益（垃圾債）。') + '</td><td><b>' + bd.creditRating + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">利率敏感度' + tip('利率敏感度：根據存續期間判斷此債券ETF對利率變動的敏感程度。「高」表示利率變動時價格波動大，「低」表示價格較穩定。') + '</td><td><b style="color:' + (bd.rateSensitivity === '高' ? 'var(--red)' : bd.rateSensitivity === '低' ? 'var(--green)' : 'var(--yellow)') + '">' + bd.rateSensitivity + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">配息率' + tip('配息率：過去12個月配發的股息佔目前價格的比率。對債券ETF而言，配息主要來自持有債券的利息收入。') + '</td><td><b>' + (bd.distributionRate != null ? bd.distributionRate.toFixed(2) + '%' : 'N/A') + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">費用率' + tip('費用率：基金管理公司每年收取的管理費用佔資產比率。費用率越低，投資人實際獲得的報酬越高。0.1%以下算非常低。') + '</td><td><b>' + (bd.expenseRatio != null ? bd.expenseRatio.toFixed(2) + '%' : 'N/A') + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">基金規模' + tip('基金總資產：規模越大流動性越好，買賣價差越小。通常$1B以上的基金流動性充足。') + '</td><td><b>' + fmtAssets(bd.totalAssets) + '</b></td></tr>' +
+    '<tr><td style="color:var(--muted)">基金類別</td><td><b>' + (bd.category || 'N/A') + '</b></td></tr>' +
+    '</table></div></div>' +
+    // Educational card
+    '<div class="card edu-card"><h3>📚 債券 ETF 投資小教室</h3><div style="margin-top:10px">' +
+    '<p><span class="edu-term">什麼是債券 ETF？</span> 債券ETF是一籃子債券的組合，像買股票一樣在交易所買賣。相比直接買單一債券（通常需要大額資金），ETF讓一般投資人也能輕鬆投資債券市場。</p>' +
+    '<p><span class="edu-term">殖利率與價格的關係</span> 債券價格和殖利率<b>呈反向關係</b>。當市場利率上升時，舊債券（票面利率較低）的價格會下跌；當利率下降時，債券價格上漲。這就是為什麼升息週期債券會虧損，降息週期則有資本利得。</p>' +
+    '<p><span class="edu-term">存續期間（Duration）</span> 存續期間是衡量<b>利率風險</b>的關鍵指標。以TLT為例，存續期間約17年，表示利率每上升1%，TLT價格約下跌17%。短天期債券（如SHY，存續期間2年）價格波動小，適合保守投資人。</p>' +
+    '<p><span class="edu-term">信用風險</span> 債券的信用等級越高（如美國公債AAA），違約風險越低但殖利率也越低；高收益債（如HYG，評等BB/B）殖利率較高但有違約風險。經濟衰退時高收益債容易下跌。</p>' +
+    '<p><span class="edu-term">什麼時候適合買債券？</span> ① 央行即將<b>降息</b>時（債券價格將上漲，長天期受益最大） ② 經濟衰退或股市不穩時（<b>避險</b>需求推升公債價格） ③ 希望獲得<b>穩定配息</b>收入時 ④ 想要<b>分散投資組合</b>風險時</p>' +
+    '</div></div>' +
+    // Long-term entry/exit
+    '<div class="card"><h3>📈 長期配置建議（債券投資）</h3><div class="grid4" style="margin-top:12px"><div class="rec-box" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)"><div class="rec-title">長期進場價</div><div class="rec-price" style="color:var(--green)">' + (lt.entry ? fp(lt.entry) : '暫不建議進場') + '</div><div class="rec-note">' + (lt.entry ? '具安全邊際的配置價位' : '等待更好時機') + '</div></div><div class="rec-box" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)"><div class="rec-title">長期停損價</div><div class="rec-price" style="color:var(--red)">' + (lt.stop ? fp(lt.stop) : 'N/A') + '</div><div class="rec-note">利率風險停損線</div></div><div class="rec-box" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3)"><div class="rec-title">長期目標價</div><div class="rec-price" style="color:var(--accent)">' + (lt.exit ? fp(lt.exit) : 'N/A') + '</div><div class="rec-note">基於利率情境的目標</div></div><div class="rec-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3)"><div class="rec-title">風險報酬比</div><div class="rec-price" style="color:var(--yellow)">' + (lt.rr || 'N/A') + '</div><div class="rec-note">' + (lt.rr && lt.rr >= 2 ? '✓ 值得配置' : '建議 ≥ 2.0') + '</div></div></div>' + reasonList(lt.reasons) + '</div>' +
+    // Short-term entry/exit
+    '<div class="card"><h3>⚡ 短期交易建議（技術分析）</h3><div class="grid4" style="margin-top:12px"><div class="rec-box" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)"><div class="rec-title">短線進場價</div><div class="rec-price" style="color:var(--green)">' + (st.entry ? fp(st.entry) : '暫不建議進場') + '</div><div class="rec-note">' + (st.entry ? '技術面支撐位附近' : '訊號偏空，觀望為主') + '</div></div><div class="rec-box" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)"><div class="rec-title">短線停損價</div><div class="rec-price" style="color:var(--red)">' + (st.stop ? fp(st.stop) : 'N/A') + '</div><div class="rec-note">跌破支撐即停損</div></div><div class="rec-box" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3)"><div class="rec-title">短線目標價</div><div class="rec-price" style="color:var(--accent)">' + (st.exit ? fp(st.exit) : 'N/A') + '</div><div class="rec-note">壓力位獲利了結</div></div><div class="rec-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3)"><div class="rec-title">風險報酬比</div><div class="rec-price" style="color:var(--yellow)">' + (st.rr || 'N/A') + '</div><div class="rec-note">' + (st.rr && st.rr >= 2 ? '✓ 值得交易' : '建議 ≥ 2.0') + '</div></div></div>' + reasonList(st.reasons) + '<div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)"><span>支撐: <b style="color:var(--green)">' + fp(st.s1) + '</b> / <b style="color:var(--green)">' + fp(st.s2) + '</b></span><span>壓力: <b style="color:var(--red)">' + fp(st.r1) + '</b> / <b style="color:var(--red)">' + fp(st.r2) + '</b></span><span>ATR(14): <b>' + f(st.atr) + '</b></span></div></div>' +
+    // Technical signals
+    '<div class="card"><h3>📡 技術訊號</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + (ta.sigs.length ? ta.sigs.map(s => '<span class="tag" style="background:' + (s.t === 'b' ? 'rgba(16,185,129,.15);color:var(--green)' : 'rgba(239,68,68,.15);color:var(--red)') + '">' + (s.t === 'b' ? '▲' : '▼') + ' ' + s.n + '</span>').join('') : '<span style="color:var(--muted)">目前無明顯訊號</span>') + '</div></div>' +
+    // Grid2: Technical indicators + Bond factors
+    '<div class="grid2"><div class="card"><h3>技術指標明細</h3><div class="table-wrap"><table><tr><td style="color:var(--muted)">MA5</td><td><b>' + f(ta.ma5) + '</b></td><td>' + (price > ta.ma5 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') + '</td></tr><tr><td style="color:var(--muted)">MA20</td><td><b>' + f(ta.ma20) + '</b></td><td>' + (price > ta.ma20 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') + '</td></tr><tr><td style="color:var(--muted)">MA60</td><td><b>' + f(ta.ma60) + '</b></td><td>' + (ta.ma60 ? (price > ta.ma60 ? '<span style="color:var(--green)">站上</span>' : '<span style="color:var(--red)">跌破</span>') : 'N/A') + '</td></tr><tr><td style="color:var(--muted)">RSI(14)</td><td><b>' + f(ta.rsi, 1) + '</b></td><td>' + (ta.rsi < 30 ? '<span style="color:var(--green)">超賣</span>' : ta.rsi > 70 ? '<span style="color:var(--red)">超買</span>' : '中性') + '</td></tr><tr><td style="color:var(--muted)">MACD</td><td><b>' + f(ta.macd, 4) + '</b></td><td>' + (ta.macd > ta.signal ? '<span style="color:var(--green)">多方</span>' : '<span style="color:var(--red)">空方</span>') + '</td></tr><tr><td style="color:var(--muted)">K / D</td><td><b>' + f(ta.kd.k, 1) + ' / ' + f(ta.kd.d, 1) + '</b></td><td>' + (ta.kd.k > ta.kd.d ? '<span style="color:var(--green)">K>D</span>' : '<span style="color:var(--red)">K&lt;D</span>') + '</td></tr><tr><td style="color:var(--muted)">布林通道</td><td colspan="2"><b>' + f(ta.bb.hi) + ' / ' + f(ta.bb.lo) + '</b></td></tr><tr><td style="color:var(--muted)">量比</td><td><b>' + f(ta.volRatio, 2) + 'x</b></td><td>' + (ta.volRatio > 1.5 ? '<span style="color:var(--yellow)">放量</span>' : ta.volRatio < 0.5 ? '縮量' : '正常') + '</td></tr></table></div></div>' +
+    '<div class="card"><h3>💡 債券投資分析因子</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + (bva.factors.length ? bva.factors.map(ff => '<span class="tag" style="background:' + tagC(ff.i) + '">' + tagI(ff.i) + ' ' + ff.n + '</span>').join('') : '<span style="color:var(--muted)">資料不足</span>') + '</div></div></div>' +
+    '<div class="disclaimer">⚠️ 以上分析僅供參考，不構成投資建議。債券ETF有利率風險、信用風險及匯率風險。投資有風險，請依自身判斷做出決策。資料來源：Yahoo Finance</div>';
+}
+
+// ============ INDICES ============
+const IDX = [
+  ['^GSPC', 'S&P 500'], ['^DJI', '道瓊工業'], ['^IXIC', '那斯達克'], ['^SOX', '費城半導體'], ['^RUT', '羅素2000'],
+  ['^VIX', 'VIX恐慌指數'], ['^TWII', '台灣加權指數'], ['GC=F', '黃金期貨'], ['CL=F', '原油期貨'],
+  ['DX-Y.NYB', '美元指數'], ['^TNX', '美10年債殖利率'], ['BTC-USD', '比特幣']
+];
+
+async function loadIndices() {
+  const div = document.getElementById('indices-content');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入指數資料...</p></div>';
+  try {
+    const quotes = await multiChart(IDX.map(i => i[0]));
+    let html = '<div class="grid3">';
+    for (const [sym, name] of IDX) {
+      const q = quotes.find(r => r.symbol === sym);
+      if (!q) continue;
+      const up = q.change >= 0;
+      html += '<div class="card index-card" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">點擊查看K線</div></div>';
+    }
+    html += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + '</div>';
+    div.innerHTML = html;
+  } catch (e) {
+    div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadIndices()">重試</button></div>';
+  }
+}
+
+async function showIdxChart(sym, name) {
+  const area = document.getElementById('idx-chart-area');
+  area.innerHTML = '<div class="card"><h3>' + name + ' K線圖</h3><div class="loading"><div class="spinner"></div></div></div>';
+  try {
+    const chart = await yfChart(sym, '6mo', '1d');
+    const q = chart.indicators.quote[0];
+    const ohlcv = [];
+    for (let i = 0; i < chart.timestamp.length; i++) if (q.close[i] != null) ohlcv.push({ t: chart.timestamp[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+    area.innerHTML = '<div class="card"><h3>📈 ' + name + ' K線走勢（6個月）</h3><div id="idx-kline" class="chart-container"></div></div>';
+    setTimeout(() => renderKline('idx-kline', ohlcv), 50);
+  } catch (e) { area.innerHTML = '<div class="card" style="color:var(--red)">無法載入' + name + '圖表</div>'; }
+}
+
+// ============ SENTIMENT ============
+async function loadSentiment() {
+  const div = document.getElementById('sentiment-content');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">計算市場情緒...</p></div>';
+  try {
+    const syms = ['^GSPC', '^VIX', '^IXIC', '^TWII', 'GC=F', '^TNX', '^DJI', '^SOX', 'BTC-USD'];
+    const quotes = await multiChart(syms);
+    const g = sym => quotes.find(q => q.symbol === sym);
+    const vix = g('^VIX'), sp = g('^GSPC'), nq = g('^IXIC'), tw = g('^TWII'), gold = g('GC=F'), tnx = g('^TNX'), sox = g('^SOX'), btc = g('BTC-USD');
+    const vixV = vix ? vix.price : 20, spC = sp ? sp.changePct : 0, nqC = nq ? nq.changePct : 0, btcC = btc ? btc.changePct : 0;
+
+    let fgi = 50;
+    if (vixV < 12) fgi += 15; else if (vixV < 17) fgi += 8; else if (vixV < 20) fgi += 3;
+    else if (vixV > 35) fgi -= 20; else if (vixV > 28) fgi -= 12; else if (vixV > 22) fgi -= 5;
+    fgi += Math.min(15, Math.max(-15, spC * 5));
+    fgi += (nqC - spC) * 3;
+    fgi += Math.min(5, Math.max(-5, btcC));
+    if (tnx && tnx.price > 4.5) fgi -= 5; else if (tnx && tnx.price < 3.5) fgi += 5;
+    fgi = Math.max(0, Math.min(100, Math.round(fgi)));
+
+    let sLabel, sColor, sEmoji;
+    if (fgi >= 80) { sLabel = '極度貪婪'; sColor = '#22c55e'; sEmoji = '🤑'; }
+    else if (fgi >= 60) { sLabel = '貪婪'; sColor = '#10b981'; sEmoji = '😊'; }
+    else if (fgi >= 40) { sLabel = '中性'; sColor = 'var(--yellow)'; sEmoji = '😐'; }
+    else if (fgi >= 20) { sLabel = '恐懼'; sColor = 'var(--orange)'; sEmoji = '😰'; }
+    else { sLabel = '極度恐懼'; sColor = 'var(--red)'; sEmoji = '😱'; }
+
+    const bull = [], bear = [];
+    if (vixV < 20) bull.push('VIX處低位(' + vixV.toFixed(1) + ')，市場波動低'); else bear.push('VIX偏高(' + vixV.toFixed(1) + ')，不確定性增加');
+    if (spC > 0) bull.push('S&P 500上漲' + spC.toFixed(2) + '%'); else if (spC < 0) bear.push('S&P 500下跌' + Math.abs(spC).toFixed(2) + '%');
+    if (nqC > 0) bull.push('科技股走強'); else if (nqC < 0) bear.push('科技股承壓');
+    if (sox) { if (sox.changePct > 0) bull.push('半導體板塊上漲' + sox.changePct.toFixed(2) + '%'); else bear.push('半導體板塊走弱'); }
+    if (tw) { if (tw.changePct > 0) bull.push('台股上漲' + tw.changePct.toFixed(2) + '%'); else if (tw.changePct < 0) bear.push('台股下跌' + Math.abs(tw.changePct).toFixed(2) + '%'); }
+    if (gold && gold.changePct > 1) bear.push('黃金避險需求增加'); else if (gold && gold.changePct < -1) bull.push('黃金下跌，風險偏好回升');
+    if (btcC > 2) bull.push('比特幣大漲' + btcC.toFixed(2) + '%'); else if (btcC < -2) bear.push('比特幣下跌' + Math.abs(btcC).toFixed(2) + '%');
+
+    const qr = q => q ? '<td><b>' + q.price.toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</b></td><td style="color:' + (q.changePct >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (q.changePct >= 0 ? '+' : '') + q.changePct.toFixed(2) + '%</td>' : '<td>N/A</td><td></td>';
+
+    div.innerHTML = '<div class="grid2"><div class="card" style="text-align:center"><h3>恐懼與貪婪指數</h3><div style="font-size:56px;margin:10px 0">' + sEmoji + '</div><div style="font-size:64px;font-weight:800;color:' + sColor + ';margin:8px 0">' + fgi + '</div><div style="font-size:22px;font-weight:600;color:' + sColor + '">' + sLabel + '</div><div class="progress-bar" style="margin:16px auto;width:80%;height:10px"><div class="progress-fill" style="width:' + fgi + '%;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),#22c55e,var(--green));height:10px"></div></div><div style="display:flex;justify-content:space-between;width:80%;margin:0 auto;font-size:11px;color:var(--muted)"><span>0 極度恐懼</span><span>50 中性</span><span>100 極度貪婪</span></div><div style="margin-top:16px;font-size:12px;color:var(--muted)">計算因子：VIX波動率 · 大盤動能 · 市場廣度 · 避險需求 · 風險偏好</div></div>' +
+      '<div class="card"><h3>各市場即時狀態</h3><table>' +
+      [['S&P 500', sp], ['道瓊', g('^DJI')], ['那斯達克', nq], ['費城半導體', sox], ['台灣加權', tw], ['VIX 恐慌', vix], ['美10年債利率', tnx], ['黃金', gold], ['比特幣', btc]].map(([n, q]) => '<tr><td style="color:var(--muted)">' + n + '</td>' + qr(q) + '</tr>').join('') +
+      '</table></div></div>' +
+      '<div class="card"><h3>📊 當下市場分析</h3><div style="line-height:1.9;margin-top:8px">' +
+      (bull.length ? '<div style="margin-bottom:12px"><b style="color:var(--green)">多方因素：</b><ul style="margin:4px 0 0 20px">' + bull.map(f => '<li>' + f + '</li>').join('') + '</ul></div>' : '') +
+      (bear.length ? '<div style="margin-bottom:12px"><b style="color:var(--red)">空方因素：</b><ul style="margin:4px 0 0 20px">' + bear.map(f => '<li>' + f + '</li>').join('') + '</ul></div>' : '') +
+      '<div style="margin-top:12px;padding:12px;background:rgba(59,130,246,.1);border-radius:8px"><b>綜合判斷：</b>' +
+      (fgi >= 60 ? '目前市場偏向樂觀，風險偏好高。市場過度樂觀時反轉風險上升，建議做好風控，避免追高，可適度減倉或設好停利。' : fgi <= 40 ? '目前市場偏向恐慌。歷史經驗：「別人恐懼時我貪婪」，極度恐懼往往孕育中長期買點，但需確認無系統性風險。建議分批佈局、嚴設停損。' : '市場情緒中性，多空拉鋸。建議觀察後續經濟數據和企業財報，等待方向明確再加大部位。') +
+      '</div></div></div>' +
+      '<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + '</div>';
+  } catch (e) {
+    div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadSentiment()">重試</button></div>';
+  }
+}
+
+// ============ NEWS ============
+let _newsItems = [];
+async function loadNews(cat) {
+  const div = document.getElementById('news-content');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
+  document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#news-tabs button')[['general', 'us', 'tw', 'crypto'].indexOf(cat)].classList.add('active');
+  const urls = {
+    general: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB',
+    us: 'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500&hl=en-US&gl=US',
+    tw: 'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3&hl=zh-TW&gl=TW',
+    crypto: 'https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum&hl=en-US'
+  };
+  try {
+    const r = await pFetch(urls[cat] || urls.general);
+    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+    const items = [];
+    xml.querySelectorAll('item').forEach(el => {
+      const title = el.querySelector('title')?.textContent || '';
+      const link = el.querySelector('link')?.textContent || '';
+      const pubDate = el.querySelector('pubDate')?.textContent || '';
+      const desc = (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '');
+      const source = el.querySelector('source')?.textContent || 'Google News';
+      items.push({ title, link, pubDate, desc, source });
+    });
+    const seen = new Set();
+    _newsItems = items.filter(it => { const k = it.title.substring(0, 25).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 20);
+    if (!_newsItems.length) throw new Error('No news');
+    let html = '<div class="card" style="padding:0">';
+    _newsItems.forEach((it, i) => {
+      html += '<div class="news-item" onclick="openNews(' + i + ')"><h4>' + it.title + '</h4><div class="meta"><span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">' + it.source + '</span><span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div><p>' + it.desc.substring(0, 120) + (it.desc.length > 120 ? '...' : '') + '</p></div>';
+    });
+    html += '</div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">來源：' + [...new Set(_newsItems.map(i => i.source))].slice(0, 6).join('、') + ' · ' + new Date().toLocaleString('zh-TW') + '</div>';
+    div.innerHTML = html;
+  } catch (e) {
+    div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入新聞失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadNews(\'' + cat + '\')">重試</button></div>';
+  }
+}
+
+function openNews(idx) {
+  const it = _newsItems[idx]; if (!it) return;
+  const analysis = newsAnalysis(it);
+  document.getElementById('news-modal-content').innerHTML = '<button class="modal-close" onclick="closeModal()">&times;</button><h2 style="margin-bottom:12px;padding-right:30px">' + it.title + '</h2><div style="font-size:13px;color:var(--muted);margin-bottom:16px"><span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">' + it.source + '</span><span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div><div style="line-height:1.8;margin-bottom:20px">' + (it.desc || '（摘要不可用）') + '</div><div style="margin-bottom:16px"><a href="' + it.link + '" target="_blank" style="color:var(--accent);font-weight:600">前往閱讀完整原文 →</a></div><div style="border-top:1px solid var(--border);padding-top:16px"><h3 style="color:var(--accent);margin-bottom:12px">📊 專業分析觀點</h3><div style="line-height:1.9;color:var(--muted)">' + analysis + '</div></div><div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;font-size:11px;color:var(--muted)"><b>來源驗證：</b>本新聞來自 ' + it.source + '（透過 Google News RSS 彙整），為可信賴的主流財經媒體。建議交叉比對 Reuters、Bloomberg、CNBC 等多方來源後做出決策。</div>';
+  document.getElementById('news-modal').style.display = 'flex';
+}
+function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
+
+function newsAnalysis(it) {
+  const t = (it.title + ' ' + it.desc).toLowerCase();
+  if (t.match(/fed|利率|rate|interest|央行|monetary/)) return '<b>貨幣政策影響：</b>央行利率決策是影響全球資產定價的核心因素。升息不利高估值成長股，有利銀行保險；降息預期推升科技股與債券價格。<br><br><b>投資建議：</b>關注 Fed 點陣圖和利率期貨隱含降息機率。鴿派轉向可增持長天期債券 ETF 和利率敏感成長股；反之降低久期曝險，偏向現金流穩健的價值型標的。';
+  if (t.match(/ai|人工智慧|半導體|semiconductor|chip|nvidia|tsmc|台積/)) return '<b>AI/半導體分析：</b>AI 算力需求持續推動半導體產業鏈成長，台積電、NVIDIA、AMD 等核心供應商持續受惠。<br><br><b>投資建議：</b>短期注意估值偏高的回檔風險，中長期 AI 基礎建設需求確立，適合技術面拉回時分批佈局。留意上游設備材料轉單效應，及下游雲端 AI 軟體獲利兌現節奏。';
+  if (t.match(/bitcoin|crypto|加密|比特幣|ethereum|以太/)) return '<b>加密貨幣分析：</b>加密市場受宏觀流動性、監管政策和機構資金三大因素驅動。比特幣常被視為風險資產領先指標。<br><br><b>投資建議：</b>加密資產波動極大，建議倉位控制在投資組合 5% 以內。關注比特幣 ETF 資金流向和鏈上數據作為趨勢判斷依據。';
+  if (t.match(/earning|財報|revenue|營收|profit|獲利|eps/)) return '<b>財報季分析：</b>企業財報是驗證基本面的關鍵時刻。重點：(1) 營收成長率 (2) 毛利率趨勢 (3) 前瞻指引。<br><br><b>投資建議：</b>財報前避免重倉單一個股。優於預期且指引上調，可在回測支撐時加碼；低於預期不要急於抄底，等技術面止穩再進場。';
+  if (t.match(/recession|衰退|gdp|inflation|通膨|cpi/)) return '<b>總經分析：</b>經濟數據是判斷景氣循環的重要依據。通膨走向決定央行政策，GDP 和就業反映實體經濟健康度。<br><br><b>投資建議：</b>軟著陸利於降息開啟，有利股債雙多。若出現衰退訊號，增加防禦型部位（公用事業、醫療、必需消費品）和公債配置。';
+  if (t.match(/oil|原油|opec|能源|energy/)) return '<b>能源市場分析：</b>油價受 OPEC+ 減產、地緣政治和全球經濟需求影響。油價上漲推升通膨預期，可能延遲降息。<br><br><b>投資建議：</b>看多油價可配置綜合型能源 ETF，同時留意油價對航空、運輸、化工的成本壓力。';
+  return '<b>市場綜合分析：</b>此新聞反映當前市場焦點議題。應結合技術面（趨勢、支撐壓力）和基本面（估值、獲利前景）做出決策。<br><br><b>投資建議：</b>維持多元分散投資組合，不因單一新聞做過激調整。價格走勢比新聞標題更值得信賴。控制倉位和停損，不確定性高時保留現金。';
+}
+
+// ============ JOURNAL ============
+const FEE = 0.003;
+function getJ() { return JSON.parse(localStorage.getItem('stock-journal') || '[]'); }
+function saveJ(d) { localStorage.setItem('stock-journal', JSON.stringify(d)); }
+function addJournal() {
+  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value };
+  if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
+  e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
+  const j = getJ(); j.unshift(e); saveJ(j);
+  document.getElementById('j-ticker').value = ''; document.getElementById('j-price').value = ''; document.getElementById('j-qty').value = ''; document.getElementById('j-notes').value = '';
+  renderJournal();
+}
+function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
+function renderJournal() {
+  const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
+  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; return; }
+  emp.style.display = 'none';
+  j.forEach(e => { if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
+  const tBuy = j.filter(e => e.action === 'buy').reduce((s, e) => s + e.net, 0);
+  const tSell = j.filter(e => e.action === 'sell').reduce((s, e) => s + e.net, 0);
+  const tFee = j.reduce((s, e) => s + (e.fee || 0), 0), pnl = tSell - tBuy;
+  const sl = { value: '價值投資', swing: '波段交易', day: '當沖', other: '其他' };
+  st.innerHTML = '<div style="display:flex;gap:20px;flex-wrap:wrap"><div><span style="color:var(--muted)">總交易:</span> <b>' + j.length + '</b></div><div><span style="color:var(--muted)">總買入(含手續費):</span> <b style="color:var(--green)">$' + tBuy.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">總賣出(扣手續費):</span> <b style="color:var(--red)">$' + tSell.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">累計手續費:</span> <b style="color:var(--orange)">$' + tFee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">已實現損益:</span> <b style="color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + '">$' + pnl.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div></div>';
+  tb.innerHTML = j.map(e => '<tr><td>' + e.date + '</td><td><b>' + e.ticker + '</b></td><td><span class="tag" style="background:' + (e.action === 'buy' ? 'rgba(16,185,129,.15);color:var(--green)' : 'rgba(239,68,68,.15);color:var(--red)') + '">' + (e.action === 'buy' ? '買入' : '賣出') + '</span></td><td>' + e.price.toFixed(2) + '</td><td>' + e.qty + '</td><td>$' + e.amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td><td style="color:var(--orange)">$' + e.fee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' <span style="font-size:10px">(0.3%)</span></td><td style="font-weight:600;color:' + (e.action === 'buy' ? 'var(--red)' : 'var(--green)') + '">$' + e.net.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td><td><span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)">' + (sl[e.strategy] || e.strategy) + '</span></td><td style="max-width:120px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (e.notes || '') + '</td><td><button class="btn btn-danger btn-sm" onclick="delJ(' + e.id + ')">刪</button></td></tr>').join('');
+}
+
+// ============ MATH ============
+function sma(d, p) { if (d.length < p) return null; return d.slice(-p).reduce((a, b) => a + b, 0) / p; }
+function emaArr(d, p) { if (d.length < p) return d.map(() => null); const k = 2 / (p + 1); let r = [d.slice(0, p).reduce((a, b) => a + b, 0) / p]; for (let i = p; i < d.length; i++) r.push(d[i] * k + r[r.length - 1] * (1 - k)); return [...Array(p - 1).fill(null), ...r]; }
+function rsi(d, p) { if (d.length < p + 1) return 50; let g = 0, l = 0; for (let i = d.length - p; i < d.length; i++) { const x = d[i] - d[i - 1]; if (x > 0) g += x; else l -= x; } if (l === 0) return 100; return 100 - 100 / (1 + (g / p) / (l / p)); }
+function bollinger(d, p, m) { const u = sma(d, p); if (u == null) return { hi: null, mid: null, lo: null }; const s = d.slice(-p); const sd = Math.sqrt(s.reduce((a, v) => a + (v - u) ** 2, 0) / p); return { hi: u + m * sd, mid: u, lo: u - m * sd }; }
+function stoch(c, h, l, kP, kS, dS) { const n = c.length; if (n < kP) return { k: 50, d: 50 }; let kV = []; for (let i = kP - 1; i < n; i++) { const hh = Math.max(...h.slice(i - kP + 1, i + 1)), ll = Math.min(...l.slice(i - kP + 1, i + 1)); kV.push(hh === ll ? 50 : ((c[i] - ll) / (hh - ll)) * 100); } let sk = []; for (let i = kS - 1; i < kV.length; i++) sk.push(kV.slice(i - kS + 1, i + 1).reduce((a, b) => a + b) / kS); let dv = []; for (let i = dS - 1; i < sk.length; i++) dv.push(sk.slice(i - dS + 1, i + 1).reduce((a, b) => a + b) / dS); return { k: sk[sk.length - 1] || 50, d: dv[dv.length - 1] || 50 }; }
+function calcATR(c, h, l, p) { if (c.length < p + 1) return 0; let t = []; for (let i = 1; i < c.length; i++) t.push(Math.max(h[i] - l[i], Math.abs(h[i] - c[i - 1]), Math.abs(l[i] - c[i - 1]))); return t.slice(-p).reduce((a, b) => a + b) / p; }
+function avg(a) { return a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0; }
+
+// ============ INIT ============
+document.getElementById('j-date').valueAsDate = new Date();
+</script>
+</body>
+</html>
