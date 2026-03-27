@@ -89,6 +89,13 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 .loading{text-align:center;padding:40px;color:var(--muted)}
 .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes flashGreen{0%{background:rgba(16,185,129,.3)}100%{background:transparent}}
+@keyframes flashRed{0%{background:rgba(239,68,68,.3)}100%{background:transparent}}
+.flash-up{animation:flashGreen .6s ease-out}
+.flash-down{animation:flashRed .6s ease-out}
+.idx-value,.idx-change,.stock-price,.stock-change,.hm-pct{transition:all .15s ease}
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.05) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px}
 .progress-fill{height:100%;border-radius:3px;transition:width .5s ease}
 .tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin:2px}
@@ -215,7 +222,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 // ============ PROXY + CACHE + RETRY ============
 const PROXY = url => 'https://corsproxy.io/?' + encodeURIComponent(url);
 const _cache = {};
-const CACHE_TTL = 5000; // 5s cache
+const CACHE_TTL = 1000; // 1s cache for real-time
 
 // ============ BOND ETF DETECTION ============
 const BOND_ETFS = new Set(['TLT','IEF','SHY','AGG','BND','LQD','HYG','JNK','VCSH','VCIT','VCLT','GOVT','BNDX','EMB','TIP','SCHZ','MUB','VGSH','VGIT','VGLT','IGSB','IGIB','IGLB','SPAB','SPTL','SPLB','SPTS','BWX','PCY','ZROZ','EDV','FLOT','SHV','BIL','SGOV','SCHO','SCHR','STIP','VTIP','IAGG','USIG','LQDH','SJNK','SHYG','ANGL','BKLN','SRLN','NEAR','MINT','JPST','GSY','FBND','FTSL','BOND','TLTW','PIMIX']);
@@ -374,7 +381,7 @@ async function twPageFundamentals(ticker) {
 // Load multiple quotes in staggered batches to avoid rate limiting
 async function multiChart(symbols) {
   const all = [];
-  const batchSize = 4;
+  const batchSize = 8;
   for (let i = 0; i < symbols.length; i += batchSize) {
     const batch = symbols.slice(i, i + batchSize);
     const results = await Promise.allSettled(batch.map(sym =>
@@ -386,7 +393,7 @@ async function multiChart(symbols) {
       })
     ));
     all.push(...results.filter(r => r.status === 'fulfilled').map(r => r.value));
-    if (i + batchSize < symbols.length) await delay(300); // small delay between batches
+    if (i + batchSize < symbols.length) await delay(100);
   }
   return all;
 }
@@ -825,22 +832,57 @@ const IDX = [
   ['JPYTWD=X', '日圓/台幣'], ['EURTWD=X', '歐元/台幣'], ['USDTWD=X', '美元/台幣']
 ];
 
+let _idxLoaded = false;
 async function loadIndices() {
   const div = document.getElementById('indices-content');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入指數資料...</p></div>';
+  if (!_idxLoaded) {
+    // Show skeleton cards immediately
+    let skel = '<div class="grid3">';
+    for (const [sym, name] of IDX) {
+      skel += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value"><div class="skeleton" style="width:120px;height:28px;margin:4px auto"></div></div><div class="idx-change"><div class="skeleton" style="width:100px;height:16px;margin:4px auto"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">載入中...</div></div>';
+    }
+    skel += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · 載入中...</div>';
+    div.innerHTML = skel;
+  }
   try {
     const quotes = await multiChart(IDX.map(i => i[0]));
-    let html = '<div class="grid3">';
-    for (const [sym, name] of IDX) {
-      const q = quotes.find(r => r.symbol === sym);
-      if (!q) continue;
-      const up = q.change >= 0;
-      html += '<div class="card index-card" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">點擊查看K線 · 每30秒自動更新</div></div>';
+    if (!_idxLoaded) {
+      let html = '<div class="grid3">';
+      for (const [sym, name] of IDX) {
+        const q = quotes.find(r => r.symbol === sym);
+        if (!q) continue;
+        const up = q.change >= 0;
+        html += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">即時更新 · 每秒刷新</div></div>';
+      }
+      html += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + ' (即時更新)</div>';
+      div.innerHTML = html;
+      _idxLoaded = true;
+    } else {
+      // In-place update with flash animation
+      for (const [sym, name] of IDX) {
+        const q = quotes.find(r => r.symbol === sym);
+        if (!q) continue;
+        const card = div.querySelector('[data-sym="' + sym + '"]');
+        if (!card) continue;
+        const valEl = card.querySelector('.idx-value');
+        const chgEl = card.querySelector('.idx-change');
+        const oldVal = valEl.textContent;
+        const newVal = q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (oldVal !== newVal) {
+          valEl.textContent = newVal;
+          const up = q.change >= 0;
+          chgEl.style.color = up ? 'var(--green)' : 'var(--red)';
+          chgEl.textContent = (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)';
+          card.classList.remove('flash-up','flash-down');
+          void card.offsetWidth;
+          card.classList.add(q.change >= 0 ? 'flash-up' : 'flash-down');
+        }
+      }
+      const ts = div.querySelector('div:last-child');
+      if (ts && ts.textContent.includes('資料來源')) ts.textContent = '資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + ' (即時更新)';
     }
-    html += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + '</div>';
-    div.innerHTML = html;
   } catch (e) {
-    div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadIndices()">重試</button></div>';
+    if (!_idxLoaded) div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadIndices()">重試</button></div>';
   }
 }
 
@@ -948,9 +990,10 @@ async function showIdxChart(sym, name) {
 }
 
 // ============ SENTIMENT ============
+let _sentLoaded = false;
 async function loadSentiment() {
   const div = document.getElementById('sentiment-content');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">計算市場情緒...</p></div>';
+  if (!_sentLoaded) div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">計算市場情緒...</p></div>';
   try {
     const syms = ['^GSPC', '^VIX', '^IXIC', '^TWII', 'GC=F', '^TNX', '^DJI', '^SOX', 'BTC-USD'];
     const quotes = await multiChart(syms);
@@ -995,9 +1038,10 @@ async function loadSentiment() {
       '<div style="margin-top:12px;padding:12px;background:rgba(59,130,246,.1);border-radius:8px"><b>綜合判斷：</b>' +
       (fgi >= 60 ? '目前市場偏向樂觀，風險偏好高。市場過度樂觀時反轉風險上升，建議做好風控，避免追高，可適度減倉或設好停利。' : fgi <= 40 ? '目前市場偏向恐慌。歷史經驗：「別人恐懼時我貪婪」，極度恐懼往往孕育中長期買點，但需確認無系統性風險。建議分批佈局、嚴設停損。' : '市場情緒中性，多空拉鋸。建議觀察後續經濟數據和企業財報，等待方向明確再加大部位。') +
       '</div></div></div>' +
-      '<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + '</div>';
+      '<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + ' (即時更新)</div>';
+    _sentLoaded = true;
   } catch (e) {
-    div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadSentiment()">重試</button></div>';
+    if (!_sentLoaded) div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadSentiment()">重試</button></div>';
   }
 }
 
@@ -2013,17 +2057,17 @@ const HEATMAP_STOCKS = {
 let _heatmapTimer = null;
 let _heatmapTab = 'us';
 
+let _hmLoaded = {};
 async function loadHeatmap(tab) {
   _heatmapTab = tab;
   document.querySelectorAll('#heatmap-tabs button').forEach((b,i) => b.classList.toggle('active', (tab==='us'?0:1)===i));
   const ct = document.getElementById('heatmap-content');
-  ct.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">載入熱力圖資料中...</p></div>';
+  if (!_hmLoaded[tab]) ct.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">載入熱力圖資料中...</p></div>';
   const stocks = HEATMAP_STOCKS[tab];
   const tickers = stocks.map(s => s.t);
-  // Batch fetch quotes
   const results = {};
-  for (let i = 0; i < tickers.length; i += 8) {
-    const batch = tickers.slice(i, i + 8);
+  for (let i = 0; i < tickers.length; i += 12) {
+    const batch = tickers.slice(i, i + 12);
     const promises = batch.map(async t => {
       try {
         const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?range=2d&interval=1d');
@@ -2038,12 +2082,13 @@ async function loadHeatmap(tab) {
       } catch(e) { results[t] = { price: 0, chg: 0, chgPct: 0 }; }
     });
     await Promise.all(promises);
-    if (i + 8 < tickers.length) await new Promise(r => setTimeout(r, 200));
+    if (i + 12 < tickers.length) await new Promise(r => setTimeout(r, 80));
   }
   renderHeatmap(tab, results);
-  // Auto-refresh
+  _hmLoaded[tab] = true;
+  // Auto-refresh every 5s (heatmap has many stocks)
   if (_heatmapTimer) clearInterval(_heatmapTimer);
-  _heatmapTimer = setInterval(() => { if (_currentPage === 'heatmap') loadHeatmap(_heatmapTab); }, 30000);
+  _heatmapTimer = setInterval(() => { if (_currentPage === 'heatmap') loadHeatmap(_heatmapTab); }, 5000);
 }
 
 function renderHeatmap(tab, results) {
@@ -2058,7 +2103,7 @@ function renderHeatmap(tab, results) {
     sectors[s.s].push({...s, ...results[s.t]});
   });
 
-  let html = '<div style="text-align:right;font-size:12px;color:var(--muted);margin-bottom:8px">最後更新: ' + timeStr + ' (每30秒自動更新)</div>';
+  let html = '<div style="text-align:right;font-size:12px;color:var(--muted);margin-bottom:8px">最後更新: ' + timeStr + ' (每5秒自動更新)</div>';
 
   // Overall market stats
   const allStocks = stocks.map(s => ({...s, ...results[s.t]}));
@@ -2139,43 +2184,18 @@ function startAutoRefresh() {
   _refreshTimer = setInterval(async () => {
     try {
       if (_currentPage === 'indices') {
-        await refreshIndicesPrices();
+        await loadIndices();
+      } else if (_currentPage === 'sentiment') {
+        await loadSentiment();
       } else if (_currentPage === 'stock' && _lastAnalyzedTicker) {
         await refreshStockPrice(_lastAnalyzedTicker);
       }
     } catch (e) { console.warn('Auto-refresh error:', e); }
-  }, 5000); // every 5 seconds
+  }, 1000); // every 1 second
 }
 
 function stopAutoRefresh() {
   if (_refreshTimer) { clearInterval(_refreshTimer); _refreshTimer = null; }
-}
-
-async function refreshIndicesPrices() {
-  try {
-    // Clear cache for fresh data
-    for (const [sym] of IDX) { delete _cache['https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?interval=1d&range=5d&includePrePost=false']; }
-    const quotes = await multiChart(IDX.map(i => i[0]));
-    const cards = document.querySelectorAll('#indices-content .index-card');
-    let ci = 0;
-    for (const [sym, name] of IDX) {
-      const q = quotes.find(r => r.symbol === sym);
-      if (!q || ci >= cards.length) { ci++; continue; }
-      const card = cards[ci];
-      const valEl = card.querySelector('.idx-value');
-      const chgEl = card.querySelector('.idx-change');
-      if (valEl) valEl.textContent = q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      if (chgEl) {
-        const up = q.change >= 0;
-        chgEl.style.color = up ? 'var(--green)' : 'var(--red)';
-        chgEl.textContent = (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)';
-      }
-      ci++;
-    }
-    // Update timestamp
-    const ts = document.querySelector('#indices-content > div:last-child');
-    if (ts && ts.textContent.includes('資料來源')) ts.textContent = '資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + ' (自動更新)';
-  } catch (e) { console.warn('Index refresh failed:', e); }
 }
 
 async function refreshStockPrice(ticker) {
