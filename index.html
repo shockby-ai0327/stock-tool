@@ -1026,7 +1026,7 @@ async function loadSentiment() {
     if (gold && gold.changePct > 1) bear.push('黃金避險需求增加'); else if (gold && gold.changePct < -1) bull.push('黃金下跌，風險偏好回升');
     if (btcC > 2) bull.push('比特幣大漲' + btcC.toFixed(2) + '%'); else if (btcC < -2) bear.push('比特幣下跌' + Math.abs(btcC).toFixed(2) + '%');
 
-    const qr = q => q ? '<td><b>' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</b></td><td style="color:' + (q.changePct >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (q.changePct >= 0 ? '+' : '') + q.changePct.toFixed(2) + '%</td>' : '<td>N/A</td><td></td>';
+    const qr = q => q ? '<td><b>' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</b></td><td style="color:' + (q.changePct >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (q.change >= 0 ? '+' : '') + q.change.toFixed(2) + ' (' + (q.changePct >= 0 ? '+' : '') + q.changePct.toFixed(2) + '%)</td>' : '<td>N/A</td><td></td>';
 
     div.innerHTML = '<div class="grid2"><div class="card" style="text-align:center"><h3>恐懼與貪婪指數</h3><div style="font-size:56px;margin:10px 0">' + sEmoji + '</div><div style="font-size:64px;font-weight:800;color:' + sColor + ';margin:8px 0">' + fgi + '</div><div style="font-size:22px;font-weight:600;color:' + sColor + '">' + sLabel + '</div><div class="progress-bar" style="margin:16px auto;width:80%;height:10px"><div class="progress-fill" style="width:' + fgi + '%;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),#22c55e,var(--green));height:10px"></div></div><div style="display:flex;justify-content:space-between;width:80%;margin:0 auto;font-size:11px;color:var(--muted)"><span>0 極度恐懼</span><span>50 中性</span><span>100 極度貪婪</span></div><div style="margin-top:16px;font-size:12px;color:var(--muted)">計算因子：VIX波動率 · 大盤動能 · 市場廣度 · 避險需求 · 風險偏好</div></div>' +
       '<div class="card"><h3>各市場即時狀態</h3><table>' +
@@ -2133,7 +2133,8 @@ function renderHeatmap(tab, results) {
     html += '<div onclick="document.getElementById(\'ticker-input\').value=\'' + s.t + '\';showPage(\'stock\');analyzeStock()" style="cursor:pointer;background:' + bg + ';border-radius:8px;padding:8px;width:' + size + 'px;flex-grow:1;max-width:180px;min-width:80px;text-align:center;transition:transform .2s" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
       '<div style="font-weight:700;font-size:13px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)">' + s.n + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,.8)">' + s.t.replace('.TW','') + '</div>' +
-      '<div style="font-size:15px;font-weight:700;color:#fff;margin-top:4px">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#fff;margin-top:4px">' + (s.chg >= 0 ? '+' : '') + (s.chg ? s.chg.toFixed(2) : '0.00') + '</div>' +
+      '<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.9)">(' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,.7)">' + (s.price ? s.price.toFixed(2) : '-') + '</div>' +
       '</div>';
   });
@@ -2150,7 +2151,7 @@ function renderHeatmap(tab, results) {
       const pct = s.chgPct || 0;
       const color = pct > 0 ? 'var(--green)' : pct < 0 ? 'var(--red)' : 'var(--muted)';
       html += '<div onclick="document.getElementById(\'ticker-input\').value=\'' + s.t + '\';showPage(\'stock\');analyzeStock()" style="cursor:pointer;background:var(--bg);padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px">' +
-        '<b>' + s.n + '</b> <span style="color:' + color + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>' +
+        '<b>' + s.n + '</b> <span style="color:' + color + '">' + (s.chg >= 0 ? '+' : '') + (s.chg ? s.chg.toFixed(2) : '0.00') + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)</span>' +
         ' <span style="color:var(--muted);font-size:11px">' + (s.price ? s.price.toFixed(2) : '-') + '</span></div>';
     });
     html += '</div></div>';
