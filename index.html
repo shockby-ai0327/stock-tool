@@ -385,9 +385,9 @@ async function multiChart(symbols) {
   for (let i = 0; i < symbols.length; i += batchSize) {
     const batch = symbols.slice(i, i + batchSize);
     const results = await Promise.allSettled(batch.map(sym =>
-      yfChart(sym, '1mo', '1d').then(chart => {
+      yfChart(sym, '5d', '1d').then(chart => {
         const m = chart.meta, q = chart.indicators.quote[0], c = q.close.filter(v => v != null);
-        const prev = c.length > 1 ? c[0] : (m.chartPreviousClose || c[c.length - 1]);
+        const prev = m.chartPreviousClose || c[c.length - 2] || c[c.length - 1];
         const price = m.regularMarketPrice;
         return { symbol: m.symbol, name: m.shortName || m.symbol, price, change: price - prev, changePct: ((price - prev) / prev) * 100, currency: m.currency, exchange: m.exchangeName };
       })
@@ -441,8 +441,7 @@ async function analyzeStock() {
     }
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = meta.regularMarketPrice;
-    const moIdx = Math.max(0, c.length - 22);
-    const prev = c[moIdx] || c[0];
+    const prev = meta.chartPreviousClose || c[c.length - 2];
     const change = price - prev, changePct = (change / prev) * 100;
     const currency = meta.currency || 'USD';
 
@@ -759,7 +758,7 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
   const tagI = i => i === '+' ? '✓' : i === '-' ? '✗' : '◌';
   const reasonList = arr => arr.length ? '<div style="margin-top:10px;font-size:12px;line-height:1.8">' + arr.map(r => '<div style="color:var(--muted)">• ' + r + '</div>').join('') + '</div>' : '';
 
-  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">月漲跌</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
+  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">日漲跌</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
     '<div class="card"><h3>📈 K線走勢圖（6個月）</h3><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
     '<div class="grid2"><div class="card"><h3>📊 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div>' +
     '<div class="card"><h3>💎 價值面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(va.score) + '">' + (va.score > 0 ? '+' : '') + va.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((va.score + 100) / 2) + '%;background:' + sc(va.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + va.verdict + '</div></div></div></div>' +
@@ -786,7 +785,7 @@ function renderBond(ticker, meta, ta, bva, bd, lt, st, cur, price, chg, chgP) {
   const fmtAssets = v => { if (!v) return 'N/A'; if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B'; if (v >= 1e6) return '$' + (v/1e6).toFixed(0) + 'M'; return '$' + v.toLocaleString(); };
   const tip = t => '<span class="tip" title="' + t + '">?</span>';
 
-  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + ' <span class="bond-badge">債券 ETF</span></div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="font-size:12px;color:var(--accent);margin-top:4px">' + bd.desc + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">月漲跌</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
+  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + ' <span class="bond-badge">債券 ETF</span></div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="font-size:12px;color:var(--accent);margin-top:4px">' + bd.desc + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">日漲跌</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
     // K-line
     '<div class="card"><h3>📈 K線走勢圖（6個月）</h3><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
     // Score cards
@@ -853,7 +852,7 @@ async function loadIndices() {
         const q = quotes.find(r => r.symbol === sym);
         if (!q) continue;
         const up = q.change >= 0;
-        html += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '"><span style="font-size:10px;opacity:.7">月漲跌</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">即時更新 · 每秒刷新</div></div>';
+        html += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '"><span style="font-size:10px;opacity:.7">日漲跌</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">即時更新 · 每秒刷新</div></div>';
       }
       html += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + ' (即時更新)</div>';
       div.innerHTML = html;
@@ -873,7 +872,7 @@ async function loadIndices() {
           valEl.textContent = newVal;
           const up = q.change >= 0;
           chgEl.style.color = up ? 'var(--green)' : 'var(--red)';
-          chgEl.innerHTML = '<span style="font-size:10px;opacity:.7">月漲跌</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)';
+          chgEl.innerHTML = '<span style="font-size:10px;opacity:.7">日漲跌</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)';
           card.classList.remove('flash-up','flash-down');
           void card.offsetWidth;
           card.classList.add(q.change >= 0 ? 'flash-up' : 'flash-down');
@@ -969,8 +968,7 @@ async function showIdxChart(sym, name) {
     for (let i = 0; i < chart.timestamp.length; i++) if (q.close[i] != null) ohlcv.push({ t: chart.timestamp[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = chart.meta.regularMarketPrice;
-    const moIdx = Math.max(0, c.length - 22);
-    const prev = c[moIdx] || c[0];
+    const prev = chart.meta.chartPreviousClose || c[c.length - 2];
     const chgPct = ((price - prev) / prev) * 100;
     const ta = technicalAnalysis(c, h, l, v, price);
     const analysis = idxAnalysis(name, sym, price, chgPct, ta);
@@ -2072,13 +2070,12 @@ async function loadHeatmap(tab) {
     const batch = tickers.slice(i, i + 12);
     const promises = batch.map(async t => {
       try {
-        const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?range=1mo&interval=1d');
+        const url = 'https://corsproxy.io/?' + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?range=2d&interval=1d');
         const r = await fetch(url); const j = await r.json();
         const q = j.chart.result[0];
         const meta = q.meta;
         const price = meta.regularMarketPrice;
-        const closes = q.indicators.quote[0].close.filter(v => v != null);
-        const prev = closes.length > 1 ? closes[0] : (meta.chartPreviousClose || meta.previousClose);
+        const prev = meta.chartPreviousClose || meta.previousClose;
         const chg = price - prev;
         const chgPct = prev ? (chg / prev * 100) : 0;
         results[t] = { price, chg, chgPct };
@@ -2115,7 +2112,7 @@ function renderHeatmap(tab, results) {
   const flat = allStocks.filter(s => s.chgPct === 0).length;
   const avgChg = allStocks.reduce((a,s) => a + s.chgPct, 0) / allStocks.length;
   html += '<div class="card" style="margin-bottom:16px;text-align:center"><div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap">' +
-    '<div>📊 月均漲跌: <b style="color:' + (avgChg >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (avgChg >= 0 ? '+' : '') + avgChg.toFixed(2) + '%</b></div>' +
+    '<div>📊 日均漲跌: <b style="color:' + (avgChg >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (avgChg >= 0 ? '+' : '') + avgChg.toFixed(2) + '%</b></div>' +
     '<div>🟢 上漲: <b style="color:var(--green)">' + up + '</b></div>' +
     '<div>🔴 下跌: <b style="color:var(--red)">' + dn + '</b></div>' +
     '<div>⚪ 平盤: <b>' + flat + '</b></div></div></div>';
@@ -2206,9 +2203,7 @@ async function refreshStockPrice(ticker) {
     delete _cache['https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=1d&range=6mo&includePrePost=false'];
     const chart = await yfChart(ticker, '6mo', '1d');
     const price = chart.meta.regularMarketPrice;
-    const closes = chart.indicators.quote[0].close.filter(v => v != null);
-    const moIdx = Math.max(0, closes.length - 22);
-    const prev = closes[moIdx] || closes[0];
+    const prev = chart.meta.chartPreviousClose;
     const change = price - prev;
     const changePct = (change / prev) * 100;
     const priceEl = document.querySelector('.stock-price');
@@ -2217,7 +2212,7 @@ async function refreshStockPrice(ticker) {
     if (changeEl) {
       const up = change >= 0;
       changeEl.className = 'stock-change ' + (up ? 'up' : 'down');
-      changeEl.innerHTML = '<span style="font-size:11px;opacity:.7">月漲跌</span> ' + (up ? '+' : '') + change.toFixed(2) + ' (' + (up ? '+' : '') + changePct.toFixed(2) + '%)';
+      changeEl.innerHTML = '<span style="font-size:11px;opacity:.7">日漲跌</span> ' + (up ? '+' : '') + change.toFixed(2) + ' (' + (up ? '+' : '') + changePct.toFixed(2) + '%)';
     }
   } catch (e) { console.warn('Stock refresh failed:', e); }
 }
