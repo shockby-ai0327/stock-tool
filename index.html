@@ -381,42 +381,81 @@ async function twPageFundamentals(ticker) {
   } catch (e) { console.warn('TW page scrape failed:', e); return null; }
 }
 
-// Timeframe for change comparison: '1d','5d','1mo'
+// ============ TIMEFRAME ============
 let _chgTF = '1d';
 const TF_LABELS = {'1d':'日漲跌','5d':'五日漲跌','1mo':'月漲跌'};
-const TF_RANGE = {'1d':'5d','5d':'1mo','1mo':'3mo'}; // API range needed per timeframe
 function tfBtnHtml(onChange) {
   return '<span class="tf-bar">' +
     ['1d','5d','1mo'].map(t => '<button class="tf-btn' + (_chgTF===t?' active':'') + '" onclick="' + onChange + '(\'' + t + '\')">' + ({'1d':'日','5d':'五日','1mo':'月'}[t]) + '</button>').join('') + '</span>';
 }
-function getChangeFromCloses(price, closes, prevClose, tf) {
+
+// Calculate change based on timeframe
+// closes = array of daily close prices (oldest first), prevClose = yesterday's close from API
+function calcChange(price, closes, prevClose, tf) {
+  if (!tf) tf = _chgTF;
   let prev;
-  if (tf === '5d') prev = closes.length >= 6 ? closes[closes.length - 6] : closes[0];
-  else if (tf === '1mo') prev = closes[0];
-  else prev = prevClose || (closes.length >= 2 ? closes[closes.length - 2] : closes[closes.length - 1]);
+  if (tf === '1d') {
+    // Use API's chartPreviousClose (yesterday's close)
+    prev = prevClose;
+  } else if (tf === '5d') {
+    // 5 trading days ago: count back 5 from the end of closes array
+    // closes array does NOT include today, so closes[len-5] = 5 trading days ago
+    prev = closes.length >= 5 ? closes[closes.length - 5] : closes[0];
+  } else {
+    // 1 month: ~22 trading days ago
+    prev = closes.length >= 22 ? closes[closes.length - 22] : closes[0];
+  }
   if (!prev || prev === 0) prev = price;
   const chg = price - prev;
   return { chg, chgPct: (chg / prev * 100) };
 }
 
-// Load multiple quotes - always fetch enough data for current timeframe
+// ============ REAL-TIME PRICE FETCH ============
+// Quick price: bypass cache, get fresh regularMarketPrice via 1d/5m chart
+async function quickPrice(ticker) {
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=5m&range=1d&includePrePost=false';
+  const r = await fetch(PROXY(url));
+  const j = await r.json();
+  if (!j.chart || !j.chart.result || !j.chart.result[0]) return null;
+  const m = j.chart.result[0].meta;
+  return { symbol: m.symbol, price: m.regularMarketPrice, prevClose: m.chartPreviousClose };
+}
+
+// Historical closes for change calculation (cached, fetched once)
+let _histCloses = {}; // { symbol: [close1, close2, ...] }
+async function fetchHistCloses(symbols) {
+  const missing = symbols.filter(s => !_histCloses[s]);
+  if (missing.length === 0) return;
+  for (let i = 0; i < missing.length; i += 8) {
+    const batch = missing.slice(i, i + 8);
+    await Promise.allSettled(batch.map(sym =>
+      yfChart(sym, '1mo', '1d').then(chart => {
+        const c = chart.indicators.quote[0].close.filter(v => v != null);
+        _histCloses[sym] = c;
+      })
+    ));
+    if (i + 8 < missing.length) await delay(100);
+  }
+}
+
+// Load multiple quotes with fresh prices
 async function multiChart(symbols) {
-  const range = TF_RANGE[_chgTF] || '5d';
+  // Ensure we have historical closes for change calc
+  await fetchHistCloses(symbols);
   const all = [];
   const batchSize = 8;
   for (let i = 0; i < symbols.length; i += batchSize) {
     const batch = symbols.slice(i, i + batchSize);
     const results = await Promise.allSettled(batch.map(sym =>
-      yfChart(sym, range, '1d').then(chart => {
-        const m = chart.meta, q = chart.indicators.quote[0], c = q.close.filter(v => v != null);
-        const prevClose = m.chartPreviousClose || c[c.length - 2] || c[c.length - 1];
-        const price = m.regularMarketPrice;
-        const cc = getChangeFromCloses(price, c, prevClose, _chgTF);
-        return { symbol: m.symbol, name: m.shortName || m.symbol, price, change: cc.chg, changePct: cc.chgPct, currency: m.currency, exchange: m.exchangeName };
+      quickPrice(sym).then(qp => {
+        if (!qp) return null;
+        const closes = _histCloses[qp.symbol] || _histCloses[sym] || [];
+        const cc = calcChange(qp.price, closes, qp.prevClose, _chgTF);
+        return { symbol: qp.symbol, price: qp.price, change: cc.chg, changePct: cc.chgPct, currency: null, exchange: null };
       })
     ));
-    all.push(...results.filter(r => r.status === 'fulfilled').map(r => r.value));
-    if (i + batchSize < symbols.length) await delay(100);
+    all.push(...results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value));
+    if (i + batchSize < symbols.length) await delay(80);
   }
   return all;
 }
@@ -465,7 +504,8 @@ async function analyzeStock() {
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = meta.regularMarketPrice;
     const prevClose = meta.chartPreviousClose || c[c.length - 2];
-    const cc = getChangeFromCloses(price, c, prevClose, _chgTF);
+    _histCloses[ticker] = c; // store for real-time refresh
+    const cc = calcChange(price, c, prevClose, _chgTF);
     const change = cc.chg, changePct = cc.chgPct;
     const currency = meta.currency || 'USD';
 
@@ -859,10 +899,8 @@ const IDX = [
 let _idxLoaded = false;
 function switchTF(tf) {
   _chgTF = tf;
-  // Force full reload on all pages
-  _idxLoaded = false; _hmLoaded = {}; _hmRawData = {};
-  // Clear cache so fresh data is fetched with new range
-  Object.keys(_cache).forEach(k => delete _cache[k]);
+  // Force full re-render on all pages (hist closes stay cached)
+  _idxLoaded = false; _hmLoaded = {};
   if (_currentPage === 'indices') loadIndices();
   else if (_currentPage === 'heatmap') loadHeatmap(_heatmapTab);
   else if (_currentPage === 'stock' && _lastAnalyzedTicker) analyzeStock();
@@ -2087,7 +2125,6 @@ let _heatmapTimer = null;
 let _heatmapTab = 'us';
 
 let _hmLoaded = {};
-let _hmRawData = {};
 async function loadHeatmap(tab) {
   _heatmapTab = tab;
   document.querySelectorAll('#heatmap-tabs button').forEach((b,i) => b.classList.toggle('active', (tab==='us'?0:1)===i));
@@ -2095,19 +2132,19 @@ async function loadHeatmap(tab) {
   if (!_hmLoaded[tab]) ct.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">載入熱力圖資料中...</p></div>';
   const stocks = HEATMAP_STOCKS[tab];
   const tickers = stocks.map(s => s.t);
+  // Fetch historical closes (cached) for change calc
+  await fetchHistCloses(tickers);
+  // Fetch fresh prices (no cache)
   const results = {};
-  const range = TF_RANGE[_chgTF] || '5d';
   for (let i = 0; i < tickers.length; i += 12) {
     const batch = tickers.slice(i, i + 12);
     const promises = batch.map(async t => {
       try {
-        const chart = await yfChart(t, range, '1d');
-        const meta = chart.meta;
-        const price = meta.regularMarketPrice;
-        const prevClose = meta.chartPreviousClose || meta.previousClose;
-        const closes = chart.indicators.quote[0].close.filter(v => v != null);
-        const cc = getChangeFromCloses(price, closes, prevClose, _chgTF);
-        results[t] = { price, chg: cc.chg, chgPct: cc.chgPct };
+        const qp = await quickPrice(t);
+        if (!qp) { results[t] = { price: 0, chg: 0, chgPct: 0 }; return; }
+        const closes = _histCloses[qp.symbol] || _histCloses[t] || [];
+        const cc = calcChange(qp.price, closes, qp.prevClose, _chgTF);
+        results[t] = { price: qp.price, chg: cc.chg, chgPct: cc.chgPct };
       } catch(e) { results[t] = { price: 0, chg: 0, chgPct: 0 }; }
     });
     await Promise.all(promises);
@@ -2211,9 +2248,6 @@ function isMarketOpen() {
 function startAutoRefresh() {
   stopAutoRefresh();
   _refreshTimer = setInterval(async () => {
-    // Clear expired cache entries before each refresh
-    const now = Date.now();
-    Object.keys(_cache).forEach(k => { if (now - _cache[k].ts >= CACHE_TTL) delete _cache[k]; });
     try {
       if (_currentPage === 'indices') {
         await loadIndices();
@@ -2232,20 +2266,19 @@ function stopAutoRefresh() {
 
 async function refreshStockPrice(ticker) {
   try {
-    // Bust cache for this ticker so we get fresh price
-    const range = TF_RANGE[_chgTF] || '5d';
-    const cacheKey = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=1d&range=' + range + '&includePrePost=false';
-    delete _cache[cacheKey];
-    // Also bust the 6mo key used by analyzeStock
-    delete _cache['https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=1d&range=6mo&includePrePost=false'];
-    const chart = await yfChart(ticker, range, '1d');
-    const price = chart.meta.regularMarketPrice;
-    const prevClose = chart.meta.chartPreviousClose;
-    const closes = chart.indicators.quote[0].close.filter(v => v != null);
-    const cc = getChangeFromCloses(price, closes, prevClose, _chgTF);
+    const qp = await quickPrice(ticker);
+    if (!qp) return;
+    const closes = _histCloses[qp.symbol] || _histCloses[ticker] || [];
+    const cc = calcChange(qp.price, closes, qp.prevClose, _chgTF);
     const priceEl = document.querySelector('.stock-price');
     const changeEl = document.querySelector('.stock-change');
-    if (priceEl) priceEl.textContent = price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (chart.meta.currency || '');
+    if (priceEl) {
+      const oldText = priceEl.textContent;
+      const newText = qp.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (!oldText.startsWith(newText)) {
+        priceEl.textContent = newText + ' ' + oldText.replace(/[\d,.\s]+/, '').trim();
+      }
+    }
     if (changeEl) {
       const up = cc.chg >= 0;
       changeEl.className = 'stock-change ' + (up ? 'up' : 'down');
