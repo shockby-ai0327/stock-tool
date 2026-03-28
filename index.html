@@ -411,14 +411,17 @@ function calcChange(price, closes, prevClose, tf) {
 }
 
 // ============ REAL-TIME PRICE FETCH ============
-// Quick price: bypass cache, get fresh regularMarketPrice via 1d/5m chart
+// Quick price: bypass ALL caches (ours + CORS proxy CDN) via timestamp param
 async function quickPrice(ticker) {
-  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=5m&range=1d&includePrePost=false';
-  const r = await fetch(PROXY(url));
-  const j = await r.json();
-  if (!j.chart || !j.chart.result || !j.chart.result[0]) return null;
-  const m = j.chart.result[0].meta;
-  return { symbol: m.symbol, price: m.regularMarketPrice, prevClose: m.chartPreviousClose };
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=5m&range=1d&includePrePost=false&_t=' + Date.now();
+  try {
+    const r = await fetch(PROXY(url));
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j.chart || !j.chart.result || !j.chart.result[0]) return null;
+    const m = j.chart.result[0].meta;
+    return { symbol: m.symbol, price: m.regularMarketPrice, prevClose: m.chartPreviousClose };
+  } catch(e) { return null; }
 }
 
 // Historical closes for change calculation (cached, fetched once)
@@ -432,6 +435,8 @@ async function fetchHistCloses(symbols) {
       yfChart(sym, '1mo', '1d').then(chart => {
         const c = chart.indicators.quote[0].close.filter(v => v != null);
         _histCloses[sym] = c;
+        // Also store by Yahoo's normalized symbol
+        if (chart.meta.symbol && chart.meta.symbol !== sym) _histCloses[chart.meta.symbol] = c;
       })
     ));
     if (i + 8 < missing.length) await delay(100);
@@ -2245,9 +2250,12 @@ function isMarketOpen() {
   return (usOpen && weekday) || (twOpen && weekday) || true; // always allow refresh for futures/crypto
 }
 
+let _refreshing = false;
 function startAutoRefresh() {
   stopAutoRefresh();
   _refreshTimer = setInterval(async () => {
+    if (_refreshing) return; // skip if previous refresh still running
+    _refreshing = true;
     try {
       if (_currentPage === 'indices') {
         await loadIndices();
@@ -2257,7 +2265,8 @@ function startAutoRefresh() {
         await refreshStockPrice(_lastAnalyzedTicker);
       }
     } catch (e) { console.warn('Auto-refresh error:', e); }
-  }, 1000); // every 1 second
+    _refreshing = false;
+  }, 3000); // every 3 seconds
 }
 
 function stopAutoRefresh() {
