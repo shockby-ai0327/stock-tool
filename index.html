@@ -122,6 +122,25 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 .modal-close{float:right;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
 @keyframes alertFlash{0%,100%{border-color:var(--yellow)}50%{border-color:var(--accent);box-shadow:0 0 20px rgba(59,130,246,.3)}}
 .alert-flash{animation:alertFlash 1s infinite}
+/* ── 全站固定免責聲明 bar ── */
+.disclaimer-bar{position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(10,14,23,.94);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:5px 20px;font-size:11px;color:var(--muted);text-align:center;pointer-events:none;line-height:1.4}
+/* ── 進場指引 Modal ── */
+.entry-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1001;display:flex;align-items:center;justify-content:center;padding:16px}
+.entry-modal{background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;padding:24px}
+.entry-check-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.entry-check-item:last-child{border-bottom:none}
+.entry-section{background:var(--bg);border-radius:8px;padding:14px;margin:12px 0}
+.entry-section h4{font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+/* ── Dashboard 儀表板 ── */
+.dash-market-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+.dash-kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;transition:border-color .2s}
+.dash-kpi .label{font-size:11px;color:var(--muted);margin-bottom:4px}
+.dash-kpi .val{font-size:22px;font-weight:700;line-height:1.1}
+.dash-kpi .chg{font-size:12px;margin-top:3px}
+.dash-scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.dash-scan-grid{grid-template-columns:1fr}}
+.scan-mini-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px}
+.scan-mini-row:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -129,6 +148,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
   <div class="sidebar">
     <div class="logo">📊 智慧選股</div>
     <nav>
+      <button onclick="showPage('dashboard')">🏠 首頁</button>
       <button class="active" onclick="showPage('stock')">📈 個股分析</button>
       <button onclick="showPage('indices')">🏛️ 大盤指數</button>
       <button onclick="showPage('sentiment')">🧠 市場情緒</button>
@@ -144,6 +164,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
     </nav>
   </div>
   <div class="mobile-nav" id="mobile-nav">
+    <button onclick="showPage('dashboard')">🏠 首頁</button>
     <button class="active" onclick="showPage('stock')">📈 個股</button>
     <button onclick="showPage('indices')">🏛️ 指數</button>
     <button onclick="showPage('sentiment')">🧠 情緒</button>
@@ -157,7 +178,36 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
     <button onclick="showPage('heatmap')">🔥 熱力圖</button>
     <button onclick="showPage('education')">📚 教學</button>
   </div>
-  <div class="main">
+  <div class="main" style="padding-bottom:44px">
+    <div id="page-dashboard" class="page">
+      <h2 style="margin-bottom:6px">🏠 今日市場總覽</h2>
+      <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
+      <div id="dash-regime" style="margin-bottom:20px"></div>
+      <div class="dash-market-row" id="dash-market-kpis"></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+        <div class="card" style="flex:1;min-width:180px;text-align:center" id="dash-fgi-card"></div>
+        <div class="card" style="flex:2;min-width:240px" id="dash-market-status"></div>
+      </div>
+      <div class="dash-scan-grid">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3>⚡ Schwartz 突破候選</h3>
+            <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>runScan('schwartz'),100)">完整掃描 →</button>
+          </div>
+          <div id="dash-schwartz-list"><div style="text-align:center;padding:20px;color:var(--muted)">等待掃描...</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3>📈 Steinhardt 動量候選</h3>
+            <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>runScan('steinhardt'),100)">完整掃描 →</button>
+          </div>
+          <div id="dash-steinhardt-list"><div style="text-align:center;padding:20px;color:var(--muted)">等待掃描...</div></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn btn-primary" style="padding:10px 28px" onclick="renderDashboard(true)">🔄 重新整理（強制重掃）</button>
+      </div>
+    </div>
     <div id="page-stock" class="page active">
       <div class="search-box">
         <input id="ticker-input" placeholder="輸入代號（美股: AAPL｜台股: 2330.TW｜債券: TLT）" onkeydown="if(event.key==='Enter')analyzeStock()">
@@ -230,7 +280,13 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
     <div id="page-industry" class="page"><h2 style="margin-bottom:20px">🏭 全球產業地圖</h2><div class="tab-bar" id="industry-tabs"><button class="active" onclick="loadIndustry('global')">🌍 全球產業</button><button onclick="loadIndustry('tw')">🇹🇼 台灣產業</button></div><div id="industry-content"></div></div>
     <div id="page-heatmap" class="page"><h2 style="margin-bottom:20px">🔥 股票熱力圖</h2><div class="tab-bar" id="heatmap-tabs"><button class="active" onclick="loadHeatmap('us')">🇺🇸 美股</button><button onclick="loadHeatmap('tw')">🇹🇼 台股</button></div><div id="heatmap-content"></div></div>
     <div id="page-scanner" class="page">
-      <h2 style="margin-bottom:20px">📡 短線掃描器</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <h2 style="margin:0">📡 短線掃描器</h2>
+        <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">
+          ⚡ 一鍵掃描（Schwartz + Steinhardt）
+        </button>
+      </div>
+      <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
       <div class="tab-bar" id="scanner-market-tabs">
         <button class="active" onclick="switchScannerMarket('us')">🇺🇸 美股</button>
         <button onclick="switchScannerMarket('tw')">🇹🇼 台股</button>
@@ -548,7 +604,7 @@ async function multiChart(symbols) {
 }
 
 // ============ NAVIGATION ============
-const PAGES = ['stock', 'indices', 'sentiment', 'scanner', 'news', 'journal', 'risk', 'performance', 'calc', 'industry', 'heatmap', 'education'];
+const PAGES = ['dashboard', 'stock', 'indices', 'sentiment', 'scanner', 'news', 'journal', 'risk', 'performance', 'calc', 'industry', 'heatmap', 'education'];
 function showPage(name) {
   _currentPage = name;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -556,8 +612,13 @@ function showPage(name) {
   document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   const idx = PAGES.indexOf(name);
-  document.querySelectorAll('.sidebar nav button')[idx].classList.add('active');
-  document.querySelectorAll('#mobile-nav button')[idx].classList.add('active');
+  if (idx >= 0) {
+    const sbBtns = document.querySelectorAll('.sidebar nav button');
+    const mobBtns = document.querySelectorAll('#mobile-nav button');
+    if (sbBtns[idx]) sbBtns[idx].classList.add('active');
+    if (mobBtns[idx]) mobBtns[idx].classList.add('active');
+  }
+  if (name === 'dashboard') renderDashboard();
   if (name === 'indices') loadIndices();
   if (name === 'sentiment') loadSentiment();
   if (name === 'news') loadNews('general');
@@ -568,7 +629,7 @@ function showPage(name) {
   if (name === 'risk') renderRisk();
   if (name === 'performance') renderPerformance();
   if (name === 'education') renderEducation();
-  // Stop scanner timers when leaving scanner page
+  // Scanner page timer management (scan itself runs in background regardless of page)
   if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } }
 }
 
@@ -2884,9 +2945,15 @@ function renderScannerResults(results, strategy, usedFallback) {
       '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
       '<td>' + r.volRatio.toFixed(1) + 'x</td>';
     if (isRole) html += '<td>' + detailHtml + '</td>';
+    // 進場指引按鈕（Schwartz/Steinhardt 專屬）
+    let entryBtn = '';
+    if (isRole) {
+      _storeEntry(r.symbol, strategy, { ...r, strategy });
+      entryBtn = '<button class="btn btn-primary btn-sm" style="margin-left:4px" onclick="showEntryGuideByKey(\'' + r.symbol + '_' + strategy + '\')">📋 進場</button>';
+    }
     html += '<td style="color:var(--yellow)">' + stars + '</td>' +
       '<td>' + r.ta.rsi.toFixed(0) + '</td>' +
-      '<td>' + (inWatchlist ? '<span style="color:var(--green)">✓ 已加入</span>' : '<button class="btn btn-primary btn-sm" onclick="addToWatchlist(\'' + r.symbol + '\')">+ 加入</button>') + '</td></tr>';
+      '<td style="white-space:nowrap">' + (inWatchlist ? '<span style="color:var(--green)">✓ 已加入</span>' : '<button class="btn btn-primary btn-sm" onclick="addToWatchlist(\'' + r.symbol + '\')">+ 加入</button>') + entryBtn + '</td></tr>';
   });
   html += '</tbody></table></div>';
   tableDiv.innerHTML = html;
@@ -2909,7 +2976,7 @@ function saveTodayWatchlist() { localStorage.setItem('scanner-watchlist', JSON.s
 function startWatchlistRefresh() {
   if (_watchlistTimer) return;
   if (_todayWatchlist.length === 0) return;
-  _watchlistTimer = setInterval(async () => { if (_currentPage !== 'scanner') return; await refreshWatchlist(); }, 10000);
+  _watchlistTimer = setInterval(async () => { await refreshWatchlist(); }, 10000); // 任何頁面都持續刷新，有警報自動彈出
   refreshWatchlist();
 }
 function stopWatchlistRefresh() { if (_watchlistTimer) { clearInterval(_watchlistTimer); _watchlistTimer = null; } }
@@ -3290,9 +3357,405 @@ function getMoneyEducation() {
   '<div class="card edu-card"><h3>🔄 反馬丁格爾策略（Anti-Martingale）</h3><p><span class="edu-term">馬丁格爾（絕對不要用）</span>：虧損後加倍下注 → 在有限資金下<b>必然爆倉</b>。</p><p style="margin-top:8px"><span class="edu-term">反馬丁格爾（推薦）</span>：獲利後增加倉位，虧損後減少倉位。</p><p style="margin-top:8px"><b>實作方式：</b></p><p>① 連續獲利 3 次 → 倉位可增加 20-50%</p><p>② 連續虧損 2 次 → 倉位減少 50%</p><p>③ 回撤超過 10% → 暫停交易</p><p style="margin-top:8px"><b>邏輯：</b>連勝時策略與市場匹配，應把握。連虧時應保護資金。</p></div>';
 }
 
+// ============ DASHBOARD + ENTRY GUIDE ============
+
+// 全域掃描快取（背景掃描，跳頁不中斷）
+const _scanCache = {
+  schwartz:   { results: [], ts: 0 },
+  steinhardt: { results: [], ts: 0 },
+  TTL: 5 * 60 * 1000   // 5 分鐘
+};
+// 進場指引資料暫存（用 index 避免 onclick 中 JSON 逸出問題）
+const _entryData = {};  // key: "SYMBOL_strategy"
+function _storeEntry(symbol, strategy, r) {
+  _entryData[symbol + '_' + strategy] = r;
+}
+function showEntryGuideByKey(key) {
+  const r = _entryData[key];
+  if (!r) return;
+  showEntryGuide(r.symbol, r.strategy, {price:r.price,changePct:r.changePct,signal:r.signal,signalStrength:r.signalStrength,signalDetail:r.signalDetail||[]}, {ma5:r.ta.ma5,ma20:r.ta.ma20,ma60:r.ta.ma60,ema8:r.ta.ema8,ema21:r.ta.ema21,macd:r.ta.macd,signal:r.ta.signal,hist:r.ta.hist,rsi:r.ta.rsi,kd:r.ta.kd,atr:r.ta.atr,volRatio:r.ta.volRatio}, (r.closes||[]).slice(-20), (r.highs||[]).slice(-20));
+}
+
+// ── Fear & Greed 計算（從 loadSentiment 抽出，可共用）
+function calcFGI(spyChgPct, vixPrice, nasdaqChgPct, tnxPrice) {
+  let fgi = 50;
+  // VIX：恐慌溫度計
+  if (vixPrice < 14)       fgi += 20;
+  else if (vixPrice < 18)  fgi += 10;
+  else if (vixPrice < 25)  fgi += 0;
+  else if (vixPrice < 35)  fgi -= 15;
+  else                     fgi -= 30;
+  // S&P 500 當日漲跌
+  fgi += Math.min(15, Math.max(-15, spyChgPct * 5));
+  // Nasdaq 與 SPY 乖離
+  fgi += Math.min(5, Math.max(-5, (nasdaqChgPct - spyChgPct) * 2));
+  // 利率 10Y
+  if (tnxPrice > 5)        fgi -= 10;
+  else if (tnxPrice > 4.5) fgi -= 5;
+  else if (tnxPrice < 3.5) fgi += 5;
+  return Math.max(0, Math.min(100, Math.round(fgi)));
+}
+
+function fgiLabel(score) {
+  if (score >= 75) return { label: '極度貪婪', emoji: '🤑', color: 'var(--red)' };
+  if (score >= 55) return { label: '貪婪',     emoji: '😊', color: 'var(--green)' };
+  if (score >= 45) return { label: '中性',     emoji: '😐', color: 'var(--yellow)' };
+  if (score >= 25) return { label: '恐慌',     emoji: '😰', color: 'var(--orange)' };
+  return                   { label: '極度恐慌', emoji: '😱', color: 'var(--accent)' };
+}
+
+// ── 市場環境判斷（第一性原理）
+function assessMarketRegime(fgiScore, vixPrice, spyChgPct) {
+  let label, color, desc, tradeAdvice;
+  if (vixPrice > 30) {
+    label = '⚠️ 高波動危機模式'; color = 'var(--red)';
+    desc  = 'VIX>' + vixPrice.toFixed(0) + '，市場恐慌性拋售。第一性原理：波動率高 = 不確定性高 = 停損觸發頻率高。';
+    tradeAdvice = '⛔ 建議縮小部位 50%，Schwartz 停損縮緊至 0.5 ATR。優先保護資本。';
+  } else if (vixPrice > 20) {
+    label = '🟡 中等波動，需謹慎'; color = 'var(--yellow)';
+    desc  = 'VIX ' + vixPrice.toFixed(0) + '，市場有壓力但尚未恐慌。';
+    tradeAdvice = '⚠️ 標準部位（1% 風控），需量能確認後再進場，避免假突破。';
+  } else if (fgiScore >= 75) {
+    label = '🔴 極度貪婪，需警惕'; color = 'var(--red)';
+    desc  = 'FGI=' + fgiScore + '，市場過熱。第一性原理：群眾極度樂觀時，買盤力竭，回調風險大。';
+    tradeAdvice = '🔔 Schwartz 策略風險高（假突破多），Steinhardt 可持倉但緊縮移動停損。';
+  } else if (fgiScore <= 25) {
+    label = '🟢 極度恐慌，反彈機會'; color = 'var(--green)';
+    desc  = 'FGI=' + fgiScore + '，市場超賣。第一性原理：恐慌性賣壓耗盡後，供需逆轉。';
+    tradeAdvice = '✅ Steinhardt 反彈動量策略最適合，但需等 EMA 確認翻多再進場。';
+  } else {
+    label = '🟢 正常交易環境'; color = 'var(--green)';
+    desc  = 'VIX ' + vixPrice.toFixed(0) + '，FGI=' + fgiScore + '，標準波動範圍。';
+    tradeAdvice = '✅ 兩種策略均適用，按標準條件執行。保持 1% 風控紀律。';
+  }
+  return { label, color, desc, tradeAdvice };
+}
+
+// ── Dashboard 主渲染
+async function renderDashboard(forceRescan) {
+  const ts = document.getElementById('dash-timestamp');
+  if (ts) ts.textContent = '更新時間：' + new Date().toLocaleTimeString('zh-TW');
+
+  // 1. 取 5 大指數
+  const symbols = ['SPY', 'QQQ', '^VIX', '^TWII', '^TNX'];
+  const labels  = { 'SPY':'S&P 500','QQQ':'Nasdaq','VIX':'^VIX','^VIX':'VIX','^TWII':'台灣加權','^TNX':'美債10Y' };
+  let marketData = {};
+  try {
+    const prices = await Promise.allSettled(symbols.map(s => quickPrice(s)));
+    prices.forEach((r, i) => {
+      if (r.status === 'fulfilled' && r.value) marketData[symbols[i]] = r.value;
+    });
+  } catch(e) {}
+
+  // 2. 渲染 KPI cards
+  const kpiDiv = document.getElementById('dash-market-kpis');
+  if (kpiDiv) {
+    const kpiDefs = [
+      { sym:'SPY',  label:'S&P 500',   icon:'🇺🇸' },
+      { sym:'QQQ',  label:'Nasdaq',    icon:'💻' },
+      { sym:'^VIX', label:'VIX 恐慌', icon:'😰' },
+      { sym:'^TWII',label:'台灣加權',  icon:'🇹🇼' },
+      { sym:'^TNX', label:'美債 10Y', icon:'📋' }
+    ];
+    kpiDiv.innerHTML = kpiDefs.map(k => {
+      const d = marketData[k.sym];
+      if (!d) return '<div class="dash-kpi"><div class="label">' + k.icon + ' ' + k.label + '</div><div class="val" style="color:var(--muted)">--</div></div>';
+      const isVix = k.sym === '^VIX', isTnx = k.sym === '^TNX';
+      const pct   = d.price && d.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : 0;
+      const up    = isVix ? pct < 0 : pct >= 0; // VIX 跌 = 好事
+      const color = up ? 'var(--green)' : 'var(--red)';
+      const priceStr = isTnx ? d.price.toFixed(2) + '%' : (k.sym === '^TWII' ? d.price.toFixed(0) : d.price.toFixed(2));
+      return '<div class="dash-kpi" style="border-color:' + (Math.abs(pct) > 1.5 ? color : 'var(--border)') + '">' +
+        '<div class="label">' + k.icon + ' ' + k.label + '</div>' +
+        '<div class="val" style="color:' + color + '">' + priceStr + '</div>' +
+        '<div class="chg" style="color:' + color + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</div></div>';
+    }).join('');
+  }
+
+  // 3. FGI + 市場環境
+  const spy = marketData['SPY'], vixD = marketData['^VIX'], qqq = marketData['QQQ'], tnx = marketData['^TNX'];
+  const spyChg  = spy  && spy.prevClose  ? (spy.price  - spy.prevClose)  / spy.prevClose  * 100 : 0;
+  const qqqChg  = qqq  && qqq.prevClose  ? (qqq.price  - qqq.prevClose)  / qqq.prevClose  * 100 : 0;
+  const vixPrc  = vixD ? vixD.price  : 18;
+  const tnxPrc  = tnx  ? tnx.price   : 4.2;
+  const fgiScore = calcFGI(spyChg, vixPrc, qqqChg, tnxPrc);
+  const fgiInfo  = fgiLabel(fgiScore);
+  const regime   = assessMarketRegime(fgiScore, vixPrc, spyChg);
+
+  const fgiCard = document.getElementById('dash-fgi-card');
+  if (fgiCard) {
+    fgiCard.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">恐慌貪婪指數</div>' +
+      '<div style="font-size:48px">' + fgiInfo.emoji + '</div>' +
+      '<div style="font-size:32px;font-weight:700;color:' + fgiInfo.color + '">' + fgiScore + '</div>' +
+      '<div style="font-size:14px;color:' + fgiInfo.color + ';font-weight:600;margin-top:4px">' + fgiInfo.label + '</div>';
+  }
+
+  const regimeDiv = document.getElementById('dash-regime');
+  if (regimeDiv) {
+    regimeDiv.innerHTML = '<div style="background:rgba(0,0,0,.2);border-left:4px solid ' + regime.color + ';border-radius:6px;padding:12px 16px">' +
+      '<div style="font-weight:700;color:' + regime.color + ';margin-bottom:4px">' + regime.label + '</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">' + regime.desc + '</div>' +
+      '<div style="font-size:13px;color:var(--text)">' + regime.tradeAdvice + '</div></div>';
+  }
+
+  const statusDiv = document.getElementById('dash-market-status');
+  if (statusDiv) {
+    const now = new Date(), utcMin = now.getUTCHours()*60 + now.getUTCMinutes();
+    const weekday = now.getDay() >= 1 && now.getDay() <= 5;
+    const usOpen  = weekday && utcMin >= 810 && utcMin < 1200;
+    const twOpen  = weekday && utcMin >= 60  && utcMin < 330;
+    statusDiv.innerHTML = '<h4 style="margin-bottom:10px;font-size:13px;color:var(--muted)">市場時段</h4>' +
+      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+      '<div><div style="font-size:12px;color:var(--muted)">🇺🇸 美股</div><div style="font-size:14px;font-weight:600;color:' + (usOpen ? 'var(--green)' : 'var(--muted)') + '">' + (usOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
+      '<div><div style="font-size:12px;color:var(--muted)">🇹🇼 台股</div><div style="font-size:14px;font-weight:600;color:' + (twOpen ? 'var(--green)' : 'var(--muted)') + '">' + (twOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
+      '<div><div style="font-size:12px;color:var(--muted)">VIX</div><div style="font-size:14px;font-weight:600;color:' + (vixPrc > 25 ? 'var(--red)' : vixPrc > 18 ? 'var(--yellow)' : 'var(--green)') + '">' + vixPrc.toFixed(1) + '</div></div>' +
+      '</div>';
+  }
+
+  // 4. 觸發掃描（自動，快取 5 分鐘）
+  quickDashboardScan(forceRescan);
+}
+
+// ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
+async function quickDashboardScan(force) {
+  const now = Date.now();
+  const needRescan = force ||
+    (now - _scanCache.schwartz.ts   > _scanCache.TTL) ||
+    (now - _scanCache.steinhardt.ts > _scanCache.TTL);
+
+  if (!needRescan) {
+    // 直接從快取渲染
+    renderDashScanList('schwartz',   _scanCache.schwartz.results);
+    renderDashScanList('steinhardt', _scanCache.steinhardt.results);
+    return;
+  }
+
+  // 顯示掃描中
+  const swEl = document.getElementById('dash-schwartz-list');
+  const stEl = document.getElementById('dash-steinhardt-list');
+  if (swEl) swEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;font-size:12px">掃描中（40-60 秒）...</p></div>';
+  if (stEl) stEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  // 背景掃描：使用 chartScanFallback（v8，已穩定）
+  try {
+    const quotes = await chartScanFallback('schwartz');
+    const schResults = [], stResults = [];
+    for (const q of quotes) {
+      if (!q || !q._chartData) continue;
+      const { closes: c, highs: h, lows: l, vols: v } = q._chartData;
+      if (c.length < 20) continue;
+      try {
+        const ta = technicalAnalysis(c, h, l, v, q.regularMarketPrice);
+        const sw = classifySignal(ta, q, 'schwartz',   { closes: c, highs: h, lows: l });
+        const st = classifySignal(ta, q, 'steinhardt', { closes: c, highs: h, lows: l });
+        if (sw) schResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol });
+        if (st) stResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: st.name, signalStrength: st.strength, signalDetail: st.detail, strategy: 'steinhardt', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol });
+      } catch(e) {}
+    }
+    schResults.sort((a,b) => b.signalStrength - a.signalStrength);
+    stResults.sort((a,b)  => b.signalStrength - a.signalStrength);
+    _scanCache.schwartz   = { results: schResults.slice(0, 5), ts: Date.now() };
+    _scanCache.steinhardt = { results: stResults.slice(0, 5),  ts: Date.now() };
+    renderDashScanList('schwartz',   _scanCache.schwartz.results);
+    renderDashScanList('steinhardt', _scanCache.steinhardt.results);
+  } catch(e) {
+    if (swEl) swEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:12px">掃描失敗，請重新整理</div>';
+  }
+}
+
+function renderDashScanList(strategy, results) {
+  const el = document.getElementById('dash-' + strategy + '-list');
+  if (!el) return;
+  if (!results || !results.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">目前無符合條件的候選股</div>';
+    return;
+  }
+  el.innerHTML = results.map(r => {
+    _storeEntry(r.symbol, strategy, { ...r, strategy });
+    const up = (r.changePct || 0) >= 0;
+    const stars = '★'.repeat(Math.min(r.signalStrength || 0, 5));
+    const key = r.symbol + '_' + strategy;
+    return '<div class="scan-mini-row">' +
+      '<div style="min-width:60px"><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></div>' +
+      '<div style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + '</div>' +
+      '<div style="text-align:right;min-width:80px">' +
+        '<span style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + (r.changePct || 0).toFixed(2) + '%</span>' +
+        ' <span style="color:var(--yellow);font-size:11px">' + stars + '</span>' +
+      '</div>' +
+      '<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 8px;margin-left:8px" onclick="showEntryGuideByKey(\'' + key + '\')">📋</button>' +
+    '</div>';
+  }).join('');
+}
+
+// ── 計算進場數字
+function calcEntryGuide(ta, price, strategy, closes, highs) {
+  const atr = ta.atr || price * 0.02;
+  const high20  = highs && highs.length >= 20 ? Math.max(...highs.slice(-20)) : price;
+  const breakoutLine = strategy === 'schwartz' ? high20 : (ta.ema8 || ta.ma20 || price);
+  const entry  = price;
+  const stop   = Math.max(breakoutLine - atr, entry * 0.92); // 最多虧 8%
+  const risk   = entry - stop;
+  const t1     = entry + risk;
+  const t2     = entry + risk * 2;
+  const t3     = entry + risk * 3;
+  const rr2    = risk > 0 ? (risk * 2 / risk).toFixed(1) : '2.0';
+  return { breakoutLine, entry, stop, t1, t2, t3, rr2, atr, risk };
+}
+
+// ── 進場指引 Modal
+function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
+  // 支援從 renderDashScanList 傳入 JSON 字串或物件
+  if (typeof quoteInfo === 'string') try { quoteInfo = JSON.parse(quoteInfo); } catch(e) {}
+  if (typeof taInfo    === 'string') try { taInfo    = JSON.parse(taInfo);    } catch(e) {}
+  if (typeof closes    === 'string') try { closes    = JSON.parse(closes);    } catch(e) {}
+  if (typeof highs     === 'string') try { highs     = JSON.parse(highs);     } catch(e) {}
+
+  const price   = quoteInfo.price || 0;
+  const guide   = calcEntryGuide(taInfo, price, strategy, closes, highs);
+  const ta      = taInfo;
+  const pctRisk = price > 0 ? ((price - guide.stop) / price * 100).toFixed(1) : '?';
+  const stars   = '★'.repeat(Math.min(quoteInfo.signalStrength || 0, 5)) + '☆'.repeat(Math.max(0, 5 - (quoteInfo.signalStrength || 0)));
+
+  // 從風控中心讀帳戶資金
+  const capitalEl = document.getElementById('risk-capital');
+  const capital   = capitalEl ? (parseFloat(capitalEl.value) || 0) : 0;
+  const maxRisk   = capital * 0.01;  // 1% 風控
+  const suggestShares = (capital > 0 && guide.risk > 0) ? Math.floor(maxRisk / guide.risk) : null;
+
+  // 指標確認清單
+  const checks = strategy === 'schwartz' ? [
+    { ok: price >= guide.breakoutLine * 0.99, label: '突破 20 日高點 ' + guide.breakoutLine.toFixed(2) + '（需 ≥ 此價）' },
+    { ok: (ta.volRatio || 0) >= 1.5,          label: '量能確認：' + (ta.volRatio || 0).toFixed(1) + 'x 均量（需 ≥ 1.5x）' },
+    { ok: ta.rsi >= 50 && ta.rsi <= 75,       label: 'RSI ' + (ta.rsi || 0).toFixed(0) + '（在 50-75 動能區間）' },
+    { ok: ta.hist > 0 && ta.macd > ta.signal, label: 'MACD 正向且翻多' },
+    { ok: ta.kd && ta.kd.k > ta.kd.d && ta.kd.k > 50, label: 'KD 黃金交叉且 K>' + (ta.kd ? ta.kd.k.toFixed(0) : '?') }
+  ] : [
+    { ok: ta.ema8 && ta.ema21 && ta.ma60 && ta.ema8 > ta.ema21 && ta.ema21 > ta.ma60, label: 'EMA8 > EMA21 > EMA60 均線多頭排列' },
+    { ok: price > (ta.ema8 || 0), label: '價格在 EMA8（' + (ta.ema8 || 0).toFixed(2) + '）上方' },
+    { ok: ta.hist > 0 && ta.macd > 0, label: 'MACD 正值且柱狀擴張' },
+    { ok: ta.rsi >= 50 && ta.rsi <= 70, label: 'RSI ' + (ta.rsi || 0).toFixed(0) + '（在 50-70 動能區間）' },
+    { ok: ta.ma5 > ta.ma20, label: '短期均線多頭（MA5 > MA20）' }
+  ];
+  const passCount = checks.filter(c => c.ok).length;
+  const totalCount = checks.length;
+
+  // 第一性原理說明
+  const principles = strategy === 'schwartz'
+    ? '<b>突破</b> = 買方力量持續壓過賣方，形成新供需均衡；<b>量能確認</b> = 機構/主力入場，非散戶情緒；<b>RSI 50-75</b> = 動能充足但未過熱；<b>ATR 停損</b> = 尊重股票真實波動，避免正常波動觸發停損。'
+    : '<b>EMA 多排</b> = 短中長線趨勢全面向上，趨勢強度高；<b>MACD 擴張</b> = 動能加速，買盤持續增加；<b>RSI 50-70</b> = 動能存在但未超買，仍有上漲空間；<b>移動停損</b> = 讓利潤奔跑，截斷虧損。';
+
+  const regimeAdvice = (() => {
+    const vixEl = document.querySelector('#dash-market-kpis .dash-kpi:nth-child(3) .val');
+    return '參考首頁市場環境判斷以調整部位大小。';
+  })();
+
+  const html = '<div class="entry-modal-overlay" id="entry-modal-overlay" onclick="if(event.target===this)closeEntryModal()">' +
+  '<div class="entry-modal">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">' +
+      '<div>' +
+        '<div style="font-size:20px;font-weight:700"><span style="color:var(--accent)">' + symbol + '</span>  <span style="font-size:14px;color:var(--muted)">現價 $' + price.toFixed(2) + '</span></div>' +
+        '<div style="margin-top:4px"><span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + quoteInfo.signal + '</span>  <span style="color:var(--yellow)">' + stars + '</span></div>' +
+      '</div>' +
+      '<button class="modal-close" onclick="closeEntryModal()">×</button>' +
+    '</div>' +
+
+    '<div class="entry-section"><h4>指標確認清單（' + passCount + '/' + totalCount + ' 達標）</h4>' +
+    checks.map(c => '<div class="entry-check-item"><span style="font-size:16px">' + (c.ok ? '✅' : '⬜') + '</span><span style="color:' + (c.ok ? 'var(--text)' : 'var(--muted)') + '">' + c.label + '</span></div>').join('') +
+    '</div>' +
+
+    '<div class="entry-section"><h4>第一性原理</h4><div style="font-size:13px;color:var(--muted);line-height:1.6">' + principles + '</div></div>' +
+
+    '<div class="entry-section"><h4>進場建議</h4>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">' +
+      '<div><div style="color:var(--muted);font-size:11px">進場位置</div><div style="font-weight:600">$' + guide.entry.toFixed(2) + '<span style="font-size:11px;color:var(--muted);display:block">或回測至 $' + guide.breakoutLine.toFixed(2) + '</span></div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">停損（1ATR）</div><div style="font-weight:600;color:var(--red)">$' + guide.stop.toFixed(2) + ' <span style="font-size:11px">(-' + pctRisk + '%)</span></div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">目標一（1:1）</div><div style="font-weight:600;color:var(--muted)">$' + guide.t1.toFixed(2) + '</div></div>' +
+      '<div style="border:1px solid var(--accent);border-radius:6px;padding:6px"><div style="color:var(--accent);font-size:11px">目標二（1:2）⭐ 首選</div><div style="font-weight:700;color:var(--green)">$' + guide.t2.toFixed(2) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">目標三（1:3）</div><div style="font-weight:600;color:var(--green)">$' + guide.t3.toFixed(2) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">ATR 參考</div><div style="font-weight:600">$' + guide.atr.toFixed(2) + '</div></div>' +
+    '</div></div>' +
+
+    (capital > 0 ?
+    '<div class="entry-section"><h4>建議部位（連動風控中心）</h4>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">' +
+      '<div><div style="color:var(--muted);font-size:11px">帳戶資金</div><div style="font-weight:600">$' + capital.toLocaleString() + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">1% 最大虧損</div><div style="font-weight:600;color:var(--red)">$' + maxRisk.toFixed(0) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">建議股數</div><div style="font-weight:700;color:var(--accent)">' + (suggestShares || '--') + ' 股</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">總佔倉</div><div style="font-weight:600">' + (suggestShares ? (suggestShares * price / capital * 100).toFixed(1) + '%' : '--') + '</div></div>' +
+    '</div></div>' : '<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">💡 在「🛡️ 風控中心」填入帳戶資金，即可自動計算建議股數</div>') +
+
+    '<div style="margin-top:16px;padding:10px;background:rgba(239,68,68,.08);border-radius:8px;font-size:12px;color:var(--muted)">' +
+      '⚠️ <b>' + (strategy === 'schwartz' ? '假突破風險' : '趨勢反轉風險') + '</b>：' +
+      (strategy === 'schwartz' ? '收盤若跌回 $' + guide.breakoutLine.toFixed(2) + ' 以下，立即出場。非開盤 30 分鐘內不追高。' : '若 EMA8 跌破 EMA21，立即出場。動能衰退（MACD 柱狀縮短）時考慮減倉。') +
+      '<br>' + regimeAdvice +
+    '</div>' +
+    '<div style="text-align:right;margin-top:16px"><button class="btn btn-primary" onclick="closeEntryModal()">關閉</button></div>' +
+  '</div></div>';
+
+  const overlay = document.createElement('div');
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay.firstChild);
+}
+function closeEntryModal() { const m = document.getElementById('entry-modal-overlay'); if (m) m.remove(); }
+
+// ── 掃描器一鍵掃描（Schwartz + Steinhardt 並排）
+async function runFullScan() {
+  const fullDiv = document.getElementById('fullscan-results');
+  if (!fullDiv) return;
+  fullDiv.style.display = 'block';
+  fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">一鍵掃描中（40-60 秒）...</p></div>';
+  try {
+    const quotes = await chartScanFallback('schwartz');
+    const schResults = [], stResults = [];
+    for (const q of quotes) {
+      if (!q?._chartData) continue;
+      const { closes: c, highs: h, lows: l, vols: v } = q._chartData;
+      if (c.length < 20) continue;
+      try {
+        const ta = technicalAnalysis(c, h, l, v, q.regularMarketPrice);
+        const sw = classifySignal(ta, q, 'schwartz',   { closes: c, highs: h, lows: l });
+        const st = classifySignal(ta, q, 'steinhardt', { closes: c, highs: h, lows: l });
+        const base = { ...q, ta, closes: c, highs: h, lows: l, price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol };
+        if (sw) schResults.push({ ...base, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz' });
+        if (st) stResults.push({ ...base, signal: st.name, signalStrength: st.strength, signalDetail: st.detail, strategy: 'steinhardt' });
+      } catch(e) {}
+    }
+    schResults.sort((a,b) => b.signalStrength - a.signalStrength);
+    stResults.sort((a,b)  => b.signalStrength - a.signalStrength);
+    // 同步更新 _scanCache
+    _scanCache.schwartz   = { results: schResults.slice(0,5), ts: Date.now() };
+    _scanCache.steinhardt = { results: stResults.slice(0,5),  ts: Date.now() };
+
+    const renderMini = (results, strategy, title) => {
+      if (!results.length) return '<div class="card"><h3>' + title + '</h3><div style="padding:20px;text-align:center;color:var(--muted)">無符合條件的候選股</div></div>';
+      return '<div class="card"><h3 style="margin-bottom:12px">' + title + '</h3>' +
+        results.slice(0,5).map(r => {
+          _storeEntry(r.symbol, strategy, { ...r, strategy });
+          const up    = r.changePct >= 0;
+          const stars = '★'.repeat(Math.min(r.signalStrength,5));
+          const key   = r.symbol + '_' + strategy;
+          return '<div class="scan-mini-row">' +
+            '<b style="color:var(--accent);min-width:55px;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' +
+            '<span style="flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.name + '</span>' +
+            '<span style="color:' + (up?'var(--green)':'var(--red)') + ';min-width:55px;text-align:right">' + (up?'+':'') + r.changePct.toFixed(2) + '%</span>' +
+            '<span style="color:var(--yellow);font-size:11px;min-width:40px;text-align:center">' + stars + '</span>' +
+            '<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 8px" onclick="showEntryGuideByKey(\'' + key + '\')">📋 進場</button>' +
+          '</div>';
+        }).join('') + '</div>';
+    };
+    fullDiv.innerHTML = '<div class="dash-scan-grid">' +
+      renderMini(schResults, 'schwartz',   '⚡ Schwartz突破 Top 5') +
+      renderMini(stResults,  'steinhardt', '📈 Steinhardt動量 Top 5') +
+    '</div>';
+  } catch(e) {
+    fullDiv.innerHTML = '<div style="color:var(--red);padding:16px">掃描失敗：' + e.message + '</div>';
+  }
+}
+
 // ============ INIT ============
 document.getElementById('j-date').valueAsDate = new Date();
 startAutoRefresh();
 </script>
+<div class="disclaimer-bar">⚠️ 投資警語：本網站所有內容僅供參考，不構成任何投資建議，本站對因使用本網站資訊所造成之任何損失概不負責。投資涉及風險，您可能損失部分或全部投入資金，請依據個人財務狀況及風險承受能力審慎判斷。</div>
 </body>
 </html>
