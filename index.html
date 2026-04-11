@@ -236,11 +236,11 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
         <button onclick="switchScannerMarket('tw')">🇹🇼 台股</button>
       </div>
       <div class="tab-bar" id="scanner-tabs">
-        <button class="active" onclick="runScan('momentum')">🚀 動量突破</button>
+        <button class="active" onclick="runScan('schwartz')" title="Marty Schwartz: 20日高點突破+量能確認+RSI 50-75+MACD正">⚡ Schwartz突破</button>
+        <button onclick="runScan('steinhardt')" title="Michael Steinhardt: EMA8>21>60均線多排+MACD擴張+RSI 50-70">📈 Steinhardt動量</button>
+        <button onclick="runScan('momentum')">🚀 動量突破</button>
         <button onclick="runScan('oversold')">📉 超賣反彈</button>
-        <button onclick="runScan('macd')">📊 MACD翻多</button>
         <button onclick="runScan('volume')">📢 放量異動</button>
-        <button onclick="runScan('trend')">📈 均線多排</button>
         <button onclick="runScan('dip')">💎 跌深股</button>
       </div>
       <div class="card" id="scanner-results">
@@ -2561,17 +2561,71 @@ function getTwScanPool() {
 
 async function batchQuote(tickers) {
   const results = [];
+  const hosts = ['query1', 'query2'];
   for (let i = 0; i < tickers.length; i += 50) {
     const batch = tickers.slice(i, i + 50).join(',');
-    try {
-      const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(batch) + '&fields=symbol,regularMarketPrice,regularMarketChangePercent,regularMarketVolume,averageDailyVolume3Month,regularMarketChange,shortName,longName,regularMarketDayHigh,regularMarketDayLow&_t=' + Date.now();
-      const r = await pFetch(url, false);
-      const j = await r.json();
-      if (j.quoteResponse?.result) results.push(...j.quoteResponse.result);
-    } catch (e) { console.warn('Batch quote failed for batch', i, e); }
-    if (i + 50 < tickers.length) await new Promise(r => setTimeout(r, 200));
+    let success = false;
+    for (const host of hosts) {
+      try {
+        const url = 'https://' + host + '.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(batch) + '&fields=symbol,regularMarketPrice,regularMarketChangePercent,regularMarketVolume,averageDailyVolume3Month,regularMarketChange,shortName,longName,regularMarketDayHigh,regularMarketDayLow&_t=' + Date.now();
+        const r = await pFetch(url, false);
+        const j = await r.json();
+        if (j.quoteResponse?.result?.length) { results.push(...j.quoteResponse.result); success = true; break; }
+      } catch (e) { console.warn('batchQuote host=' + host + ' batch=' + i, e); }
+    }
+    if (i + 50 < tickers.length) await new Promise(r => setTimeout(r, 300));
   }
   return results;
+}
+
+// 精選美股掃描池（yfChart fallback 用）：S&P500 流動性最佳前80 + 熱門成長股
+const SCAN_CURATED_US = [
+  'NVDA','AAPL','MSFT','AMZN','META','GOOGL','TSLA','JPM','AMD','AVGO',
+  'PLTR','CRWD','PANW','NET','DDOG','ZS','SNOW','MDB','WDAY','NOW',
+  'NFLX','ORCL','CRM','ADBE','INTU','SHOP','COIN','HOOD','RBLX','U',
+  'ARM','MRVL','ON','SMCI','DELL','IONQ','RKLB','AXON','FTNT','OKTA',
+  'V','MA','GS','MS','BAC','JPM','C','WFC','BLK','BRK-B',
+  'LLY','JNJ','ABBV','MRK','PFE','AMGN','REGN','VRTX','GILD','BMY',
+  'XOM','CVX','COP','SLB','EOG','OXY','MPC','DVN','FANG','VLO',
+  'BA','CAT','DE','RTX','NOC','LMT','GD','HON','GE','UPS'
+];
+
+// Fallback：直接用 yfChart 拉精選股，回傳與 batchQuote 同格式的陣列
+async function chartScanFallback(strategy) {
+  const pool = _scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60);
+  const out = [];
+  for (let i = 0; i < pool.length; i += 8) {
+    const batch = pool.slice(i, i + 8);
+    const settled = await Promise.allSettled(batch.map(async sym => {
+      try {
+        const chart = await yfChart(sym, '3mo', '1d');
+        const oq = chart.indicators.quote[0];
+        const closes = oq.close.filter(v => v != null);
+        const highs  = oq.high.filter(v => v != null);
+        const lows   = oq.low.filter(v => v != null);
+        const vols   = oq.volume.filter(v => v != null);
+        if (closes.length < 20) return null;
+        const price = chart.meta.regularMarketPrice || closes[closes.length - 1];
+        const prevClose = closes[closes.length - 2];
+        const changePct = prevClose ? (price - prevClose) / prevClose * 100 : 0;
+        const avgVol = vols.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
+        const vol = vols[vols.length - 1] || 0;
+        return {
+          symbol: sym, shortName: sym, longName: sym,
+          regularMarketPrice: price,
+          regularMarketChangePercent: changePct,
+          regularMarketVolume: vol,
+          averageDailyVolume3Month: avgVol,
+          regularMarketDayHigh: highs[highs.length - 1] || price,
+          regularMarketDayLow: lows[lows.length - 1] || price,
+          _chartData: { closes, highs, lows, vols }
+        };
+      } catch (e) { return null; }
+    }));
+    settled.forEach(r => { if (r.status === 'fulfilled' && r.value) out.push(r.value); });
+    if (i + 8 < pool.length) await new Promise(r => setTimeout(r, 250));
+  }
+  return out;
 }
 
 let _scannerMarket = 'us';
@@ -2591,14 +2645,22 @@ function switchScannerMarket(market) {
 
 async function runScan(strategy) {
   _scannerStrategy = strategy;
+  const stratOrder = ['schwartz','steinhardt','momentum','oversold','volume','dip'];
   document.querySelectorAll('#scanner-tabs button').forEach((b, i) =>
-    b.classList.toggle('active', i === ['momentum','oversold','macd','volume','trend','dip'].indexOf(strategy))
+    b.classList.toggle('active', i === stratOrder.indexOf(strategy))
   );
   const tableDiv = document.getElementById('scanner-table');
   tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">掃描中（' + (_scannerMarket === 'us' ? '美股' : '台股') + '）...</p></div>';
   try {
     const candidates = _scannerMarket === 'us' ? SP500_TICKERS : getTwScanPool();
-    const quotes = await batchQuote(candidates);
+    let quotes = await batchQuote(candidates);
+    let usedFallback = false;
+    // 若 batchQuote 失敗或資料不足，切換至精選清單 yfChart fallback
+    if (quotes.length < 15) {
+      usedFallback = true;
+      tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">批量報價受限，改用精選清單掃描（約 40-60 秒）...</p></div>';
+      quotes = await chartScanFallback(strategy);
+    }
     const preFiltered = preFilterByStrategy(quotes, strategy);
     const top30 = preFiltered.slice(0, 30);
     const results = [];
@@ -2607,23 +2669,30 @@ async function runScan(strategy) {
       const batchResults = await Promise.allSettled(
         batch.map(async q => {
           try {
-            const chart = await yfChart(q.symbol, '1mo', '1d');
-            const oq = chart.indicators.quote[0];
-            const c = oq.close.filter(v => v != null);
-            const h = oq.high.filter(v => v != null);
-            const l = oq.low.filter(v => v != null);
-            const v = oq.volume.filter(v => v != null);
+            let c, h, l, v;
+            if (q._chartData) {
+              // 已有 chartData（來自 fallback），直接使用
+              c = q._chartData.closes; h = q._chartData.highs;
+              l = q._chartData.lows;  v = q._chartData.vols;
+            } else {
+              const chart = await yfChart(q.symbol, '3mo', '1d');
+              const oq = chart.indicators.quote[0];
+              c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
+              l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
+            }
             if (c.length < 20) return null;
-            const price = chart.meta.regularMarketPrice;
+            const price = q.regularMarketPrice;
             const ta = technicalAnalysis(c, h, l, v, price);
-            const signal = classifySignal(ta, q, strategy);
+            const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
             if (!signal) return null;
             return {
               symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
               price: price, changePct: q.regularMarketChangePercent || 0,
               volume: q.regularMarketVolume || 0, avgVolume: q.averageDailyVolume3Month || 0,
-              volRatio: q.averageDailyVolume3Month > 0 ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
-              signal: signal.name, signalStrength: signal.strength, ta: ta, closes: c, highs: h, lows: l
+              volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
+              signal: signal.name, signalStrength: signal.strength,
+              signalDetail: signal.detail || [],
+              ta: ta, closes: c, highs: h, lows: l
             };
           } catch (e) { return null; }
         })
@@ -2633,7 +2702,7 @@ async function runScan(strategy) {
     }
     results.sort((a, b) => b.signalStrength - a.signalStrength);
     _scannerResults = results;
-    renderScannerResults(results, strategy);
+    renderScannerResults(results, strategy, usedFallback);
   } catch (e) {
     tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
   }
@@ -2647,6 +2716,10 @@ function preFilterByStrategy(quotes, strategy) {
     const avgVol = q.averageDailyVolume3Month || 1;
     const volRatio = vol / avgVol;
     switch (strategy) {
+      // Marty Schwartz：有突破動能 + 量能配合
+      case 'schwartz': return pct > 0.5 && volRatio > 1.2;
+      // Michael Steinhardt：正向動能（EMA對齊在 classifySignal 深判）
+      case 'steinhardt': return pct >= 0;
       case 'momentum': return pct > 2 && volRatio > 1.3;
       case 'oversold': return pct < -2;
       case 'macd': return pct > 0 && pct < 5 && vol > avgVol * 0.8;
@@ -2656,19 +2729,68 @@ function preFilterByStrategy(quotes, strategy) {
       default: return true;
     }
   }).sort((a, b) => {
+    if (strategy === 'schwartz' || strategy === 'momentum') return (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0);
+    if (strategy === 'steinhardt') return (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0);
     if (strategy === 'volume') return (b.regularMarketVolume / (b.averageDailyVolume3Month || 1)) - (a.regularMarketVolume / (a.averageDailyVolume3Month || 1));
-    if (strategy === 'momentum') return (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0);
     if (strategy === 'oversold' || strategy === 'dip') return (a.regularMarketChangePercent || 0) - (b.regularMarketChangePercent || 0);
     return 0;
   });
 }
 
-function classifySignal(ta, quote, strategy) {
+function classifySignal(ta, quote, strategy, chartData) {
   const pct = quote.regularMarketChangePercent || 0;
+  const price = quote.regularMarketPrice || 0;
   const volRatio = (quote.regularMarketVolume || 0) / (quote.averageDailyVolume3Month || 1);
   switch (strategy) {
+
+    // ── Marty Schwartz 突破策略 ──────────────────────────────────────
+    // 核心：股價突破 20 日高點 + 成交量 ≥ 1.5 倍均量 + RSI 50-75 + MACD 正
+    case 'schwartz': {
+      const closes = chartData ? chartData.closes : [];
+      const highs  = chartData ? chartData.highs : [];
+      const high20 = highs.length >= 20 ? Math.max(...highs.slice(-20)) : (ta.ma20 ? ta.ma20 * 1.05 : price);
+      const prevHigh20 = highs.length >= 21 ? Math.max(...highs.slice(-21, -1)) : high20;
+      // 突破條件：當日創近 20 日新高（或在前高 1% 內）
+      const breakout = price >= high20 * 0.99;
+      if (!breakout) return null;
+      const volOk  = volRatio >= 1.5;   // Schwartz 要求量能確認
+      const rsiOk  = ta.rsi >= 50 && ta.rsi <= 75;  // 有動能但不超買
+      const macdOk = ta.hist > 0 && ta.macd > ta.signal; // MACD 正且翻多
+      const kdOk   = ta.kd.k > ta.kd.d && ta.kd.k > 50; // KD 黃金交叉
+      let strength = 1;
+      const detail = [];
+      if (volOk)  { strength++; detail.push('量 ' + volRatio.toFixed(1) + 'x✓'); }
+      else          detail.push('量 ' + volRatio.toFixed(1) + 'x');
+      if (rsiOk)  { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + '✓'); }
+      else          detail.push('RSI ' + ta.rsi.toFixed(0));
+      if (macdOk) { strength++; detail.push('MACD✓'); }
+      if (kdOk)   { strength++; detail.push('KD✓'); }
+      return { name: '⚡ Schwartz突破', strength, detail };
+    }
+
+    // ── Michael Steinhardt 動量策略 ─────────────────────────────────
+    // 核心：EMA8 > EMA21 > EMA60 + MACD > 0 且擴張 + RSI 50-70 + 價格在 EMA8 上方
+    case 'steinhardt': {
+      const ema8   = ta.ema8;
+      const ema21  = ta.ema21;
+      const ema60  = ta.ma60; // MA60 ≈ EMA60 夠用
+      // 必要條件：EMA 多頭排列
+      if (!ema8 || !ema21 || !ema60 || !(ema8 > ema21 && ema21 > ema60)) return null;
+      const priceAboveEma = price > ema8;     // 價格在 EMA8 上方
+      const macdExpand = ta.hist > 0 && ta.macd > 0;  // MACD 正且擴張
+      const rsiOk = ta.rsi >= 50 && ta.rsi <= 70;     // 動能區間
+      const trendStrong = ta.ma5 > ta.ma20;            // 短期均線也多頭
+      let strength = 2; // EMA 多排本身就值 2 星
+      const detail = ['EMA多排✓'];
+      if (priceAboveEma){ strength++; detail.push('價>EMA8✓'); }
+      if (macdExpand)   { strength++; detail.push('MACD擴張✓'); }
+      if (rsiOk)        { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + '✓'); }
+      if (trendStrong)     detail.push('短線多頭');
+      return { name: '📈 Steinhardt動量', strength, detail };
+    }
+
     case 'momentum': {
-      const aboveMa20 = ta.ma20 && quote.regularMarketPrice > ta.ma20;
+      const aboveMa20 = ta.ma20 && price > ta.ma20;
       if (!aboveMa20) return null;
       let strength = 1;
       if (volRatio > 1.3) strength++;
@@ -2679,7 +2801,7 @@ function classifySignal(ta, quote, strategy) {
     }
     case 'oversold': {
       const rsiOversold = ta.rsi < 35, kdOversold = ta.kd.k < 25;
-      const bbLow = ta.bb.lo != null && quote.regularMarketPrice <= ta.bb.lo * 1.02;
+      const bbLow = ta.bb.lo != null && price <= ta.bb.lo * 1.02;
       if (!rsiOversold && !kdOversold && !bbLow) return null;
       let strength = 1;
       if (rsiOversold) strength++; if (kdOversold) strength++; if (bbLow) strength++;
@@ -2690,7 +2812,7 @@ function classifySignal(ta, quote, strategy) {
       if (ta.hist <= 0) return null;
       let strength = 2;
       if (ta.macd > ta.signal) strength++;
-      if (quote.regularMarketPrice > ta.ma20) strength++;
+      if (price > ta.ma20) strength++;
       if (ta.rsi > 45 && ta.rsi < 65) strength++;
       return { name: 'MACD翻多', strength };
     }
@@ -2710,7 +2832,7 @@ function classifySignal(ta, quote, strategy) {
       if (ta.rsi > 35) return null;
       let strength = 1;
       if (ta.rsi < 25) strength++; if (ta.kd.k < 20) strength++;
-      if (ta.bb.lo != null && quote.regularMarketPrice < ta.bb.lo) strength++;
+      if (ta.bb.lo != null && price < ta.bb.lo) strength++;
       if (pct < -8) strength++;
       return { name: '跌深 (RSI:' + ta.rsi.toFixed(0) + ')', strength };
     }
@@ -2718,25 +2840,52 @@ function classifySignal(ta, quote, strategy) {
   return null;
 }
 
-function renderScannerResults(results, strategy) {
+function renderScannerResults(results, strategy, usedFallback) {
   const tableDiv = document.getElementById('scanner-table');
-  const strategyNames = { momentum: '🚀 動量突破', oversold: '📉 超賣反彈', macd: '📊 MACD翻多', volume: '📢 放量異動', trend: '📈 均線多排', dip: '💎 跌深股' };
+  const strategyNames = {
+    schwartz: '⚡ Schwartz突破', steinhardt: '📈 Steinhardt動量',
+    momentum: '🚀 動量突破', oversold: '📉 超賣反彈',
+    macd: '📊 MACD翻多', volume: '📢 放量異動',
+    trend: '📈 均線多排', dip: '💎 跌深股'
+  };
+  const roleDescriptions = {
+    schwartz: '基於 Marty Schwartz 策略：20日高點突破 × 量能確認(≥1.5x) × RSI 50-75 × MACD正向。停損：突破線下 1ATR。目標：2-3ATR。',
+    steinhardt: '基於 Michael Steinhardt 策略：EMA8>21>60 均線多排 × MACD擴張 × RSI 50-70 × 價格在 EMA8 上方。移動停損跟隨 EMA21。'
+  };
+  const stratName = strategyNames[strategy] || strategy;
   if (!results.length) {
-    tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">目前無符合「' + strategyNames[strategy] + '」條件的股票</div>';
+    tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">目前無符合「' + stratName + '」條件的股票' +
+      (usedFallback ? '<br><small style="font-size:11px">（精選清單模式，共掃描 ' + (SCAN_CURATED_US.length) + ' 檔）</small>' : '') + '</div>';
     return;
   }
-  let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">找到 ' + results.length + ' 檔符合「' + strategyNames[strategy] + '」的股票</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>現價</th><th>漲跌%</th><th>量比</th><th>信號</th><th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
+  let html = '';
+  // 角色說明 banner（Schwartz/Steinhardt 專屬）
+  if (roleDescriptions[strategy]) {
+    html += '<div style="background:rgba(59,130,246,.1);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:12px;color:var(--muted);margin-bottom:12px">' +
+      '💡 ' + roleDescriptions[strategy] + '</div>';
+  }
+  const sourceNote = usedFallback ? ' <small style="color:var(--muted)">(精選清單 ' + SCAN_CURATED_US.length + ' 檔)</small>' : '';
+  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">找到 <b style="color:var(--text)">' + results.length + '</b> 檔符合「' + stratName + '」的股票' + sourceNote + '</div>';
+  const isRole = strategy === 'schwartz' || strategy === 'steinhardt';
+  html += '<div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>現價</th><th>漲跌%</th><th>量比</th>';
+  if (isRole) html += '<th>指標確認</th>';
+  html += '<th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
   results.forEach(r => {
     const up = r.changePct >= 0;
-    const stars = '★'.repeat(r.signalStrength) + '☆'.repeat(5 - r.signalStrength);
+    const stars = '★'.repeat(Math.min(r.signalStrength, 5)) + '☆'.repeat(Math.max(0, 5 - r.signalStrength));
     const inWatchlist = _todayWatchlist.some(w => w.symbol === r.symbol);
-    html += '<tr><td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></td>' +
-      '<td>' + r.name + '</td><td>' + r.price.toFixed(2) + '</td>' +
+    const detailHtml = (r.signalDetail && r.signalDetail.length)
+      ? r.signalDetail.map(d => '<span class="tag" style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(59,130,246,.12);color:var(--accent)">' + d + '</span>').join('')
+      : '<span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + r.signal + '</span>';
+    html += '<tr>' +
+      '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></td>' +
+      '<td style="font-size:12px">' + r.name + '</td>' +
+      '<td>' + r.price.toFixed(2) + '</td>' +
       '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
-      '<td>' + r.volRatio.toFixed(1) + 'x</td>' +
-      '<td><span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + r.signal + '</span></td>' +
-      '<td style="color:var(--yellow)">' + stars + '</td><td>' + r.ta.rsi.toFixed(0) + '</td>' +
+      '<td>' + r.volRatio.toFixed(1) + 'x</td>';
+    if (isRole) html += '<td>' + detailHtml + '</td>';
+    html += '<td style="color:var(--yellow)">' + stars + '</td>' +
+      '<td>' + r.ta.rsi.toFixed(0) + '</td>' +
       '<td>' + (inWatchlist ? '<span style="color:var(--green)">✓ 已加入</span>' : '<button class="btn btn-primary btn-sm" onclick="addToWatchlist(\'' + r.symbol + '\')">+ 加入</button>') + '</td></tr>';
   });
   html += '</tbody></table></div>';
