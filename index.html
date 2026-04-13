@@ -2911,7 +2911,7 @@ function renderScannerResults(results, strategy, usedFallback) {
   };
   const roleDescriptions = {
     schwartz: '基於 Marty Schwartz 策略：20日高點突破 × 量能確認(≥1.5x) × RSI 50-75 × MACD正向。停損：突破線下 1ATR。目標：2-3ATR。',
-    steinhardt: '基於 Michael Steinhardt 策略：EMA8>21>60 均線多排 × MACD擴張 × RSI 50-70 × 價格在 EMA8 上方。移動停損跟隨 EMA21。'
+    steinhardt: '基於 Michael Steinhardt 策略（Variant Perception）：EMA8>21>60 均線多排 × MACD擴張 × RSI 50-70，同時驗證基本面：EPS 正值、營收成長 >5%、ROE >15%、估值合理（PE<35）。技術面反映機構資金流入，基本面確認公司真實價值被低估。移動停損跟隨 EMA21。'
   };
   const stratName = strategyNames[strategy] || strategy;
   if (!results.length) {
@@ -3554,9 +3554,13 @@ async function quickDashboardScan(force) {
     }
     schResults.sort((a,b) => b.signalStrength - a.signalStrength);
     stResults.sort((a,b)  => b.signalStrength - a.signalStrength);
-    _scanCache.schwartz   = { results: schResults.slice(0, 5), ts: Date.now() };
-    _scanCache.steinhardt = { results: stResults.slice(0, 5),  ts: Date.now() };
-    renderDashScanList('schwartz',   _scanCache.schwartz.results);
+    _scanCache.schwartz = { results: schResults.slice(0, 5), ts: Date.now() };
+    renderDashScanList('schwartz', _scanCache.schwartz.results);
+
+    // Steinhardt：技術面後再跑基本面驗證（Variant Perception）
+    if (stEl) stEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;font-size:12px">檢驗基本面（EPS / 營收 / ROE）...</p></div>';
+    const stEnriched = await enrichSteinhardtFundamentals(stResults);
+    _scanCache.steinhardt = { results: stEnriched.slice(0, 5), ts: Date.now() };
     renderDashScanList('steinhardt', _scanCache.steinhardt.results);
   } catch(e) {
     if (swEl) swEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:12px">掃描失敗，請重新整理</div>';
@@ -3575,9 +3579,17 @@ function renderDashScanList(strategy, results) {
     const up = (r.changePct || 0) >= 0;
     const stars = '★'.repeat(Math.min(r.signalStrength || 0, 5));
     const key = r.symbol + '_' + strategy;
+    // Steinhardt 顯示基本面品質徽章
+    const fundBadge = strategy === 'steinhardt' && r.fundLoaded != null
+      ? '<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;background:' +
+          (r.fundScore >= 3 ? 'rgba(16,185,129,.2);color:var(--green)' :
+           r.fundScore >= 2 ? 'rgba(245,158,11,.2);color:var(--yellow)' :
+                              'rgba(239,68,68,.15);color:var(--red)') +
+          '">📊' + (r.fundScore || 0) + '/4</span>'
+      : '';
     return '<div class="scan-mini-row">' +
       '<div style="min-width:60px"><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></div>' +
-      '<div style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + '</div>' +
+      '<div style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + fundBadge + '</div>' +
       '<div style="text-align:right;min-width:80px">' +
         '<span style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + (r.changePct || 0).toFixed(2) + '%</span>' +
         ' <span style="color:var(--yellow);font-size:11px">' + stars + '</span>' +
@@ -3600,6 +3612,50 @@ function calcEntryGuide(ta, price, strategy, closes, highs) {
   const t3     = entry + risk * 3;
   const rr2    = risk > 0 ? (risk * 2 / risk).toFixed(1) : '2.0';
   return { breakoutLine, entry, stop, t1, t2, t3, rr2, atr, risk };
+}
+
+// ── Steinhardt 基本面篩選（Variant Perception 核心）
+// 在技術面通過後，驗證公司財務體質：獲利、成長、資本效益、合理估值
+async function enrichSteinhardtFundamentals(candidates) {
+  const top = candidates.slice(0, 10); // 最多 10 檔，避免過長等待
+  const enriched = await Promise.all(top.map(async r => {
+    try {
+      const fund = await yfPageFundamentals(r.symbol);
+      if (!fund) return { ...r, fundScore: 0, fundDetail: ['無法取得基本面資料'], fundLoaded: false };
+      const sd = fund.summaryDetail || {}, ks = fund.defaultKeyStatistics || {}, fd = fund.financialData || {};
+      const rv = v => v?.raw;
+      const eps = rv(ks.trailingEps);
+      const rg  = rv(fd.revenueGrowth);   // 0.15 = 15%
+      const roe = rv(fd.returnOnEquity);  // 0.20 = 20%
+      const pe  = rv(sd.trailingPE) || rv(sd.forwardPE);
+      let fundScore = 0;
+      const fundDetail = [];
+      // 1. 公司獲利（Steinhardt 不做虧損股）
+      if (eps != null && eps > 0)      { fundScore++; fundDetail.push('EPS $' + eps.toFixed(2) + ' ✓'); }
+      else if (eps != null)              { fundDetail.push('EPS $' + eps.toFixed(2) + ' ⚠️虧損'); }
+      else                               { fundDetail.push('EPS 資料不足'); }
+      // 2. 營收/獲利成長
+      if (rg != null && rg > 0.05)     { fundScore++; fundDetail.push('營收成長 +' + (rg*100).toFixed(1) + '% ✓'); }
+      else if (rg != null && rg > 0)   { fundDetail.push('營收微增 +' + (rg*100).toFixed(1) + '%'); }
+      else if (rg != null)              { fundDetail.push('營收衰退 ' + (rg*100).toFixed(1) + '%'); }
+      else                               { fundDetail.push('成長資料不足'); }
+      // 3. 高資本回報率（Steinhardt 重視經營效率）
+      if (roe != null && roe > 0.15)   { fundScore++; fundDetail.push('ROE ' + (roe*100).toFixed(1) + '% ✓'); }
+      else if (roe != null && roe > 0) { fundDetail.push('ROE ' + (roe*100).toFixed(1) + '%'); }
+      else if (roe != null)             { fundDetail.push('ROE ' + (roe*100).toFixed(1) + '% ⚠️'); }
+      // 4. 估值合理（Variant Perception：市場誤判程度）
+      if (pe != null && pe > 0 && pe < 35)        { fundScore++; fundDetail.push('PE ' + pe.toFixed(1) + ' 合理 ✓'); }
+      else if (pe != null && pe >= 35 && pe < 60) { fundDetail.push('PE ' + pe.toFixed(1) + ' 偏高'); }
+      else if (pe != null && pe >= 60)             { fundDetail.push('PE ' + pe.toFixed(1) + ' 過高 ⚠️'); }
+      else if (pe != null && pe <= 0)              { fundDetail.push('PE 負值(虧損)'); }
+      return { ...r, fundScore, fundDetail, fundLoaded: true };
+    } catch(e) {
+      return { ...r, fundScore: 0, fundDetail: ['基本面載入失敗'], fundLoaded: false };
+    }
+  }));
+  // 以「技術強度 × 2 + 基本面分數」排序，讓兩者兼優的標的排最前
+  enriched.sort((a, b) => (b.signalStrength * 2 + b.fundScore) - (a.signalStrength * 2 + a.fundScore));
+  return enriched;
 }
 
 // ── 進場指引 Modal
@@ -3634,7 +3690,11 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
     { ok: price > (ta.ema8 || 0), label: '價格在 EMA8（' + (ta.ema8 || 0).toFixed(2) + '）上方' },
     { ok: ta.hist > 0 && ta.macd > 0, label: 'MACD 正值且柱狀擴張' },
     { ok: ta.rsi >= 50 && ta.rsi <= 70, label: 'RSI ' + (ta.rsi || 0).toFixed(0) + '（在 50-70 動能區間）' },
-    { ok: ta.ma5 > ta.ma20, label: '短期均線多頭（MA5 > MA20）' }
+    { ok: ta.ma5 > ta.ma20, label: '短期均線多頭（MA5 > MA20）' },
+    // 基本面檢查（從 enrichSteinhardtFundamentals 結果讀取）
+    { ok: (quoteInfo.fundScore || 0) >= 1, label: '公司獲利（EPS 正值）' + ((quoteInfo.fundDetail || []).find(d => d.includes('EPS')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('EPS')) : '') },
+    { ok: (quoteInfo.fundScore || 0) >= 2, label: '營收成長 > 5%' + ((quoteInfo.fundDetail || []).find(d => d.includes('營收')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('營收')) : '') },
+    { ok: (quoteInfo.fundScore || 0) >= 3, label: 'ROE > 15%（資本效益）' + ((quoteInfo.fundDetail || []).find(d => d.includes('ROE')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('ROE')) : '') }
   ];
   const passCount = checks.filter(c => c.ok).length;
   const totalCount = checks.length;
@@ -3642,7 +3702,7 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
   // 第一性原理說明
   const principles = strategy === 'schwartz'
     ? '<b>突破</b> = 買方力量持續壓過賣方，形成新供需均衡；<b>量能確認</b> = 機構/主力入場，非散戶情緒；<b>RSI 50-75</b> = 動能充足但未過熱；<b>ATR 停損</b> = 尊重股票真實波動，避免正常波動觸發停損。'
-    : '<b>EMA 多排</b> = 短中長線趨勢全面向上，趨勢強度高；<b>MACD 擴張</b> = 動能加速，買盤持續增加；<b>RSI 50-70</b> = 動能存在但未超買，仍有上漲空間；<b>移動停損</b> = 讓利潤奔跑，截斷虧損。';
+    : '<b>Variant Perception（差異認知）</b> = Steinhardt 核心：找市場尚未定價的優質股，技術與基本面雙重確認；<b>EPS 正值 + 營收成長</b> = 公司真實在賺錢且在擴張，不是靠炒作；<b>ROE > 15%</b> = 資本利用率高，管理層懂得為股東創造報酬；<b>EMA 多排 + MACD 擴張</b> = 機構資金持續流入，市場認同基本面；<b>移動停損跟 EMA21</b> = 趨勢反轉時自動保護獲利。';
 
   const regimeAdvice = (() => {
     const vixEl = document.querySelector('#dash-market-kpis .dash-kpi:nth-child(3) .val');
@@ -3664,6 +3724,24 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
     '</div>' +
 
     '<div class="entry-section"><h4>第一性原理</h4><div style="font-size:13px;color:var(--muted);line-height:1.6">' + principles + '</div></div>' +
+
+    (strategy === 'steinhardt' && quoteInfo.fundLoaded != null ?
+    '<div class="entry-section"><h4>📊 基本面驗證（Variant Perception）</h4>' +
+    (quoteInfo.fundLoaded
+      ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">' +
+        (quoteInfo.fundDetail || []).map(d => {
+          const ok = d.includes('✓');
+          const warn = d.includes('⚠️') || d.includes('虧損') || d.includes('衰退') || d.includes('過高') || d.includes('負值');
+          return '<span style="font-size:12px;padding:3px 8px;border-radius:4px;background:' +
+            (ok ? 'rgba(16,185,129,.15);color:var(--green)' : warn ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)') +
+            '">' + d + '</span>';
+        }).join('') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">基本面評分 <b style="color:' + ((quoteInfo.fundScore||0)>=3?'var(--green)':(quoteInfo.fundScore||0)>=2?'var(--yellow)':'var(--red)') + '">' + (quoteInfo.fundScore||0) + '/4</b>｜' +
+        ((quoteInfo.fundScore||0) >= 3 ? '✅ 財務體質優良，符合 Steinhardt 選股標準' :
+         (quoteInfo.fundScore||0) >= 2 ? '⚠️ 基本面尚可，建議縮小部位（0.5%風控）' :
+                                         '❌ 基本面偏弱，Steinhardt 策略不建議進場') + '</div>'
+      : '<div style="font-size:12px;color:var(--muted)">基本面資料不可用（請至個股分析頁手動確認）</div>') +
+    '</div>' : '') +
 
     '<div class="entry-section"><h4>進場建議</h4>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">' +
@@ -3722,9 +3800,12 @@ async function runFullScan() {
     }
     schResults.sort((a,b) => b.signalStrength - a.signalStrength);
     stResults.sort((a,b)  => b.signalStrength - a.signalStrength);
+    // Steinhardt 加跑基本面驗證
+    fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">Steinhardt：基本面驗證中（EPS / 營收 / ROE）...</p></div>';
+    const stEnriched = await enrichSteinhardtFundamentals(stResults);
     // 同步更新 _scanCache
     _scanCache.schwartz   = { results: schResults.slice(0,5), ts: Date.now() };
-    _scanCache.steinhardt = { results: stResults.slice(0,5),  ts: Date.now() };
+    _scanCache.steinhardt = { results: stEnriched.slice(0,5), ts: Date.now() };
 
     const renderMini = (results, strategy, title) => {
       if (!results.length) return '<div class="card"><h3>' + title + '</h3><div style="padding:20px;text-align:center;color:var(--muted)">無符合條件的候選股</div></div>';
@@ -3745,7 +3826,7 @@ async function runFullScan() {
     };
     fullDiv.innerHTML = '<div class="dash-scan-grid">' +
       renderMini(schResults, 'schwartz',   '⚡ Schwartz突破 Top 5') +
-      renderMini(stResults,  'steinhardt', '📈 Steinhardt動量 Top 5') +
+      renderMini(stEnriched, 'steinhardt', '📈 Steinhardt動量 Top 5') +
     '</div>';
   } catch(e) {
     fullDiv.innerHTML = '<div style="color:var(--red);padding:16px">掃描失敗：' + e.message + '</div>';
