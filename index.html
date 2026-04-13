@@ -141,6 +141,15 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 @media(max-width:640px){.dash-scan-grid{grid-template-columns:1fr}}
 .scan-mini-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px}
 .scan-mini-row:last-child{border-bottom:none}
+.t-stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:740px){.t-stock-grid{grid-template-columns:1fr}}
+.t-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
+.t-card.holding{border-color:var(--accent);background:rgba(59,130,246,.06)}
+.t-zone-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--muted)}
+.t-zone-val{font-weight:600;color:var(--text)}
+.t-exit-badge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:8px;display:inline-block}
+.t-entry-form{display:flex;gap:6px;margin-top:10px;align-items:center}
+.t-entry-form input{flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px}
 </style>
 </head>
 <body>
@@ -206,6 +215,20 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
       </div>
       <div style="text-align:center;margin-top:20px">
         <button class="btn btn-primary" style="padding:10px 28px" onclick="renderDashboard(true)">🔄 重新整理（強制重掃）</button>
+      </div>
+
+      <!-- T交易精選 -->
+      <div class="card" style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0">🔄 T交易精選</h3>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔（MSFT・META・GOOGL）・每日更新進出區間・1-7天持倉週期</div>
+          </div>
+          <span id="t-review-badge"></span>
+        </div>
+        <div class="t-stock-grid" id="dash-t-list">
+          <div style="text-align:center;padding:20px;color:var(--muted);grid-column:1/-1">載入中...</div>
+        </div>
       </div>
     </div>
     <div id="page-stock" class="page active">
@@ -293,11 +316,7 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
       </div>
       <div class="tab-bar" id="scanner-tabs">
         <button class="active" onclick="runScan('schwartz')" title="Marty Schwartz: 20日高點突破+量能確認+RSI 50-75+MACD正">⚡ Schwartz突破</button>
-        <button onclick="runScan('steinhardt')" title="Michael Steinhardt: EMA8>21>60均線多排+MACD擴張+RSI 50-70">📈 Steinhardt動量</button>
-        <button onclick="runScan('momentum')">🚀 動量突破</button>
-        <button onclick="runScan('oversold')">📉 超賣反彈</button>
-        <button onclick="runScan('volume')">📢 放量異動</button>
-        <button onclick="runScan('dip')">💎 跌深股</button>
+        <button onclick="runScan('steinhardt')" title="Michael Steinhardt: EMA8>21>60均線多排+MACD擴張+RSI 50-70+基本面驗證">📈 Steinhardt動量</button>
       </div>
       <div class="card" id="scanner-results">
         <h3>掃描結果</h3>
@@ -2706,7 +2725,7 @@ function switchScannerMarket(market) {
 
 async function runScan(strategy) {
   _scannerStrategy = strategy;
-  const stratOrder = ['schwartz','steinhardt','momentum','oversold','volume','dip'];
+  const stratOrder = ['schwartz','steinhardt'];
   document.querySelectorAll('#scanner-tabs button').forEach((b, i) =>
     b.classList.toggle('active', i === stratOrder.indexOf(strategy))
   );
@@ -2777,25 +2796,11 @@ function preFilterByStrategy(quotes, strategy) {
     const avgVol = q.averageDailyVolume3Month || 1;
     const volRatio = vol / avgVol;
     switch (strategy) {
-      // Marty Schwartz：有突破動能 + 量能配合
-      case 'schwartz': return pct > 0.5 && volRatio > 1.2;
-      // Michael Steinhardt：正向動能（EMA對齊在 classifySignal 深判）
-      case 'steinhardt': return pct >= 0;
-      case 'momentum': return pct > 2 && volRatio > 1.3;
-      case 'oversold': return pct < -2;
-      case 'macd': return pct > 0 && pct < 5 && vol > avgVol * 0.8;
-      case 'volume': return volRatio > 2.5;
-      case 'trend': return pct > 0;
-      case 'dip': return pct < -5;
+      case 'schwartz':   return pct > 0.5 && volRatio > 1.2;  // 突破動能 + 量能
+      case 'steinhardt': return pct >= 0;                      // 正向動能（EMA對齊在 classifySignal 深判）
       default: return true;
     }
-  }).sort((a, b) => {
-    if (strategy === 'schwartz' || strategy === 'momentum') return (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0);
-    if (strategy === 'steinhardt') return (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0);
-    if (strategy === 'volume') return (b.regularMarketVolume / (b.averageDailyVolume3Month || 1)) - (a.regularMarketVolume / (a.averageDailyVolume3Month || 1));
-    if (strategy === 'oversold' || strategy === 'dip') return (a.regularMarketChangePercent || 0) - (b.regularMarketChangePercent || 0);
-    return 0;
-  });
+  }).sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0));
 }
 
 function classifySignal(ta, quote, strategy, chartData) {
@@ -2850,53 +2855,6 @@ function classifySignal(ta, quote, strategy, chartData) {
       return { name: '📈 Steinhardt動量', strength, detail };
     }
 
-    case 'momentum': {
-      const aboveMa20 = ta.ma20 && price > ta.ma20;
-      if (!aboveMa20) return null;
-      let strength = 1;
-      if (volRatio > 1.3) strength++;
-      if (ta.rsi > 45 && ta.rsi < 80) strength++;
-      if (ta.macd > ta.signal) strength++;
-      if (ta.kd.k > ta.kd.d) strength++;
-      return { name: '動量突破', strength };
-    }
-    case 'oversold': {
-      const rsiOversold = ta.rsi < 35, kdOversold = ta.kd.k < 25;
-      const bbLow = ta.bb.lo != null && price <= ta.bb.lo * 1.02;
-      if (!rsiOversold && !kdOversold && !bbLow) return null;
-      let strength = 1;
-      if (rsiOversold) strength++; if (kdOversold) strength++; if (bbLow) strength++;
-      if (ta.kd.k > ta.kd.d && ta.kd.k < 30) strength++;
-      return { name: '超賣反彈', strength };
-    }
-    case 'macd': {
-      if (ta.hist <= 0) return null;
-      let strength = 2;
-      if (ta.macd > ta.signal) strength++;
-      if (price > ta.ma20) strength++;
-      if (ta.rsi > 45 && ta.rsi < 65) strength++;
-      return { name: 'MACD翻多', strength };
-    }
-    case 'volume': {
-      if (volRatio < 2.5) return null;
-      return { name: '放量異動 (' + volRatio.toFixed(1) + 'x)', strength: Math.min(5, Math.floor(volRatio)) };
-    }
-    case 'trend': {
-      if (!ta.ma5 || !ta.ma20 || !ta.ma60) return null;
-      if (!(ta.ma5 > ta.ma20 && ta.ma20 > ta.ma60)) return null;
-      let strength = 3;
-      if (ta.rsi > 50 && ta.rsi < 70) strength++;
-      if (ta.macd > 0) strength++;
-      return { name: '均線多頭排列', strength };
-    }
-    case 'dip': {
-      if (ta.rsi > 35) return null;
-      let strength = 1;
-      if (ta.rsi < 25) strength++; if (ta.kd.k < 20) strength++;
-      if (ta.bb.lo != null && price < ta.bb.lo) strength++;
-      if (pct < -8) strength++;
-      return { name: '跌深 (RSI:' + ta.rsi.toFixed(0) + ')', strength };
-    }
   }
   return null;
 }
@@ -2904,10 +2862,7 @@ function classifySignal(ta, quote, strategy, chartData) {
 function renderScannerResults(results, strategy, usedFallback) {
   const tableDiv = document.getElementById('scanner-table');
   const strategyNames = {
-    schwartz: '⚡ Schwartz突破', steinhardt: '📈 Steinhardt動量',
-    momentum: '🚀 動量突破', oversold: '📉 超賣反彈',
-    macd: '📊 MACD翻多', volume: '📢 放量異動',
-    trend: '📈 均線多排', dip: '💎 跌深股'
+    schwartz: '⚡ Schwartz突破', steinhardt: '📈 Steinhardt動量'
   };
   const roleDescriptions = {
     schwartz: '基於 Marty Schwartz 策略：20日高點突破 × 量能確認(≥1.5x) × RSI 50-75 × MACD正向。停損：突破線下 1ATR。目標：2-3ATR。',
@@ -3085,44 +3040,60 @@ function loadScanner() {
 // ============ RISK CENTER ============
 function renderRisk() {
   const div = document.getElementById('risk-content');
-  div.innerHTML = '<div class="card"><h3>📐 倉位計算器（Position Sizing）</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">基於 Marty Schwartz 的 1% 法則：單筆交易最大虧損不超過總資金的 1-2%。</p><div class="journal-form" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>總資金</label><input type="number" id="risk-capital" placeholder="1000000" step="1000"></div><div class="form-group"><label>風險比例</label><select id="risk-pct"><option value="0.5">0.5%（極保守）</option><option value="1" selected>1%（標準）</option><option value="1.5">1.5%（積極）</option><option value="2">2%（激進）</option><option value="3">3%（高風險）</option></select></div><div class="form-group"><label>進場價</label><input type="number" id="risk-entry" step="0.01" placeholder="150.00"></div><div class="form-group"><label>停損價</label><input type="number" id="risk-stop" step="0.01" placeholder="145.00"></div><div class="form-group"><label>市場</label><select id="risk-market" onchange="riskMarketChange()"><option value="us">美股</option><option value="tw">台股</option></select></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcPosition()" style="width:100%">計算倉位</button></div></div></div><div id="position-result"></div>' +
+  div.innerHTML = '<div class="card"><h3>📐 倉位計算器（Position Sizing）</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">基於 Marty Schwartz 的 1% 法則：單筆交易最大虧損不超過總資金的 1-2%。</p><div class="journal-form" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>總資金 <span id="fx-rate-display" style="font-size:10px;color:var(--muted)"></span></label><div style="display:flex;gap:6px"><input type="number" id="risk-capital" placeholder="1000000" step="1000" style="flex:1"><select id="risk-currency" onchange="setCurrency(this.value)" style="width:90px;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px"><option value="usd">USD $</option><option value="twd">TWD NT$</option></select></div></div><div class="form-group"><label>風險比例</label><select id="risk-pct"><option value="0.5">0.5%（極保守）</option><option value="1" selected>1%（標準）</option><option value="1.5">1.5%（積極）</option><option value="2">2%（激進）</option><option value="3">3%（高風險）</option></select></div><div class="form-group"><label>進場價</label><input type="number" id="risk-entry" step="0.01" placeholder="150.00"></div><div class="form-group"><label>停損價</label><input type="number" id="risk-stop" step="0.01" placeholder="145.00"></div><div class="form-group"><label>市場</label><select id="risk-market" onchange="riskMarketChange()"><option value="us">美股</option><option value="tw">台股</option></select></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcPosition()" style="width:100%">計算倉位</button></div></div></div><div id="position-result"></div>' +
     '<div class="card"><h3>📊 Kelly Criterion 最佳倉位</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">根據你的歷史勝率和盈虧比，計算數學上最佳的倉位比例。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>勝率 (%)</label><input type="number" id="kelly-winrate" value="55" min="1" max="99" step="1"></div><div class="form-group"><label>平均獲利 / 平均虧損</label><input type="number" id="kelly-ratio" value="1.5" min="0.1" step="0.1"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcKelly()">計算 Kelly</button></div></div><div id="kelly-result"></div><div style="margin-top:8px;font-size:12px;color:var(--orange)">💡 實務上建議使用 Half Kelly（凱利值的一半），以降低波動。</div></div>' +
     '<div class="card"><h3>💀 最大回撤模擬</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">模擬連續虧損時你的資金會怎樣。這就是風控存在的意義。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>起始資金</label><input type="number" id="dd-capital" value="1000000" step="1000"></div><div class="form-group"><label>每次虧損比例 (%)</label><input type="number" id="dd-loss" value="2" min="0.1" max="50" step="0.5"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcDrawdown()">模擬</button></div></div><div id="dd-result"></div></div>' +
     '<div class="card"><h3>📋 交易策略模板</h3><div class="tab-bar" id="strategy-tabs"><button class="active" onclick="showStrategy(\'breakout\')">突破交易</button><button onclick="showStrategy(\'meanrev\')">均值回歸</button><button onclick="showStrategy(\'momentum\')">動量追蹤</button><button onclick="showStrategy(\'gap\')">缺口交易</button><button onclick="showStrategy(\'orb\')">開盤區間突破</button></div><div id="strategy-detail"></div></div>';
   showStrategy('breakout');
   autoFillKellyFromJournal();
+  // 套用幣別設定（renderRisk 每次都重建 DOM，需重新設定）
+  setTimeout(initCurrencyUI, 0);
 }
 
 function riskMarketChange() {}
 
 function calcPosition() {
-  const capital = parseFloat(document.getElementById('risk-capital').value) || 0;
+  const capitalRaw = parseFloat(document.getElementById('risk-capital').value) || 0;
   const riskPct = parseFloat(document.getElementById('risk-pct').value) / 100;
   const entry = parseFloat(document.getElementById('risk-entry').value) || 0;
   const stop = parseFloat(document.getElementById('risk-stop').value) || 0;
   const market = document.getElementById('risk-market').value;
-  if (!capital || !entry || !stop || entry <= stop) {
+  if (!capitalRaw || !entry || !stop || entry <= stop) {
     document.getElementById('position-result').innerHTML = '<div class="card" style="color:var(--red);text-align:center">請填寫完整資料，且進場價必須大於停損價</div>';
     return;
   }
-  const maxLoss = capital * riskPct, riskPerShare = entry - stop;
+  // 幣別轉換：若 TWD 模式，先把資金換成 USD 再計算（進出場價皆為 USD）
+  const isTWD = _currency === 'twd' && market === 'us';
+  const capitalUSD = isTWD ? capitalRaw / _fxRate : capitalRaw;
+  const maxLoss = capitalUSD * riskPct;
+  const riskPerShare = entry - stop;
   let shares = Math.floor(maxLoss / riskPerShare);
   if (market === 'tw') shares = Math.floor(shares / 1000) * 1000;
-  const totalCost = shares * entry, actualLoss = shares * riskPerShare, capitalPct = totalCost / capital * 100;
-  const cur = market === 'tw' ? 'NT$' : '$';
-  let html = '<div class="card"><h3>📐 計算結果</h3><div style="text-align:center;padding:20px 0"><div style="font-size:14px;color:var(--muted)">建議買入數量</div><div style="font-size:48px;font-weight:700;color:var(--accent)">' + shares.toLocaleString() + ' 股</div>';
+  const totalCostUSD = shares * entry;
+  const actualLossUSD = shares * riskPerShare;
+  const totalCostTWD = totalCostUSD * _fxRate;
+  const actualLossTWD = actualLossUSD * _fxRate;
+  const capitalPct = totalCostUSD / capitalUSD * 100;
+  const cur = (market === 'tw' || !isTWD) ? (market === 'tw' ? 'NT$' : '$') : 'NT$';
+
+  let html = '<div class="card"><h3>📐 計算結果</h3>';
+  if (isTWD) html += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">匯率：1 USD = ' + _fxRate.toFixed(2) + ' TWD</div>';
+  html += '<div style="text-align:center;padding:20px 0"><div style="font-size:14px;color:var(--muted)">建議買入數量</div><div style="font-size:48px;font-weight:700;color:var(--accent)">' + shares.toLocaleString() + ' 股</div>';
   if (market === 'tw') html += '<div style="font-size:16px;color:var(--muted)">(' + (shares / 1000) + ' 張)</div>';
   html += '</div><div class="table-wrap"><table>';
-  html += '<tr><td style="color:var(--muted)">總投入金額</td><td style="text-align:right"><b>' + cur + totalCost.toLocaleString() + '</b></td></tr>';
+  html += '<tr><td style="color:var(--muted)">帳戶資金</td><td style="text-align:right"><b>' + (isTWD ? 'NT$'+capitalRaw.toLocaleString() : '$'+capitalUSD.toLocaleString()) + '</b></td></tr>';
+  html += '<tr><td style="color:var(--muted)">總投入金額</td><td style="text-align:right"><b>' + (isTWD ? 'NT$'+Math.round(totalCostTWD).toLocaleString()+' / $'+totalCostUSD.toLocaleString()+' USD' : '$'+totalCostUSD.toLocaleString()) + '</b></td></tr>';
   html += '<tr><td style="color:var(--muted)">佔總資金比例</td><td style="text-align:right"><b>' + capitalPct.toFixed(1) + '%</b></td></tr>';
-  html += '<tr><td style="color:var(--muted)">單股風險</td><td style="text-align:right"><b>' + riskPerShare.toFixed(2) + '</b></td></tr>';
-  html += '<tr><td style="color:var(--muted)">最大虧損 (1R)</td><td style="text-align:right;color:var(--red)"><b>' + cur + actualLoss.toLocaleString() + '</b></td></tr>';
-  html += '<tr><td style="color:var(--muted)">佔總資金</td><td style="text-align:right;color:var(--red)"><b>' + (actualLoss / capital * 100).toFixed(2) + '%</b></td></tr>';
+  html += '<tr><td style="color:var(--muted)">單股風險</td><td style="text-align:right"><b>$' + riskPerShare.toFixed(2) + ' USD' + (isTWD ? ' / NT$' + (riskPerShare * _fxRate).toFixed(0) : '') + '</b></td></tr>';
+  html += '<tr><td style="color:var(--muted)">最大虧損 (1R)</td><td style="text-align:right;color:var(--red)"><b>' + (isTWD ? 'NT$'+Math.round(actualLossTWD).toLocaleString()+' / $'+actualLossUSD.toFixed(0)+' USD' : '$'+actualLossUSD.toLocaleString()) + '</b></td></tr>';
+  html += '<tr><td style="color:var(--muted)">佔總資金</td><td style="text-align:right;color:var(--red)"><b>' + (actualLossUSD / capitalUSD * 100).toFixed(2) + '%</b></td></tr>';
   html += '</table></div><h3 style="margin-top:20px">🎯 R 倍數情境</h3><div class="table-wrap"><table><thead><tr><th>情境</th><th>出場價</th><th>損益</th><th>報酬率</th></tr></thead><tbody>';
-  html += '<tr style="background:rgba(239,68,68,.05)"><td>停損 (-1R)</td><td>' + stop.toFixed(2) + '</td><td style="color:var(--red)">-' + cur + actualLoss.toLocaleString() + '</td><td style="color:var(--red)">-' + (riskPct * 100).toFixed(1) + '%</td></tr>';
+  html += '<tr style="background:rgba(239,68,68,.05)"><td>停損 (-1R)</td><td>$' + stop.toFixed(2) + '</td><td style="color:var(--red)">-' + (isTWD ? 'NT$'+Math.round(actualLossTWD).toLocaleString() : '$'+actualLossUSD.toLocaleString()) + '</td><td style="color:var(--red)">-' + (riskPct * 100).toFixed(1) + '%</td></tr>';
   [1, 1.5, 2, 2.5, 3, 5].forEach(r => {
-    const exitPrice = entry + riskPerShare * r, profit = shares * riskPerShare * r;
-    html += '<tr style="background:rgba(16,185,129,.05)"><td>+' + r + 'R</td><td>' + exitPrice.toFixed(2) + '</td><td style="color:var(--green)">+' + cur + profit.toLocaleString() + '</td><td style="color:var(--green)">+' + (profit / capital * 100).toFixed(2) + '%</td></tr>';
+    const exitPrice = entry + riskPerShare * r;
+    const profitUSD = shares * riskPerShare * r;
+    const profitTWD = profitUSD * _fxRate;
+    html += '<tr style="background:rgba(16,185,129,.05)"><td>+' + r + 'R</td><td>$' + exitPrice.toFixed(2) + '</td><td style="color:var(--green)">+' + (isTWD ? 'NT$'+Math.round(profitTWD).toLocaleString() : '$'+profitUSD.toLocaleString()) + '</td><td style="color:var(--green)">+' + (profitUSD / capitalUSD * 100).toFixed(2) + '%</td></tr>';
   });
   html += '</tbody></table></div></div>';
   document.getElementById('position-result').innerHTML = html;
@@ -3365,6 +3336,41 @@ const _scanCache = {
   steinhardt: { results: [], ts: 0 },
   TTL: 5 * 60 * 1000   // 5 分鐘
 };
+// ── T交易精選：固定三檔 ──────────────────────────────────────────────────
+const T_STOCKS = [
+  { symbol:'MSFT', name:'Microsoft',      cycle:'IT採購週期 + Azure雲端旺季(Q4)，每季財報前布局，Q1回調後建倉' },
+  { symbol:'META', name:'Meta Platforms', cycle:'廣告Q4旺季(CPM較Q1高30-40%) + AI廣告精準投放催化，9月底-12月最佳視窗' },
+  { symbol:'GOOGL',name:'Alphabet',       cycle:'廣告週期 + Cloud季增速 + 選舉年廣告超級週期，AI恐慌超跌後均值回歸' }
+];
+const _tCache = { data:{}, ts:0, TTL:15*60*1000 };
+let _tHoldings = JSON.parse(localStorage.getItem('tHoldings')||'{}');
+function saveTHoldings(){ localStorage.setItem('tHoldings', JSON.stringify(_tHoldings)); }
+let _tLastReview = localStorage.getItem('tLastReview')||'';
+
+// ── 幣別切換 ─────────────────────────────────────────────────────────────
+let _currency  = localStorage.getItem('pref_currency') || 'usd';
+let _fxRate    = parseFloat(localStorage.getItem('pref_fxrate')) || 32.5;
+const _fxCacheTs = { ts: 0, TTL: 30 * 60 * 1000 };
+async function fetchFxRate() {
+  if (Date.now() - _fxCacheTs.ts < _fxCacheTs.TTL) return _fxRate;
+  try {
+    const chart = await yfChart('TWD=X', '5d', '1d');
+    const closes = chart.indicators.quote[0].close.filter(Boolean);
+    _fxRate = closes[closes.length - 1];
+    _fxCacheTs.ts = Date.now();
+    localStorage.setItem('pref_fxrate', _fxRate.toFixed(2));
+  } catch(e) { /* fallback to stored value */ }
+  return _fxRate;
+}
+function setCurrency(val) {
+  _currency = val;
+  localStorage.setItem('pref_currency', val);
+  const display = document.getElementById('fx-rate-display');
+  if (display) display.textContent = val === 'twd' ? '匯率：1 USD = ' + _fxRate.toFixed(2) + ' TWD（30分鐘更新）' : '';
+  const sel = document.getElementById('risk-currency');
+  if (sel && sel.value !== val) sel.value = val;
+}
+
 // 進場指引資料暫存（用 index 避免 onclick 中 JSON 逸出問題）
 const _entryData = {};  // key: "SYMBOL_strategy"
 function _storeEntry(symbol, strategy, r) {
@@ -3514,6 +3520,8 @@ async function renderDashboard(forceRescan) {
 
   // 4. 觸發掃描（自動，快取 5 分鐘）
   quickDashboardScan(forceRescan);
+  // 5. T交易精選（15 分鐘快取，獨立載入）
+  renderDashTTrading();
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
@@ -3560,7 +3568,9 @@ async function quickDashboardScan(force) {
     // Steinhardt：技術面後再跑基本面驗證（Variant Perception）
     if (stEl) stEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;font-size:12px">檢驗基本面（EPS / 營收 / ROE）...</p></div>';
     const stEnriched = await enrichSteinhardtFundamentals(stResults);
-    _scanCache.steinhardt = { results: stEnriched.slice(0, 5), ts: Date.now() };
+    // 基本面硬過濾：fundScore < 2 排除（API 失敗的保留，避免過度過濾）
+    const stFiltered = stEnriched.filter(r => !r.fundLoaded || r.fundScore >= 2);
+    _scanCache.steinhardt = { results: stFiltered.slice(0, 5), ts: Date.now() };
     renderDashScanList('steinhardt', _scanCache.steinhardt.results);
   } catch(e) {
     if (swEl) swEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:12px">掃描失敗，請重新整理</div>';
@@ -3585,7 +3595,7 @@ function renderDashScanList(strategy, results) {
           (r.fundScore >= 3 ? 'rgba(16,185,129,.2);color:var(--green)' :
            r.fundScore >= 2 ? 'rgba(245,158,11,.2);color:var(--yellow)' :
                               'rgba(239,68,68,.15);color:var(--red)') +
-          '">📊' + (r.fundScore || 0) + '/4</span>'
+          '">📊' + (r.fundScore || 0) + '/5</span>'
       : '';
     return '<div class="scan-mini-row">' +
       '<div style="min-width:60px"><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></div>' +
@@ -3648,6 +3658,13 @@ async function enrichSteinhardtFundamentals(candidates) {
       else if (pe != null && pe >= 35 && pe < 60) { fundDetail.push('PE ' + pe.toFixed(1) + ' 偏高'); }
       else if (pe != null && pe >= 60)             { fundDetail.push('PE ' + pe.toFixed(1) + ' 過高 ⚠️'); }
       else if (pe != null && pe <= 0)              { fundDetail.push('PE 負值(虧損)'); }
+      // 5. PEG < 1.5（Variant Perception 核心：成長被低估）
+      const peg = rv(ks.pegRatio);
+      if (peg != null && peg > 0 && peg < 1.5)    { fundScore++; fundDetail.push('PEG ' + peg.toFixed(2) + ' ✓ 成長低估'); }
+      else if (peg != null && peg > 0)             { fundDetail.push('PEG ' + peg.toFixed(2) + '（偏高）'); }
+      // 6. 盈利加速（Forward PE < Trailing PE）— 不加分，僅作標註
+      const fpe = rv(sd.forwardPE), tpe = rv(sd.trailingPE);
+      if (fpe != null && tpe != null && fpe < tpe) { fundDetail.push('盈利加速 fPE' + fpe.toFixed(1) + '<tPE' + tpe.toFixed(1) + ' ↑'); }
       return { ...r, fundScore, fundDetail, fundLoaded: true };
     } catch(e) {
       return { ...r, fundScore: 0, fundDetail: ['基本面載入失敗'], fundLoaded: false };
@@ -3672,11 +3689,13 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
   const pctRisk = price > 0 ? ((price - guide.stop) / price * 100).toFixed(1) : '?';
   const stars   = '★'.repeat(Math.min(quoteInfo.signalStrength || 0, 5)) + '☆'.repeat(Math.max(0, 5 - (quoteInfo.signalStrength || 0)));
 
-  // 從風控中心讀帳戶資金
-  const capitalEl = document.getElementById('risk-capital');
-  const capital   = capitalEl ? (parseFloat(capitalEl.value) || 0) : 0;
-  const maxRisk   = capital * 0.01;  // 1% 風控
-  const suggestShares = (capital > 0 && guide.risk > 0) ? Math.floor(maxRisk / guide.risk) : null;
+  // 從風控中心讀帳戶資金（支援 TWD/USD 幣別）
+  const capitalEl  = document.getElementById('risk-capital');
+  const capitalRaw = capitalEl ? (parseFloat(capitalEl.value) || 0) : 0;
+  const capitalUSD = (_currency === 'twd' && capitalRaw > 0) ? capitalRaw / _fxRate : capitalRaw;
+  const capital    = capitalUSD; // 內部計算統一用 USD
+  const maxRisk    = capitalUSD * 0.01;  // 1% 風控（USD）
+  const suggestShares = (capitalUSD > 0 && guide.risk > 0) ? Math.floor(maxRisk / guide.risk) : null;
 
   // 指標確認清單
   const checks = strategy === 'schwartz' ? [
@@ -3736,10 +3755,10 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
             (ok ? 'rgba(16,185,129,.15);color:var(--green)' : warn ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)') +
             '">' + d + '</span>';
         }).join('') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">基本面評分 <b style="color:' + ((quoteInfo.fundScore||0)>=3?'var(--green)':(quoteInfo.fundScore||0)>=2?'var(--yellow)':'var(--red)') + '">' + (quoteInfo.fundScore||0) + '/4</b>｜' +
-        ((quoteInfo.fundScore||0) >= 3 ? '✅ 財務體質優良，符合 Steinhardt 選股標準' :
-         (quoteInfo.fundScore||0) >= 2 ? '⚠️ 基本面尚可，建議縮小部位（0.5%風控）' :
-                                         '❌ 基本面偏弱，Steinhardt 策略不建議進場') + '</div>'
+        '<div style="font-size:12px;color:var(--muted)">基本面評分 <b style="color:' + ((quoteInfo.fundScore||0)>=4?'var(--green)':(quoteInfo.fundScore||0)>=2?'var(--yellow)':'var(--red)') + '">' + (quoteInfo.fundScore||0) + '/5</b>｜' +
+        ((quoteInfo.fundScore||0) >= 4 ? '✅ 財務體質優良，高度符合 Steinhardt Variant Perception 標準' :
+         (quoteInfo.fundScore||0) >= 2 ? '⚠️ 基本面尚可（已通過硬門檻），建議標準1%風控' :
+                                         '⚠️ 基本面低於門檻，謹慎操作') + '</div>'
       : '<div style="font-size:12px;color:var(--muted)">基本面資料不可用（請至個股分析頁手動確認）</div>') +
     '</div>' : '') +
 
@@ -3753,14 +3772,15 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
       '<div><div style="color:var(--muted);font-size:11px">ATR 參考</div><div style="font-weight:600">$' + guide.atr.toFixed(2) + '</div></div>' +
     '</div></div>' +
 
-    (capital > 0 ?
+    (capitalUSD > 0 ?
     '<div class="entry-section"><h4>建議部位（連動風控中心）</h4>' +
+    (_currency === 'twd' ? '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">匯率：1 USD = ' + _fxRate.toFixed(2) + ' TWD</div>' : '') +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">' +
-      '<div><div style="color:var(--muted);font-size:11px">帳戶資金</div><div style="font-weight:600">$' + capital.toLocaleString() + '</div></div>' +
-      '<div><div style="color:var(--muted);font-size:11px">1% 最大虧損</div><div style="font-weight:600;color:var(--red)">$' + maxRisk.toFixed(0) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">帳戶資金</div><div style="font-weight:600">' + (_currency==='twd' ? 'NT$'+capitalRaw.toLocaleString() : '$'+capitalUSD.toLocaleString()) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">1% 最大虧損</div><div style="font-weight:600;color:var(--red)">' + (_currency==='twd' ? 'NT$'+Math.round(maxRisk*_fxRate).toLocaleString() : '$'+maxRisk.toFixed(0)) + '</div></div>' +
       '<div><div style="color:var(--muted);font-size:11px">建議股數</div><div style="font-weight:700;color:var(--accent)">' + (suggestShares || '--') + ' 股</div></div>' +
-      '<div><div style="color:var(--muted);font-size:11px">總佔倉</div><div style="font-weight:600">' + (suggestShares ? (suggestShares * price / capital * 100).toFixed(1) + '%' : '--') + '</div></div>' +
-    '</div></div>' : '<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">💡 在「🛡️ 風控中心」填入帳戶資金，即可自動計算建議股數</div>') +
+      '<div><div style="color:var(--muted);font-size:11px">總成本</div><div style="font-weight:600">' + (suggestShares ? (_currency==='twd' ? 'NT$'+Math.round(suggestShares*price*_fxRate).toLocaleString()+' / $'+Math.round(suggestShares*price).toLocaleString()+' USD' : '$'+(suggestShares*price).toLocaleString()) : '--') + '</div></div>' +
+    '</div></div>' : '<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">💡 在「🛡️ 風控中心」填入帳戶資金（支援 TWD / USD），即可自動計算建議股數</div>') +
 
     '<div style="margin-top:16px;padding:10px;background:rgba(239,68,68,.08);border-radius:8px;font-size:12px;color:var(--muted)">' +
       '⚠️ <b>' + (strategy === 'schwartz' ? '假突破風險' : '趨勢反轉風險') + '</b>：' +
@@ -3803,9 +3823,11 @@ async function runFullScan() {
     // Steinhardt 加跑基本面驗證
     fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">Steinhardt：基本面驗證中（EPS / 營收 / ROE）...</p></div>';
     const stEnriched = await enrichSteinhardtFundamentals(stResults);
+    // 基本面硬過濾：fundScore < 2 排除
+    const stFiltered = stEnriched.filter(r => !r.fundLoaded || r.fundScore >= 2);
     // 同步更新 _scanCache
     _scanCache.schwartz   = { results: schResults.slice(0,5), ts: Date.now() };
-    _scanCache.steinhardt = { results: stEnriched.slice(0,5), ts: Date.now() };
+    _scanCache.steinhardt = { results: stFiltered.slice(0,5), ts: Date.now() };
 
     const renderMini = (results, strategy, title) => {
       if (!results.length) return '<div class="card"><h3>' + title + '</h3><div style="padding:20px;text-align:center;color:var(--muted)">無符合條件的候選股</div></div>';
@@ -3826,15 +3848,322 @@ async function runFullScan() {
     };
     fullDiv.innerHTML = '<div class="dash-scan-grid">' +
       renderMini(schResults, 'schwartz',   '⚡ Schwartz突破 Top 5') +
-      renderMini(stEnriched, 'steinhardt', '📈 Steinhardt動量 Top 5') +
+      renderMini(stFiltered, 'steinhardt', '📈 Steinhardt動量 Top 5') +
     '</div>';
   } catch(e) {
     fullDiv.innerHTML = '<div style="color:var(--red);padding:16px">掃描失敗：' + e.message + '</div>';
   }
 }
 
+// ============ T交易精選引擎 ============
+
+// T-score 計算
+function scoreTTrading(ta, chartData, price) {
+  const { closes, highs, lows } = chartData;
+  const n = Math.min(closes.length, 20);
+  // 日內振幅序列
+  const ranges = [];
+  for (let i = closes.length - n; i < closes.length; i++) {
+    if (closes[i] > 0) ranges.push((highs[i] - lows[i]) / closes[i]);
+  }
+  const mean = ranges.reduce((a,b)=>a+b,0) / (ranges.length||1);
+  const std  = Math.sqrt(ranges.reduce((a,b)=>a+(b-mean)**2,0) / (ranges.length||1));
+  const rci  = mean > 0 ? std / mean : 1; // Range Consistency Index（越低越規律）
+
+  const atrPct = ta.atr ? (ta.atr / price * 100) : 0;
+  const bbWidth = (ta.bb && ta.bb.hi && ta.bb.lo && ta.bb.mid && ta.bb.mid > 0)
+    ? (ta.bb.hi - ta.bb.lo) / ta.bb.mid : 0;
+
+  // 計分
+  let score = 0;
+  const detail = [];
+  // ATR%（甜蜜區 2-3.5%）
+  if (atrPct >= 2 && atrPct <= 3.5)      { score += 30; detail.push('ATR ' + atrPct.toFixed(1) + '% ✓'); }
+  else if (atrPct >= 1.5 || atrPct <= 5) { score += 18; detail.push('ATR ' + atrPct.toFixed(1) + '%'); }
+  else                                     { score += 6;  detail.push('ATR ' + atrPct.toFixed(1) + '% △'); }
+  // 振幅一致性
+  if (rci < 0.25)      { score += 28; detail.push('振幅一致性 優✓'); }
+  else if (rci < 0.35) { score += 18; detail.push('振幅一致性 良'); }
+  else if (rci < 0.45) { score += 10; detail.push('振幅一致性 中'); }
+  else                  { detail.push('振幅一致性 差'); }
+  // BB寬度（適中 0.04-0.10）
+  if (bbWidth >= 0.04 && bbWidth <= 0.10)       { score += 22; detail.push('BB寬度 適中✓'); }
+  else if (bbWidth >= 0.02 && bbWidth <= 0.15)  { score += 12; detail.push('BB寬度 尚可'); }
+  else                                           { detail.push('BB寬度 偏離'); }
+  // RSI 中立（40-60 最適合T）
+  if (ta.rsi >= 40 && ta.rsi <= 60)       { score += 20; detail.push('RSI ' + ta.rsi.toFixed(0) + ' 中立✓'); }
+  else if (ta.rsi >= 35 && ta.rsi <= 65) { score += 12; detail.push('RSI ' + ta.rsi.toFixed(0)); }
+  else                                    { score += 4;  detail.push('RSI ' + ta.rsi.toFixed(0) + ' 偏離'); }
+
+  score = Math.min(100, score);
+  const label = score >= 80 ? '🔥 高度適合' : score >= 65 ? '✅ 適合' : score >= 50 ? '⚠️ 勉強' : '—';
+  const atr = ta.atr || price * 0.02;
+  const ma20 = ta.ma20 || price;
+  const bbHi = (ta.bb && ta.bb.hi) ? ta.bb.hi : price * 1.03;
+  const buyLo  = ma20 - 0.3 * atr;
+  const buyHi  = ma20 + 0.2 * atr;
+  const sellLo = bbHi - 0.2 * atr;
+  const sellHi = bbHi + 0.1 * atr;
+  const stop   = buyLo - 0.5 * atr;
+  return { score, label, atrPct, rci, buyLo, buyHi, sellLo, sellHi, stop, detail };
+}
+
+// 每日抓取三檔 T 股票資料
+async function fetchTStockData() {
+  const results = [];
+  for (const stock of T_STOCKS) {
+    try {
+      const chart = await yfChart(stock.symbol, '3mo', '1d');
+      const q0 = chart.indicators.quote[0];
+      const closes = q0.close.map(v => v||0).filter((_,i) => q0.close[i] != null);
+      const highs  = q0.high.map(v => v||0).filter((_,i) => q0.high[i]  != null);
+      const lows   = q0.low.map(v  => v||0).filter((_,i) => q0.low[i]   != null);
+      const vols   = (q0.volume||[]).map(v => v||0).filter((_,i) => (q0.volume||[])[i] != null);
+      const price  = closes[closes.length - 1] || 0;
+      const prevClose = closes[closes.length - 2] || price;
+      const changePct = prevClose > 0 ? (price - prevClose) / prevClose * 100 : 0;
+      const ta = technicalAnalysis(closes, highs, lows, vols, price);
+      const tScore = scoreTTrading(ta, { closes, highs, lows, vols }, price);
+      results.push({ ...stock, price, changePct, ta, tScore, closes, highs, lows });
+    } catch(e) {
+      results.push({ ...stock, price: 0, changePct: 0, ta: null, tScore: null, error: true });
+    }
+  }
+  _tCache.data = Object.fromEntries(results.map(r => [r.symbol, r]));
+  _tCache.ts = Date.now();
+  return results;
+}
+
+// 出場訊號判斷
+function calcTExitSignal(symbol, tScore, ta, price) {
+  const holding = _tHoldings[symbol];
+  if (!holding || !ta || !tScore) return null;
+  const entry = parseFloat(holding.entry) || 0;
+  const entryDate = new Date(holding.date);
+  const daysHeld = Math.floor((Date.now() - entryDate.getTime()) / 86400000);
+  const pnlPct = entry > 0 ? (price - entry) / entry * 100 : 0;
+
+  if (price <= tScore.stop || (ta.ema8 && ta.ema21 && ta.ema8 < ta.ema21)) {
+    return { level:'exit', text:'🔴 停損 / 趨勢反轉，立即出場', daysHeld, pnlPct };
+  }
+  if (price >= tScore.sellLo) {
+    return { level:'warn', text:'🟠 已進入賣區（$' + tScore.sellLo.toFixed(2) + '），考慮出場', daysHeld, pnlPct };
+  }
+  if (ta.rsi > 70) {
+    return { level:'warn', text:'🟠 RSI ' + ta.rsi.toFixed(0) + ' 超買，考慮減倉', daysHeld, pnlPct };
+  }
+  if (daysHeld >= 5) {
+    return { level:'watch', text:'🟡 持倉第 ' + daysHeld + ' 天，接近 7 天上限', daysHeld, pnlPct };
+  }
+  return { level:'none', text:'🟢 持倉正常，繼續觀察', daysHeld, pnlPct };
+}
+
+// 季度複查檢查
+function checkTQuarterlyReview() {
+  const badge = document.getElementById('t-review-badge');
+  if (!badge) return;
+  if (!_tLastReview) {
+    badge.innerHTML = '<span style="background:rgba(245,158,11,.2);color:var(--yellow);padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer" onclick="confirmTReview()">🔔 設定初始審查日期</span>';
+    return;
+  }
+  const daysSince = Math.floor((Date.now() - new Date(_tLastReview).getTime()) / 86400000);
+  if (daysSince >= 90) {
+    badge.innerHTML = '<span style="background:rgba(239,68,68,.15);color:var(--red);padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer" onclick="confirmTReview()">🔔 T交易季度審查到期（距上次' + daysSince + '天），點此確認維持</span>';
+  } else {
+    badge.innerHTML = '<span style="color:var(--muted);font-size:11px">下次審查：' + (90 - daysSince) + ' 天後</span>';
+  }
+}
+function confirmTReview() {
+  _tLastReview = new Date().toISOString().slice(0,10);
+  localStorage.setItem('tLastReview', _tLastReview);
+  checkTQuarterlyReview();
+}
+
+// 渲染 T交易精選卡片
+async function renderDashTTrading() {
+  const el = document.getElementById('dash-t-list');
+  if (!el) return;
+  checkTQuarterlyReview();
+
+  if (Date.now() - _tCache.ts > _tCache.TTL || !Object.keys(_tCache.data).length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);grid-column:1/-1"><div class="spinner" style="margin:0 auto 8px"></div>載入 MSFT・META・GOOGL 行情...</div>';
+    await fetchTStockData();
+  }
+
+  const rows = T_STOCKS.map(stock => {
+    const d = _tCache.data[stock.symbol];
+    if (!d || d.error) return '<div class="t-card"><div style="color:var(--muted);text-align:center;padding:20px">' + stock.symbol + ' 資料載入失敗</div></div>';
+    const up = d.changePct >= 0;
+    const ts = d.tScore;
+    const holding = _tHoldings[stock.symbol];
+    const exitSig = calcTExitSignal(stock.symbol, ts, d.ta, d.price);
+
+    if (holding) {
+      // ── 持倉模式 ─────────────────────────────────────────
+      const entry = parseFloat(holding.entry);
+      const exitBgColor = exitSig?.level === 'exit' ? 'rgba(239,68,68,.2)' :
+                          exitSig?.level === 'warn'  ? 'rgba(245,158,11,.2)' :
+                          exitSig?.level === 'watch' ? 'rgba(245,158,11,.1)' : 'rgba(16,185,129,.1)';
+      const pnlColor = (exitSig?.pnlPct||0) >= 0 ? 'var(--green)' : 'var(--red)';
+      return '<div class="t-card holding">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
+          '<div><b style="color:var(--accent);font-size:16px">' + stock.symbol + '</b><span style="color:var(--muted);font-size:12px;margin-left:6px">' + stock.name + '</span></div>' +
+          '<div style="text-align:right"><div style="font-size:15px;font-weight:600">$' + d.price.toFixed(2) + '</div>' +
+          '<div style="font-size:11px;color:' + (up?'var(--green)':'var(--red)') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '% 今日</div></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;font-size:12px;margin-bottom:10px">' +
+          '<span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px">持倉中</span>' +
+          '<span>進場 <b>$' + entry.toFixed(2) + '</b></span>' +
+          '<span>第 <b>' + (exitSig?.daysHeld||0) + '</b> 天</span>' +
+          '<span style="color:' + pnlColor + '"><b>' + ((exitSig?.pnlPct||0)>=0?'+':'') + (exitSig?.pnlPct||0).toFixed(2) + '%</b></span>' +
+        '</div>' +
+        '<div style="background:' + exitBgColor + ';border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px">' +
+          '<div style="font-weight:600">' + (exitSig?.text||'') + '</div>' +
+          '<div style="color:var(--muted);margin-top:4px">RSI ' + (d.ta?.rsi||0).toFixed(0) + '  距停損 $' + (ts?.stop||0).toFixed(2) + ' (' + (d.price > 0 ? (((d.price-(ts?.stop||0))/d.price*100).toFixed(1)) : '?') + '%)</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button class="btn btn-sm" style="flex:1;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="confirmTExit(\'' + stock.symbol + '\')">✅ 確認出場</button>' +
+          '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')">📋 出場分析</button>' +
+        '</div>' +
+      '</div>';
+    } else {
+      // ── 無持倉模式 ────────────────────────────────────────
+      const scoreColor = (ts?.score||0) >= 80 ? 'var(--green)' : (ts?.score||0) >= 65 ? 'var(--yellow)' : 'var(--muted)';
+      return '<div class="t-card" id="t-card-' + stock.symbol + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
+          '<div><b style="color:var(--accent);font-size:16px">' + stock.symbol + '</b><span style="color:var(--muted);font-size:12px;margin-left:6px">' + stock.name + '</span></div>' +
+          '<div style="text-align:right"><div style="font-size:15px;font-weight:600">$' + d.price.toFixed(2) + '</div>' +
+          '<div style="font-size:11px;color:' + (up?'var(--green)':'var(--red)') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '%</div></div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">🔄 ' + stock.cycle + '</div>' +
+        '<div style="font-size:11px;font-weight:600;color:' + scoreColor + ';margin-bottom:8px">T評分 ' + (ts?.score||0) + '/100  ' + (ts?.label||'—') + '</div>' +
+        '<div class="t-zone-row"><span>買區</span><span class="t-zone-val" style="color:var(--green)">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</span></div>' +
+        '<div class="t-zone-row"><span>賣區</span><span class="t-zone-val" style="color:var(--red)">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</span></div>' +
+        '<div class="t-zone-row"><span>停損</span><span class="t-zone-val" style="color:var(--muted)">$' + (ts?.stop||0).toFixed(2) + '</span></div>' +
+        '<div class="t-zone-row"><span>ATR%</span><span class="t-zone-val">' + (ts?.atrPct||0).toFixed(1) + '%</span></div>' +
+        '<div id="t-entry-form-' + stock.symbol + '" class="t-entry-form" style="display:none">' +
+          '<input id="t-entry-' + stock.symbol + '" type="number" step="0.01" placeholder="進場價格 (USD)">' +
+          '<button class="btn btn-primary btn-sm" onclick="recordTEntry(\'' + stock.symbol + '\')">確認</button>' +
+          '<button class="btn btn-sm" style="background:rgba(100,100,100,.2)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'none\'">取消</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:10px">' +
+          '<button class="btn btn-sm" style="flex:1;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'flex\'">⚙️ 記錄進場</button>' +
+          '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')">📋 進場指引</button>' +
+        '</div>' +
+      '</div>';
+    }
+  });
+  el.innerHTML = rows.join('');
+}
+
+// 記錄進場
+function recordTEntry(symbol) {
+  const inp = document.getElementById('t-entry-' + symbol);
+  const val = parseFloat(inp?.value);
+  if (!val || val <= 0) { alert('請輸入有效的進場價格'); return; }
+  _tHoldings[symbol] = { entry: val.toFixed(2), date: new Date().toISOString().slice(0,10) };
+  saveTHoldings();
+  renderDashTTrading();
+}
+
+// 確認出場
+function confirmTExit(symbol) {
+  if (!confirm(symbol + ' 確認出場？此操作將清除持倉記錄。')) return;
+  delete _tHoldings[symbol];
+  saveTHoldings();
+  renderDashTTrading();
+}
+
+// T交易專用進場/出場指引 Modal
+function showTGuide(symbol) {
+  const d = _tCache.data[symbol];
+  if (!d) return;
+  const ts = d.tScore;
+  const holding = _tHoldings[symbol];
+  const exitSig = calcTExitSignal(symbol, ts, d.ta, d.price);
+  const stock = T_STOCKS.find(s => s.symbol === symbol);
+
+  // 部位計算（套用幣別）
+  const capitalRaw = parseFloat(document.getElementById('risk-capital')?.value) || 0;
+  const capitalUSD = _currency === 'twd' ? capitalRaw / _fxRate : capitalRaw;
+  const riskUSD    = capitalUSD * 0.01;
+  const riskPerShare = d.price > 0 && ts ? (d.price - ts.stop) : d.price * 0.02;
+  const shares = riskPerShare > 0 && capitalUSD > 0 ? Math.floor(riskUSD / riskPerShare) : null;
+  const totalUSD = shares ? shares * d.price : null;
+  const totalTWD = totalUSD ? totalUSD * _fxRate : null;
+
+  const posHtml = capitalUSD > 0 && shares
+    ? '<div class="entry-section"><h4>建議部位（連動風控中心）</h4>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">' +
+        '<div><div style="color:var(--muted);font-size:11px">帳戶資金</div><div style="font-weight:600">' + (_currency==='twd' ? 'NT$' + capitalRaw.toLocaleString() : '$' + capitalUSD.toLocaleString()) + '</div></div>' +
+        '<div><div style="color:var(--muted);font-size:11px">1% 最大虧損</div><div style="font-weight:600;color:var(--red)">' + (_currency==='twd' ? 'NT$'+(riskUSD*_fxRate).toFixed(0) : '$'+riskUSD.toFixed(0)) + '</div></div>' +
+        '<div><div style="color:var(--muted);font-size:11px">建議股數</div><div style="font-weight:700;color:var(--accent)">' + shares + ' 股</div></div>' +
+        '<div><div style="color:var(--muted);font-size:11px">總成本</div><div style="font-weight:600">' + (_currency==='twd' ? 'NT$'+totalTWD?.toLocaleString(undefined,{maximumFractionDigits:0}) + '<span style="font-size:10px;color:var(--muted)"> / $'+totalUSD?.toLocaleString(undefined,{maximumFractionDigits:0})+' USD</span>' : '$'+totalUSD?.toLocaleString(undefined,{maximumFractionDigits:0})) + '</div></div>' +
+      '</div></div>'
+    : '<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">💡 在「🛡️ 風控中心」填入帳戶資金，即可計算建議股數</div>';
+
+  const holdingHtml = holding && exitSig
+    ? '<div class="entry-section"><h4>持倉狀態</h4>' +
+      '<div style="padding:10px;background:rgba(59,130,246,.08);border-radius:8px;font-size:13px">' +
+        '進場 $' + holding.entry + '｜第 ' + exitSig.daysHeld + ' 天｜' +
+        '<span style="color:' + (exitSig.pnlPct>=0?'var(--green)':'var(--red)') + '">' +
+        (exitSig.pnlPct>=0?'+':'') + exitSig.pnlPct.toFixed(2) + '%</span><br>' +
+        '<b style="display:block;margin-top:6px">' + exitSig.text + '</b>' +
+      '</div></div>'
+    : '';
+
+  const html = '<div class="entry-modal-overlay" id="t-guide-overlay" onclick="if(event.target===this)document.getElementById(\'t-guide-overlay\').remove()">' +
+  '<div class="entry-modal">' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:16px">' +
+      '<div><div style="font-size:20px;font-weight:700"><span style="color:var(--accent)">' + symbol + '</span> <span style="font-size:14px;color:var(--muted)">$' + d.price.toFixed(2) + '</span></div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + stock?.name + ' · T評分 <b style="color:var(--text)">' + (ts?.score||0) + '/100</b> ' + (ts?.label||'') + '</div></div>' +
+      '<button class="modal-close" onclick="document.getElementById(\'t-guide-overlay\').remove()">×</button>' +
+    '</div>' +
+
+    '<div class="entry-section"><h4>🔄 產業週期</h4><div style="font-size:13px;color:var(--muted)">' + stock?.cycle + '</div></div>' +
+
+    holdingHtml +
+
+    '<div class="entry-section"><h4>今日進出區間</h4>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">' +
+      '<div><div style="color:var(--muted);font-size:11px">買區</div><div style="font-weight:600;color:var(--green)">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</div></div>' +
+      '<div style="border:1px solid var(--red);border-radius:6px;padding:6px"><div style="color:var(--red);font-size:11px">賣區 ⭐ 出場目標</div><div style="font-weight:700;color:var(--text)">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">停損（嚴守）</div><div style="font-weight:600;color:var(--red)">$' + (ts?.stop||0).toFixed(2) + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px">ATR%</div><div style="font-weight:600">' + (ts?.atrPct||0).toFixed(1) + '%</div></div>' +
+    '</div></div>' +
+
+    posHtml +
+
+    '<div class="entry-section"><h4>第一性原理（T交易邏輯）</h4>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.6"><b>MA20 = 機構成本線</b>：大量機構以 MA20 為參考，反覆回測不跌破 = 主力護盤 → 買區設在 MA20±0.3ATR；' +
+    '<b>BB 上軌 = 短期壓力</b>：布林上軌是統計上 95% 的日內高點，到了先出；' +
+    '<b>ATR 停損</b>：尊重股票真實波動，不是隨意設整數；' +
+    '<b>7 天紀律</b>：超過 7 天的短線部位通常已失去原始動能。</div></div>' +
+
+    '<div style="padding:10px;background:rgba(239,68,68,.08);border-radius:8px;font-size:12px;color:var(--muted)">' +
+      '⚠️ 持倉規則：最多持有 7 天；進入賣區即考慮出場；EMA8 跌破 EMA21 立即停損。' +
+    '</div>' +
+    '<div style="text-align:right;margin-top:16px"><button class="btn btn-primary" onclick="document.getElementById(\'t-guide-overlay\').remove()">關閉</button></div>' +
+  '</div></div>';
+
+  const overlay = document.createElement('div');
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay.firstChild);
+}
+
+// ============ 幣別切換 & 風控中心整合 ============
+
+// 讀取已存幣別設定（頁面載入時套用）
+function initCurrencyUI() {
+  const sel = document.getElementById('risk-currency');
+  if (sel) sel.value = _currency;
+  setCurrency(_currency);
+}
+
 // ============ INIT ============
 document.getElementById('j-date').valueAsDate = new Date();
+// 非阻塞：載入匯率 + 套用幣別設定
+fetchFxRate().then(() => initCurrencyUI());
 startAutoRefresh();
 </script>
 <div class="disclaimer-bar">⚠️ 投資警語：本網站所有內容僅供參考，不構成任何投資建議，本站對因使用本網站資訊所造成之任何損失概不負責。投資涉及風險，您可能損失部分或全部投入資金，請依據個人財務狀況及風險承受能力審慎判斷。</div>
