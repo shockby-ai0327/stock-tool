@@ -509,6 +509,41 @@ async function pFetch(url, useCache, timeoutMs = 8000) {
 }
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ============ FINNHUB (pre-screening, CORS direct — no proxy needed) ============
+const FINNHUB_KEY = 'd7eufb9r01qi33g7mk90d7eufb9r01qi33g7mk9g';
+async function finnhubQuote(symbol) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent(symbol) + '&token=' + FINNHUB_KEY, { signal: ctrl.signal });
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j || !j.c || j.c === 0) return null;
+    return {
+      symbol, shortName: symbol, longName: symbol,
+      regularMarketPrice: j.c,
+      regularMarketChangePercent: j.dp || 0,
+      regularMarketVolume: 0,
+      averageDailyVolume3Month: 1,
+      regularMarketDayHigh: j.h || j.c,
+      regularMarketDayLow: j.l || j.c,
+    };
+  } catch(e) { return null; }
+  finally { clearTimeout(tid); }
+}
+
+async function finnhubBatchPreScreen(symbols) {
+  const results = [];
+  // Batch 15 at a time; wait 1s between batches to stay under 60/min
+  for (let i = 0; i < symbols.length; i += 15) {
+    const batch = symbols.slice(i, i + 15);
+    const settled = await Promise.allSettled(batch.map(s => finnhubQuote(s)));
+    settled.forEach(r => { if (r.status === 'fulfilled' && r.value) results.push(r.value); });
+    if (i + 15 < symbols.length) await delay(1100);
+  }
+  return results;
+}
+
 // ============ YAHOO FINANCE ============
 // Strategy: v8 chart for OHLCV, page scrape for fundamentals
 
@@ -2732,7 +2767,7 @@ const SCAN_CURATED_US = [
   'PLTR','CRWD','PANW','NET','DDOG','ZS','SNOW','MDB','WDAY','NOW',
   'NFLX','ORCL','CRM','ADBE','INTU','SHOP','COIN','HOOD','RBLX','U',
   'ARM','MRVL','ON','SMCI','DELL','IONQ','RKLB','AXON','FTNT','OKTA',
-  'V','MA','GS','MS','BAC','JPM','C','WFC','BLK','BRK-B',
+  'V','MA','GS','MS','BAC','C','WFC','BLK','BRK-B','SCHW',
   'LLY','JNJ','ABBV','MRK','PFE','AMGN','REGN','VRTX','GILD','BMY',
   'XOM','CVX','COP','SLB','EOG','OXY','MPC','DVN','FANG','VLO',
   'BA','CAT','DE','RTX','NOC','LMT','GD','HON','GE','UPS'
@@ -2802,65 +2837,91 @@ async function runScan(strategy) {
   const setProgress = (msg) => {
     tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;color:var(--muted);font-size:13px">' + msg + '</p></div>';
   };
-  setProgress('① 取得報價中...');
+
+  // Overall 90-second scan timeout
+  let _scanAborted = false;
+  const _scanTimer = setTimeout(() => { _scanAborted = true; }, 90000);
+
   try {
-    const candidates = _scannerMarket === 'us' ? SP500_TICKERS : getTwScanPool();
-    let quotes = await batchQuote(candidates);
+    // ── Stage 1: batch pre-screen ──────────────────────────────────────────
+    setProgress('① 取得報價中（Yahoo Finance）...');
+    let quotes = [];
     let usedFallback = false;
-    if (quotes.length < 15) {
+
+    if (_scannerMarket === 'us') {
+      // Try Yahoo spark first (1 request for full S&P500)
+      try { quotes = await batchQuote(SP500_TICKERS); } catch(e) { quotes = []; }
+
+      if (quotes.length < 15) {
+        // Spark failed → Finnhub direct quotes for curated pool (CORS, no proxy)
+        usedFallback = true;
+        setProgress('② Finnhub 報價中（' + SCAN_CURATED_US.length + ' 檔精選池）...');
+        quotes = await finnhubBatchPreScreen(SCAN_CURATED_US);
+      }
+    } else {
+      // Taiwan market: use yfChart fallback (no Finnhub for TW stocks)
       usedFallback = true;
-      setProgress('② 精選清單模式（逐檔掃描 ' + SCAN_CURATED_US.length + ' 檔）...');
+      setProgress('② 台股模式（逐檔掃描）...');
       quotes = await chartScanFallback(strategy);
     }
+
+    if (_scanAborted) throw new Error('掃描超時（90秒），請重試');
+
+    // ── Stage 2: pre-filter → top 15 candidates ────────────────────────────
     const preFiltered = preFilterByStrategy(quotes, strategy);
-    const top30 = preFiltered.slice(0, 30);
-    setProgress('③ 技術分析中（' + top30.length + ' 檔候選）...');
-    const results = [];
-    for (let i = 0; i < top30.length; i += 8) {
-      setProgress('③ 技術分析中（' + Math.min(i + 8, top30.length) + ' / ' + top30.length + '）...');
-      const batch = top30.slice(i, i + 8);
-      const batchResults = await Promise.allSettled(
-        batch.map(async q => {
-          try {
-            let c, h, l, v;
-            if (q._chartData) {
-              c = q._chartData.closes; h = q._chartData.highs;
-              l = q._chartData.lows;  v = q._chartData.vols;
-            } else {
-              const chart = await yfChart(q.symbol, '3mo', '1d');
-              const oq = chart.indicators.quote[0];
-              c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
-              l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
-              if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
-                q.regularMarketVolume = v[v.length - 1] || 0;
-                q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
-              }
-            }
-            if (c.length < 20) return null;
-            const price = q.regularMarketPrice;
-            const ta = technicalAnalysis(c, h, l, v, price);
-            const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
-            if (!signal) return null;
-            return {
-              symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
-              price: price, changePct: q.regularMarketChangePercent || 0,
-              volume: q.regularMarketVolume || 0, avgVolume: q.averageDailyVolume3Month || 0,
-              volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
-              signal: signal.name, signalStrength: signal.strength,
-              signalDetail: signal.detail || [],
-              ta: ta, closes: c, highs: h, lows: l
-            };
-          } catch(e) { return null; }
-        })
-      );
-      results.push(...batchResults.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value));
-      if (i + 8 < top30.length) await new Promise(r => setTimeout(r, 150));
+    const top15 = preFiltered.slice(0, 15);
+
+    if (top15.length === 0) {
+      renderScannerResults([], strategy, usedFallback);
+      return;
     }
+
+    // ── Stage 3: fetch OHLCV + technical analysis (all 15 concurrently) ────
+    setProgress('③ 技術分析中（' + top15.length + ' 檔候選）...');
+    const batchResults = await Promise.allSettled(
+      top15.map(async q => {
+        if (_scanAborted) return null;
+        try {
+          let c, h, l, v;
+          if (q._chartData) {
+            c = q._chartData.closes; h = q._chartData.highs;
+            l = q._chartData.lows;  v = q._chartData.vols;
+          } else {
+            const chart = await yfChart(q.symbol, '3mo', '1d');
+            const oq = chart.indicators.quote[0];
+            c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
+            l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
+            if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
+              q.regularMarketVolume = v[v.length - 1] || 0;
+              q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
+            }
+          }
+          if (c.length < 20) return null;
+          const price = q.regularMarketPrice;
+          const ta = technicalAnalysis(c, h, l, v, price);
+          const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
+          if (!signal) return null;
+          return {
+            symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
+            price, changePct: q.regularMarketChangePercent || 0,
+            volume: q.regularMarketVolume || 0, avgVolume: q.averageDailyVolume3Month || 0,
+            volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
+            signal: signal.name, signalStrength: signal.strength,
+            signalDetail: signal.detail || [],
+            ta, closes: c, highs: h, lows: l
+          };
+        } catch(e) { return null; }
+      })
+    );
+
+    const results = batchResults.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
     results.sort((a, b) => b.signalStrength - a.signalStrength);
     _scannerResults = results;
     renderScannerResults(results, strategy, usedFallback);
   } catch (e) {
     tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
+  } finally {
+    clearTimeout(_scanTimer);
   }
 }
 
