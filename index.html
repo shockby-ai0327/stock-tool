@@ -2684,21 +2684,41 @@ function getTwScanPool() {
   return _twScanPool;
 }
 
+// batchQuote：使用 v8/spark API（v7 已被 Yahoo 封鎖）
+// spark 僅提供 price + changePct，volume 由後續 yfChart 補上
 async function batchQuote(tickers) {
   const results = [];
-  const hosts = ['query1', 'query2'];
-  for (let i = 0; i < tickers.length; i += 50) {
-    const batch = tickers.slice(i, i + 50).join(',');
-    let success = false;
-    for (const host of hosts) {
+  for (let i = 0; i < tickers.length; i += 100) {
+    const batch = tickers.slice(i, i + 100);
+    let done = false;
+    for (const host of ['query1', 'query2']) {
       try {
-        const url = 'https://' + host + '.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(batch) + '&fields=symbol,regularMarketPrice,regularMarketChangePercent,regularMarketVolume,averageDailyVolume3Month,regularMarketChange,shortName,longName,regularMarketDayHigh,regularMarketDayLow&_t=' + Date.now();
+        const url = 'https://' + host + '.finance.yahoo.com/v8/finance/spark?symbols=' +
+          batch.join(',') + '&range=1d&interval=1d&_t=' + Date.now();
         const r = await pFetch(url, false);
         const j = await r.json();
-        if (j.quoteResponse?.result?.length) { results.push(...j.quoteResponse.result); success = true; break; }
-      } catch (e) { console.warn('batchQuote host=' + host + ' batch=' + i, e); }
+        // spark 回傳格式：{ AAPL: { close:[price], chartPreviousClose:prev, ... }, ... }
+        if (j && typeof j === 'object' && !j.finance && !j.error) {
+          const entries = Object.entries(j).filter(([, v]) => v && v.close && v.close[0]);
+          if (entries.length >= 3) {
+            entries.forEach(([sym, data]) => {
+              const price = data.close[0];
+              const prev  = data.chartPreviousClose;
+              const changePct = prev ? (price - prev) / prev * 100 : 0;
+              results.push({
+                symbol: sym, shortName: sym, longName: sym,
+                regularMarketPrice: price,
+                regularMarketChangePercent: changePct,
+                regularMarketVolume: 0,        // spark 無量，由 yfChart 補
+                averageDailyVolume3Month: 1,   // 同上，佔位
+              });
+            });
+            done = true; break;
+          }
+        }
+      } catch(e) { console.warn('batchQuote spark host=' + host, e); }
     }
-    if (i + 50 < tickers.length) await new Promise(r => setTimeout(r, 300));
+    if (done && i + 100 < tickers.length) await new Promise(r => setTimeout(r, 200));
   }
   return results;
 }
@@ -2715,43 +2735,13 @@ const SCAN_CURATED_US = [
   'BA','CAT','DE','RTX','NOC','LMT','GD','HON','GE','UPS'
 ];
 
-// 2-Stage 掃描：先 batchQuote 快速篩選，再對候選股拉 yfChart 做技術分析
-// Stage 1：1 個請求取得 80 檔報價 → 依策略篩出前 20 強
-// Stage 2：對 20 檔各拉 yfChart（平行 5 個）→ 請求從 80 降至 ~21
+// chartScanFallback：直接用 yfChart 拉精選池，同時取得完整 OHLCV + 技術指標所需資料
+// Cloudflare Worker 作為主要 proxy，速度穩定
 async function chartScanFallback(strategy) {
   const pool = _scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60);
-
-  // Stage 1：batchQuote 快速篩選（1-2 個請求）
-  let preFiltered = [];
-  try {
-    const quotes = await batchQuote(pool);
-    if (quotes.length >= 10) {
-      // 依策略做初步篩選
-      const filtered = quotes.filter(q => {
-        if (!q || !q.regularMarketPrice) return false;
-        const pct = q.regularMarketChangePercent || 0;
-        const vol = q.regularMarketVolume || 0;
-        const avgVol = q.averageDailyVolume3Month || 1;
-        const volRatio = vol / avgVol;
-        if (strategy === 'schwartz')   return pct > 0.3 && volRatio > 1.1;
-        if (strategy === 'steinhardt') return pct >= -1;
-        return true;
-      });
-      // 依漲幅排序，取前 20 強進入 Stage 2
-      preFiltered = filtered
-        .sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0))
-        .slice(0, 20)
-        .map(q => q.symbol);
-    }
-  } catch(e) { console.warn('Stage1 batchQuote failed, using full pool:', e); }
-
-  // Stage 1 失敗就用全部 pool；成功就只掃前 20
-  const candidates = preFiltered.length >= 5 ? preFiltered : pool;
-
-  // Stage 2：對候選股拉 yfChart（平行 5 個，降低 rate limit 風險）
   const out = [];
-  for (let i = 0; i < candidates.length; i += 5) {
-    const batch = candidates.slice(i, i + 5);
+  for (let i = 0; i < pool.length; i += 8) {
+    const batch = pool.slice(i, i + 8);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
         const chart = await yfChart(sym, '3mo', '1d');
@@ -2761,25 +2751,25 @@ async function chartScanFallback(strategy) {
         const lows   = oq.low.filter(v => v != null);
         const vols   = oq.volume.filter(v => v != null);
         if (closes.length < 20) return null;
-        const price = chart.meta.regularMarketPrice || closes[closes.length - 1];
-        const prevClose = closes[closes.length - 2];
+        const price    = chart.meta.regularMarketPrice || closes[closes.length - 1];
+        const prevClose = chart.meta.chartPreviousClose || closes[closes.length - 2];
         const changePct = prevClose ? (price - prevClose) / prevClose * 100 : 0;
-        const avgVol = vols.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
-        const vol = vols[vols.length - 1] || 0;
+        const avgVol   = vols.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
+        const vol      = vols[vols.length - 1] || 0;
         return {
-          symbol: sym, shortName: sym, longName: sym,
+          symbol: sym, shortName: chart.meta.shortName || sym, longName: chart.meta.longName || sym,
           regularMarketPrice: price,
           regularMarketChangePercent: changePct,
           regularMarketVolume: vol,
           averageDailyVolume3Month: avgVol,
           regularMarketDayHigh: highs[highs.length - 1] || price,
-          regularMarketDayLow: lows[lows.length - 1] || price,
+          regularMarketDayLow:  lows[lows.length - 1]  || price,
           _chartData: { closes, highs, lows, vols }
         };
-      } catch (e) { return null; }
+      } catch(e) { return null; }
     }));
     settled.forEach(r => { if (r.status === 'fulfilled' && r.value) out.push(r.value); });
-    if (i + 5 < candidates.length) await new Promise(r => setTimeout(r, 150));
+    if (i + 8 < pool.length) await new Promise(r => setTimeout(r, 200));
   }
   return out;
 }
@@ -2835,6 +2825,11 @@ async function runScan(strategy) {
               const oq = chart.indicators.quote[0];
               c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
               l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
+              // spark batchQuote 無量資料，從 yfChart 補回
+              if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
+                q.regularMarketVolume = v[v.length - 1] || 0;
+                q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
+              }
             }
             if (c.length < 20) return null;
             const price = q.regularMarketPrice;
@@ -2867,13 +2862,14 @@ async function runScan(strategy) {
 function preFilterByStrategy(quotes, strategy) {
   return quotes.filter(q => {
     if (!q || !q.regularMarketPrice) return false;
-    const pct = q.regularMarketChangePercent || 0;
-    const vol = q.regularMarketVolume || 0;
+    const pct    = q.regularMarketChangePercent || 0;
+    const vol    = q.regularMarketVolume || 0;
     const avgVol = q.averageDailyVolume3Month || 1;
-    const volRatio = vol / avgVol;
+    const volRatio  = vol / avgVol;
+    const hasVolume = vol > 0 && avgVol > 1; // spark batchQuote 不含量，等 yfChart 補
     switch (strategy) {
-      case 'schwartz':   return pct > 0.5 && volRatio > 1.2;  // 突破動能 + 量能
-      case 'steinhardt': return pct >= 0;                      // 正向動能（EMA對齊在 classifySignal 深判）
+      case 'schwartz':   return pct > 0.5 && (!hasVolume || volRatio > 1.2);
+      case 'steinhardt': return pct >= 0;
       default: return true;
     }
   }).sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0));
