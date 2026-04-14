@@ -533,24 +533,18 @@ async function finnhubQuote(symbol) {
 }
 
 async function finnhubBatchPreScreen(symbols) {
-  const results = [];
-  // Batch 15 at a time; wait 1s between batches to stay under 60/min
-  for (let i = 0; i < symbols.length; i += 15) {
-    const batch = symbols.slice(i, i + 15);
-    const settled = await Promise.allSettled(batch.map(s => finnhubQuote(s)));
-    settled.forEach(r => { if (r.status === 'fulfilled' && r.value) results.push(r.value); });
-    if (i + 15 < symbols.length) await delay(1100);
-  }
-  return results;
+  // Fire all at once — 40 stocks is well under Finnhub's 60/min limit
+  const settled = await Promise.allSettled(symbols.map(s => finnhubQuote(s)));
+  return settled.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
 }
 
 // ============ YAHOO FINANCE ============
 // Strategy: v8 chart for OHLCV, page scrape for fundamentals
 
-async function yfChart(ticker, range, interval) {
+async function yfChart(ticker, range, interval, timeoutMs = 8000) {
   range = range || '6mo'; interval = interval || '1d';
   const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
-  const r = await pFetch(url, true);
+  const r = await pFetch(url, true, timeoutMs);
   const j = await r.json();
   if (!j.chart || !j.chart.result || !j.chart.result[0]) throw new Error('No data for ' + ticker);
   return j.chart.result[0];
@@ -2849,11 +2843,16 @@ async function runScan(strategy) {
     let usedFallback = false;
 
     if (_scannerMarket === 'us') {
-      // Try Yahoo spark first (1 request for full S&P500)
-      try { quotes = await batchQuote(SP500_TICKERS); } catch(e) { quotes = []; }
+      // Try Yahoo spark with 12-second hard timeout
+      try {
+        quotes = await Promise.race([
+          batchQuote(SP500_TICKERS),
+          delay(12000).then(() => { throw new Error('spark timeout'); })
+        ]);
+      } catch(e) { quotes = []; }
 
       if (quotes.length < 15) {
-        // Spark failed → Finnhub direct quotes for curated pool (CORS, no proxy)
+        // Spark failed/timed-out → Finnhub direct quotes (CORS, no proxy needed)
         usedFallback = true;
         setProgress('② Finnhub 報價中（' + SCAN_CURATED_US.length + ' 檔精選池）...');
         quotes = await finnhubBatchPreScreen(SCAN_CURATED_US);
@@ -2876,18 +2875,23 @@ async function runScan(strategy) {
       return;
     }
 
-    // ── Stage 3: fetch OHLCV + technical analysis (all 15 concurrently) ────
-    setProgress('③ 技術分析中（' + top15.length + ' 檔候選）...');
-    const batchResults = await Promise.allSettled(
+    // ── Stage 3: fetch OHLCV + technical analysis (all 15 concurrently, 25s cap) ────
+    setProgress('③ 技術分析中（' + top15.length + ' 檔，逐一取歷史資料）...');
+
+    // Each yfChart call uses pFetch with 6s timeout; cap entire stage at 25s
+    const _yfStageDone = { v: false };
+    const _yfStageTimeout = new Promise(resolve => setTimeout(() => { _yfStageDone.v = true; resolve([]); }, 25000));
+
+    const _yfStageWork = Promise.allSettled(
       top15.map(async q => {
-        if (_scanAborted) return null;
+        if (_yfStageDone.v) return null;
         try {
           let c, h, l, v;
           if (q._chartData) {
             c = q._chartData.closes; h = q._chartData.highs;
             l = q._chartData.lows;  v = q._chartData.vols;
           } else {
-            const chart = await yfChart(q.symbol, '3mo', '1d');
+            const chart = await yfChart(q.symbol, '3mo', '1d', 6000);
             const oq = chart.indicators.quote[0];
             c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
             l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
@@ -2914,7 +2918,10 @@ async function runScan(strategy) {
       })
     );
 
-    const results = batchResults.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+    const batchResults = await Promise.race([_yfStageWork, _yfStageTimeout]);
+    const results = Array.isArray(batchResults)
+      ? batchResults.filter(r => r && r.status === 'fulfilled' && r.value).map(r => r.value)
+      : [];
     results.sort((a, b) => b.signalStrength - a.signalStrength);
     _scannerResults = results;
     renderScannerResults(results, strategy, usedFallback);
