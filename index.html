@@ -482,27 +482,30 @@ function extractBondData(ticker, fundamentals, meta, price) {
   return { yield: yld, couponRate: coupon, duration: dur, creditRating: credit, type, desc, rateSensitivity: sensitivity, distributionRate: yld, expenseRatio: er != null ? er * 100 : null, totalAssets: ta, category: cat };
 }
 
-async function pFetch(url, useCache) {
+async function pFetch(url, useCache, timeoutMs = 8000) {
   if (useCache && _cache[url] && Date.now() - _cache[url].ts < CACHE_TTL) return _cache[url].resp.clone();
-  // Try last successful proxy first, then fall back to others
   const order = [_lastProxyIdx, ...PROXIES.map((_,i)=>i).filter(i=>i!==_lastProxyIdx)];
   let lastErr;
   for (const pi of order) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const r = await fetch(PROXIES[pi](url));
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), timeoutMs);
+        let r;
+        try { r = await fetch(PROXIES[pi](url), { signal: ctrl.signal }); }
+        finally { clearTimeout(tid); }
         if (!r.ok) {
           const t = await r.text();
           if (t.includes('Too Many Requests')) { await delay(1500 * (attempt + 1)); continue; }
           throw new Error('HTTP ' + r.status);
         }
-        _lastProxyIdx = pi; // remember successful proxy
+        _lastProxyIdx = pi;
         if (useCache) { const blob = await r.blob(); _cache[url] = { ts: Date.now(), resp: new Response(blob, { headers: r.headers }) }; return _cache[url].resp.clone(); }
         return r;
-      } catch (e) { lastErr = e; if (attempt === 0) await delay(500); }
+      } catch(e) { lastErr = e; if (attempt === 0) await delay(300); }
     }
   }
-  throw lastErr || new Error('所有 CORS proxy 均失敗，請稍後再試');
+  throw lastErr || new Error('所有 proxy 均逾時或失敗');
 }
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -2796,28 +2799,31 @@ async function runScan(strategy) {
     b.classList.toggle('active', i === stratOrder.indexOf(strategy))
   );
   const tableDiv = document.getElementById('scanner-table');
-  tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">掃描中（' + (_scannerMarket === 'us' ? '美股' : '台股') + '）...</p></div>';
+  const setProgress = (msg) => {
+    tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;color:var(--muted);font-size:13px">' + msg + '</p></div>';
+  };
+  setProgress('① 取得報價中...');
   try {
     const candidates = _scannerMarket === 'us' ? SP500_TICKERS : getTwScanPool();
     let quotes = await batchQuote(candidates);
     let usedFallback = false;
-    // 若 batchQuote 失敗或資料不足，切換至精選清單 yfChart fallback
     if (quotes.length < 15) {
       usedFallback = true;
-      tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">批量報價受限，改用精選清單掃描（約 40-60 秒）...</p></div>';
+      setProgress('② 精選清單模式（逐檔掃描 ' + SCAN_CURATED_US.length + ' 檔）...');
       quotes = await chartScanFallback(strategy);
     }
     const preFiltered = preFilterByStrategy(quotes, strategy);
     const top30 = preFiltered.slice(0, 30);
+    setProgress('③ 技術分析中（' + top30.length + ' 檔候選）...');
     const results = [];
     for (let i = 0; i < top30.length; i += 8) {
+      setProgress('③ 技術分析中（' + Math.min(i + 8, top30.length) + ' / ' + top30.length + '）...');
       const batch = top30.slice(i, i + 8);
       const batchResults = await Promise.allSettled(
         batch.map(async q => {
           try {
             let c, h, l, v;
             if (q._chartData) {
-              // 已有 chartData（來自 fallback），直接使用
               c = q._chartData.closes; h = q._chartData.highs;
               l = q._chartData.lows;  v = q._chartData.vols;
             } else {
@@ -2825,7 +2831,6 @@ async function runScan(strategy) {
               const oq = chart.indicators.quote[0];
               c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
               l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
-              // spark batchQuote 無量資料，從 yfChart 補回
               if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
                 q.regularMarketVolume = v[v.length - 1] || 0;
                 q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
@@ -2845,7 +2850,7 @@ async function runScan(strategy) {
               signalDetail: signal.detail || [],
               ta: ta, closes: c, highs: h, lows: l
             };
-          } catch (e) { return null; }
+          } catch(e) { return null; }
         })
       );
       results.push(...batchResults.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value));
