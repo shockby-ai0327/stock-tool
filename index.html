@@ -399,6 +399,7 @@ firebase.initializeApp(_fbConfig);
 <script>
 // ============ PROXY + CACHE + RETRY ============
 const PROXIES = [
+  url => 'https://stocktool.7nzgpk2hdz.workers.dev/?url=' + encodeURIComponent(url),
   url => 'https://corsproxy.io/?' + encodeURIComponent(url),
   url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   url => 'https://cors-anywhere.herokuapp.com/' + url,
@@ -2714,12 +2715,43 @@ const SCAN_CURATED_US = [
   'BA','CAT','DE','RTX','NOC','LMT','GD','HON','GE','UPS'
 ];
 
-// Fallback：直接用 yfChart 拉精選股，回傳與 batchQuote 同格式的陣列
+// 2-Stage 掃描：先 batchQuote 快速篩選，再對候選股拉 yfChart 做技術分析
+// Stage 1：1 個請求取得 80 檔報價 → 依策略篩出前 20 強
+// Stage 2：對 20 檔各拉 yfChart（平行 5 個）→ 請求從 80 降至 ~21
 async function chartScanFallback(strategy) {
   const pool = _scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60);
+
+  // Stage 1：batchQuote 快速篩選（1-2 個請求）
+  let preFiltered = [];
+  try {
+    const quotes = await batchQuote(pool);
+    if (quotes.length >= 10) {
+      // 依策略做初步篩選
+      const filtered = quotes.filter(q => {
+        if (!q || !q.regularMarketPrice) return false;
+        const pct = q.regularMarketChangePercent || 0;
+        const vol = q.regularMarketVolume || 0;
+        const avgVol = q.averageDailyVolume3Month || 1;
+        const volRatio = vol / avgVol;
+        if (strategy === 'schwartz')   return pct > 0.3 && volRatio > 1.1;
+        if (strategy === 'steinhardt') return pct >= -1;
+        return true;
+      });
+      // 依漲幅排序，取前 20 強進入 Stage 2
+      preFiltered = filtered
+        .sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0))
+        .slice(0, 20)
+        .map(q => q.symbol);
+    }
+  } catch(e) { console.warn('Stage1 batchQuote failed, using full pool:', e); }
+
+  // Stage 1 失敗就用全部 pool；成功就只掃前 20
+  const candidates = preFiltered.length >= 5 ? preFiltered : pool;
+
+  // Stage 2：對候選股拉 yfChart（平行 5 個，降低 rate limit 風險）
   const out = [];
-  for (let i = 0; i < pool.length; i += 8) {
-    const batch = pool.slice(i, i + 8);
+  for (let i = 0; i < candidates.length; i += 5) {
+    const batch = candidates.slice(i, i + 5);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
         const chart = await yfChart(sym, '3mo', '1d');
@@ -2747,7 +2779,7 @@ async function chartScanFallback(strategy) {
       } catch (e) { return null; }
     }));
     settled.forEach(r => { if (r.status === 'fulfilled' && r.value) out.push(r.value); });
-    if (i + 8 < pool.length) await new Promise(r => setTimeout(r, 250));
+    if (i + 5 < candidates.length) await new Promise(r => setTimeout(r, 150));
   }
   return out;
 }
