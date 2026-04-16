@@ -482,8 +482,8 @@ function extractBondData(ticker, fundamentals, meta, price) {
   return { yield: yld, couponRate: coupon, duration: dur, creditRating: credit, type, desc, rateSensitivity: sensitivity, distributionRate: yld, expenseRatio: er != null ? er * 100 : null, totalAssets: ta, category: cat };
 }
 
-async function pFetch(url, useCache, timeoutMs = 8000) {
-  if (useCache && _cache[url] && Date.now() - _cache[url].ts < CACHE_TTL) return _cache[url].resp.clone();
+async function pFetch(url, useCache, timeoutMs = 8000, cacheTTL = CACHE_TTL) {
+  if (useCache && _cache[url] && Date.now() - _cache[url].ts < cacheTTL) return _cache[url].resp.clone();
   const order = [_lastProxyIdx, ...PROXIES.map((_,i)=>i).filter(i=>i!==_lastProxyIdx)];
   let lastErr;
   for (const pi of order) {
@@ -544,7 +544,7 @@ async function finnhubBatchPreScreen(symbols) {
 async function yfChart(ticker, range, interval, timeoutMs = 8000) {
   range = range || '6mo'; interval = interval || '1d';
   const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
-  const r = await pFetch(url, true, timeoutMs);
+  const r = await pFetch(url, true, timeoutMs, 5 * 60 * 1000); // 5-minute cache for historical data
   const j = await r.json();
   if (!j.chart || !j.chart.result || !j.chart.result[0]) throw new Error('No data for ' + ticker);
   return j.chart.result[0];
@@ -701,6 +701,20 @@ async function multiChart(symbols) {
 
 // ============ NAVIGATION ============
 const PAGES = ['dashboard', 'stock', 'indices', 'sentiment', 'scanner', 'news', 'journal', 'risk', 'performance', 'calc', 'industry', 'heatmap', 'education'];
+
+// Page re-render throttling — avoid redundant network fetches when switching pages quickly
+const _pageLastRender = {};
+const PAGE_RERENDER_TTL = {
+  dashboard: 2*60*1000, indices: 5*60*1000, sentiment: 10*60*1000,
+  news: 10*60*1000, industry: 10*60*1000, heatmap: 3*60*1000
+};
+function _shouldRerender(name) {
+  const ttl = PAGE_RERENDER_TTL[name];
+  if (!ttl || !_pageLastRender[name]) return true;
+  return Date.now() - _pageLastRender[name] > ttl;
+}
+function _markRendered(name) { _pageLastRender[name] = Date.now(); }
+
 function showPage(name) {
   _currentPage = name;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -714,13 +728,14 @@ function showPage(name) {
     if (sbBtns[idx]) sbBtns[idx].classList.add('active');
     if (mobBtns[idx]) mobBtns[idx].classList.add('active');
   }
-  if (name === 'dashboard') renderDashboard();
-  if (name === 'indices') loadIndices();
-  if (name === 'sentiment') loadSentiment();
-  if (name === 'news') loadNews('general');
+  if (name === 'dashboard'  && _shouldRerender('dashboard'))  { renderDashboard();         _markRendered('dashboard'); }
+  if (name === 'indices'    && _shouldRerender('indices'))    { loadIndices();              _markRendered('indices'); }
+  if (name === 'sentiment'  && _shouldRerender('sentiment'))  { loadSentiment();            _markRendered('sentiment'); }
+  if (name === 'news'       && _shouldRerender('news'))       { loadNews('general');        _markRendered('news'); }
+  if (name === 'industry'   && _shouldRerender('industry'))   { loadIndustry('global');     _markRendered('industry'); }
+  if (name === 'heatmap'    && _shouldRerender('heatmap'))    { loadHeatmap('us');          _markRendered('heatmap'); }
+  // Pages that always re-render (user-driven or fast local render)
   if (name === 'journal') renderJournal();
-  if (name === 'industry') loadIndustry('global');
-  if (name === 'heatmap') loadHeatmap('us');
   if (name === 'scanner') loadScanner();
   if (name === 'risk') renderRisk();
   if (name === 'performance') renderPerformance();
@@ -759,7 +774,13 @@ async function analyzeStock() {
     const change = cc.chg, changePct = cc.chgPct;
     const currency = meta.currency || 'USD';
 
+    const o = ohlcv.map(d => d.o); // opens — needed for candlestick pattern detection
     const ta = technicalAnalysis(c, h, l, v, price);
+
+    // Detect K-line patterns (candle + chart)
+    const candlePatterns = detectCandlePatterns(c, h, l, o);
+    const chartPatterns  = detectChartPatterns(c, h, l);
+    const allPatterns    = [...candlePatterns, ...chartPatterns];
 
     if (isBondETF(ticker, fundamentals)) {
       const bondData = extractBondData(ticker, fundamentals, meta, price);
@@ -772,6 +793,20 @@ async function analyzeStock() {
       const ltEntry = longTermEntry(va, price, c, h, l, ta.atr);
       const stEntry = shortTermEntry(ta, price, c, h, l);
       rd.innerHTML = renderStock(ticker, meta, ta, va, ltEntry, stEntry, currency, price, change, changePct);
+    }
+    // Append K-line pattern card (after main render, before kline chart init)
+    if (allPatterns.length) {
+      const pTag = p => '<span class="tag" title="' + p.desc + '" style="cursor:default;background:' +
+        (p.t==='b' ? 'rgba(16,185,129,.15);color:var(--green)' : p.t==='s' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)') +
+        '">' + (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n + (p.confidence ? ' ' + p.confidence + '%' : '') + '</span>';
+      const pDetail = p => '<div style="margin-top:6px;padding:10px 12px;background:rgba(255,255,255,.025);border-radius:8px;border-left:3px solid ' +
+        (p.t==='b' ? 'var(--green)' : p.t==='s' ? 'var(--red)' : 'var(--yellow)') + '">' +
+        '<div style="font-weight:600;font-size:13px;margin-bottom:3px">' + (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + p.desc + '</div></div>';
+      const patternCard = '<div class="card"><h3>🕯️ K線型態偵測</h3>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0">' + allPatterns.map(pTag).join('') + '</div>' +
+        allPatterns.map(pDetail).join('') + '</div>';
+      rd.innerHTML += patternCard;
     }
     setTimeout(() => renderKline('stock-kline', ohlcv), 50);
   } catch (e) {
@@ -809,6 +844,199 @@ function renderKline(id, ohlcv) {
   vs.setData(ohlcv.map(d => ({ time: d.t, value: d.v, color: d.c >= d.o ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)' })));
   ch.timeScale().fitContent();
   new ResizeObserver(() => ch.applyOptions({ width: el.clientWidth })).observe(el);
+}
+
+// ============ K-LINE & CHART PATTERN DETECTION ============
+
+// detectCandlePatterns: analyse last 1-3 candles for reversal/continuation signals
+// Returns [{n, t, desc}]  t='b'=bullish, 's'=bearish, 'n'=neutral
+function detectCandlePatterns(closes, highs, lows, opens) {
+  const patterns = [];
+  const n = closes.length;
+  if (n < 3 || !opens || opens.length < n) return patterns;
+  const body  = i => Math.abs(closes[i] - opens[i]);
+  const rng   = i => highs[i] - lows[i];
+  const upper = i => highs[i]  - Math.max(closes[i], opens[i]);
+  const lower = i => Math.min(closes[i], opens[i]) - lows[i];
+  const bull  = i => closes[i] > opens[i];
+  const i = n - 1, p = n - 2, pp = n - 3;
+  const avgBody = closes.slice(-10).reduce((s,c,k,a) => s + Math.abs(c - (opens[n-10+k]||c)), 0) / 10;
+
+  // 1. Doji — body ≤ 10% of range
+  if (rng(i) > 0 && body(i) / rng(i) < 0.1) {
+    patterns.push({ n:'十字星', t:'n', desc:'開收盤幾乎相等，買賣力量均衡，可能出現轉折。需結合前趨勢判斷方向。' });
+  }
+
+  // 2. Hammer — bullish reversal at bottom; long lower shadow
+  if (rng(i) > 0 && bull(i) && lower(i) > 2 * body(i) && upper(i) < 0.5 * body(i) && body(i) > 0) {
+    patterns.push({ n:'鎚子線', t:'b', desc:'長下影線代表空方打壓後被多方強力接回，下跌動能衰竭，可能出現底部反轉。' });
+  }
+
+  // 3. Hanging Man — bearish reversal at top; same shape as hammer but red
+  if (rng(i) > 0 && !bull(i) && lower(i) > 2 * body(i) && upper(i) < 0.5 * body(i) && body(i) > 0) {
+    patterns.push({ n:'吊人線', t:'s', desc:'高位出現長下影線，雖多方曾試圖拉高，但最終收黑，代表頂部賣壓增強。' });
+  }
+
+  // 4. Shooting Star — bearish; long upper shadow, small body near low
+  if (rng(i) > 0 && !bull(i) && upper(i) > 2 * body(i) && lower(i) < 0.5 * body(i) && body(i) > 0) {
+    patterns.push({ n:'流星線', t:'s', desc:'上影線長表示多方推高後遭賣壓壓回，高位反轉訊號，配合量能更有效。' });
+  }
+
+  // 5. Inverted Hammer — bullish reversal; long upper shadow after downtrend
+  if (n >= 2 && rng(i) > 0 && bull(i) && upper(i) > 2 * body(i) && lower(i) < 0.5 * body(i) && !bull(p)) {
+    patterns.push({ n:'倒鎚子', t:'b', desc:'前一根收黑，今日長上影線嘗試突破，多空拉鋸轉趨有利多方，留意隔日確認。' });
+  }
+
+  // 6. Bullish Engulfing — green candle fully engulfs prior red candle
+  if (n >= 2 && bull(i) && !bull(p) && opens[i] <= closes[p] && closes[i] >= opens[p] && body(i) > body(p)) {
+    patterns.push({ n:'看漲吞噬', t:'b', desc:'今日陽線完全吞噬昨日陰線，多方力道大增，反轉訊號強烈，尤其在底部更有效。' });
+  }
+
+  // 7. Bearish Engulfing — red candle fully engulfs prior green candle
+  if (n >= 2 && !bull(i) && bull(p) && opens[i] >= closes[p] && closes[i] <= opens[p] && body(i) > body(p)) {
+    patterns.push({ n:'看跌吞噬', t:'s', desc:'今日陰線完全吞噬昨日陽線，空方力道大增，反轉訊號強烈，尤其在頂部更有效。' });
+  }
+
+  // 8. Morning Star — 3-candle bullish reversal: big red + small body + big green
+  if (n >= 3 && !bull(pp) && body(pp) > avgBody * 0.8
+      && body(p) < avgBody * 0.4
+      && bull(i) && closes[i] > (opens[pp] + closes[pp]) / 2) {
+    patterns.push({ n:'早晨之星', t:'b', desc:'三K棒底部反轉：大陰線+小實體猶豫+大陽線確認，是非常可靠的底部轉多訊號。' });
+  }
+
+  // 9. Evening Star — 3-candle bearish reversal: big green + small body + big red
+  if (n >= 3 && bull(pp) && body(pp) > avgBody * 0.8
+      && body(p) < avgBody * 0.4
+      && !bull(i) && closes[i] < (opens[pp] + closes[pp]) / 2) {
+    patterns.push({ n:'黃昏之星', t:'s', desc:'三K棒頂部反轉：大陽線+小實體猶豫+大陰線確認，是非常可靠的頂部轉空訊號。' });
+  }
+
+  return patterns;
+}
+
+// detectChartPatterns: find multi-week chart patterns from OHLC history
+// Returns [{n, t, desc, confidence}]
+function detectChartPatterns(closes, highs, lows) {
+  const patterns = [];
+  const n = closes.length;
+  if (n < 30) return patterns;
+
+  const price = closes[n - 1];
+  const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+  const ma60 = n >= 60 ? closes.slice(-60).reduce((a, b) => a + b, 0) / 60 : null;
+
+  // Helper: find local peaks/troughs in a window
+  function localPeaks(arr, win) {
+    const peaks = [];
+    for (let i = win; i < arr.length - win; i++) {
+      const slice = arr.slice(i - win, i + win + 1);
+      if (arr[i] === Math.max(...slice)) peaks.push({ idx: i, val: arr[i] });
+    }
+    return peaks;
+  }
+  function localTroughs(arr, win) {
+    const troughs = [];
+    for (let i = win; i < arr.length - win; i++) {
+      const slice = arr.slice(i - win, i + win + 1);
+      if (arr[i] === Math.min(...slice)) troughs.push({ idx: i, val: arr[i] });
+    }
+    return troughs;
+  }
+
+  const recentH = highs.slice(-60);
+  const recentL = lows.slice(-60);
+  const recentC = closes.slice(-60);
+  const peaks   = localPeaks(recentH, 4);
+  const troughs = localTroughs(recentL, 4);
+
+  // 1. Double Top (M頭) — two peaks within 3%, valley between
+  if (peaks.length >= 2) {
+    const [p1, p2] = peaks.slice(-2);
+    if (p2.idx > p1.idx + 8) {
+      const diff = Math.abs(p1.val - p2.val) / Math.max(p1.val, p2.val);
+      const midMin = Math.min(...recentH.slice(p1.idx, p2.idx));
+      const dropFromPeak = (Math.max(p1.val, p2.val) - midMin) / Math.max(p1.val, p2.val);
+      if (diff < 0.035 && dropFromPeak > 0.04) {
+        patterns.push({ n:'M頭（雙重頂）', t:'s', confidence: Math.round((1-diff/0.035)*100),
+          desc:'兩個相近高點中間有明顯回落，代表賣壓在同一價位兩次出現，供給過剩。若跌破頸線，跌幅通常等於頭部到頸線的距離。' });
+      }
+    }
+  }
+
+  // 2. Double Bottom (W底) — two troughs within 3%, peak between
+  if (troughs.length >= 2) {
+    const [t1, t2] = troughs.slice(-2);
+    if (t2.idx > t1.idx + 8) {
+      const diff = Math.abs(t1.val - t2.val) / Math.min(t1.val, t2.val);
+      const midMax = Math.max(...recentL.slice(t1.idx, t2.idx));
+      const riseFromTrough = (midMax - Math.min(t1.val, t2.val)) / Math.min(t1.val, t2.val);
+      if (diff < 0.035 && riseFromTrough > 0.04) {
+        patterns.push({ n:'W底（雙重底）', t:'b', confidence: Math.round((1-diff/0.035)*100),
+          desc:'兩個相近低點中間有明顯反彈，代表買盤在同一價位兩次出現，需求強勁。若突破頸線，漲幅通常等於底部到頸線的距離。' });
+      }
+    }
+  }
+
+  // 3. Head & Shoulders (頭肩頂) — three peaks; middle highest
+  if (peaks.length >= 3) {
+    const [ls, hd, rs] = peaks.slice(-3);
+    if (hd.val > ls.val && hd.val > rs.val && Math.abs(ls.val - rs.val) / hd.val < 0.05) {
+      patterns.push({ n:'頭肩頂', t:'s', confidence: 75,
+        desc:'左肩 → 頭部（最高） → 右肩（高度近似左肩），是強力頂部反轉訊號。頸線被跌破後下跌目標為頭頂到頸線的距離。' });
+    }
+  }
+
+  // 4. Inverse Head & Shoulders (頭肩底)
+  if (troughs.length >= 3) {
+    const [ls, hd, rs] = troughs.slice(-3);
+    if (hd.val < ls.val && hd.val < rs.val && Math.abs(ls.val - rs.val) / Math.abs(hd.val) < 0.05) {
+      patterns.push({ n:'頭肩底', t:'b', confidence: 75,
+        desc:'左肩 → 頭部（最低） → 右肩（深度近似左肩），是強力底部反轉訊號。突破頸線後漲幅目標為頭底到頸線的距離。' });
+    }
+  }
+
+  // 5. Triangle / Wedge (三角收斂) — range narrowing over last 20 bars
+  if (n >= 25) {
+    const win20H = highs.slice(-20);
+    const win20L = lows.slice(-20);
+    const hiSlope = (win20H[19] - win20H[0]) / 20;
+    const loSlope = (win20L[19] - win20L[0]) / 20;
+    if (hiSlope < 0 && loSlope > 0) {
+      patterns.push({ n:'三角收斂', t:'n', confidence: 70,
+        desc:'高點逐漸降低、低點逐漸升高，形成收斂三角。代表多空力道趨於平衡，蓄勢待發。方向突破後通常有較大行情。' });
+    } else if (hiSlope < -price * 0.0005 && loSlope < -price * 0.0005) {
+      patterns.push({ n:'下降楔形', t:'b', confidence: 65,
+        desc:'高低點同步下移但斜率收斂，多方雖暫時退守，但賣壓漸弱。向上突破後往往有強勁反彈。' });
+    }
+  }
+
+  // 6. V-Reversal (V型反轉) — sharp drop then strong recovery in last 15 bars
+  if (n >= 20) {
+    const r15 = closes.slice(-15);
+    const minIdx = r15.indexOf(Math.min(...r15));
+    if (minIdx > 0 && minIdx < r15.length - 2) {
+      const dropPct  = (r15[0] - r15[minIdx]) / r15[0];
+      const recoverPct = (r15[r15.length - 1] - r15[minIdx]) / r15[minIdx];
+      if (dropPct > 0.06 && recoverPct > 0.05) {
+        patterns.push({ n:'V型反轉', t:'b', confidence: 70,
+          desc:'短期急跌後強力反彈，V形走勢代表恐慌拋售後買盤迅速介入，通常出現在重要支撐位或超賣後。' });
+      }
+    }
+  }
+
+  // 7. Trend classification
+  if (ma60) {
+    const ma20slope = (closes[n-1] - closes[n-11]) / 10; // 10-day slope of price for MA20 proxy
+    if (price > ma20 && ma20 > ma60 && ma20slope > 0) {
+      patterns.push({ n:'上升趨勢', t:'b', confidence: 80,
+        desc:'現價 > MA20 > MA60，均線呈多頭排列，趨勢向上。Schwartz/Steinhardt 策略的理想環境。' });
+    } else if (price < ma20 && ma20 < ma60 && ma20slope < 0) {
+      patterns.push({ n:'下跌趨勢', t:'s', confidence: 80,
+        desc:'現價 < MA20 < MA60，均線呈空頭排列，趨勢向下。謹慎做多，等待趨勢轉換確認。' });
+    }
+  }
+
+  return patterns;
 }
 
 // ============ TECHNICAL ANALYSIS ============
@@ -2886,15 +3114,17 @@ async function runScan(strategy) {
       top15.map(async q => {
         if (_yfStageDone.v) return null;
         try {
-          let c, h, l, v;
+          let c, h, l, v, o;
           if (q._chartData) {
             c = q._chartData.closes; h = q._chartData.highs;
             l = q._chartData.lows;  v = q._chartData.vols;
+            o = q._chartData.opens || [];
           } else {
             const chart = await yfChart(q.symbol, '3mo', '1d', 6000);
             const oq = chart.indicators.quote[0];
             c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
             l = oq.low.filter(x => x != null);   v = oq.volume.filter(x => x != null);
+            o = (oq.open || []).filter(x => x != null);
             if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
               q.regularMarketVolume = v[v.length - 1] || 0;
               q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
@@ -2905,13 +3135,17 @@ async function runScan(strategy) {
           const ta = technicalAnalysis(c, h, l, v, price);
           const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
           if (!signal) return null;
+          // Append K-line pattern tags to signalDetail (max 2)
+          const patternTags = [...detectCandlePatterns(c, h, l, o), ...detectChartPatterns(c, h, l)]
+            .slice(0, 2)
+            .map(p => (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n);
           return {
             symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
             price, changePct: q.regularMarketChangePercent || 0,
             volume: q.regularMarketVolume || 0, avgVolume: q.averageDailyVolume3Month || 0,
             volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
             signal: signal.name, signalStrength: signal.strength,
-            signalDetail: signal.detail || [],
+            signalDetail: [...(signal.detail || []), ...patternTags],
             ta, closes: c, highs: h, lows: l
           };
         } catch(e) { return null; }
@@ -3430,14 +3664,48 @@ function renderRDistribution(trades) {
 // ============ EDUCATION ============
 function renderEducation() {
   const div = document.getElementById('education-content');
-  div.innerHTML = '<div class="tab-bar" id="edu-tabs"><button class="active" onclick="showEduTab(\'ta\')">技術分析進階</button><button onclick="showEduTab(\'patterns\')">K線型態圖解</button><button onclick="showEduTab(\'psychology\')">交易心理學</button><button onclick="showEduTab(\'money\')">資金管理</button></div><div id="edu-detail"></div>';
-  showEduTab('ta');
+  div.innerHTML = '<div class="tab-bar" id="edu-tabs">' +
+    '<button class="active" onclick="showEduTab(\'live\')">📊 互動圖表教室</button>' +
+    '<button onclick="showEduTab(\'ta\')">技術分析進階</button>' +
+    '<button onclick="showEduTab(\'patterns\')">K線型態圖解</button>' +
+    '<button onclick="showEduTab(\'psychology\')">交易心理學</button>' +
+    '<button onclick="showEduTab(\'money\')">資金管理</button>' +
+    '</div><div id="edu-detail"></div>';
+  showEduTab('live');
 }
 
 function showEduTab(tab) {
-  document.querySelectorAll('#edu-tabs button').forEach((b, i) => b.classList.toggle('active', i === ['ta','patterns','psychology','money'].indexOf(tab)));
+  document.querySelectorAll('#edu-tabs button').forEach((b, i) => b.classList.toggle('active', i === ['live','ta','patterns','psychology','money'].indexOf(tab)));
+  if (tab === 'live') { document.getElementById('edu-detail').innerHTML = getEduLiveHtml(); return; }
   const eduContent = { ta: getTaEducation(), patterns: getPatternsEducation(), psychology: getPsychologyEducation(), money: getMoneyEducation() };
   document.getElementById('edu-detail').innerHTML = eduContent[tab];
+}
+
+function getEduLiveHtml() {
+  return '<div class="card" style="max-width:900px">' +
+    '<h3 style="margin-bottom:4px">📊 互動圖表教室</h3>' +
+    '<p style="font-size:12px;color:var(--muted);margin-bottom:16px">輸入任意股票代碼，載入即時K線圖，AI自動分析走勢型態並逐一說明。</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' +
+      '<input id="edu-ticker-input" class="input" style="flex:1;min-width:140px;max-width:180px" placeholder="AAPL / NVDA / 2330.TW" onkeydown="if(event.key===\'Enter\')analyzeEduChart()">' +
+      '<select id="edu-tf-select" class="input" style="width:110px">' +
+        '<option value="3mo">3個月</option>' +
+        '<option value="6mo" selected>6個月</option>' +
+        '<option value="1y">1年</option>' +
+      '</select>' +
+      '<button class="btn btn-primary" onclick="analyzeEduChart()">🔍 分析走勢</button>' +
+      '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+        '<button class="btn" onclick="document.getElementById(\'edu-ticker-input\').value=\'NVDA\';analyzeEduChart()" style="font-size:11px;padding:5px 10px">NVDA</button>' +
+        '<button class="btn" onclick="document.getElementById(\'edu-ticker-input\').value=\'AAPL\';analyzeEduChart()" style="font-size:11px;padding:5px 10px">AAPL</button>' +
+        '<button class="btn" onclick="document.getElementById(\'edu-ticker-input\').value=\'TSLA\';analyzeEduChart()" style="font-size:11px;padding:5px 10px">TSLA</button>' +
+        '<button class="btn" onclick="document.getElementById(\'edu-ticker-input\').value=\'2330.TW\';analyzeEduChart()" style="font-size:11px;padding:5px 10px">台積電</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="edu-chart-status" style="color:var(--muted);font-size:13px;min-height:20px"></div>' +
+    '<div id="edu-chart-wrap" style="display:none">' +
+      '<div id="edu-kline-chart" style="height:400px;border-radius:8px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)"></div>' +
+      '<div id="edu-analysis-report"></div>' +
+    '</div>' +
+  '</div>';
 }
 
 function getTaEducation() {
@@ -4427,6 +4695,259 @@ async function syncField(field, value) {
     console.warn('Sync error ('+field+'):', e);
     setSyncStatus('⚠️ 同步失敗', true);
   }
+}
+
+// ============ EDUCATION LIVE CHART ANALYSIS ============
+
+async function analyzeEduChart() {
+  const ticker = (document.getElementById('edu-ticker-input').value || '').trim().toUpperCase();
+  const tf = document.getElementById('edu-tf-select').value || '6mo';
+  if (!ticker) return;
+
+  const statusEl = document.getElementById('edu-chart-status');
+  const wrapEl   = document.getElementById('edu-chart-wrap');
+  const reportEl = document.getElementById('edu-analysis-report');
+  statusEl.innerHTML = '<div class="loading" style="justify-content:flex-start;gap:10px"><div class="spinner" style="width:18px;height:18px"></div>正在載入 ' + ticker + ' 的資料...</div>';
+  wrapEl.style.display = 'none';
+
+  try {
+    const chart = await yfChart(ticker, tf, '1d', 10000);
+    const meta  = chart.meta;
+    const q     = chart.indicators.quote[0];
+    const ts    = chart.timestamp;
+    const ohlcv = [];
+    for (let i = 0; i < ts.length; i++) {
+      if (q.close[i] != null && q.open[i] != null) {
+        ohlcv.push({ t: ts[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+      }
+    }
+    if (ohlcv.length < 20) throw new Error('資料不足（至少需要20根K棒）');
+
+    const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h);
+    const l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
+    const o = ohlcv.map(d => d.o);
+    const price = meta.regularMarketPrice || c[c.length - 1];
+
+    const ta         = technicalAnalysis(c, h, l, v, price);
+    const candleP    = detectCandlePatterns(c, h, l, o);
+    const chartP     = detectChartPatterns(c, h, l);
+
+    statusEl.innerHTML = '';
+    wrapEl.style.display = 'block';
+
+    // Render candlestick chart with pattern markers
+    renderEduKline('edu-kline-chart', ohlcv, ta, candleP, chartP, ts);
+
+    // Render 7-section analysis report
+    reportEl.innerHTML = renderEduAnalysisReport(ticker, price, meta, ta, candleP, chartP, c, h, l);
+  } catch(e) {
+    statusEl.innerHTML = '<span style="color:var(--red)">載入失敗：' + e.message + '　<button class="btn btn-primary" style="margin-left:8px" onclick="analyzeEduChart()">重試</button></span>';
+    wrapEl.style.display = 'none';
+  }
+}
+
+function renderEduKline(id, ohlcv, ta, candleP, chartP, timestamps) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  const isDark = true;
+  const lc = window.LightweightCharts;
+  if (!lc) { el.innerHTML = '<p style="color:var(--muted);padding:20px">圖表庫未載入</p>'; return; }
+
+  const chart = lc.createChart(el, {
+    width: el.clientWidth, height: 400,
+    layout: { background: { color: '#131928' }, textColor: '#94a3b8' },
+    grid: { vertLines: { color: '#1e2a3a' }, horzLines: { color: '#1e2a3a' } },
+    crosshair: { mode: lc.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: '#1e2a3a' },
+    timeScale: { borderColor: '#1e2a3a', timeVisible: true },
+  });
+
+  const candleSeries = chart.addCandlestickSeries({
+    upColor: '#10b981', downColor: '#ef4444',
+    borderUpColor: '#10b981', borderDownColor: '#ef4444',
+    wickUpColor: '#10b981', wickDownColor: '#ef4444',
+  });
+  candleSeries.setData(ohlcv.map(d => ({
+    time: d.t, open: d.o, high: d.h, low: d.l, close: d.c
+  })));
+
+  // MA lines
+  function addMA(closes, period, color) {
+    const data = [];
+    for (let i = period - 1; i < closes.length; i++) {
+      const avg = closes.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+      data.push({ time: ohlcv[i].t, value: avg });
+    }
+    const s = chart.addLineSeries({ color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crossHairMarkerVisible: false });
+    s.setData(data);
+  }
+  const c = ohlcv.map(d => d.c);
+  addMA(c, 5, '#f59e0b');
+  addMA(c, 20, '#3b82f6');
+  addMA(c, 60, '#a78bfa');
+
+  // Fibonacci price lines
+  if (ta.fib) {
+    const fibLevels = [
+      { price: ta.fib.level382, color: '#f59e0b', title: 'Fib 38.2%' },
+      { price: ta.fib.level500, color: '#94a3b8', title: 'Fib 50%' },
+      { price: ta.fib.level618, color: '#10b981', title: 'Fib 61.8%' },
+    ];
+    fibLevels.forEach(fl => {
+      if (fl.price) candleSeries.createPriceLine({ price: fl.price, color: fl.color, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: fl.title });
+    });
+  }
+
+  // Pattern markers (last candle + last detected positions)
+  const markers = [];
+  const lastT = ohlcv[ohlcv.length - 1].t;
+  candleP.forEach(p => {
+    markers.push({ time: lastT, position: p.t === 'b' ? 'belowBar' : 'aboveBar', color: p.t === 'b' ? '#10b981' : p.t === 's' ? '#ef4444' : '#f59e0b', shape: p.t === 'b' ? 'arrowUp' : p.t === 's' ? 'arrowDown' : 'circle', text: p.n, size: 1 });
+  });
+  // Chart patterns get a marker earlier
+  chartP.slice(0, 2).forEach(p => {
+    const idx = Math.max(0, ohlcv.length - 5);
+    markers.push({ time: ohlcv[idx].t, position: p.t === 'b' ? 'belowBar' : p.t === 's' ? 'aboveBar' : 'inBar', color: p.t === 'b' ? '#10b981' : p.t === 's' ? '#ef4444' : '#94a3b8', shape: 'square', text: p.n, size: 1 });
+  });
+  if (markers.length) {
+    markers.sort((a, b) => a.time - b.time);
+    candleSeries.setMarkers(markers);
+  }
+
+  new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth })).observe(el);
+}
+
+function renderEduAnalysisReport(ticker, price, meta, ta, candleP, chartP, c, h, l) {
+  const f = v => v != null ? (v >= 1000 ? v.toFixed(2) : v.toFixed(2)) : 'N/A';
+  const allP = [...candleP, ...chartP];
+  const currency = meta.currency || 'USD';
+  const fmt = v => (currency === 'TWD' ? 'NT$' : '$') + f(v);
+
+  // Trend desc
+  const ma20 = ta.ma20, ma60 = ta.ma60;
+  let trendLabel = '整理中', trendColor = 'var(--yellow)';
+  if (ta.ma5 && ma20 && ma60 && ta.ma5 > ma20 && ma20 > ma60) { trendLabel = '多頭排列 ▲'; trendColor = 'var(--green)'; }
+  else if (ta.ma5 && ma20 && ma60 && ta.ma5 < ma20 && ma20 < ma60) { trendLabel = '空頭排列 ▼'; trendColor = 'var(--red)'; }
+
+  const distMA60 = ma60 ? ((price - ma60) / ma60 * 100) : null;
+  const sigLabels = { 'strong-buy':'強力買進', 'buy':'看漲', 'hold':'中性', 'sell':'看跌', 'strong-sell':'強力賣出' };
+  const sigColors = { 'strong-buy':'var(--green)', 'buy':'#34d399', 'hold':'var(--yellow)', 'sell':'#f87171', 'strong-sell':'var(--red)' };
+
+  // RSI desc
+  const rsiDesc = ta.rsi < 30 ? '超賣區（< 30）' : ta.rsi > 70 ? '超買區（> 70）' : ta.rsi < 50 ? '弱勢區（30–50）' : '強勢區（50–70）';
+  const rsiColor = ta.rsi < 30 ? 'var(--green)' : ta.rsi > 70 ? 'var(--red)' : ta.rsi < 50 ? 'var(--yellow)' : '#34d399';
+
+  // MACD desc
+  const macdDesc = ta.hist > 0 ? (ta.hist > (ta.macd * 0.1) ? '正向擴張（看漲）' : '正向收斂（動能趨弱）') : (ta.hist < -(Math.abs(ta.macd) * 0.1) ? '負向擴張（看空）' : '負向收斂（動能回升）');
+
+  // BB position
+  const bbPct = ta.bb ? ((price - ta.bb.lo) / (ta.bb.hi - ta.bb.lo) * 100) : 50;
+  const bbDesc = bbPct > 80 ? '接近上軌（超買壓力）' : bbPct < 20 ? '接近下軌（超賣支撐）' : '布林帶中段（正常波動）';
+
+  // First principles for detected patterns
+  function patternInsight(allP) {
+    if (!allP.length) return '<p style="color:var(--muted)">暫無明顯型態，建議等待訊號明確後再進場。</p>';
+    const bullP = allP.filter(p => p.t === 'b');
+    const bearP = allP.filter(p => p.t === 's');
+    let text = '';
+    if (bullP.length && bearP.length) text = '⚖️ 多空訊號並存，市場方向尚不明確，建議觀望或縮小部位。';
+    else if (bullP.length > bearP.length) text = '✅ 多方訊號主導：' + bullP.map(p => p.n).join('、') + '。從第一性原理看，這代表買方力量正在積累，若配合量能放大和支撐位確認，勝率更高。';
+    else text = '⚠️ 空方訊號主導：' + bearP.map(p => p.n).join('、') + '。賣壓大於買盤，謹慎做多，等待反轉確認訊號。';
+    return '<p style="font-size:13px;line-height:1.8;color:var(--text)">' + text + '</p>';
+  }
+
+  // Trade guidance
+  const atr = ta.atr || (price * 0.02);
+  const entryLo = (price * 0.99).toFixed(2);
+  const stopLoss = (price - 1.5 * atr).toFixed(2);
+  const t1 = (price + atr).toFixed(2);
+  const t2 = (price + 2 * atr).toFixed(2);
+  const rr = (atr / (1.5 * atr)).toFixed(1);
+
+  const section = (icon, title, content, col) =>
+    '<div class="card" style="margin-top:12px;' + (col ? 'border-left:3px solid ' + col + ';' : '') + '">' +
+    '<h4 style="margin:0 0 10px;font-size:14px">' + icon + ' ' + title + '</h4>' + content + '</div>';
+
+  let html = '<div style="margin-top:4px">';
+
+  // ① Overall assessment
+  html += section('①', '整體評分與趨勢',
+    '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">' +
+      '<div style="text-align:center;padding:8px 16px;background:rgba(255,255,255,.04);border-radius:8px">' +
+        '<div style="font-size:11px;color:var(--muted)">技術評分</div>' +
+        '<div style="font-size:28px;font-weight:700;color:' + (sigColors[ta.sig]||'var(--yellow)') + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div>' +
+        '<div style="font-size:12px;color:' + (sigColors[ta.sig]||'var(--yellow)') + '">' + (sigLabels[ta.sig]||'中性') + '</div>' +
+      '</div>' +
+      '<div style="flex:1;min-width:200px">' +
+        '<div style="margin-bottom:6px">趨勢：<span style="color:' + trendColor + ';font-weight:600">' + trendLabel + '</span></div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">MA5 ' + f(ta.ma5) + ' ｜ MA20 ' + f(ta.ma20) + ' ｜ MA60 ' + f(ta.ma60) + '</div>' +
+        (distMA60 != null ? '<div style="font-size:12px">現價距MA60：<span style="color:' + (distMA60 > 0 ? 'var(--green)' : 'var(--red)') + '">' + (distMA60 > 0 ? '+' : '') + distMA60.toFixed(1) + '%</span></div>' : '') +
+        '<div style="font-size:12px;margin-top:4px">ATR：' + f(atr) + '（' + (atr/price*100).toFixed(1) + '%）</div>' +
+      '</div>' +
+    '</div>',
+    sigColors[ta.sig]
+  );
+
+  // ② Candle patterns
+  if (candleP.length) {
+    const tags = candleP.map(p => '<span class="tag" style="background:' + (p.t==='b' ? 'rgba(16,185,129,.15);color:var(--green)' : p.t==='s' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)') + '">' + (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n + '</span>').join('');
+    const details = candleP.map(p => '<div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,.025);border-radius:6px;font-size:12px;border-left:2px solid ' + (p.t==='b' ? 'var(--green)' : p.t==='s' ? 'var(--red)' : 'var(--yellow)') + '"><strong>' + p.n + '</strong>：' + p.desc + '</div>').join('');
+    html += section('②', '近期K棒型態（最新' + candleP.length + '個）', '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + tags + '</div>' + details, null);
+  }
+
+  // ③ Chart patterns
+  if (chartP.length) {
+    const tags = chartP.map(p => '<span class="tag" style="background:' + (p.t==='b' ? 'rgba(16,185,129,.15);color:var(--green)' : p.t==='s' ? 'rgba(239,68,68,.15);color:var(--red)' : 'rgba(245,158,11,.15);color:var(--yellow)') + '">' + (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n + (p.confidence ? ' ' + p.confidence + '%' : '') + '</span>').join('');
+    const details = chartP.map(p => '<div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,.025);border-radius:6px;font-size:12px;border-left:2px solid ' + (p.t==='b' ? 'var(--green)' : p.t==='s' ? 'var(--red)' : 'var(--yellow)') + '"><strong>' + p.n + (p.confidence ? '（信心度 ' + p.confidence + '%）' : '') + '</strong>：' + p.desc + '</div>').join('');
+    html += section('③', '圖形型態', '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + tags + '</div>' + details, null);
+  }
+
+  // ④ Indicators
+  html += section('④', '技術指標現況',
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">' +
+      '<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:11px;color:var(--muted)">RSI</div><div style="font-weight:600;color:' + rsiColor + '">' + (ta.rsi||0).toFixed(1) + '</div><div style="font-size:11px;color:var(--muted)">' + rsiDesc + '</div></div>' +
+      '<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:11px;color:var(--muted)">MACD Histogram</div><div style="font-weight:600;color:' + (ta.hist > 0 ? 'var(--green)' : 'var(--red)') + '">' + (ta.hist||0).toFixed(3) + '</div><div style="font-size:11px;color:var(--muted)">' + macdDesc + '</div></div>' +
+      '<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:11px;color:var(--muted)">KD（K/D）</div><div style="font-weight:600">' + (ta.kd ? (ta.kd.k||0).toFixed(1) + ' / ' + (ta.kd.d||0).toFixed(1) : 'N/A') + '</div><div style="font-size:11px;color:var(--muted)">' + (ta.kd && ta.kd.k < 20 ? '超賣區' : ta.kd && ta.kd.k > 80 ? '超買區' : '正常區') + '</div></div>' +
+      '<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:11px;color:var(--muted)">布林帶位置</div><div style="font-weight:600">' + bbPct.toFixed(0) + '%</div><div style="font-size:11px;color:var(--muted)">' + bbDesc + '</div></div>' +
+      '<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:11px;color:var(--muted)">EMA8 / EMA21</div><div style="font-weight:600;color:' + (ta.ema8 > ta.ema21 ? 'var(--green)' : 'var(--red)') + '">' + (ta.ema8 > ta.ema21 ? '短多 ▲' : '短空 ▼') + '</div><div style="font-size:11px;color:var(--muted)">' + f(ta.ema8) + ' / ' + f(ta.ema21) + '</div></div>' +
+    '</div>', null
+  );
+
+  // ⑤ Support / Resistance
+  const recHigh = Math.max(...h.slice(-20)).toFixed(2);
+  const recLow  = Math.min(...l.slice(-20)).toFixed(2);
+  html += section('⑤', '支撐 / 壓力位',
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      (ta.fib ? [
+        { label: 'Fib 38.2%', val: ta.fib.level382, color: '#f59e0b' },
+        { label: 'Fib 50%',   val: ta.fib.level500, color: '#94a3b8' },
+        { label: 'Fib 61.8%', val: ta.fib.level618, color: '#10b981' },
+      ].map(fl => '<div style="padding:6px 12px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid ' + fl.color + '"><div style="font-size:10px;color:var(--muted)">' + fl.label + '</div><div style="font-weight:600">' + fmt(fl.val) + '</div></div>').join('') : '') +
+      '<div style="padding:6px 12px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--red)"><div style="font-size:10px;color:var(--muted)">近20日最高</div><div style="font-weight:600;color:var(--red)">' + fmt(parseFloat(recHigh)) + '</div></div>' +
+      '<div style="padding:6px 12px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)"><div style="font-size:10px;color:var(--muted)">近20日最低</div><div style="font-weight:600;color:var(--green)">' + fmt(parseFloat(recLow)) + '</div></div>' +
+      (ta.pivot ? '<div style="padding:6px 12px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:10px;color:var(--muted)">Pivot Point</div><div style="font-weight:600">' + fmt(ta.pivot.pp) + '</div><div style="font-size:10px;color:var(--muted)">R1 ' + fmt(ta.pivot.r1) + ' / S1 ' + fmt(ta.pivot.s1) + '</div></div>' : '') +
+    '</div>', null
+  );
+
+  // ⑥ First principles
+  html += section('⑥', '第一性原理解讀', patternInsight(allP), '#3b82f6');
+
+  // ⑦ Trade guidance
+  html += section('⑦', '操作參考（學習用途，非投資建議）',
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:12px">' +
+      '<div style="padding:8px;background:rgba(59,130,246,.08);border-radius:6px;border:1px solid rgba(59,130,246,.2)"><div style="font-size:10px;color:var(--muted)">參考進場區間</div><div style="font-weight:600;color:var(--accent)">' + fmt(parseFloat(entryLo)) + ' ~ ' + fmt(price) + '</div></div>' +
+      '<div style="padding:8px;background:rgba(239,68,68,.08);border-radius:6px;border:1px solid rgba(239,68,68,.2)"><div style="font-size:10px;color:var(--muted)">停損（1.5×ATR）</div><div style="font-weight:600;color:var(--red)">' + fmt(parseFloat(stopLoss)) + '</div></div>' +
+      '<div style="padding:8px;background:rgba(16,185,129,.08);border-radius:6px;border:1px solid rgba(16,185,129,.2)"><div style="font-size:10px;color:var(--muted)">目標一（1×ATR）</div><div style="font-weight:600;color:var(--green)">' + fmt(parseFloat(t1)) + '</div></div>' +
+      '<div style="padding:8px;background:rgba(16,185,129,.08);border-radius:6px;border:1px solid rgba(16,185,129,.2)"><div style="font-size:10px;color:var(--muted)">目標二（2×ATR）</div><div style="font-weight:600;color:var(--green)">' + fmt(parseFloat(t2)) + '</div></div>' +
+    '</div>' +
+    '<div style="padding:10px;background:rgba(239,68,68,.06);border-radius:8px;border:1px solid rgba(239,68,68,.2);font-size:11px;color:var(--muted)">' +
+      '⚠️ 以上數字僅為技術面學習示例，不構成任何投資建議。實際操作需結合基本面、市場環境、個人風險承受能力綜合判斷。' +
+    '</div>', '#f59e0b'
+  );
+
+  html += '</div>';
+  return html;
 }
 
 // ============ INIT ============
