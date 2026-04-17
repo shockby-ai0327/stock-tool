@@ -3506,7 +3506,7 @@ function saveTodayWatchlist() { localStorage.setItem('scanner-watchlist', JSON.s
 function startWatchlistRefresh() {
   if (_watchlistTimer) return;
   if (_todayWatchlist.length === 0) return;
-  _watchlistTimer = setInterval(async () => { await refreshWatchlist(); }, 10000); // 任何頁面都持續刷新，有警報自動彈出
+  _watchlistTimer = setInterval(async () => { if (!document.hidden) await refreshWatchlist(); }, 10000);
   refreshWatchlist();
 }
 function stopWatchlistRefresh() { if (_watchlistTimer) { clearInterval(_watchlistTimer); _watchlistTimer = null; } }
