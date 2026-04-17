@@ -798,7 +798,12 @@ async function analyzeStock() {
     }
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = meta.regularMarketPrice;
-    const prevClose = meta.chartPreviousClose || c[c.length - 2];
+    // meta.chartPreviousClose on a 6-month chart = start-of-period price, NOT yesterday.
+    // Derive prev close from timestamps instead.
+    const todayMidnight = Math.floor(new Date().setHours(0,0,0,0) / 1000);
+    const lastTs = ts.length > 0 ? ts[ts.length - 1] : 0;
+    const lastCandleIsToday = lastTs >= todayMidnight;
+    const prevClose = lastCandleIsToday ? (c[c.length - 2] || c[c.length - 1]) : c[c.length - 1];
     _histCloses[ticker] = c; // store for real-time refresh
     const cc = calcChange(price, c, prevClose, _chgTF);
     const change = cc.chg, changePct = cc.chgPct;
@@ -1563,7 +1568,10 @@ async function showIdxChart(sym, name) {
     for (let i = 0; i < chart.timestamp.length; i++) if (q.close[i] != null) ohlcv.push({ t: chart.timestamp[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = chart.meta.regularMarketPrice;
-    const prev = chart.meta.chartPreviousClose || c[c.length - 2];
+    const _ts = chart.timestamp || [];
+    const _today0 = Math.floor(new Date().setHours(0,0,0,0) / 1000);
+    const _lastTs = _ts.length ? _ts[_ts.length - 1] : 0;
+    const prev = (_lastTs >= _today0) ? (c[c.length - 2] || c[c.length - 1]) : c[c.length - 1];
     const chgPct = ((price - prev) / prev) * 100;
     const ta = technicalAnalysis(c, h, l, v, price);
     const analysis = idxAnalysis(name, sym, price, chgPct, ta);
@@ -1595,22 +1603,12 @@ async function loadSentiment() {
     const g = sym => quotes.find(q => q.symbol === sym);
     const vix = g('^VIX'), sp = g('^GSPC'), nq = g('^IXIC'), tw = g('^TWII'), gold = g('GC=F'), tnx = g('^TNX'), sox = g('^SOX'), btc = g('BTC-USD');
     const vixV = vix ? vix.price : 20, spC = sp ? sp.changePct : 0, nqC = nq ? nq.changePct : 0, btcC = btc ? btc.changePct : 0;
+    const tnxV = tnx ? tnx.price : 4.2;
 
-    let fgi = 50;
-    if (vixV < 12) fgi += 15; else if (vixV < 17) fgi += 8; else if (vixV < 20) fgi += 3;
-    else if (vixV > 35) fgi -= 20; else if (vixV > 28) fgi -= 12; else if (vixV > 22) fgi -= 5;
-    fgi += Math.min(15, Math.max(-15, spC * 5));
-    fgi += (nqC - spC) * 3;
-    fgi += Math.min(5, Math.max(-5, btcC));
-    if (tnx && tnx.price > 4.5) fgi -= 5; else if (tnx && tnx.price < 3.5) fgi += 5;
-    fgi = Math.max(0, Math.min(100, Math.round(fgi)));
-
-    let sLabel, sColor, sEmoji;
-    if (fgi >= 80) { sLabel = '極度貪婪'; sColor = '#22c55e'; sEmoji = '🤑'; }
-    else if (fgi >= 60) { sLabel = '貪婪'; sColor = '#10b981'; sEmoji = '😊'; }
-    else if (fgi >= 40) { sLabel = '中性'; sColor = 'var(--yellow)'; sEmoji = '😐'; }
-    else if (fgi >= 20) { sLabel = '恐懼'; sColor = 'var(--orange)'; sEmoji = '😰'; }
-    else { sLabel = '極度恐懼'; sColor = 'var(--red)'; sEmoji = '😱'; }
+    // Use same calcFGI() as dashboard for consistency
+    const fgi = calcFGI(spC, vixV, nqC, tnxV);
+    const fgiInfo = fgiLabel(fgi);
+    const sLabel = fgiInfo.label, sColor = fgiInfo.color, sEmoji = fgiInfo.emoji;
 
     const bull = [], bear = [];
     if (vixV < 20) bull.push('VIX處低位(' + vixV.toFixed(1) + ')，市場波動低'); else bear.push('VIX偏高(' + vixV.toFixed(1) + ')，不確定性增加');
@@ -3030,7 +3028,13 @@ async function chartScanFallback(strategy) {
         const vols   = oq.volume.filter(v => v != null);
         if (closes.length < 20) return null;
         const price    = chart.meta.regularMarketPrice || closes[closes.length - 1];
-        const prevClose = chart.meta.chartPreviousClose || closes[closes.length - 2];
+        // chartPreviousClose on a 3-month chart = start-of-period, not yesterday
+        const tsArr = chart.timestamp || [];
+        const _today0 = Math.floor(new Date().setHours(0,0,0,0) / 1000);
+        const _lastTs  = tsArr.length ? tsArr[tsArr.length - 1] : 0;
+        const prevClose = (_lastTs >= _today0)
+          ? (closes[closes.length - 2] || closes[closes.length - 1])
+          : closes[closes.length - 1];
         const changePct = prevClose ? (price - prevClose) / prevClose * 100 : 0;
         const avgVol   = vols.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
         const vol      = vols[vols.length - 1] || 0;
