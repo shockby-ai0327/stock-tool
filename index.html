@@ -1740,17 +1740,94 @@ function showJournalATRGuide(price, ticker) {
   setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 }
 function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
+
+window._jNotesMap = {};
+
+function showNotesPopup(id) {
+  const notes = window._jNotesMap[id] || '';
+  if (!notes) return;
+  const existing = document.getElementById('j-notes-overlay'); if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'j-notes-overlay';
+  div.className = 'entry-modal-overlay';
+  div.onclick = e => { if (e.target === div) div.remove(); };
+  div.innerHTML =
+    '<div class="entry-modal" style="max-width:480px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+    '<span style="font-weight:600;font-size:15px">交易備註</span>' +
+    '<button class="modal-close" onclick="document.getElementById(\'j-notes-overlay\').remove()">×</button></div>' +
+    '<div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;background:var(--bg);padding:14px;border-radius:8px">' + notes.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div></div>';
+  document.body.appendChild(div);
+}
+
+function showATRPopup(price, ticker) {
+  let atr = null;
+  for (const key in _entryData) { if (key.startsWith(ticker + '_')) { atr = _entryData[key]?.ta?.atr; break; } }
+  if (!atr || atr <= 0) atr = price * 0.02;
+  const fromCache = Object.keys(_entryData).some(k => k.startsWith(ticker + '_'));
+  const sl = price - 1.5 * atr;
+  const r1 = price + atr, r2 = price + 2 * atr, r3 = price + 3 * atr;
+  const fmt = v => '$' + v.toFixed(2);
+  const pct = v => ((v - price) / price * 100).toFixed(1) + '%';
+  const box = (label, val, color, note) =>
+    '<div style="padding:10px;background:rgba(0,0,0,.15);border-radius:8px;border-left:2px solid ' + color + '">' +
+    '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">' + label + '</div>' +
+    '<div style="font-weight:700;font-size:15px;color:' + color + '">' + fmt(val) + '</div>' +
+    '<div style="font-size:11px;color:var(--muted)">' + note + '</div></div>';
+  const existing = document.getElementById('j-atr-overlay'); if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'j-atr-overlay';
+  div.className = 'entry-modal-overlay';
+  div.onclick = e => { if (e.target === div) div.remove(); };
+  div.innerHTML =
+    '<div class="entry-modal" style="max-width:520px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+    '<span style="font-weight:600;font-size:15px">進場計算（ATR 參考）<span style="font-size:12px;color:var(--muted);margin-left:8px">' + ticker + ' @ ' + fmt(price) + '</span></span>' +
+    '<button class="modal-close" onclick="document.getElementById(\'j-atr-overlay\').remove()">×</button></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">' +
+    '<div style="padding:10px;background:rgba(0,0,0,.15);border-radius:8px;border-left:2px solid var(--muted)"><div style="font-size:10px;color:var(--muted);margin-bottom:2px">ATR（真實波幅）</div><div style="font-weight:700;font-size:15px">$' + atr.toFixed(2) + '</div><div style="font-size:11px;color:var(--muted)">' + (atr/price*100).toFixed(1) + '% 日波動</div></div>' +
+    box('停損（-1.5×ATR）', sl, 'var(--red)', pct(sl)) +
+    box('1R 目標（+1×ATR）', r1, 'var(--green)', '+' + pct(r1)) +
+    box('2R 目標（+2×ATR）', r2, 'var(--green)', '+' + pct(r2)) +
+    box('3R 目標（+3×ATR）', r3, 'var(--green)', '+' + pct(r3)) +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:12px">ATR ' + (fromCache ? '來自掃描器快取（精確）' : '以進場價 2% 估算，先掃描該股可獲精確值') + '。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div></div>';
+  document.body.appendChild(div);
+}
+
 function renderJournal() {
   const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
-  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; return; }
+  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
   emp.style.display = 'none';
-  j.forEach(e => { if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
+  window._jNotesMap = {};
+  j.forEach(e => { window._jNotesMap[e.id] = e.notes || ''; if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
   const tBuy = j.filter(e => e.action === 'buy').reduce((s, e) => s + e.net, 0);
   const tSell = j.filter(e => e.action === 'sell').reduce((s, e) => s + e.net, 0);
   const tFee = j.reduce((s, e) => s + (e.fee || 0), 0), pnl = tSell - tBuy;
   const sl = { value: '價值投資', swing: '波段交易', day: '當沖', other: '其他' };
   st.innerHTML = '<div style="display:flex;gap:20px;flex-wrap:wrap"><div><span style="color:var(--muted)">總交易:</span> <b>' + j.length + '</b></div><div><span style="color:var(--muted)">總買入(含手續費):</span> <b style="color:var(--green)">$' + tBuy.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">總賣出(扣手續費):</span> <b style="color:var(--red)">$' + tSell.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">累計手續費:</span> <b style="color:var(--orange)">$' + tFee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">已實現損益:</span> <b style="color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + '">$' + pnl.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div></div>';
-  tb.innerHTML = j.map(e => '<tr><td>' + e.date + '</td><td><b>' + e.ticker + '</b></td><td><span class="tag" style="background:' + (e.action === 'buy' ? 'rgba(16,185,129,.15);color:var(--green)' : 'rgba(239,68,68,.15);color:var(--red)') + '">' + (e.action === 'buy' ? '買入' : '賣出') + '</span></td><td>' + e.price.toFixed(2) + '</td><td>' + e.qty + '</td><td>$' + e.amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td><td style="color:var(--orange)">$' + e.fee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' <span style="font-size:10px">(0.3%)</span></td><td style="font-weight:600;color:' + (e.action === 'buy' ? 'var(--red)' : 'var(--green)') + '">$' + e.net.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td><td><span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)">' + (sl[e.strategy] || e.strategy) + '</span></td><td style="max-width:120px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (e.notes || '') + '</td><td><button class="btn btn-danger btn-sm" onclick="delJ(' + e.id + ')">刪</button></td></tr>').join('');
+  tb.innerHTML = j.map(e =>
+    '<tr>' +
+    '<td>' + e.date + '</td>' +
+    '<td><b>' + e.ticker + '</b></td>' +
+    '<td><span class="tag" style="background:' + (e.action === 'buy' ? 'rgba(16,185,129,.15);color:var(--green)' : 'rgba(239,68,68,.15);color:var(--red)') + '">' + (e.action === 'buy' ? '買入' : '賣出') + '</span></td>' +
+    '<td>' + e.price.toFixed(2) + '</td>' +
+    '<td>' + e.qty + '</td>' +
+    '<td>$' + e.amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td>' +
+    '<td style="color:var(--orange)">$' + e.fee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' <span style="font-size:10px">(0.3%)</span></td>' +
+    '<td style="font-weight:600;color:' + (e.action === 'buy' ? 'var(--red)' : 'var(--green)') + '">$' + e.net.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td>' +
+    '<td><span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)">' + (sl[e.strategy] || e.strategy) + '</span></td>' +
+    '<td style="max-width:140px">' +
+      (e.notes
+        ? '<span style="display:block;max-width:130px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-decoration:underline dotted" title="點擊查看完整備註" onclick="showNotesPopup(' + e.id + ')">' + (e.notes.replace(/</g,'&lt;')) + '</span>'
+        : '<span style="font-size:12px;color:var(--muted);opacity:.35">—</span>') +
+    '</td>' +
+    '<td style="white-space:nowrap">' +
+      (e.action === 'buy' ? '<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;margin-right:4px;font-size:12px" title="進場計算（ATR）" onclick="showATRPopup(' + e.price + ',\'' + e.ticker + '\')">◎</button>' : '') +
+      '<button class="btn btn-danger btn-sm" onclick="delJ(' + e.id + ')">刪</button>' +
+    '</td>' +
+    '</tr>'
+  ).join('');
 }
 
 // ============ MATH ============
