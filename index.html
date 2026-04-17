@@ -305,6 +305,7 @@ firebase.initializeApp(_fbConfig);
       <h2 style="margin-bottom:16px">交易日誌</h2>
       <div class="tab-bar" id="journal-tabs">
         <button class="active" onclick="switchJournalTab('records')">交易記錄</button>
+        <button onclick="switchJournalTab('holdings')">持倉追蹤</button>
         <button onclick="switchJournalTab('risk')">風控設定</button>
         <button onclick="switchJournalTab('performance')">績效分析</button>
       </div>
@@ -330,6 +331,9 @@ firebase.initializeApp(_fbConfig);
       </div>
       <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
       </div><!-- end journal-tab-records -->
+      <div id="journal-tab-holdings" style="display:none">
+        <div id="holdings-content"></div>
+      </div>
       <div id="journal-tab-risk" style="display:none">
         <div id="risk-content"></div>
       </div>
@@ -341,7 +345,6 @@ firebase.initializeApp(_fbConfig);
       <h2 style="margin-bottom:16px">產業地圖</h2>
       <div class="tab-bar" id="industry-tabs">
         <button class="active" onclick="switchIndustryTab('map')">全球產業</button>
-        <button onclick="switchIndustryTab('tw')">台灣產業</button>
         <button onclick="switchIndustryTab('heatmap')">熱力圖</button>
       </div>
       <div id="industry-content"></div>
@@ -749,17 +752,18 @@ function switchIndicesTab(tab) {
 }
 
 function switchJournalTab(tab) {
-  document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['records','risk','performance'].indexOf(tab)));
-  ['records','risk','performance'].forEach(t => {
+  document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['records','holdings','risk','performance'].indexOf(tab)));
+  ['records','holdings','risk','performance'].forEach(t => {
     const el = document.getElementById('journal-tab-' + t);
     if (el) el.style.display = (t === tab) ? '' : 'none';
   });
   if (tab === 'risk') renderRisk();
   if (tab === 'performance') renderPerformance();
+  if (tab === 'holdings') renderHoldings();
 }
 
 function switchIndustryTab(tab) {
-  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['map','tw','heatmap'].indexOf(tab)));
+  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['map','heatmap'].indexOf(tab)));
   const ic = document.getElementById('industry-content');
   const hc = document.getElementById('heatmap-content');
   if (!ic || !hc) return;
@@ -768,9 +772,7 @@ function switchIndustryTab(tab) {
     if (_shouldRerender('heatmap')) { loadHeatmap('us'); _markRendered('heatmap'); }
   } else {
     ic.style.display = ''; hc.style.display = 'none';
-    const which = tab === 'tw' ? 'tw' : 'global';
-    const rkey = 'industry-' + which;
-    if (_shouldRerender(rkey)) { loadIndustry(which); _markRendered(rkey); }
+    if (_shouldRerender('industry-global')) { loadIndustry('global'); _markRendered('industry-global'); }
   }
 }
 
@@ -1741,6 +1743,68 @@ function showJournalATRGuide(price, ticker) {
 }
 function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
 
+async function renderHoldings() {
+  const div = document.getElementById('holdings-content');
+  const j = getJ();
+  if (!j.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無交易紀錄</h3><p style="color:var(--muted);margin-top:8px">新增買入紀錄後，持倉追蹤將自動計算。</p></div>'; return; }
+  // Calculate open positions using average cost
+  const pos = {};
+  j.slice().reverse().forEach(e => {
+    if (!pos[e.ticker]) pos[e.ticker] = { qty: 0, totalCost: 0, firstDate: e.date, strategy: e.strategy };
+    if (e.action === 'buy') {
+      pos[e.ticker].qty += e.qty;
+      pos[e.ticker].totalCost += e.net;
+      pos[e.ticker].firstDate = e.date;
+    } else {
+      const avgCost = pos[e.ticker].qty > 0 ? pos[e.ticker].totalCost / pos[e.ticker].qty : 0;
+      pos[e.ticker].qty = Math.max(0, pos[e.ticker].qty - e.qty);
+      pos[e.ticker].totalCost = pos[e.ticker].qty * avgCost;
+    }
+  });
+  const open = Object.entries(pos).filter(([, p]) => p.qty > 0);
+  if (!open.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>目前無持倉</h3><p style="color:var(--muted);margin-top:8px">所有買入部位均已賣出。</p></div>'; return; }
+  div.innerHTML = '<div class="card"><h3>持倉追蹤</h3><p style="font-size:12px;color:var(--muted);margin-bottom:12px">載入即時報價中...</p></div>';
+  // Fetch current prices
+  const prices = {};
+  await Promise.all(open.map(async ([ticker]) => {
+    try { const d = await quickPrice(ticker); if (d) prices[ticker] = d.price; } catch(e) {}
+  }));
+  let totalMV = 0, totalCostAll = 0;
+  const rows = open.map(([ticker, p]) => {
+    const avgCost = p.totalCost / p.qty;
+    const curPrice = prices[ticker] || 0;
+    const mv = curPrice * p.qty;
+    const pnl = mv - p.totalCost;
+    const pnlPct = p.totalCost > 0 ? (pnl / p.totalCost * 100) : 0;
+    const days = Math.floor((Date.now() - new Date(p.firstDate)) / 86400000);
+    totalMV += mv; totalCostAll += p.totalCost;
+    const c = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    return '<tr>' +
+      '<td><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + ticker + '\';showPage(\'stock\');analyzeStock()">' + ticker + '</b></td>' +
+      '<td>' + p.qty + '</td>' +
+      '<td>$' + avgCost.toFixed(2) + '</td>' +
+      '<td>' + (curPrice ? '$' + curPrice.toFixed(2) : '—') + '</td>' +
+      '<td style="color:' + c + ';font-weight:600">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</td>' +
+      '<td style="color:' + c + ';font-weight:600">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
+      '<td style="color:var(--muted)">' + days + ' 天</td>' +
+      '</tr>';
+  }).join('');
+  const totalPnl = totalMV - totalCostAll;
+  const totalPnlPct = totalCostAll > 0 ? (totalPnl / totalCostAll * 100) : 0;
+  const tc = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  div.innerHTML =
+    '<div class="card" style="margin-bottom:16px">' +
+    '<div style="display:flex;gap:24px;flex-wrap:wrap">' +
+    '<div><span style="color:var(--muted);font-size:13px">持倉市值</span><div style="font-size:22px;font-weight:700">$' + totalMV.toLocaleString(undefined,{maximumFractionDigits:0}) + '</div></div>' +
+    '<div><span style="color:var(--muted);font-size:13px">總成本</span><div style="font-size:22px;font-weight:700">$' + totalCostAll.toLocaleString(undefined,{maximumFractionDigits:0}) + '</div></div>' +
+    '<div><span style="color:var(--muted);font-size:13px">浮動損益</span><div style="font-size:22px;font-weight:700;color:' + tc + '">' + (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toLocaleString(undefined,{maximumFractionDigits:0}) + ' (' + (totalPnlPct >= 0 ? '+' : '') + totalPnlPct.toFixed(2) + '%)</div></div>' +
+    '</div></div>' +
+    '<div class="card"><h3>個股明細</h3><div style="overflow-x:auto"><table>' +
+    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>' +
+    '<p style="font-size:11px;color:var(--muted);margin-top:10px">現價為即時報價（15分延遲）；損益以含手續費成本計算。</p></div>';
+}
+
 window._jNotesMap = {};
 
 function showNotesPopup(id) {
@@ -2344,8 +2408,9 @@ const INDUSTRY_DATA = {
       partners:'Coursera+全球大學；Duolingo+AI技術；企業培訓+LinkedIn Learning',
       recovery:null, outlook:'AI正在顛覆教育產業，Duolingo是AI受惠者，Chegg是受害者。終身學習趨勢推動成長。'
     }
-  ],
-  tw: [
+  ]
+};
+const _REMOVED_TW = [
     { id:'twsemi', name:'半導體', icon:'🔬', cycle:'hot', cycleLabel:'當紅',
       desc:'台灣護國群山，全球晶圓代工與IC封測重鎮。',
       upstream:['矽晶圓(環球晶)','光罩(台灣光罩)','化學品(長興/三福化)','設備代理(帆宣/家登)','特殊氣體(聯華氣體)'],
@@ -2583,40 +2648,77 @@ const INDUSTRY_DATA = {
       partners:'台灣遊戲公司+國際IP授權；鈊象+各遊樂場',
       recovery:null, outlook:'手遊市場成熟，精品化是趨勢。鈊象商用機台出海成長亮眼。'
     }
-  ]
+];
+
+const SECTOR_ETF = {
+  semi:'SOXX', ai:'AIQ', cloud:'SKYY', ev:'DRIV', energy:'XLE',
+  renewenergy:'ICLN', pharma:'XBI', fintech:'XLF', ecommerce:'XRT',
+  cybersec:'HACK', media:'XLC', realestate:'XLRE', aerospace:'ITA',
+  auto:'CARZ', telecom:'XLC', agri:'MOO', luxury:'XLY',
+  logistics:'XTN', mining:'XME', insurance:'KIE', robotics:'ROBO',
+  utilities:'XLU', quantum:null, space:'UFO', chemicals:'XLB',
+  construction:'ITB', education:null
 };
 
 let _industryTab = 'global';
-function loadIndustry(tab) {
+async function loadIndustry(tab) {
   _industryTab = tab;
-  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['global','tw','heatmap'].indexOf(tab)));
-  const data = INDUSTRY_DATA[tab];
+  const data = INDUSTRY_DATA.global;
   const ct = document.getElementById('industry-content');
   const cycleColors = {hot:'#c0392b',warm:'#d4860a',neutral:'#2980b9',cool:'#7d3c98',cold:'#34495e'};
   const cycleText   = {hot:'當紅',warm:'回溫',neutral:'中性',cool:'偏冷',cold:'萎靡'};
-  // Heatmap overview
-  let heatHtml = '<div class="card" style="margin-bottom:20px"><h3 style="margin-bottom:12px">產業景氣概覽</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
+  const chgToColor  = p => p >= 1 ? 'var(--green)' : p <= -1 ? 'var(--red)' : 'var(--muted)';
+
+  // Show loading state while fetching ETF prices
+  ct.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">載入 ETF 即時數據中...</div>';
+
+  // Fetch all unique ETF tickers in parallel
+  const etfTickers = [...new Set(data.map(ind => SECTOR_ETF[ind.id]).filter(Boolean))];
+  const etfData = {};
+  await Promise.all(etfTickers.map(async t => {
+    try { const d = await quickPrice(t); if (d) etfData[t] = d; } catch(e) {}
+  }));
+
+  // Heatmap overview with real ETF badge
+  let heatHtml = '<div class="card" style="margin-bottom:20px"><h3 style="margin-bottom:4px">產業景氣概覽</h3>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">ETF 今日漲跌 · 景氣狀態為中期評估</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   data.forEach(ind => {
-    heatHtml += '<div onclick="showIndustryDetail(\'' + tab + '\',\'' + ind.id + '\')" style="cursor:pointer;background:' + cycleColors[ind.cycle] + ';color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;min-width:90px;text-align:center">' +
-      ind.name + '<div style="font-size:10px;opacity:.9;margin-top:2px;font-weight:400">' + cycleText[ind.cycle] + '</div></div>';
+    const etf = SECTOR_ETF[ind.id];
+    const d = etf ? etfData[etf] : null;
+    const chg = d ? ((d.price - d.prevClose) / d.prevClose * 100) : null;
+    const badge = chg != null
+      ? '<div style="font-size:11px;font-weight:700;color:' + chgToColor(chg) + '">' + (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%</div>'
+      : '';
+    heatHtml += '<div onclick="showIndustryDetail(\'global\',\'' + ind.id + '\')" style="cursor:pointer;background:' + cycleColors[ind.cycle] + ';color:#fff;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;min-width:80px;text-align:center">' +
+      ind.name + '<div style="font-size:10px;opacity:.85;margin-top:1px;font-weight:400">' + (etf || '') + '</div>' + badge + '</div>';
   });
   heatHtml += '</div><div style="margin-top:10px;font-size:11px;color:var(--muted)">景氣狀態：';
   Object.entries(cycleText).forEach(([k, v]) => {
     heatHtml += '<span style="display:inline-block;background:' + cycleColors[k] + ';color:#fff;font-size:10px;padding:1px 7px;border-radius:3px;margin-right:4px">' + v + '</span>';
   });
   heatHtml += '· 點擊產業查看詳細分析</div></div>';
+
   // List view
   let listHtml = '';
   data.forEach(ind => {
+    const etf = SECTOR_ETF[ind.id];
+    const d = etf ? etfData[etf] : null;
+    const chg = d ? ((d.price - d.prevClose) / d.prevClose * 100) : null;
+    const etfBadge = etf
+      ? '<span style="font-size:11px;color:var(--muted);margin-left:6px">' + etf +
+        (chg != null ? ' <span style="color:' + chgToColor(chg) + ';font-weight:600">' + (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%</span>' : '') + '</span>'
+      : '';
     const sec = (label, content) =>
       '<div style="padding:10px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">' +
       '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">' + label + '</div>' +
       '<div style="font-size:13px">' + content + '</div></div>';
     listHtml += '<div class="card" id="ind-' + ind.id + '" style="margin-bottom:12px;padding:14px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleIndustry(\'' + ind.id + '\')">' +
-      '<div style="display:flex;align-items:center;gap:10px">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
       '<span style="font-size:13px;font-weight:700">' + ind.name + '</span>' +
       '<span style="font-size:11px;padding:2px 8px;border-radius:3px;background:' + cycleColors[ind.cycle] + ';color:#fff">' + cycleText[ind.cycle] + '</span>' +
+      etfBadge +
       '</div>' +
       '<span id="arrow-' + ind.id + '" style="font-size:14px;color:var(--muted);transition:transform .3s">▼</span></div>' +
       '<div class="ind-detail" id="detail-' + ind.id + '" style="display:none;margin-top:14px">' +
@@ -3661,9 +3763,23 @@ function showStrategy(type) {
 // ============ PERFORMANCE ============
 function renderPerformance() {
   const j = getJ(), div = document.getElementById('performance-content');
-  if (j.length < 2) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無足夠交易紀錄</h3><p style="color:var(--muted);margin-top:8px">至少需要 2 筆交易紀錄才能分析績效。</p><button class="btn btn-primary" style="margin-top:16px" onclick="showPage(\'journal\')">前往交易日誌</button></div>'; return; }
+  if (!j.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無交易紀錄</h3><p style="color:var(--muted);margin-top:8px">新增交易紀錄後即可查看績效分析。</p></div>'; return; }
   const trades = pairTrades(j);
-  if (trades.length === 0) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無完整買賣配對</h3><p style="color:var(--muted);margin-top:8px">績效分析需要至少一組完整的買入→賣出配對紀錄。</p></div>'; return; }
+  if (trades.length === 0) {
+    // Show basic stats from raw journal even without closed pairs
+    const buys = j.filter(e => e.action === 'buy');
+    const sells = j.filter(e => e.action === 'sell');
+    const totalIn = buys.reduce((s,e) => s + e.net, 0);
+    const totalOut = sells.reduce((s,e) => s + e.net, 0);
+    div.innerHTML = '<div class="card"><h3>基本統計</h3>' +
+      '<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:14px">' +
+      '<div><span style="color:var(--muted)">買入次數：</span><b>' + buys.length + '</b></div>' +
+      '<div><span style="color:var(--muted)">賣出次數：</span><b>' + sells.length + '</b></div>' +
+      '<div><span style="color:var(--muted)">總投入：</span><b style="color:var(--red)">$' + totalIn.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+      '<div><span style="color:var(--muted)">總回收：</span><b style="color:var(--green)">$' + totalOut.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+      '</div><p style="color:var(--muted);margin-top:16px;font-size:13px">進階績效分析（勝率、利潤因子、期望值）需要至少一組完整的買入→賣出配對紀錄。</p></div>';
+    return;
+  }
   const stats = calcPerformanceStats(trades);
   let html = '<div class="grid4">';
   html += statCard('勝率', stats.winRate.toFixed(1) + '%', stats.winRate >= 50 ? 'green' : 'red');
@@ -4969,25 +5085,42 @@ async function quickDashboardScan(force) {
   }
 }
 
-function renderDashScanList(strategy, results) {
+const _scanSort = {};
+function renderDashScanList(strategy, results, sortBy) {
   const el = document.getElementById('dash-' + strategy + '-list');
   if (!el) return;
   if (!results || !results.length) {
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">目前無符合條件的候選股</div>';
     return;
   }
-  el.innerHTML = results.map(r => {
-    _storeEntry(r.symbol, strategy, { ...r, strategy });
+  results.forEach(r => _storeEntry(r.symbol, strategy, { ...r, strategy }));
+  const sort = sortBy || _scanSort[strategy] || 'strength';
+  _scanSort[strategy] = sort;
+  const sorted = [...results].sort((a, b) => {
+    if (sort === 'strength') return (b.signalStrength || 0) - (a.signalStrength || 0);
+    if (sort === 'chg') return (b.changePct || 0) - (a.changePct || 0);
+    return a.symbol.localeCompare(b.symbol);
+  });
+  const btnStyle = (s) => 'font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid var(--border);cursor:pointer;background:' +
+    (sort === s ? 'var(--accent);color:#fff' : 'transparent;color:var(--muted)');
+  const sortBar = '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">' +
+    '<span style="font-size:11px;color:var(--muted)">排序：</span>' +
+    '<button style="' + btnStyle('strength') + '" onclick="renderDashScanList(\'' + strategy + '\',window._lastScanResults[\'' + strategy + '\'],\'strength\')">信號強度</button>' +
+    '<button style="' + btnStyle('chg') + '" onclick="renderDashScanList(\'' + strategy + '\',window._lastScanResults[\'' + strategy + '\'],\'chg\')">漲幅</button>' +
+    '<button style="' + btnStyle('az') + '" onclick="renderDashScanList(\'' + strategy + '\',window._lastScanResults[\'' + strategy + '\'],\'az\')">A-Z</button>' +
+    '</div>';
+  window._lastScanResults = window._lastScanResults || {};
+  window._lastScanResults[strategy] = results;
+  el.innerHTML = sortBar + sorted.map(r => {
     const up = (r.changePct || 0) >= 0;
     const stars = '★'.repeat(Math.min(r.signalStrength || 0, 5));
     const key = r.symbol + '_' + strategy;
-    // Steinhardt 顯示基本面品質徽章
     const fundBadge = strategy === 'steinhardt' && r.fundLoaded != null
       ? '<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;background:' +
           (r.fundScore >= 3 ? 'rgba(16,185,129,.2);color:var(--green)' :
            r.fundScore >= 2 ? 'rgba(245,158,11,.2);color:var(--yellow)' :
                               'rgba(239,68,68,.15);color:var(--red)') +
-          '">📊' + (r.fundScore || 0) + '/5</span>'
+          '">F' + (r.fundScore || 0) + '/5</span>'
       : '';
     return '<div class="scan-mini-row">' +
       '<div style="min-width:60px"><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></div>' +
