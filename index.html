@@ -726,7 +726,7 @@ function showPage(name) {
   if (name === 'dashboard' && _shouldRerender('dashboard')) { renderDashboard();     _markRendered('dashboard'); }
   if (name === 'indices'   && _shouldRerender('indices'))   { loadIndices();         _markRendered('indices'); }
   if (name === 'news'      && _shouldRerender('news'))      { loadNews('general');   _markRendered('news'); }
-  if (name === 'industry'  && _shouldRerender('industry'))  { loadIndustry('global');_markRendered('industry'); }
+  if (name === 'industry'  && _shouldRerender('industry-global')) { loadIndustry('global'); _markRendered('industry-global'); }
   if (name === 'journal')    { renderJournal(); switchJournalTab('records'); }
   if (name === 'scanner')    loadScanner();
   if (name === 'education')  renderEducation();
@@ -769,7 +769,8 @@ function switchIndustryTab(tab) {
   } else {
     ic.style.display = ''; hc.style.display = 'none';
     const which = tab === 'tw' ? 'tw' : 'global';
-    if (_shouldRerender('industry')) { loadIndustry(which); _markRendered('industry'); }
+    const rkey = 'industry-' + which;
+    if (_shouldRerender(rkey)) { loadIndustry(which); _markRendered(rkey); }
   }
 }
 
@@ -2513,41 +2514,56 @@ const INDUSTRY_DATA = {
 let _industryTab = 'global';
 function loadIndustry(tab) {
   _industryTab = tab;
-  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', (tab==='global'?0:1)===i));
+  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['global','tw','heatmap'].indexOf(tab)));
   const data = INDUSTRY_DATA[tab];
   const ct = document.getElementById('industry-content');
+  const cycleColors = {hot:'#c0392b',warm:'#d4860a',neutral:'#2980b9',cool:'#7d3c98',cold:'#34495e'};
+  const cycleText   = {hot:'當紅',warm:'回溫',neutral:'中性',cool:'偏冷',cold:'萎靡'};
   // Heatmap overview
-  let heatHtml = '<div class="card" style="margin-bottom:20px"><h3>🌡️ 產業景氣熱力圖</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">';
-  const cycleColors = {hot:'#e74c3c',warm:'#f39c12',neutral:'#3498db',cool:'#8e44ad',cold:'#2c3e50'};
-  const cycleText = {hot:'🔥 當紅',warm:'☀️ 回溫',neutral:'⚖️ 中性',cool:'🌧️ 偏冷',cold:'❄️ 萎靡'};
+  let heatHtml = '<div class="card" style="margin-bottom:20px"><h3 style="margin-bottom:12px">產業景氣概覽</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
   data.forEach(ind => {
-    heatHtml += '<div onclick="showIndustryDetail(\'' + tab + '\',\'' + ind.id + '\')" style="cursor:pointer;background:' + cycleColors[ind.cycle] + ';color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;min-width:100px;text-align:center;transition:transform .2s" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">' + ind.icon + ' ' + ind.name + '<div style="font-size:11px;opacity:.85;margin-top:2px">' + cycleText[ind.cycle] + '</div></div>';
+    heatHtml += '<div onclick="showIndustryDetail(\'' + tab + '\',\'' + ind.id + '\')" style="cursor:pointer;background:' + cycleColors[ind.cycle] + ';color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;min-width:90px;text-align:center">' +
+      ind.name + '<div style="font-size:10px;opacity:.9;margin-top:2px;font-weight:400">' + cycleText[ind.cycle] + '</div></div>';
   });
-  heatHtml += '</div><div style="margin-top:12px;font-size:11px;color:var(--muted)">🔥當紅 ☀️回溫 ⚖️中性 🌧️偏冷 ❄️萎靡　｜　點擊產業查看詳細分析</div></div>';
+  heatHtml += '</div><div style="margin-top:10px;font-size:11px;color:var(--muted)">景氣狀態：';
+  Object.entries(cycleText).forEach(([k, v]) => {
+    heatHtml += '<span style="display:inline-block;background:' + cycleColors[k] + ';color:#fff;font-size:10px;padding:1px 7px;border-radius:3px;margin-right:4px">' + v + '</span>';
+  });
+  heatHtml += '· 點擊產業查看詳細分析</div></div>';
   // List view
   let listHtml = '';
   data.forEach(ind => {
-    listHtml += '<div class="card" id="ind-' + ind.id + '" style="margin-bottom:16px">' +
+    const sec = (label, content) =>
+      '<div style="padding:10px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">' + label + '</div>' +
+      '<div style="font-size:13px">' + content + '</div></div>';
+    listHtml += '<div class="card" id="ind-' + ind.id + '" style="margin-bottom:12px;padding:14px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleIndustry(\'' + ind.id + '\')">' +
-      '<h3 style="margin:0">' + ind.icon + ' ' + ind.name + ' <span style="font-size:12px;padding:3px 10px;border-radius:12px;background:' + cycleColors[ind.cycle] + ';color:#fff">' + cycleText[ind.cycle] + '</span></h3>' +
-      '<span class="ind-arrow" id="arrow-' + ind.id + '" style="font-size:18px;transition:transform .3s">▼</span></div>' +
-      '<div class="ind-detail" id="detail-' + ind.id + '" style="display:none;margin-top:16px">' +
-      '<p style="color:var(--muted);margin-bottom:12px">' + ind.desc + '</p>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-      '<div class="edu-card"><p><span class="edu-term">⬆️ 上游</span></p><p>' + ind.upstream.join('、') + '</p></div>' +
-      '<div class="edu-card"><p><span class="edu-term">⬇️ 下游</span></p><p>' + ind.downstream.join('、') + '</p></div>' +
-      '<div class="edu-card"><p><span class="edu-term">📦 主要產品</span></p><p>' + ind.products + '</p></div>' +
-      '<div class="edu-card"><p><span class="edu-term">🛒 主要買家</span></p><p>' + ind.buyers + '</p></div>' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+      '<span style="font-size:13px;font-weight:700">' + ind.name + '</span>' +
+      '<span style="font-size:11px;padding:2px 8px;border-radius:3px;background:' + cycleColors[ind.cycle] + ';color:#fff">' + cycleText[ind.cycle] + '</span>' +
       '</div>' +
-      '<div class="edu-card" style="margin-top:12px"><p><span class="edu-term">🏆 領導企業</span></p>' +
-      ind.leaders.map(l => '<div style="display:inline-block;background:var(--bg);padding:6px 12px;border-radius:8px;margin:4px;font-size:13px;cursor:pointer" onclick="event.stopPropagation();' + (l.t ? 'document.getElementById(\'ticker-input\').value=\'' + l.t + '\';showPage(\'stock\');analyzeStock()' : '') + '"><b>' + l.n + '</b>' + (l.t ? ' <span style="color:var(--accent)">(' + l.t + ')</span>' : '') + ' — ' + l.role + '</div>').join('') +
+      '<span id="arrow-' + ind.id + '" style="font-size:14px;color:var(--muted);transition:transform .3s">▼</span></div>' +
+      '<div class="ind-detail" id="detail-' + ind.id + '" style="display:none;margin-top:14px">' +
+      '<p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">' + ind.desc + '</p>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      sec('上游供應', ind.upstream.join('、')) +
+      sec('下游應用', ind.downstream.join('、')) +
+      sec('主要產品', ind.products) +
+      sec('主要買家', ind.buyers) +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
-      '<div class="edu-card"><p><span class="edu-term">⚔️ 競爭關係</span></p><p style="font-size:13px">' + ind.competitors + '</p></div>' +
-      '<div class="edu-card"><p><span class="edu-term">🤝 合作關係</span></p><p style="font-size:13px">' + ind.partners + '</p></div>' +
+      '<div style="margin-bottom:8px;padding:10px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">代表企業</div>' +
+      ind.leaders.map(l => '<button style="background:var(--card);border:1px solid var(--border);color:' + (l.t ? 'var(--accent)' : 'var(--text)') + ';padding:5px 10px;border-radius:5px;margin:3px;font-size:12px;cursor:pointer" onclick="event.stopPropagation();' + (l.t ? 'document.getElementById(\'ticker-input\').value=\'' + l.t + '\';showPage(\'stock\');analyzeStock()' : '') + '">' + l.n + (l.t ? ' (' + l.t + ')' : '') + '<span style="font-size:10px;color:var(--muted);display:block">' + l.role + '</span></button>').join('') +
       '</div>' +
-      '<div class="edu-card" style="margin-top:12px;border-left:3px solid ' + cycleColors[ind.cycle] + '"><p><span class="edu-term">📊 產業展望</span></p><p style="font-size:13px">' + ind.outlook + '</p>' +
-      (ind.recovery ? '<p style="font-size:13px;margin-top:6px;color:var(--orange)">💡 復甦可能性：' + ind.recovery + '</p>' : '') +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      sec('競爭關係', ind.competitors) +
+      sec('合作關係', ind.partners) +
+      '</div>' +
+      '<div style="padding:10px 12px;background:var(--bg);border-radius:6px;border-left:3px solid ' + cycleColors[ind.cycle] + '">' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">產業展望</div>' +
+      '<div style="font-size:13px;line-height:1.6">' + ind.outlook + '</div>' +
+      (ind.recovery ? '<div style="font-size:12px;color:var(--orange);margin-top:6px">復甦可能性：' + ind.recovery + '</div>' : '') +
       '</div></div></div>';
   });
   ct.innerHTML = heatHtml + listHtml;
@@ -4737,9 +4753,8 @@ async function renderDashboard(forceRescan) {
   const ts = document.getElementById('dash-timestamp');
   if (ts) ts.textContent = '更新時間：' + new Date().toLocaleTimeString('zh-TW');
 
-  // 1. 取 5 大指數
-  const symbols = ['SPY', 'QQQ', '^VIX', '^TWII', '^TNX'];
-  const labels  = { 'SPY':'S&P 500','QQQ':'Nasdaq','VIX':'^VIX','^VIX':'VIX','^TWII':'台灣加權','^TNX':'美債10Y' };
+  // 1. 取 5 大指數（使用真實指數代碼，與大盤指數頁一致）
+  const symbols = ['^GSPC', '^IXIC', '^VIX', '^TWII', '^TNX'];
   let marketData = {};
   try {
     const prices = await Promise.allSettled(symbols.map(s => quickPrice(s)));
@@ -4752,30 +4767,29 @@ async function renderDashboard(forceRescan) {
   const kpiDiv = document.getElementById('dash-market-kpis');
   if (kpiDiv) {
     const kpiDefs = [
-      { sym:'SPY',  label:'S&P 500',   icon:'🇺🇸' },
-      { sym:'QQQ',  label:'Nasdaq',    icon:'💻' },
-      { sym:'^VIX', label:'VIX 恐慌', icon:'😰' },
-      { sym:'^TWII',label:'台灣加權',  icon:'🇹🇼' },
-      { sym:'^TNX', label:'美債 10Y', icon:'📋' }
+      { sym:'^GSPC', label:'S&P 500',  fmt: v => v.toFixed(0) },
+      { sym:'^IXIC', label:'Nasdaq',   fmt: v => v.toFixed(0) },
+      { sym:'^VIX',  label:'VIX',      fmt: v => v.toFixed(2) },
+      { sym:'^TWII', label:'台灣加權', fmt: v => v.toFixed(0) },
+      { sym:'^TNX',  label:'美債 10Y', fmt: v => v.toFixed(3) + '%' }
     ];
     kpiDiv.innerHTML = kpiDefs.map(k => {
       const d = marketData[k.sym];
-      if (!d) return '<div class="dash-kpi"><div class="label">' + k.icon + ' ' + k.label + '</div><div class="val" style="color:var(--muted)">--</div></div>';
-      const isVix = k.sym === '^VIX', isTnx = k.sym === '^TNX';
+      if (!d) return '<div class="dash-kpi"><div class="label">' + k.label + '</div><div class="val" style="color:var(--muted)">--</div></div>';
+      const isVix = k.sym === '^VIX';
       const pct   = d.price && d.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : 0;
-      const up    = isVix ? pct < 0 : pct >= 0; // VIX 跌 = 好事
+      const up    = isVix ? pct < 0 : pct >= 0;
       const color = up ? 'var(--green)' : 'var(--red)';
-      const priceStr = isTnx ? d.price.toFixed(2) + '%' : (k.sym === '^TWII' ? d.price.toFixed(0) : d.price.toFixed(2));
       return '<div class="dash-kpi" style="border-color:' + (Math.abs(pct) > 1.5 ? color : 'var(--border)') + '">' +
-        '<div class="label">' + k.icon + ' ' + k.label + '</div>' +
-        '<div class="val" style="color:' + color + '">' + priceStr + '</div>' +
+        '<div class="label">' + k.label + '</div>' +
+        '<div class="val" style="color:' + color + '">' + k.fmt(d.price) + '</div>' +
         '<div class="chg" style="color:' + color + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</div></div>';
     }).join('');
   }
 
-  // 3. FGI + 市場環境
-  const spy = marketData['SPY'], vixD = marketData['^VIX'], qqq = marketData['QQQ'], tnx = marketData['^TNX'];
-  const spyChg  = spy  && spy.prevClose  ? (spy.price  - spy.prevClose)  / spy.prevClose  * 100 : 0;
+  // 3. FGI + 市場環境（使用與指數頁相同的代碼）
+  const spyD = marketData['^GSPC'], vixD = marketData['^VIX'], qqq = marketData['^IXIC'], tnx = marketData['^TNX'];
+  const spyChg  = spyD && spyD.prevClose ? (spyD.price - spyD.prevClose) / spyD.prevClose * 100 : 0;
   const qqqChg  = qqq  && qqq.prevClose  ? (qqq.price  - qqq.prevClose)  / qqq.prevClose  * 100 : 0;
   const vixPrc  = vixD ? vixD.price  : 18;
   const tnxPrc  = tnx  ? tnx.price   : 4.2;
