@@ -3670,15 +3670,17 @@ function renderEducation() {
     '<button onclick="showEduTab(\'patterns\')">K線型態圖解</button>' +
     '<button onclick="showEduTab(\'psychology\')">交易心理學</button>' +
     '<button onclick="showEduTab(\'money\')">資金管理</button>' +
+    '<button onclick="showEduTab(\'glossary\')">📖 名詞解釋</button>' +
     '</div><div id="edu-detail"></div>';
   showEduTab('live');
 }
 
 function showEduTab(tab) {
-  document.querySelectorAll('#edu-tabs button').forEach((b, i) => b.classList.toggle('active', i === ['live','ta','patterns','psychology','money'].indexOf(tab)));
+  document.querySelectorAll('#edu-tabs button').forEach((b, i) => b.classList.toggle('active', i === ['live','ta','patterns','psychology','money','glossary'].indexOf(tab)));
   if (tab === 'live') { document.getElementById('edu-detail').innerHTML = getEduLiveHtml(); return; }
-  const eduContent = { ta: getTaEducation(), patterns: getPatternsEducation(), psychology: getPsychologyEducation(), money: getMoneyEducation() };
+  const eduContent = { ta: getTaEducation(), patterns: getPatternsEducation(), psychology: getPsychologyEducation(), money: getMoneyEducation(), glossary: getGlossaryEducation() };
   document.getElementById('edu-detail').innerHTML = eduContent[tab];
+  if (tab === 'glossary') initGlossarySearch();
 }
 
 function getEduLiveHtml() {
@@ -3709,22 +3711,697 @@ function getEduLiveHtml() {
 }
 
 function getTaEducation() {
-  return '<div class="card edu-card"><h3>📊 支撐與壓力的本質</h3><p><span class="edu-term">支撐（Support）</span></p><p>支撐不是一條線，是一個<b>價格區域</b>，在這個區域中，買方的力量開始大於賣方。</p><p><b>為什麼支撐有效？</b></p><p>① 過去在此價位買入的人「不想賠錢」→ 不願賣出 → 賣壓減少</p><p>② 過去在此價位錯過的人「想補回」→ 願意買入 → 買盤增加</p><p>③ 機構法人的大量限價買單堆積在此區域</p><p>④ 心理數字關卡（如 100、50、整數位）</p><p style="margin-top:12px"><span class="edu-term">壓力（Resistance）</span></p><p>壓力是相反邏輯：過去在此價位被套牢的人「想解套」→ 價格到了就賣 → 賣壓增加。</p><p style="margin-top:12px"><span class="edu-term">支撐壓力互換原則</span></p><p>當支撐被跌破後，它變成新的壓力。當壓力被突破後，它變成新的支撐。</p></div>' +
-  '<div class="card edu-card"><h3>📈 趨勢結構（Market Structure）</h3><p><span class="edu-term">上升趨勢</span>：Higher Highs (HH) + Higher Lows (HL)</p><p>每一波高點都比前一波高，每一波低點也比前一波低點高。</p><p style="margin-top:8px"><span class="edu-term">下降趨勢</span>：Lower Highs (LH) + Lower Lows (LL)</p><p style="margin-top:8px"><span class="edu-term">趨勢反轉信號（Break of Structure, BOS）</span></p><p>上升趨勢中，如果價格跌破前一個 Higher Low → 趨勢可能反轉。</p><p style="margin-top:8px"><b>Schwartz 的實戰應用：</b>「我不試圖抓頂部或底部，我等趨勢確認後順勢交易。」</p></div>' +
-  '<div class="card edu-card"><h3>📊 量價關係深度解析</h3><p><span class="edu-term">量價配合八法則</span></p><p>① <b>量增價漲</b>：健康上漲，趨勢延續（最強信號）</p><p>② <b>量縮價漲</b>：上漲無力，可能見頂（警告信號）</p><p>③ <b>量增價跌</b>：恐慌拋售，可能加速下跌（危險信號）</p><p>④ <b>量縮價跌</b>：下跌動能衰竭，可能觸底（觀察信號）</p><p>⑤ <b>天量天價</b>：大量出貨，頂部確認</p><p>⑥ <b>地量地價</b>：無人交易，底部特徵</p><p>⑦ <b>突破放量</b>：突破有效的確認（量 > 1.5 倍均量）</p><p>⑧ <b>突破縮量</b>：假突破的警告</p><p style="margin-top:12px"><b>Steinhardt 的觀察：</b>「成交量是市場真正的情緒。價格可以被操縱，但成交量不會騙人。」</p></div>';
+  var svgStyle = 'display:block;margin:12px auto;background:#0a0e17;border-radius:6px;padding:8px';
+  var txtAttr = 'fill="#94a3b8" font-size="10" font-family="sans-serif"';
+  var txtSm = 'fill="#94a3b8" font-size="9" font-family="sans-serif"';
+
+  // Card 1: K線的解剖
+  var card1 = '<div class="card edu-card"><h3>🕯️ K線的解剖（Candlestick Anatomy）</h3>' +
+    '<svg width="420" height="160" style="' + svgStyle + '" viewBox="0 0 420 160">' +
+      // Bullish candle (陽線) centered at x=95
+      '<line x1="95" y1="15" x2="95" y2="35" stroke="#10b981" stroke-width="2"/>' +
+      '<rect x="80" y="35" width="30" height="60" fill="#10b981" rx="2"/>' +
+      '<line x1="95" y1="95" x2="95" y2="130" stroke="#10b981" stroke-width="2"/>' +
+      // Bullish label lines and text
+      '<line x1="95" y1="15" x2="135" y2="15" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="138" y="18" ' + txtAttr + '>最高 High</text>' +
+      '<line x1="110" y1="35" x2="135" y2="35" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="138" y="38" ' + txtAttr + '>收盤 Close</text>' +
+      '<line x1="110" y1="65" x2="135" y2="65" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="138" y="68" fill="#10b981" font-size="9" font-family="sans-serif">實體 Body</text>' +
+      '<line x1="110" y1="95" x2="135" y2="95" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="138" y="98" ' + txtAttr + '>開盤 Open</text>' +
+      '<line x1="95" y1="130" x2="135" y2="130" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="138" y="133" ' + txtAttr + '>最低 Low</text>' +
+      '<text x="78" y="25" ' + txtSm + '>上影線</text>' +
+      '<text x="78" y="120" ' + txtSm + '>下影線</text>' +
+      '<text x="68" y="148" fill="#10b981" font-size="11" font-family="sans-serif" font-weight="bold">陽線</text>' +
+      // Bearish candle (陰線) centered at x=295
+      '<line x1="295" y1="20" x2="295" y2="40" stroke="#ef4444" stroke-width="2"/>' +
+      '<rect x="280" y="40" width="30" height="60" fill="#ef4444" rx="2"/>' +
+      '<line x1="295" y1="100" x2="295" y2="135" stroke="#ef4444" stroke-width="2"/>' +
+      // Bearish label lines and text
+      '<line x1="295" y1="20" x2="255" y2="20" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="190" y="23" ' + txtAttr + '>最高 High</text>' +
+      '<line x1="280" y1="40" x2="255" y2="40" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="190" y="43" ' + txtAttr + '>開盤 Open</text>' +
+      '<line x1="280" y1="70" x2="255" y2="70" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="190" y="73" fill="#ef4444" font-size="9" font-family="sans-serif">實體 Body</text>' +
+      '<line x1="280" y1="100" x2="255" y2="100" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="190" y="103" ' + txtAttr + '>收盤 Close</text>' +
+      '<line x1="295" y1="135" x2="255" y2="135" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="190" y="138" ' + txtAttr + '>最低 Low</text>' +
+      '<text x="283" y="148" fill="#ef4444" font-size="11" font-family="sans-serif" font-weight="bold">陰線</text>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b style="color:#10b981">陽線（收 &gt; 開）</b>：買方佔優，K線收綠（紅）</p>' +
+      '<p><b style="color:#ef4444">陰線（開 &gt; 收）</b>：賣方佔優，K線收黑（綠）</p>' +
+      '<p><b>上影線長</b>：多方曾拉高但被壓回，高位賣壓強</p></div>' +
+      '<div><p><b>下影線長</b>：空方曾打低但被接回，低位買盤強</p>' +
+      '<p><b>實體大</b>：方向明確，多空力量懸殊</p>' +
+      '<p><b>實體小</b>：猶豫不決，多空力量均衡</p></div>' +
+    '</div></div>';
+
+  // Card 2: 支撐與壓力
+  var card2 = '<div class="card edu-card"><h3>📊 支撐與壓力（Support &amp; Resistance）</h3>' +
+    '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">' +
+      '<div style="text-align:center">' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">支撐區域 — 多次彈升</div>' +
+        '<svg width="240" height="130" style="' + svgStyle + '" viewBox="0 0 240 130">' +
+          // Support line
+          '<line x1="10" y1="85" x2="230" y2="85" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,3"/>' +
+          '<text x="190" y="80" fill="#10b981" font-size="9" font-family="sans-serif">支撐區</text>' +
+          // Candle 1 touching support
+          '<line x1="40" y1="55" x2="40" y2="65" stroke="#10b981" stroke-width="1.5"/>' +
+          '<rect x="33" y="65" width="14" height="20" fill="#10b981" rx="1"/>' +
+          '<line x1="40" y1="85" x2="40" y2="90" stroke="#10b981" stroke-width="1.5"/>' +
+          // Candle 2 bounce up
+          '<line x1="70" y1="40" x2="70" y2="50" stroke="#10b981" stroke-width="1.5"/>' +
+          '<rect x="63" y="50" width="14" height="35" fill="#10b981" rx="1"/>' +
+          '<line x1="70" y1="85" x2="70" y2="88" stroke="#10b981" stroke-width="1.5"/>' +
+          // Candle 3 touching support again
+          '<line x1="100" y1="60" x2="100" y2="70" stroke="#10b981" stroke-width="1.5"/>' +
+          '<rect x="93" y="70" width="14" height="15" fill="#10b981" rx="1"/>' +
+          '<line x1="100" y1="85" x2="100" y2="92" stroke="#10b981" stroke-width="1.5"/>' +
+          // Candle 4 bounce
+          '<line x1="130" y1="35" x2="130" y2="45" stroke="#10b981" stroke-width="1.5"/>' +
+          '<rect x="123" y="45" width="14" height="40" fill="#10b981" rx="1"/>' +
+          '<line x1="130" y1="85" x2="130" y2="87" stroke="#10b981" stroke-width="1.5"/>' +
+          // Arrows indicating bounces
+          '<text x="30" y="45" fill="#10b981" font-size="12">↑</text>' +
+          '<text x="60" y="30" fill="#10b981" font-size="12">↑</text>' +
+          '<text x="90" y="52" fill="#10b981" font-size="12">↑</text>' +
+          '<text x="120" y="28" fill="#10b981" font-size="12">↑</text>' +
+        '</svg>' +
+      '</div>' +
+      '<div style="text-align:center">' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">支撐壓力互換 — Role Reversal</div>' +
+        '<svg width="240" height="130" style="' + svgStyle + '" viewBox="0 0 240 130">' +
+          // Original support line at y=55
+          '<line x1="10" y1="55" x2="230" y2="55" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>' +
+          '<text x="5" y="50" fill="#94a3b8" font-size="8" font-family="sans-serif">原支撐</text>' +
+          // Price above support, green candles
+          '<rect x="25" y="30" width="12" height="25" fill="#10b981" rx="1"/>' +
+          '<rect x="45" y="25" width="12" height="30" fill="#10b981" rx="1"/>' +
+          // Red candles breaking support
+          '<rect x="65" y="40" width="12" height="30" fill="#ef4444" rx="1"/>' +
+          '<line x1="71" y1="35" x2="71" y2="40" stroke="#ef4444" stroke-width="1.5"/>' +
+          '<line x1="71" y1="70" x2="71" y2="78" stroke="#ef4444" stroke-width="1.5"/>' +
+          // More red candles below
+          '<rect x="85" y="65" width="12" height="25" fill="#ef4444" rx="1"/>' +
+          '<rect x="105" y="75" width="12" height="20" fill="#ef4444" rx="1"/>' +
+          // Bounce back to old support (now resistance) — gets rejected
+          '<rect x="125" y="45" width="12" height="30" fill="#10b981" rx="1"/>' +
+          '<line x1="131" y1="35" x2="131" y2="45" stroke="#10b981" stroke-width="1.5"/>' +
+          // Rejected back down
+          '<rect x="145" y="60" width="12" height="28" fill="#ef4444" rx="1"/>' +
+          '<line x1="151" y1="50" x2="151" y2="60" stroke="#ef4444" stroke-width="1.5"/>' +
+          // Arrow and label showing rejection at resistance
+          '<text x="125" y="28" fill="#ef4444" font-size="8" font-family="sans-serif">原支撐→新壓力</text>' +
+          '<line x1="131" y1="32" x2="131" y2="37" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2"/>' +
+          '<text x="165" y="50" fill="#ef4444" font-size="9" font-family="sans-serif">↓ 被壓回</text>' +
+        '</svg>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b>支撐/壓力為「區域」</b>，不是精確的一條線</p>' +
+      '<p><b>測試次數越多</b>，該價位越重要（多次驗證）</p>' +
+      '<p><b>收盤確認</b>才算有效突破（觸及不算）</p></div>' +
+      '<div><p><b>支撐壓力互換</b>（Role Reversal）：跌破支撐後，反彈至原支撐會遭遇新壓力</p>' +
+      '<p><b>配合量能</b>：放量突破才有效，縮量突破需謹慎</p></div>' +
+    '</div></div>';
+
+  // Card 3: 趨勢結構
+  var card3 = '<div class="card edu-card"><h3>📈 趨勢結構（Market Structure）</h3>' +
+    '<svg width="420" height="165" style="' + svgStyle + '" viewBox="0 0 420 165">' +
+      // Divider
+      '<line x1="210" y1="5" x2="210" y2="155" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4"/>' +
+      '<text x="60" y="15" fill="#10b981" font-size="10" font-family="sans-serif" font-weight="bold">上升趨勢 Uptrend</text>' +
+      '<text x="225" y="15" fill="#ef4444" font-size="10" font-family="sans-serif" font-weight="bold">下降趨勢 Downtrend</text>' +
+      // UPTREND: wave pattern going up (left half)
+      // Points: start(10,130), HL1(40,110), HH1(80,70), HL2(120,85), HH2(160,40), end(200,55)
+      '<polyline points="10,130 40,110 80,70 120,85 160,40 200,55" fill="none" stroke="#e2e8f0" stroke-width="2"/>' +
+      // Trend line connecting HL1 and HL2
+      '<line x1="40" y1="110" x2="130" y2="90" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+      // Labels for uptrend
+      '<text x="74" y="63" fill="#10b981" font-size="9" font-family="sans-serif">HH1</text>' +
+      '<text x="154" y="33" fill="#10b981" font-size="9" font-family="sans-serif">HH2</text>' +
+      '<text x="25" y="108" fill="#3b82f6" font-size="9" font-family="sans-serif">HL1</text>' +
+      '<text x="112" y="82" fill="#3b82f6" font-size="9" font-family="sans-serif">HL2</text>' +
+      '<text x="12" y="143" fill="#3b82f6" font-size="8" font-family="sans-serif">趨勢線</text>' +
+      // DOWNTREND: wave pattern going down (right half)
+      // Points: start(220,40), LH1(250,60), LL1(290,100), LH2(330,75), LL2(370,120), end(410,105)
+      '<polyline points="220,40 250,60 290,100 330,75 370,120 410,105" fill="none" stroke="#e2e8f0" stroke-width="2"/>' +
+      // Trend line connecting LH1 and LH2
+      '<line x1="250" y1="60" x2="340" y2="80" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+      // Labels for downtrend
+      '<text x="244" y="55" fill="#ef4444" font-size="9" font-family="sans-serif">LH1</text>' +
+      '<text x="324" y="70" fill="#ef4444" font-size="9" font-family="sans-serif">LH2</text>' +
+      '<text x="284" y="115" fill="#94a3b8" font-size="9" font-family="sans-serif">LL1</text>' +
+      '<text x="364" y="135" fill="#94a3b8" font-size="9" font-family="sans-serif">LL2</text>' +
+      // BOS arrow on left side where trend might break
+      '<text x="30" y="155" fill="#f59e0b" font-size="9" font-family="sans-serif">BOS = 跌破HL → 反轉警告</text>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b style="color:#10b981">上升趨勢</b>：HH（高點更高）+ HL（低點更高）</p>' +
+      '<p><b style="color:#ef4444">下降趨勢</b>：LH（高點更低）+ LL（低點更低）</p>' +
+      '<p><b>趨勢線</b>：連接 Higher Lows 作為動態支撐</p></div>' +
+      '<div><p><b style="color:#f59e0b">BOS（Break of Structure）</b>：跌破 HL 或突破 LH，趨勢反轉訊號</p>' +
+      '<p><b>Schwartz 法則</b>：只在確認 HL 之上做多，不預測頂底</p></div>' +
+    '</div></div>';
+
+  // Card 4: 移動平均線 MA
+  var card4 = '<div class="card edu-card"><h3>📉 移動平均線（Moving Average, MA）</h3>' +
+    '<svg width="420" height="145" style="' + svgStyle + '" viewBox="0 0 420 145">' +
+      // Price line (white/light, jagged)
+      '<polyline points="10,90 30,70 50,80 70,55 90,65 110,45 130,60 150,40 170,55 190,35 210,50 230,30 250,45 270,35 290,50 310,40 330,55 350,45 370,60 390,50 410,40" fill="none" stroke="#e2e8f0" stroke-width="1.5" opacity="0.7"/>' +
+      // MA5 (yellow, slightly smoother)
+      '<polyline points="30,80 60,68 90,60 120,52 150,45 180,42 210,44 240,38 270,40 300,44 330,48 360,50 390,47" fill="none" stroke="#f59e0b" stroke-width="2"/>' +
+      // MA20 (blue, smooth)
+      '<polyline points="50,85 90,75 130,65 170,58 210,52 250,47 290,45 330,46 370,48 410,46" fill="none" stroke="#3b82f6" stroke-width="2"/>' +
+      // MA60 (purple, very smooth)
+      '<polyline points="80,100 130,88 180,78 230,68 280,60 330,56 380,54 410,53" fill="none" stroke="#a78bfa" stroke-width="2"/>' +
+      // Golden cross marker around x=190
+      '<circle cx="192" cy="43" r="8" fill="none" stroke="#10b981" stroke-width="1.5"/>' +
+      '<text x="200" y="35" fill="#10b981" font-size="9" font-family="sans-serif">金叉✓</text>' +
+      // Legend
+      '<rect x="10" y="125" width="8" height="3" fill="#f59e0b" rx="1"/>' +
+      '<text x="22" y="130" ' + txtSm + '>MA5</text>' +
+      '<rect x="55" y="125" width="8" height="3" fill="#3b82f6" rx="1"/>' +
+      '<text x="67" y="130" ' + txtSm + '>MA20</text>' +
+      '<rect x="105" y="125" width="8" height="3" fill="#a78bfa" rx="1"/>' +
+      '<text x="117" y="130" ' + txtSm + '>MA60</text>' +
+      '<rect x="155" y="125" width="8" height="3" fill="#e2e8f0" rx="1" opacity="0.7"/>' +
+      '<text x="167" y="130" ' + txtSm + '>Price</text>' +
+      // Annotation: bullish alignment area
+      '<text x="310" y="35" fill="#10b981" font-size="8" font-family="sans-serif">多頭排列</text>' +
+      '<text x="310" y="45" fill="#10b981" font-size="8" font-family="sans-serif">MA5&gt;MA20&gt;MA60</text>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b>MA本質</b>：過去 N 天收盤價的平均成本</p>' +
+      '<p><b>MA5</b>（週線）／<b>MA20</b>（月線）／<b>MA60</b>（季線）</p>' +
+      '<p><b style="color:#10b981">多頭排列</b>：MA5 &gt; MA20 &gt; MA60 = 趨勢健康</p></div>' +
+      '<div><p><b style="color:#f59e0b">黃金交叉</b>：MA5 向上穿越 MA20 → 做多信號</p>' +
+      '<p><b style="color:#ef4444">死亡交叉</b>：MA5 向下穿越 MA20 → 做空信號</p>' +
+      '<p><b>動態支撐</b>：MA 線常扮演動態支撐/壓力角色</p></div>' +
+    '</div></div>';
+
+  // Card 5: RSI
+  var card5 = '<div class="card edu-card"><h3>📊 RSI 相對強弱指標（Relative Strength Index）</h3>' +
+    '<svg width="420" height="185" style="' + svgStyle + '" viewBox="0 0 420 185">' +
+      // Panel divider
+      '<line x1="10" y1="95" x2="410" y2="95" stroke="#1e293b" stroke-width="1.5"/>' +
+      // TOP PANEL: Price (y=10 to y=85)
+      '<text x="12" y="20" fill="#94a3b8" font-size="9" font-family="sans-serif">Price</text>' +
+      // Price line: goes down, makes low1, recovers, makes lower low2, then bounces
+      '<polyline points="30,25 70,30 110,55 150,75 190,80 230,65 270,70 310,55 350,35 390,30" fill="none" stroke="#e2e8f0" stroke-width="2"/>' +
+      // Mark two lows on price
+      '<circle cx="190" cy="80" r="3" fill="#ef4444"/>' +
+      '<circle cx="270" cy="70" r="3" fill="#ef4444"/>' +
+      '<text x="175" y="92" fill="#ef4444" font-size="8" font-family="sans-serif">低1</text>' +
+      '<text x="257" y="92" fill="#ef4444" font-size="8" font-family="sans-serif">低2(更低)</text>' +
+      // BOTTOM PANEL: RSI (y=100 to y=175)
+      '<text x="12" y="112" fill="#94a3b8" font-size="9" font-family="sans-serif">RSI</text>' +
+      // Overbought zone (y=100 to y=118): light red
+      '<rect x="25" y="100" width="385" height="18" fill="#ef4444" opacity="0.1"/>' +
+      // Oversold zone (y=152 to y=170): light green
+      '<rect x="25" y="152" width="385" height="18" fill="#10b981" opacity="0.1"/>' +
+      // RSI=70 line at y=118
+      '<line x1="25" y1="118" x2="410" y2="118" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>' +
+      '<text x="375" y="115" fill="#ef4444" font-size="9" font-family="sans-serif">超買 70</text>' +
+      // RSI=30 line at y=152
+      '<line x1="25" y1="152" x2="410" y2="152" stroke="#10b981" stroke-width="1" stroke-dasharray="4,3"/>' +
+      '<text x="375" y="162" fill="#10b981" font-size="9" font-family="sans-serif">超賣 30</text>' +
+      // RSI=50 line at y=135
+      '<line x1="25" y1="135" x2="410" y2="135" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2,4"/>' +
+      '<text x="375" y="133" fill="#94a3b8" font-size="8" font-family="sans-serif">50</text>' +
+      // RSI line: starts mid, goes down below 30, bounces, goes up, then comes back down but higher
+      '<polyline points="30,125 70,130 110,148 150,162 190,165 230,148 270,155 310,130 350,115 390,120" fill="none" stroke="#3b82f6" stroke-width="2"/>' +
+      // Mark two RSI troughs
+      '<circle cx="190" cy="165" r="3" fill="#10b981"/>' +
+      '<circle cx="270" cy="155" r="3" fill="#10b981"/>' +
+      // Divergence arrow
+      '<line x1="190" y1="155" x2="270" y2="148" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,2"/>' +
+      '<text x="195" y="145" fill="#f59e0b" font-size="9" font-family="sans-serif">底背離 ↗</text>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b style="color:#ef4444">70以上=超買</b>：漲幅過大，注意回落風險</p>' +
+      '<p><b style="color:#10b981">30以下=超賣</b>：跌幅過大，注意反彈機會</p>' +
+      '<p><b>50分界線</b>：多空動能分水嶺，RSI &gt; 50 偏多</p></div>' +
+      '<div><p><b style="color:#f59e0b">多頭背離</b>：價格新低但RSI不新低 → 底部反轉訊號</p>' +
+      '<p><b>空頭背離</b>：價格新高但RSI不新高 → 頂部警告</p>' +
+      '<p><b>公式</b>：漲幅均值 ÷（漲幅均值 + 跌幅均值）× 100</p></div>' +
+    '</div></div>';
+
+  // Card 6: MACD
+  var card6 = '<div class="card edu-card"><h3>📊 MACD 動能指標（Moving Average Convergence Divergence）</h3>' +
+    '<svg width="420" height="205" style="' + svgStyle + '" viewBox="0 0 420 205">' +
+      // Panel dividers
+      '<line x1="10" y1="75" x2="410" y2="75" stroke="#1e293b" stroke-width="1.5"/>' +
+      '<line x1="10" y1="145" x2="410" y2="145" stroke="#1e293b" stroke-width="1.5"/>' +
+      // TOP PANEL: Price (y=10 to y=70)
+      '<text x="12" y="20" fill="#94a3b8" font-size="9" font-family="sans-serif">Price</text>' +
+      '<polyline points="30,55 70,45 110,35 150,50 190,40 230,30 270,45 310,35 350,25 390,30" fill="none" stroke="#e2e8f0" stroke-width="2"/>' +
+      // MIDDLE PANEL: MACD + Signal (y=80 to y=140)
+      '<text x="12" y="90" fill="#94a3b8" font-size="9" font-family="sans-serif">MACD</text>' +
+      // Zero line at y=112
+      '<line x1="25" y1="112" x2="410" y2="112" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="3,3"/>' +
+      '<text x="388" y="110" fill="#94a3b8" font-size="8" font-family="sans-serif">0</text>' +
+      // MACD line (blue)
+      '<polyline points="30,125 70,120 110,115 140,108 170,102 200,95 230,90 270,92 310,88 350,85 390,88" fill="none" stroke="#3b82f6" stroke-width="2"/>' +
+      // Signal line (orange, slightly lagging)
+      '<polyline points="30,128 70,124 110,119 140,113 170,107 200,100 230,96 270,95 310,91 350,88 390,90" fill="none" stroke="#f59e0b" stroke-width="2"/>' +
+      // Golden cross marker
+      '<circle cx="200" cy="97" r="7" fill="none" stroke="#10b981" stroke-width="1.5"/>' +
+      '<text x="208" y="93" fill="#10b981" font-size="8" font-family="sans-serif">金叉</text>' +
+      // Legend for MACD panel
+      '<rect x="30" y="130" width="8" height="2" fill="#3b82f6"/>' +
+      '<text x="42" y="134" ' + txtSm + '>MACD線</text>' +
+      '<rect x="90" y="130" width="8" height="2" fill="#f59e0b"/>' +
+      '<text x="102" y="134" ' + txtSm + '>信號線</text>' +
+      // BOTTOM PANEL: Histogram (y=150 to y=195)
+      '<text x="12" y="158" fill="#94a3b8" font-size="9" font-family="sans-serif">柱狀圖</text>' +
+      // Zero line at y=172
+      '<line x1="25" y1="172" x2="410" y2="172" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="3,3"/>' +
+      // Histogram bars: initially red (below zero), then turning green (above zero)
+      '<rect x="35" y="172" width="12" height="12" fill="#ef4444" opacity="0.8"/>' +
+      '<rect x="55" y="172" width="12" height="9" fill="#ef4444" opacity="0.8"/>' +
+      '<rect x="75" y="172" width="12" height="6" fill="#ef4444" opacity="0.8"/>' +
+      '<rect x="95" y="172" width="12" height="3" fill="#ef4444" opacity="0.8"/>' +
+      '<rect x="115" y="169" width="12" height="3" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="135" y="165" width="12" height="7" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="155" y="161" width="12" height="11" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="175" y="158" width="12" height="14" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="195" y="157" width="12" height="15" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="215" y="159" width="12" height="13" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="235" y="162" width="12" height="10" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="255" y="165" width="12" height="7" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="275" y="168" width="12" height="4" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="295" y="157" width="12" height="15" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="315" y="154" width="12" height="18" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="335" y="151" width="12" height="21" fill="#10b981" opacity="0.8"/>' +
+      '<rect x="355" y="153" width="12" height="19" fill="#10b981" opacity="0.8"/>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b>MACD</b> = EMA12 − EMA26（快線減慢線）</p>' +
+      '<p><b>0軸以上</b>：多方動能；<b>0軸以下</b>：空方動能</p>' +
+      '<p><b style="color:#f59e0b">金叉</b>：MACD線向上穿越信號線 → 做多信號</p></div>' +
+      '<div><p><b>柱狀縮短</b>：動能轉弱，趨勢可能反轉的預警</p>' +
+      '<p><b>Schwartz連結</b>：MACD正值 + 上升趨勢 = 突破更有效</p>' +
+      '<p><b>死叉</b>：MACD線向下穿越信號線 → 做空信號</p></div>' +
+    '</div></div>';
+
+  // Card 7: 布林通道
+  var card7 = '<div class="card edu-card"><h3>📊 布林通道（Bollinger Bands）</h3>' +
+    '<svg width="420" height="155" style="' + svgStyle + '" viewBox="0 0 420 155">' +
+      // Shaded area between bands
+      '<polygon points="20,30 80,28 140,35 200,40 220,50 240,55 260,50 280,45 320,40 360,35 400,32 400,110 360,115 320,118 280,120 260,118 240,115 220,108 200,100 140,88 80,80 20,75" fill="#3b82f6" opacity="0.07"/>' +
+      // Upper band (red dashed)
+      '<polyline points="20,30 80,28 140,35 200,40 220,50 240,55 260,50 280,45 320,40 360,35 400,32" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>' +
+      // Middle band MA20 (blue solid)
+      '<polyline points="20,52 80,54 140,60 200,68 220,78 240,84 260,82 280,78 320,72 360,66 400,62" fill="none" stroke="#3b82f6" stroke-width="2"/>' +
+      // Lower band (green dashed)
+      '<polyline points="20,75 80,80 140,88 200,100 220,108 240,115 260,118 280,120 320,118 360,115 400,110" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,3"/>' +
+      // Price line touching lower band then bouncing
+      '<polyline points="20,48 60,52 100,65 140,82 170,98 200,108 220,112 240,120 255,122 260,118 275,108 300,92 330,78 360,62 390,48 410,42" fill="none" stroke="#e2e8f0" stroke-width="2"/>' +
+      // Squeeze section indicator (bands narrow around x=220-260)
+      '<rect x="218" y="48" width="44" height="3" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>' +
+      '<text x="210" y="43" fill="#f59e0b" font-size="8" font-family="sans-serif">Squeeze</text>' +
+      '<text x="206" y="35" fill="#f59e0b" font-size="8" font-family="sans-serif">蓄勢待發</text>' +
+      // Band labels on right side
+      '<text x="385" y="25" fill="#ef4444" font-size="9" font-family="sans-serif">+2σ</text>' +
+      '<text x="380" y="58" fill="#3b82f6" font-size="9" font-family="sans-serif">MA20</text>' +
+      '<text x="385" y="105" fill="#10b981" font-size="9" font-family="sans-serif">−2σ</text>' +
+      // Bounce arrow from lower band
+      '<text x="248" y="140" fill="#10b981" font-size="9" font-family="sans-serif">↑ 觸及下軌後彈升</text>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div><p><b>中軌 MA20</b> ± 2個標準差（σ）</p>' +
+      '<p><b>統計意義</b>：約95%的價格在帶內移動</p>' +
+      '<p><b style="color:#f59e0b">Squeeze收縮</b>：波動率極低，即將大幅突破</p></div>' +
+      '<div><p><b style="color:#10b981">觸及下軌</b>：超賣支撐訊號，可能反彈</p>' +
+      '<p><b>趨勢時</b>：價格沿上軌走，不要貿然反向做空</p>' +
+      '<p><b>Bollinger Bounce</b> vs <b>Breakout</b>：震盪市反彈，趨勢市突破</p></div>' +
+    '</div></div>';
+
+  // Card 8: 量價關係
+  var card8 = '<div class="card edu-card"><h3>📊 量價關係（Volume-Price Analysis）</h3>' +
+    '<svg width="420" height="145" style="' + svgStyle + '" viewBox="0 0 420 145">' +
+      // 8 candles with volume bars
+      // Candle 1: Green, big volume (量增價漲)
+      '<line x1="35" y1="20" x2="35" y2="28" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="28" y="28" width="14" height="40" fill="#10b981" rx="1"/>' +
+      '<line x1="35" y1="68" x2="35" y2="75" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="28" y="110" width="14" height="28" fill="#10b981" opacity="0.7" rx="1"/>' +
+      '<text x="14" y="105" fill="#10b981" font-size="7" font-family="sans-serif">量增</text>' +
+      '<text x="14" y="144" fill="#10b981" font-size="7" font-family="sans-serif">價漲✓</text>' +
+      // Candle 2: Red, big volume (量增價跌)
+      '<line x1="85" y1="22" x2="85" y2="30" stroke="#ef4444" stroke-width="1.5"/>' +
+      '<rect x="78" y="30" width="14" height="38" fill="#ef4444" rx="1"/>' +
+      '<line x1="85" y1="68" x2="85" y2="78" stroke="#ef4444" stroke-width="1.5"/>' +
+      '<rect x="78" y="110" width="14" height="26" fill="#ef4444" opacity="0.7" rx="1"/>' +
+      '<text x="64" y="105" fill="#ef4444" font-size="7" font-family="sans-serif">量增</text>' +
+      '<text x="64" y="144" fill="#ef4444" font-size="7" font-family="sans-serif">價跌⚠</text>' +
+      // Candle 3: Green, small volume (量縮價漲)
+      '<line x1="135" y1="38" x2="135" y2="46" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="128" y="46" width="14" height="28" fill="#10b981" rx="1"/>' +
+      '<line x1="135" y1="74" x2="135" y2="80" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="128" y="118" width="14" height="13" fill="#10b981" opacity="0.7" rx="1"/>' +
+      '<text x="114" y="113" fill="#f59e0b" font-size="7" font-family="sans-serif">量縮</text>' +
+      '<text x="114" y="144" fill="#f59e0b" font-size="7" font-family="sans-serif">價漲⚠</text>' +
+      // Candle 4: Red, small volume (量縮價跌)
+      '<line x1="185" y1="42" x2="185" y2="50" stroke="#ef4444" stroke-width="1.5"/>' +
+      '<rect x="178" y="50" width="14" height="25" fill="#ef4444" rx="1"/>' +
+      '<line x1="185" y1="75" x2="185" y2="83" stroke="#ef4444" stroke-width="1.5"/>' +
+      '<rect x="178" y="120" width="14" height="10" fill="#ef4444" opacity="0.7" rx="1"/>' +
+      '<text x="164" y="115" fill="#94a3b8" font-size="7" font-family="sans-serif">量縮</text>' +
+      '<text x="164" y="144" fill="#94a3b8" font-size="7" font-family="sans-serif">價跌</text>' +
+      // Candle 5: Green big (天量天價警示)
+      '<line x1="235" y1="15" x2="235" y2="22" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="228" y="22" width="14" height="48" fill="#10b981" rx="1"/>' +
+      '<line x1="235" y1="70" x2="235" y2="78" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="228" y="105" width="14" height="35" fill="#10b981" opacity="0.7" rx="1"/>' +
+      '<text x="214" y="100" fill="#f59e0b" font-size="7" font-family="sans-serif">天量</text>' +
+      '<text x="214" y="144" fill="#f59e0b" font-size="7" font-family="sans-serif">天價⚠</text>' +
+      // Candle 6: Red, tiny volume (地量特徵)
+      '<rect x="278" y="58" width="14" height="18" fill="#ef4444" rx="1"/>' +
+      '<rect x="278" y="124" width="14" height="6" fill="#ef4444" opacity="0.7" rx="1"/>' +
+      '<text x="264" y="120" fill="#94a3b8" font-size="7" font-family="sans-serif">地量</text>' +
+      // Candle 7: Green, big volume (突破放量)
+      '<line x1="335" y1="18" x2="335" y2="28" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="328" y="28" width="14" height="42" fill="#10b981" rx="1"/>' +
+      '<line x1="335" y1="70" x2="335" y2="78" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="328" y="108" width="14" height="32" fill="#10b981" opacity="0.7" rx="1"/>' +
+      '<text x="314" y="103" fill="#10b981" font-size="7" font-family="sans-serif">突破</text>' +
+      '<text x="314" y="144" fill="#10b981" font-size="7" font-family="sans-serif">放量✓</text>' +
+      // Candle 8: Green, tiny volume (突破縮量 假突破)
+      '<line x1="385" y1="30" x2="385" y2="38" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="378" y="38" width="14" height="35" fill="#10b981" rx="1"/>' +
+      '<line x1="385" y1="73" x2="385" y2="80" stroke="#10b981" stroke-width="1.5"/>' +
+      '<rect x="378" y="120" width="14" height="9" fill="#10b981" opacity="0.5" rx="1"/>' +
+      '<text x="364" y="115" fill="#ef4444" font-size="7" font-family="sans-serif">縮量</text>' +
+      '<text x="364" y="144" fill="#ef4444" font-size="7" font-family="sans-serif">假突破</text>' +
+      // Volume axis line
+      '<line x1="20" y1="108" x2="410" y2="108" stroke="#1e293b" stroke-width="1"/>' +
+    '</svg>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+      '<div>' +
+        '<p>① <b style="color:#10b981">量增價漲</b>：健康上漲，趨勢延續（最強信號）</p>' +
+        '<p>② <b style="color:#94a3b8">量縮價漲</b>：上漲無力，可能見頂（警告）</p>' +
+        '<p>③ <b style="color:#ef4444">量增價跌</b>：恐慌拋售，可能加速下跌（危險）</p>' +
+        '<p>④ <b style="color:#94a3b8">量縮價跌</b>：下跌動能衰竭，可能觸底（觀察）</p>' +
+      '</div>' +
+      '<div>' +
+        '<p>⑤ <b style="color:#f59e0b">天量天價</b>：大量出貨，頂部確認信號</p>' +
+        '<p>⑥ <b style="color:#94a3b8">地量地價</b>：無人交易，底部特徵</p>' +
+        '<p>⑦ <b style="color:#10b981">突破放量</b>：突破有效的確認（量 &gt; 1.5倍均量）</p>' +
+        '<p>⑧ <b style="color:#ef4444">突破縮量</b>：假突破的警告，需謹慎</p>' +
+      '</div>' +
+    '</div>' +
+    '<p style="margin-top:8px;color:#94a3b8;font-size:12px"><b>Steinhardt：</b>「成交量是市場真正的情緒。價格可以被操縱，但成交量不會騙人。」</p>' +
+    '</div>';
+
+  return card1 + card2 + card3 + card4 + card5 + card6 + card7 + card8;
 }
 
 function getPatternsEducation() {
-  return '<div class="card edu-card"><h3>🕯️ 單 K 線型態</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:12px">' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="60" height="100" viewBox="0 0 60 100"><line x1="30" y1="10" x2="30" y2="30" stroke="#7a8ba5" stroke-width="2"/><rect x="15" y="30" width="30" height="40" fill="#10b981" rx="2"/><line x1="30" y1="70" x2="30" y2="95" stroke="#7a8ba5" stroke-width="2"/></svg><div style="font-weight:700;margin-top:8px">錘子線（Hammer）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">下影線 ≥ 實體 2 倍，出現在下跌趨勢底部。<b style="color:var(--green)">看漲反轉信號。</b></div></div>' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="60" height="100" viewBox="0 0 60 100"><line x1="30" y1="5" x2="30" y2="30" stroke="#7a8ba5" stroke-width="2"/><rect x="15" y="30" width="30" height="40" fill="#ef4444" rx="2"/><line x1="30" y1="70" x2="30" y2="95" stroke="#7a8ba5" stroke-width="2"/></svg><div style="font-weight:700;margin-top:8px">吊人線（Hanging Man）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">形態同錘子但出現在上漲趨勢頂部。<b style="color:var(--red)">看跌反轉信號。</b></div></div>' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="60" height="100" viewBox="0 0 60 100"><line x1="30" y1="10" x2="30" y2="45" stroke="#7a8ba5" stroke-width="2"/><rect x="15" y="45" width="30" height="5" fill="#7a8ba5" rx="1"/><line x1="30" y1="50" x2="30" y2="90" stroke="#7a8ba5" stroke-width="2"/></svg><div style="font-weight:700;margin-top:8px">十字星（Doji）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">開盤≈收盤，上下影線。<b>代表市場猶豫不決</b>，可能發生反轉。</div></div>' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="80" height="100" viewBox="0 0 80 100"><rect x="5" y="20" width="25" height="60" fill="#ef4444" rx="2"/><rect x="35" y="10" width="35" height="80" fill="#10b981" rx="2"/></svg><div style="font-weight:700;margin-top:8px">看漲吞噬（Bullish Engulfing）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">大陽線完全覆蓋前一根陰線。<b style="color:var(--green)">強烈看漲反轉。</b></div></div>' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="80" height="100" viewBox="0 0 80 100"><rect x="5" y="10" width="25" height="60" fill="#10b981" rx="2"/><rect x="35" y="5" width="35" height="85" fill="#ef4444" rx="2"/></svg><div style="font-weight:700;margin-top:8px">看跌吞噬（Bearish Engulfing）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">大陰線完全覆蓋前一根陽線。<b style="color:var(--red)">強烈看跌反轉。</b></div></div>' +
-    '<div style="background:var(--bg);padding:16px;border-radius:8px;text-align:center"><svg width="60" height="100" viewBox="0 0 60 100"><line x1="30" y1="5" x2="30" y2="15" stroke="#7a8ba5" stroke-width="2"/><rect x="15" y="15" width="30" height="50" fill="#10b981" rx="2"/><line x1="30" y1="65" x2="30" y2="70" stroke="#7a8ba5" stroke-width="2"/></svg><div style="font-weight:700;margin-top:8px">大陽線（Marubozu）</div><div style="font-size:12px;color:var(--muted);margin-top:4px">實體長、影線短或無。<b style="color:var(--green)">買方完全控制，強烈看漲。</b></div></div></div></div>' +
-  '<div class="card edu-card"><h3>📐 經典反轉型態</h3><div style="margin-bottom:20px"><p><span class="edu-term">頭肩頂（Head and Shoulders）</span></p><svg width="300" height="120" viewBox="0 0 300 120" style="margin:12px 0"><polyline points="10,90 50,60 90,80 150,20 210,80 250,50 290,90" fill="none" stroke="var(--accent)" stroke-width="2"/><line x1="60" y1="80" x2="230" y2="80" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4,4"/><text x="150" y="15" fill="var(--muted)" font-size="10" text-anchor="middle">頭</text><text x="50" y="55" fill="var(--muted)" font-size="10" text-anchor="middle">左肩</text><text x="250" y="45" fill="var(--muted)" font-size="10" text-anchor="middle">右肩</text><text x="260" y="78" fill="var(--red)" font-size="10">頸線</text></svg><p>三個高點中間最高。當價格跌破頸線，確認反轉。</p><p><b>目標價</b> = 頸線 - (頭部到頸線的距離)</p></div>' +
-  '<div style="margin-bottom:20px"><p><span class="edu-term">雙重頂 / 雙重底（Double Top / Bottom）</span></p><svg width="300" height="120" viewBox="0 0 300 120" style="margin:12px 0"><polyline points="10,90 80,20 150,70 220,20 290,90" fill="none" stroke="var(--accent)" stroke-width="2"/><line x1="100" y1="70" x2="200" y2="70" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4,4"/><text x="80" y="15" fill="var(--muted)" font-size="10" text-anchor="middle">第一頂</text><text x="220" y="15" fill="var(--muted)" font-size="10" text-anchor="middle">第二頂</text><text x="220" y="68" fill="var(--red)" font-size="10">頸線</text></svg><p>價格兩次測試同一高點都無法突破。跌破中間低點確認反轉。</p></div>' +
-  '<div><p><span class="edu-term">三角形整理（Triangle）</span></p><svg width="300" height="120" viewBox="0 0 300 120" style="margin:12px 0"><line x1="10" y1="20" x2="250" y2="55" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="10" y1="100" x2="250" y2="55" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4,4"/><polyline points="10,20 40,90 80,30 120,80 160,40 200,70 240,55 290,25" fill="none" stroke="var(--accent)" stroke-width="2"/><text x="265" y="20" fill="var(--green)" font-size="10">突破方向</text></svg><p>高點遞降 + 低點遞升 = 對稱三角形。突破方向是交易方向。</p></div></div>';
+  const pc = (svg,name,pos,yi,psy,note,stars,col)=>
+    '<div style="background:#0a0e17;padding:14px;border-radius:8px;text-align:center">'+svg+
+    '<div style="font-weight:700;margin-top:8px;font-size:13px">'+name+'</div>'+
+    '<div style="font-size:11px;color:'+col+';margin:3px 0">📍 '+pos+'</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:4px;text-align:left"><b>含義：</b>'+yi+'</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:3px;text-align:left"><b>心理：</b>'+psy+'</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:3px;text-align:left"><b>注意：</b>'+note+'</div>'+
+    '<div style="font-size:13px;color:#f59e0b;margin-top:6px">'+stars+'</div></div>';
+
+  // ── 第一節：單K棒型態 ──────────────────────────────────────────────────────
+  const s1 = '<div class="card edu-card">'+
+    '<h3>🕯️ 第一節：單K棒型態（12種）</h3>'+
+    '<p style="font-size:12px;color:#94a3b8;margin-bottom:8px">K棒本身就是一個完整的故事——它記錄了一個時間單位內買賣雙方的全部戰鬥過程。</p>'+
+
+    '<h4 style="color:#10b981;margin:18px 0 10px">🟢 A. 底部反轉信號（看漲）</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">'+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><line x1="30" y1="10" x2="30" y2="15" stroke="#94a3b8" stroke-width="1.5"/><rect x="16" y="15" width="28" height="20" fill="#10b981" rx="2"/><line x1="30" y1="35" x2="30" y2="90" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '錘子線（Hammer）','下跌趨勢底部','#10b981',
+      '下影線≥實體2倍，上影線極短，代表賣方試圖打低但買方強力接盤',
+      '開盤後大幅下跌，多方全力反攻收復大部分跌幅，底部支撐強勁',
+      '需等下一根陽線確認才進場，單根信號不足','★★★☆☆')+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><line x1="30" y1="10" x2="30" y2="55" stroke="#94a3b8" stroke-width="1.5"/><rect x="16" y="55" width="28" height="20" fill="#10b981" rx="2"/><line x1="30" y1="75" x2="30" y2="82" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '倒錘子（Inverted Hammer）','下跌趨勢底部','#10b981',
+      '上影線≥實體2倍，多方嘗試拉高未守住，但空方也無力繼續打壓',
+      '賣盤力道減弱的信號，本身信號較弱，需等確認',
+      '下一根大陽線確認才有效，單根可靠性低','★★☆☆☆')+
+
+    pc('<svg width="90" height="100" viewBox="0 0 90 100" style="display:block;margin:0 auto"><line x1="20" y1="10" x2="20" y2="13" stroke="#94a3b8" stroke-width="1.5"/><rect x="8" y="13" width="24" height="30" fill="#ef4444" rx="2"/><line x1="20" y1="43" x2="20" y2="50" stroke="#94a3b8" stroke-width="1.5"/><line x1="62" y1="8" x2="62" y2="11" stroke="#94a3b8" stroke-width="1.5"/><rect x="50" y="11" width="24" height="55" fill="#10b981" rx="2"/><line x1="62" y1="66" x2="62" y2="73" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '看漲吞噬（Bullish Engulfing）','下跌趨勢底部','#10b981',
+      '大陽線完全包覆前一根陰線，買方力量全面壓制賣方',
+      '第二天低開（讓空方覺得繼續跌）卻強力反轉，空方被迫回補',
+      '吞噬幅度越大信號越強，需配合成交量放大','★★★★☆')+
+
+    '</div>'+
+
+    '<h4 style="color:#ef4444;margin:18px 0 10px">🔴 B. 頂部反轉信號（看跌）</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">'+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><line x1="30" y1="10" x2="30" y2="55" stroke="#94a3b8" stroke-width="1.5"/><rect x="16" y="55" width="28" height="20" fill="#ef4444" rx="2"/><line x1="30" y1="75" x2="30" y2="82" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '流星線（Shooting Star）','上漲趨勢頂部','#ef4444',
+      '上影線≥實體2倍，多方試圖繼續拉高但被壓回，高位賣壓出現',
+      '開盤後大漲，賣方在高位大量出貨把價格壓回，多方攻擊力竭',
+      '需在上漲趨勢高點才有效，低位出現不算','★★★☆☆')+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><line x1="30" y1="10" x2="30" y2="15" stroke="#94a3b8" stroke-width="1.5"/><rect x="16" y="15" width="28" height="20" fill="#ef4444" rx="2"/><line x1="30" y1="35" x2="30" y2="90" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '吊人線（Hanging Man）','上漲趨勢頂部','#ef4444',
+      '形態與錘子相同但出現在高點，代表下方賣壓開始出現',
+      '看似多方控制，但已有資金開始出貨（下影線是出貨後被買回的痕跡）',
+      '是警告信號而非確認，等下一根陰線確認','★★☆☆☆')+
+
+    pc('<svg width="90" height="100" viewBox="0 0 90 100" style="display:block;margin:0 auto"><line x1="20" y1="10" x2="20" y2="13" stroke="#94a3b8" stroke-width="1.5"/><rect x="8" y="13" width="24" height="45" fill="#10b981" rx="2"/><line x1="20" y1="58" x2="20" y2="65" stroke="#94a3b8" stroke-width="1.5"/><line x1="62" y1="8" x2="62" y2="11" stroke="#94a3b8" stroke-width="1.5"/><rect x="50" y="11" width="24" height="65" fill="#ef4444" rx="2"/><line x1="62" y1="76" x2="62" y2="83" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '看跌吞噬（Bearish Engulfing）','上漲趨勢頂部','#ef4444',
+      '大陰線完全包覆前一根陽線，賣方力量全面壓制買方',
+      '第二天高開（讓多方覺得繼續漲）卻強力反轉，多方被迫停損',
+      '需配合成交量放大，且在高位出現才有效','★★★★☆')+
+
+    '</div>'+
+
+    '<h4 style="color:#94a3b8;margin:18px 0 10px">⚪ C. 猶豫／不確定信號</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">'+
+
+    pc('<svg width="180" height="100" viewBox="0 0 180 100" style="display:block;margin:0 auto"><line x1="30" y1="10" x2="30" y2="47" stroke="#94a3b8" stroke-width="1.5"/><rect x="22" y="47" width="16" height="4" fill="#94a3b8" rx="1"/><line x1="30" y1="51" x2="30" y2="88" stroke="#94a3b8" stroke-width="1.5"/><text x="30" y="98" fill="#94a3b8" font-size="9" text-anchor="middle">長腳十字</text><line x1="90" y1="10" x2="90" y2="47" stroke="#94a3b8" stroke-width="1.5"/><rect x="82" y="47" width="16" height="4" fill="#94a3b8" rx="1"/><text x="90" y="98" fill="#94a3b8" font-size="9" text-anchor="middle">墓碑十字</text><line x1="150" y1="47" x2="150" y2="47" stroke="#94a3b8" stroke-width="1.5"/><rect x="142" y="47" width="16" height="4" fill="#94a3b8" rx="1"/><line x1="150" y1="51" x2="150" y2="88" stroke="#94a3b8" stroke-width="1.5"/><text x="150" y="98" fill="#94a3b8" font-size="9" text-anchor="middle">蜻蜓十字</text></svg>',
+      '十字星（Doji）','任何位置','#94a3b8',
+      '開盤=收盤，市場完全猶豫，多空力量相當',
+      '長腳=雙方激烈拉鋸；墓碑=多方失敗(上攻被壓回)；蜻蜓=空方失敗(下打被接回)',
+      '需結合前後趨勢判斷方向，單獨出現無明確方向','★★☆☆☆')+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><line x1="30" y1="12" x2="30" y2="32" stroke="#94a3b8" stroke-width="1.5"/><rect x="16" y="32" width="28" height="30" fill="#94a3b8" rx="2"/><line x1="30" y1="62" x2="30" y2="85" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '紡錘線（Spinning Top）','趨勢末段或整理中','#94a3b8',
+      '實體小，上下影線相對長，多空雙方爭奪激烈但誰也無法控場',
+      '比十字星略有方向感（有實體），但仍代表猶豫',
+      '常出現在趨勢中繼或即將轉折前的蓄勢階段','★★☆☆☆')+
+
+    '</div>'+
+
+    '<h4 style="color:#f59e0b;margin:18px 0 10px">🟡 D. 強力信號</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">'+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><rect x="16" y="12" width="28" height="76" fill="#10b981" rx="2"/></svg>',
+      '大陽線（Bullish Marubozu）','突破或上漲趨勢中','#10b981',
+      '實體佔全日波幅80%以上，幾乎無影線，買方完全掌控',
+      '從開盤到收盤都是買方強勢，空方無力抵抗。收漲停就是最典型大陽線',
+      '若出現在超漲位置，可能是最後的瘋狂','★★★★★')+
+
+    pc('<svg width="60" height="100" viewBox="0 0 60 100" style="display:block;margin:0 auto"><rect x="16" y="12" width="28" height="76" fill="#ef4444" rx="2"/></svg>',
+      '大陰線（Bearish Marubozu）','跌破支撐或下跌趨勢中','#ef4444',
+      '賣方從開盤到收盤完全主導，代表強烈拋售',
+      '恐慌蔓延，觸發更多停損，下跌加速',
+      '在超跌位置出現可能是最後恐慌賣壓（跌出機會）','★★★★★')+
+
+    pc('<svg width="110" height="100" viewBox="0 0 110 100" style="display:block;margin:0 auto"><line x1="20" y1="10" x2="20" y2="14" stroke="#94a3b8" stroke-width="1.5"/><rect x="9" y="14" width="22" height="62" fill="#ef4444" rx="2"/><line x1="20" y1="76" x2="20" y2="82" stroke="#94a3b8" stroke-width="1.5"/><line x1="55" y1="53" x2="55" y2="57" stroke="#94a3b8" stroke-width="1.5"/><rect x="44" y="57" width="22" height="16" fill="#94a3b8" rx="2"/><line x1="55" y1="73" x2="55" y2="78" stroke="#94a3b8" stroke-width="1.5"/><line x1="90" y1="10" x2="90" y2="14" stroke="#94a3b8" stroke-width="1.5"/><rect x="79" y="14" width="22" height="58" fill="#10b981" rx="2"/><line x1="90" y1="72" x2="90" y2="78" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '早晨之星（Morning Star）','下跌趨勢底部','#10b981',
+      '大陰+小實體+大陽三根K棒組合，代表趨勢完全逆轉',
+      '第1根=空方強攻；第2根=空方力竭猶豫；第3根=多方全面反攻',
+      '最強底部反轉信號之一，第3根需收復第1根實體50%以上','★★★★★')+
+
+    pc('<svg width="110" height="100" viewBox="0 0 110 100" style="display:block;margin:0 auto"><line x1="20" y1="10" x2="20" y2="14" stroke="#94a3b8" stroke-width="1.5"/><rect x="9" y="14" width="22" height="58" fill="#10b981" rx="2"/><line x1="20" y1="72" x2="20" y2="78" stroke="#94a3b8" stroke-width="1.5"/><line x1="55" y1="10" x2="55" y2="14" stroke="#94a3b8" stroke-width="1.5"/><rect x="44" y="14" width="22" height="16" fill="#94a3b8" rx="2"/><line x1="55" y1="30" x2="55" y2="38" stroke="#94a3b8" stroke-width="1.5"/><line x1="90" y1="10" x2="90" y2="14" stroke="#94a3b8" stroke-width="1.5"/><rect x="79" y="14" width="22" height="65" fill="#ef4444" rx="2"/><line x1="90" y1="79" x2="90" y2="85" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+      '黃昏之星（Evening Star）','上漲趨勢頂部','#ef4444',
+      '大陽+小實體+大陰三根K棒組合，代表頂部反轉',
+      '第1根=多方全面進攻；第2根=多方力竭猶豫；第3根=空方全面壓制',
+      '最強頂部反轉信號之一，第3根需跌回第1根實體50%以下','★★★★★')+
+
+    '</div></div>';
+
+  // ── 第二節：多K棒延伸型態 ─────────────────────────────────────────────────
+  const s2 = '<div class="card edu-card">'+
+    '<h3>📊 第二節：多K棒組合型態</h3>'+
+    '<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">多根K棒的組合揭示市場力量的轉移過程，可靠性高於單根K棒。</p>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">'+
+
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<svg width="130" height="100" viewBox="0 0 130 100" style="display:block;margin:0 auto">'+
+    '<rect x="5" y="60" width="28" height="35" fill="#10b981" rx="2"/><line x1="19" y1="55" x2="19" y2="60" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="50" y="40" width="28" height="50" fill="#10b981" rx="2"/><line x1="64" y1="35" x2="64" y2="40" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="95" y="18" width="28" height="55" fill="#10b981" rx="2"/><line x1="109" y1="13" x2="109" y2="18" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '</svg>'+
+    '<div style="font-weight:700;font-size:13px;margin-top:8px;color:#10b981">三白兵（Three White Soldiers）</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:6px">三根連續大陽線，每根在前一根實體範圍內開盤，然後繼續上漲。每天都有新買盤進場，趨勢轉多信號非常強。</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:4px">⚠️ 若出現在已大幅上漲後的高位，需警惕過熱。</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">強度：★★★★★</div>'+
+    '</div>'+
+
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<svg width="130" height="100" viewBox="0 0 130 100" style="display:block;margin:0 auto">'+
+    '<rect x="5" y="10" width="28" height="40" fill="#ef4444" rx="2"/><line x1="19" y1="50" x2="19" y2="55" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="50" y="22" width="28" height="45" fill="#ef4444" rx="2"/><line x1="64" y1="67" x2="64" y2="72" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="95" y="35" width="28" height="48" fill="#ef4444" rx="2"/><line x1="109" y1="83" x2="109" y2="88" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '</svg>'+
+    '<div style="font-weight:700;font-size:13px;margin-top:8px;color:#ef4444">三黑鴉（Three Black Crows）</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:6px">三根連續大陰線，每根開盤在前一根實體範圍內，代表強烈的下跌趨勢開始。多方防線逐步被攻破。</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:4px">⚠️ 高位出現才真正危險，低位後期可能已price in。</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">強度：★★★★★</div>'+
+    '</div>'+
+
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<svg width="100" height="100" viewBox="0 0 100 100" style="display:block;margin:0 auto">'+
+    '<rect x="8" y="15" width="26" height="65" fill="#ef4444" rx="2"/>'+
+    '<rect x="58" y="40" width="26" height="50" fill="#10b981" rx="2"/>'+
+    '<line x1="58" y1="48" x2="34" y2="48" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3"/>'+
+    '<text x="50" y="95" fill="#94a3b8" font-size="9" text-anchor="middle">收過中點</text>'+
+    '</svg>'+
+    '<div style="font-weight:700;font-size:13px;margin-top:8px;color:#10b981">穿頸線（Piercing Line）</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:6px">陰線後出現陽線，收盤穿越前陰線實體中點以上。空方攻擊後多方反擊，回收前日跌幅一半以上。</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:4px">⚠️ 若只收到中點以下則效力弱（稱「約會線」）。</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">強度：★★★☆☆</div>'+
+    '</div>'+
+
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<svg width="100" height="100" viewBox="0 0 100 100" style="display:block;margin:0 auto">'+
+    '<rect x="8" y="25" width="26" height="60" fill="#10b981" rx="2"/>'+
+    '<rect x="58" y="12" width="26" height="60" fill="#ef4444" rx="2"/>'+
+    '<line x1="58" y1="55" x2="34" y2="55" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3"/>'+
+    '<text x="50" y="95" fill="#94a3b8" font-size="9" text-anchor="middle">跌破中點</text>'+
+    '</svg>'+
+    '<div style="font-weight:700;font-size:13px;margin-top:8px;color:#ef4444">烏雲蓋頂（Dark Cloud Cover）</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:6px">陽線後陰線跳空高開但收盤跌破前陽線實體中點以下。多方高點攻擊失敗，賣方在高位強力出貨。</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:4px">⚠️ 需在高位上漲趨勢後出現才有效。</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">強度：★★★☆☆</div>'+
+    '</div>'+
+
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<svg width="100" height="100" viewBox="0 0 100 100" style="display:block;margin:0 auto">'+
+    '<line x1="21" y1="10" x2="21" y2="15" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="8" y="15" width="26" height="68" fill="#10b981" rx="2"/>'+
+    '<line x1="21" y1="83" x2="21" y2="88" stroke="#94a3b8" stroke-width="1.5"/>'+
+    '<rect x="62" y="38" width="22" height="26" fill="#ef4444" rx="2"/>'+
+    '</svg>'+
+    '<div style="font-weight:700;font-size:13px;margin-top:8px;color:#94a3b8">孕線（Harami）</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:6px">大K線後出現完全被包含在前根實體範圍內的小K線，代表市場猶豫、縮量整理，可能是趨勢轉折前兆。</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:4px">⚠️ 孕線本身只是警告，需等下一根K棒確認方向。</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">強度：★★☆☆☆</div>'+
+    '</div>'+
+
+    '</div></div>';
+
+  // ── 第三節：圖形型態 ──────────────────────────────────────────────────────
+  const cpCard = (svgHtml,name,tag,tagColor,desc,confirm,target,psy,fail,stars)=>
+    '<div style="background:#0a0e17;padding:16px;border-radius:8px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+    '<span style="font-weight:700;font-size:13px">'+name+'</span>'+
+    '<span style="font-size:10px;padding:2px 8px;border-radius:4px;background:'+tagColor+'22;color:'+tagColor+'">'+tag+'</span>'+
+    '</div>'+
+    svgHtml+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:8px"><b>形成：</b>'+desc+'</div>'+
+    '<div style="font-size:11px;color:#94a3b8;margin-top:3px"><b>確認：</b>'+confirm+'</div>'+
+    '<div style="font-size:11px;color:#10b981;margin-top:3px"><b>目標：</b>'+target+'</div>'+
+    '<div style="font-size:11px;color:#64748b;margin-top:3px"><b>心理：</b>'+psy+'</div>'+
+    '<div style="font-size:11px;color:#ef4444;margin-top:3px"><b>失敗：</b>'+fail+'</div>'+
+    '<div style="font-size:12px;color:#f59e0b;margin-top:6px">'+stars+'</div>'+
+    '</div>';
+
+  const s3 = '<div class="card edu-card">'+
+    '<h3>📐 第三節：圖形型態（8種）</h3>'+
+    '<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">圖形型態在更大的時間維度上記錄了主力資金的行為，可靠性最高但形成時間也最長。</p>'+
+
+    '<h4 style="color:#ef4444;margin:16px 0 10px">🔴 頂部反轉型態</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><polyline points="10,95 55,60 90,80 150,15 210,80 250,55 290,95" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="70" y1="80" x2="235" y2="80" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><text x="55" y="55" fill="#94a3b8" font-size="10" text-anchor="middle">左肩</text><text x="150" y="10" fill="#94a3b8" font-size="10" text-anchor="middle">頭</text><text x="250" y="50" fill="#94a3b8" font-size="10" text-anchor="middle">右肩</text><text x="260" y="76" fill="#ef4444" font-size="10">頸線</text><text x="55" y="92" fill="#f59e0b" font-size="9">量大</text><text x="150" y="92" fill="#94a3b8" font-size="9">量縮</text><text x="250" y="92" fill="#94a3b8" font-size="9">量更縮</text></svg>',
+      '頭肩頂（Head & Shoulders）','頂部反轉','#ef4444',
+      '三個高峰，中間最高，量能遞減是關鍵特徵（頭部量縮是主力出貨的痕跡）',
+      '跌破頸線+成交量放大，下根K棒無法回升頸線上方',
+      '頸線 − (頭部 − 頸線) 的距離，即形態高度等比下移',
+      '主力在頭部出貨，右肩是最後的逃命機會，普通投資者在右肩仍然看多',
+      '右肩突破頭部高點→型態失效，繼續看多','★★★★★')+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 280 110" style="display:block"><polyline points="10,95 75,20 145,70 215,20 280,95" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="95" y1="70" x2="195" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><text x="75" y="14" fill="#94a3b8" font-size="10" text-anchor="middle">第一頂</text><text x="215" y="14" fill="#94a3b8" font-size="10" text-anchor="middle">第二頂</text><text x="215" y="66" fill="#ef4444" font-size="10">頸線</text></svg>',
+      '雙重頂 M頭（Double Top）','頂部反轉','#ef4444',
+      '兩次測試相同高點都無法突破，說明該價位賣壓極強',
+      '跌破頸線（兩峰之間的谷底），收盤確認',
+      '頸線 − (頭部 − 頸線)，等同形態高度',
+      '第二次試高失敗，等待突破的買盤失望轉為賣盤',
+      '第二頂突破第一頂→型態失效，轉為看多','★★★★☆')+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><line x1="10" y1="18" x2="240" y2="42" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="10" y1="85" x2="240" y2="65" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><polyline points="10,18 40,78 75,32 110,68 145,38 180,60 215,45 245,62 280,90" fill="none" stroke="#3b82f6" stroke-width="2"/><text x="155" y="12" fill="#ef4444" font-size="10">壓力線（斜率緩）</text><text x="155" y="100" fill="#10b981" font-size="10">支撐線（斜率陡）</text></svg>',
+      '上升楔形（Rising Wedge）','頂部反轉 / 看跌','#ef4444',
+      '高點和低點都在上升，但支撐線斜率比壓力線更陡，上漲動能逐漸衰竭',
+      '向下跌破支撐線（與形態方向相反），量能放大',
+      '形態跌破位 − 楔形高度（最大振幅）',
+      '多方越追越費力，每次回調越來越深，主力趁勢出貨',
+      '向上突破壓力線且放量→看漲，楔形失效','★★★☆☆')+
+
+    '</div>'+
+
+    '<h4 style="color:#10b981;margin:18px 0 10px">🟢 底部反轉型態</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><polyline points="10,15 55,55 90,30 150,95 210,30 250,55 290,15" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="70" y1="55" x2="235" y2="55" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><text x="55" y="70" fill="#94a3b8" font-size="10" text-anchor="middle">左肩</text><text x="150" y="105" fill="#94a3b8" font-size="10" text-anchor="middle">頭（最低）</text><text x="250" y="70" fill="#94a3b8" font-size="10" text-anchor="middle">右肩</text><text x="260" y="52" fill="#10b981" font-size="10">頸線</text></svg>',
+      '頭肩底（Inverse H&S）','底部反轉','#10b981',
+      '頭肩頂的鏡像，三個谷底中間最低，出現在下跌趨勢底部',
+      '向上突破頸線+成交量明顯放大',
+      '頸線 + (頸線 − 頭部) 的距離',
+      '多方逐漸獲得力量，右肩代表最後一波試探賣壓',
+      '右肩跌破頭部低點→型態失效，繼續看空','★★★★★')+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 280 110" style="display:block"><polyline points="10,15 75,95 145,40 215,95 280,15" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="95" y1="40" x2="195" y2="40" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><text x="75" y="105" fill="#94a3b8" font-size="10" text-anchor="middle">第一底</text><text x="215" y="105" fill="#94a3b8" font-size="10" text-anchor="middle">第二底</text><text x="215" y="36" fill="#10b981" font-size="10">頸線</text></svg>',
+      '雙重底 W底（Double Bottom）','底部反轉','#10b981',
+      '兩次測試相同低點都有強力買盤支撐，底部確認',
+      '突破頸線（兩谷之間的高點），收盤確認',
+      '頸線 + (頸線 − 底部) 的距離',
+      '第二次測底時持有者不願賣，新買盤進場，供需逆轉',
+      '第二底跌破第一底→型態失效，繼續看空','★★★★☆')+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><line x1="10" y1="90" x2="240" y2="68" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="10" y1="25" x2="240" y2="50" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><polyline points="10,90 40,30 75,80 110,42 145,70 180,50 215,62 245,52 280,18" fill="none" stroke="#3b82f6" stroke-width="2"/><text x="155" y="100" fill="#ef4444" font-size="10">支撐線（斜率緩）</text><text x="155" y="14" fill="#10b981" font-size="10">壓力線（斜率陡）</text></svg>',
+      '下降楔形（Falling Wedge）','底部反轉 / 看漲','#10b981',
+      '高點和低點都在下降且逐漸收窄，賣壓遞減，常在跌勢末段出現',
+      '向上突破壓力線+成交量放大',
+      '形態突破位 + 楔形高度（最大振幅）',
+      '空方越打越沒力，每次反彈越來越高，代表拋售力道枯竭',
+      '向下跌破支撐線→看空，楔形繼續延伸','★★★☆☆')+
+
+    '</div>'+
+
+    '<h4 style="color:#f59e0b;margin:18px 0 10px">🟡 整理繼續型態</h4>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><line x1="10" y1="90" x2="10" y2="10" stroke="#10b981" stroke-width="3"/><line x1="10" y1="10" x2="60" y2="20" stroke="#10b981" stroke-width="3"/><text x="10" y="105" fill="#10b981" font-size="9">旗桿</text><polyline points="60,20 75,32 90,24 105,36 120,28 135,40 150,32" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="60" y1="20" x2="155" y2="32" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/><line x1="60" y1="36" x2="155" y2="48" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/><text x="100" y="55" fill="#94a3b8" font-size="9">旗面（縮量整理）</text><line x1="152" y1="32" x2="152" y2="8" stroke="#10b981" stroke-width="2.5"/><text x="175" y="10" fill="#10b981" font-size="9">→突破繼續漲</text></svg>',
+      '旗形整理（Bull Flag）','上漲趨勢中繼','#f59e0b',
+      '急速上漲後（旗桿）短暫小幅回調整理（旗面），量能縮減，方向不變',
+      '突破旗面上沿+成交量明顯放大',
+      '突破位 + 旗桿長度（複製旗桿）',
+      '主力在整理中吸籌，旗面是散戶出場主力進場的過程',
+      '旗面跌破旗桿起點→看空，型態失效','★★★★☆')+
+
+    cpCard('<svg width="100%" height="110" viewBox="0 0 300 110" style="display:block"><text x="30" y="14" fill="#ef4444" font-size="10">對稱三角</text><line x1="10" y1="18" x2="110" y2="52" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="10" y1="80" x2="110" y2="52" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><polyline points="10,18 30,72 55,30 80,64 105,48 120,55" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="140" y="14" fill="#10b981" font-size="10">上升三角（看漲）</text><line x1="140" y1="22" x2="240" y2="22" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="140" y1="80" x2="240" y2="46" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4"/><polyline points="140,78 160,24 180,58 200,24 220,38 238,28" fill="none" stroke="#3b82f6" stroke-width="1.5"/><text x="10" y="100" fill="#94a3b8" font-size="9">下降三角（看空）：平底+壓力遞降</text></svg>',
+      '三角形整理（三種）','多空平衡整理','#f59e0b',
+      '對稱三角=多空平衡等待方向；上升三角=平頂+底部遞升（看漲）；下降三角=平底+頂部遞降（看空）',
+      '任何一種突破方向都需要成交量放大確認，縮量突破是假訊號',
+      '測量突破位後加上三角形最大振幅',
+      '三角形越緊縮到頂點，突破後動能越強（能量積聚越久）',
+      '突破後立刻回拉超過三角頂點→假突破，觀望','★★★☆☆')+
+
+    '</div></div>';
+
+  return s1 + s2 + s3;
 }
 
 function getPsychologyEducation() {
@@ -3739,6 +4416,193 @@ function getMoneyEducation() {
   '<div class="card edu-card"><h3>📐 Kelly Criterion 詳解</h3><p><span class="edu-term">公式</span>：f* = W - (1-W)/R</p><p>f* = 最佳倉位比例，W = 勝率，R = 平均獲利 / 平均虧損</p><p style="margin-top:8px"><b>例子：</b>勝率 55%，R=1.5 → f* = 0.55 - 0.45/1.5 = <b>0.25</b>（25%）</p><p style="margin-top:8px"><b>實務重點：</b></p><p>① Full Kelly 波動性大，建議使用 <b>Half Kelly</b></p><p>② Kelly 值為負 → 不應該交易</p><p>→ 去「風控中心」頁面可以自動計算你的 Kelly 值。</p></div>' +
   '<div class="card edu-card"><h3>🏗️ 金字塔加碼法（Pyramiding）</h3><p><span class="edu-term">核心概念</span>：在獲利的部位上加碼，而非虧損的部位。</p><p style="margin-top:8px"><b>標準做法：</b></p><p>① 初始倉位：40%（在進場價買入）</p><p>② 第一次加碼：30%（股價上漲 1R 後）</p><p>③ 第二次加碼：20%（股價上漲 2R 後）</p><p style="margin-top:8px"><b>關鍵紀律：</b></p><p>✅ 每次加碼後，將停損移到上一次加碼的價位</p><p>✅ 永遠不在虧損的部位加碼（這叫「攤平」）</p><p>✅ 加碼數量必須遞減</p><p style="margin-top:12px"><b>Schwartz：</b>「我只在勝利的時候加大注碼。」</p></div>' +
   '<div class="card edu-card"><h3>🔄 反馬丁格爾策略（Anti-Martingale）</h3><p><span class="edu-term">馬丁格爾（絕對不要用）</span>：虧損後加倍下注 → 在有限資金下<b>必然爆倉</b>。</p><p style="margin-top:8px"><span class="edu-term">反馬丁格爾（推薦）</span>：獲利後增加倉位，虧損後減少倉位。</p><p style="margin-top:8px"><b>實作方式：</b></p><p>① 連續獲利 3 次 → 倉位可增加 20-50%</p><p>② 連續虧損 2 次 → 倉位減少 50%</p><p>③ 回撤超過 10% → 暫停交易</p><p style="margin-top:8px"><b>邏輯：</b>連勝時策略與市場匹配，應把握。連虧時應保護資金。</p></div>';
+}
+
+// ============ GLOSSARY EDUCATION ============
+function getGlossaryEducation() {
+  return `<div class="card edu-card">
+<h3>📖 短線交易專有名詞大全</h3>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">搜尋關鍵字，或點選分類篩選。每個名詞含定義、詳解與範例。</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+  <input id="glossary-search" class="input" style="flex:1;min-width:200px;max-width:320px" placeholder="搜尋名詞… 例如 RSI、突破、停損" oninput="filterGlossary()">
+</div>
+<div id="glossary-cats" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+  <button class="btn active" data-cat="all" onclick="setGlossaryCat('all',this)" style="font-size:12px;padding:4px 12px">全部</button>
+  <button class="btn" data-cat="indicator" onclick="setGlossaryCat('indicator',this)" style="font-size:12px;padding:4px 12px">📈 技術指標</button>
+  <button class="btn" data-cat="pattern" onclick="setGlossaryCat('pattern',this)" style="font-size:12px;padding:4px 12px">🕯️ 型態結構</button>
+  <button class="btn" data-cat="strategy" onclick="setGlossaryCat('strategy',this)" style="font-size:12px;padding:4px 12px">⚡ 交易策略</button>
+  <button class="btn" data-cat="market" onclick="setGlossaryCat('market',this)" style="font-size:12px;padding:4px 12px">🏦 市場機制</button>
+  <button class="btn" data-cat="risk" onclick="setGlossaryCat('risk',this)" style="font-size:12px;padding:4px 12px">🛡️ 風控</button>
+  <button class="btn" data-cat="sr" onclick="setGlossaryCat('sr',this)" style="font-size:12px;padding:4px 12px">📊 支撐壓力</button>
+</div>
+<div id="glossary-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+</div>
+
+<div class="card edu-card" id="sr-guide-card">
+<h3>📊 支撐 vs 突破：怎麼判斷？</h3>
+<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">這是短線交易中最重要的判斷技能。很多人把「觸及支撐」誤當成「支撐突破」，造成不必要的停損。</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px">
+
+<div style="background:#0a0e17;border:1px solid #10b98133;border-radius:8px;padding:14px">
+<div style="color:#10b981;font-weight:700;margin-bottom:8px">情況一：支撐反彈（Bounce）✅</div>
+<svg width="100%" height="90" viewBox="0 0 240 90" style="display:block;margin-bottom:8px">
+  <line x1="10" y1="65" x2="230" y2="65" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <polyline points="10,30 50,55 90,68 115,70 140,62 180,40 230,25" fill="none" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="108" y="62" width="14" height="12" fill="#10b981" rx="1"/>
+  <text x="120" y="80" fill="#10b981" font-size="9">觸及支撐後反彈</text>
+  <text x="190" y="61" fill="#10b981" font-size="9">支撐線</text>
+</svg>
+<div style="font-size:11px;color:#94a3b8">✅ 收盤在支撐線上方<br>✅ 成交量縮減（賣壓不足）<br>✅ 出現錘子線或吞噬型態<br>→ 多方機會，等確認後買</div>
+</div>
+
+<div style="background:#0a0e17;border:1px solid #ef444433;border-radius:8px;padding:14px">
+<div style="color:#ef4444;font-weight:700;margin-bottom:8px">情況二：真突破（Breakout）🔴</div>
+<svg width="100%" height="90" viewBox="0 0 240 90" style="display:block;margin-bottom:8px">
+  <line x1="10" y1="45" x2="230" y2="45" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <polyline points="10,15 50,30 90,42 130,50 170,68 230,82" fill="none" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="123" y="42" width="14" height="16" fill="#ef4444" rx="1"/>
+  <text x="5" y="40" fill="#ef4444" font-size="9">支撐→被跌破</text>
+  <text x="165" y="84" fill="#ef4444" font-size="9">收盤在下方</text>
+</svg>
+<div style="font-size:11px;color:#94a3b8">🔴 收盤跌破支撐線（非只觸及）<br>🔴 成交量放大（>1.5x均量）<br>🔴 下根K棒繼續跌無法回升<br>→ 賣出或停損</div>
+</div>
+
+<div style="background:#0a0e17;border:1px solid #f59e0b33;border-radius:8px;padding:14px">
+<div style="color:#f59e0b;font-weight:700;margin-bottom:8px">情況三：假突破（Fakeout）⚠️</div>
+<svg width="100%" height="90" viewBox="0 0 240 90" style="display:block;margin-bottom:8px">
+  <line x1="10" y1="48" x2="230" y2="48" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <polyline points="10,20 50,35 90,44 115,60 140,42 180,30 230,18" fill="none" stroke="#3b82f6" stroke-width="2"/>
+  <text x="108" y="72" fill="#f59e0b" font-size="9">短暫破位後拉回</text>
+  <text x="190" y="44" fill="#f59e0b" font-size="9">假突破</text>
+</svg>
+<div style="font-size:11px;color:#94a3b8">⚠️ 跌破支撐但量能不足<br>⚠️ 很快拉回支撐線上方<br>⚠️ 無後續大量拋售<br>→ 誘空陷阱，多方機會</div>
+</div>
+
+</div>
+
+<div style="background:#0a0e17;border-radius:8px;padding:16px">
+<div style="font-weight:700;color:#f59e0b;margin-bottom:10px">✅ 支撐有效性判斷清單（5個問題）</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="font-size:12px;color:#94a3b8;padding:8px;background:#131928;border-radius:6px"><b style="color:#3b82f6">① 收盤位置</b><br>收盤在支撐線上方？<br><span style="color:#10b981">是→仍然有效</span> <span style="color:#ef4444">否→需再觀察</span></div>
+<div style="font-size:12px;color:#94a3b8;padding:8px;background:#131928;border-radius:6px"><b style="color:#3b82f6">② 成交量</b><br>跌破時量是否放大（>1.5x）？<br><span style="color:#10b981">否→可能假突破</span> <span style="color:#ef4444">是→真突破風險</span></div>
+<div style="font-size:12px;color:#94a3b8;padding:8px;background:#131928;border-radius:6px"><b style="color:#3b82f6">③ K棒型態確認</b><br>有無錘子、吞噬、十字星？<br><span style="color:#10b981">有→反轉信號強</span> <span style="color:#ef4444">無→方向未定</span></div>
+<div style="font-size:12px;color:#94a3b8;padding:8px;background:#131928;border-radius:6px"><b style="color:#3b82f6">④ 下一根K棒</b><br>下根K棒確認了哪個方向？<br><span style="color:#10b981">陽線→支撐有效</span> <span style="color:#ef4444">陰線→突破確認</span></div>
+<div style="font-size:12px;color:#94a3b8;padding:8px;background:#131928;border-radius:6px;grid-column:1/-1"><b style="color:#3b82f6">⑤ 整體趨勢</b><br>上升趨勢中的支撐更有效（趨勢力量在支撐你）；下降趨勢中支撐容易被打穿（趨勢力量在對抗支撐）。</div>
+</div>
+</div>
+</div>`;
+}
+
+// 名詞大全資料
+const GLOSSARY_TERMS = [
+  // ── 技術指標類 ──────────────────────────────────────────
+  {cat:'indicator',name:'MA 移動平均線',en:'Moving Average',def:'過去N天收盤價的算術平均值，代表該時期的平均持有成本。',detail:'MA5=5日均線（週線觀念），MA20=20日均線（月線觀念），MA60=季線。當短期MA在長期MA上方稱「多頭排列」，反之為空頭排列。',example:'若MA5>MA20>MA60，代表近期動能強於中期、中期強於長期，趨勢健康看多。',related:'EMA, 均線排列, 金叉, 死叉'},
+  {cat:'indicator',name:'EMA 指數移動平均',en:'Exponential Moving Average',def:'給予近期資料更高權重的移動平均線，對價格變化反應更快速。',detail:'EMA8和EMA21是Steinhardt策略的核心：EMA8在EMA21上方=短期動能強，是做多的基本前提。',example:'NVDA今日EMA8=890, EMA21=875，EMA8>EMA21代表近期買盤強過中期趨勢，多頭信號。',related:'MA, MACD（MACD本質是兩條EMA的差值）'},
+  {cat:'indicator',name:'MACD',en:'Moving Average Convergence Divergence',def:'快速EMA（12日）減去慢速EMA（26日）的差值，搭配信號線（MACD的9日EMA）和柱狀圖。',detail:'MACD線在0軸上方代表多方動能；MACD線穿越信號線向上為金叉（買訊）；柱狀圖縮短代表動能減弱。',example:'若MACD=+2.5且剛穿越信號線，搭配Schwartz突破信號，代表動能確認，勝率提高。',related:'EMA, 金叉, 動能指標'},
+  {cat:'indicator',name:'RSI',en:'Relative Strength Index',def:'相對強弱指標，計算過去14天漲跌幅的相對強度，數值0-100。',detail:'RSI>70=超買（漲太快可能回調），RSI<30=超賣（跌太快可能反彈），RSI=50是多空分界線。背離信號是最強的應用。',example:'AAPL價格創新低但RSI從28反彈至35（不創新低），這就是「多頭背離」，代表下跌動能衰竭。',related:'背離(Divergence), KD, 超買超賣'},
+  {cat:'indicator',name:'KD隨機指標',en:'Stochastic Oscillator',def:'比較收盤價與一段時期最高最低價的關係，反映市場超買超賣程度。',detail:'K值和D值都在0-100，D>80超買，D<20超賣。K向上穿越D為金叉，向下穿越為死叉。KD在高位死叉比RSI>70更精準預示回調。',example:'股價在高點，KD=88且K剛向下穿越D，死叉加上超買區，代表短線風險高，考慮減倉。',related:'RSI, 超買超賣'},
+  {cat:'indicator',name:'布林通道',en:'Bollinger Bands (BB)',def:'中軌（MA20）±2個標準差構成的三條線，統計上95%的價格在帶內運動。',detail:'帶寬收縮（Squeeze）代表即將大幅波動；觸及下軌是超賣支撐；觸及上軌不等於立刻做空（趨勢時會沿帶走）。',example:'TSLA布林帶寬從8%縮到3%，Squeeze狀態。下一根放量突破上軌=買訊，跌破下軌=賣訊。',related:'標準差, MA20, Squeeze'},
+  {cat:'indicator',name:'ATR 真實波幅',en:'Average True Range',def:'衡量股票每日平均波動幅度的指標，代表「正常的噪音範圍」。',detail:'ATR不顯示方向，只顯示波動大小。停損距離設在1-2個ATR，確保正常波動不會觸發停損。ATR高=股票波動大，需更寬停損。',example:'NVDA的ATR=25美元，代表每天正常漲跌約25美元。若進場在890，停損設在865（890-25），讓正常波動空間。',related:'停損設置, 倉位計算, 波動率'},
+  {cat:'indicator',name:'VWAP 量加權平均價',en:'Volume Weighted Average Price',def:'以成交量為權重計算的當日平均成交價，代表機構的真實成本基準。',detail:'機構通常以VWAP為基準買賣：股價高於VWAP=機構願意在此買→支撐；低於VWAP=機構賣出壓力。常用於日內交易。',example:'開盤後AAPL在VWAP（185美元）附近震盪，若多方守住VWAP回彈=做多信號；跌破VWAP=謹慎。',related:'支撐壓力, 日內交易, 機構行為'},
+  {cat:'indicator',name:'OBV 能量潮',en:'On-Balance Volume',def:'累積成交量指標：上漲日加上成交量，下跌日減去成交量，追蹤資金流向。',detail:'OBV上升但股價橫盤=積累（主力買進），可能即將拉升；OBV下降但股價橫盤=派發（主力出貨），可能即將下跌。',example:'MSFT連跌三日但OBV持續上升，代表雖然價格跌但成交量更多在上漲日（主力在默默買），底部信號。',related:'成交量, 資金流向, 型態確認'},
+  {cat:'indicator',name:'Fibonacci 回撤',en:'Fibonacci Retracement',def:'利用費波那契數列比例（23.6%, 38.2%, 50%, 61.8%, 78.6%）標示潛在支撐壓力位。',detail:'趨勢行情中，回調到38.2%是健康回調（強趨勢），回調到50%是正常，回調到61.8%是測試底部極限。超過78.6%代表趨勢可能反轉。',example:'NVDA從700漲到1000（漲300點），回調38.2%=886（支撐），50%=850（重要支撐），61.8%=814（底線）。',related:'支撐壓力, 趨勢結構'},
+  {cat:'indicator',name:'Pivot Point 樞紐點',en:'Pivot Point',def:'根據前日高低收計算出的當日關鍵支撐壓力價位：Pivot=(H+L+C)/3。',detail:'Pivot上方：R1=2P-L，R2=P+(H-L)；Pivot下方：S1=2P-H，S2=P-(H-L)。日內交易者常將Pivot作為方向指引。',related:'支撐壓力, 日內交易'},
+  {cat:'indicator',name:'成交量',en:'Volume',def:'在特定時間內交易的股票份數，是市場對某個價格水平「認可程度」的直接反映。',detail:'量是一切型態信號的確認工具。突破要放量（>1.5x均量），反轉要放量，整理要縮量。縮量突破是假訊號。',example:'股票突破20日高點但成交量只有均量60%，不符合Schwartz策略的量能確認條件，不進場。',related:'量價關係, 突破確認'},
+  {cat:'indicator',name:'量比',en:'Volume Ratio',def:'當日成交量與過去5日或10日平均成交量的比值。量比>2通常視為「放量」。',detail:'量比=1代表成交量正常；量比>1.5=開始放量；量比>2=明顯放量；量比>3=爆量（注意：有時是出貨）。',related:'成交量, 突破確認'},
+
+  // ── 型態與結構類 ──────────────────────────────────────
+  {cat:'pattern',name:'支撐',en:'Support',def:'買方力量足以吸收賣壓、阻止價格進一步下跌的價格區域。',detail:'支撐是「區域」不是「線」——通常是前期低點附近±1-2%的範圍。測試次數越多該支撐越重要（更多人記住它）。',example:'AAPL在175-177美元區間三次找到買盤反彈，這個區域就是有效支撐。進場在176觸及時，停損在175以下。',related:'壓力, 支撐壓力互換, 布林下軌, MA20'},
+  {cat:'pattern',name:'壓力',en:'Resistance',def:'賣方力量足以壓制買盤、阻止價格進一步上漲的價格區域。',detail:'壓力通常來自：被套牢的投資者想解套（到價位就賣）、前期高點、整數關卡（如100、200）、均線。',example:'TSLA在250美元附近四次無法站穩，每次接近250就有大賣單。這是強壓力位，突破需要強量能。',related:'支撐, 突破, 頭肩頂頸線'},
+  {cat:'pattern',name:'突破',en:'Breakout',def:'價格有效穿越重要支撐或壓力位，通常伴隨成交量放大。',detail:'Schwartz策略的核心就是「突破20日高點」。有效突破三要素：①收盤確認（非只觸及）②量能放大>1.5x③下根K棒不跌回。',example:'NVDA在890突破20日高點880，成交量是均量1.8倍，次日開盤在885（未跌回880以下），是有效突破。',related:'假突破, 量能確認, Schwartz策略'},
+  {cat:'pattern',name:'假突破',en:'Fakeout / Bull Trap',def:'價格短暫突破重要位置後迅速回落，是誘騙交易者的陷阱。',detail:'假突破常見於：①縮量突破（量不夠大）②收盤未守住（僅日內突破）③突破後下一根K棒跌回。做市商常用假突破來收集流動性。',example:'股票突破壓力185美元但收盤跌回183，成交量只有均量80%。次日繼續跌→典型假突破，追進的人被套。',related:'突破, 量能確認, Bull Trap'},
+  {cat:'pattern',name:'趨勢線',en:'Trend Line',def:'連接上升趨勢的更高低點（Higher Lows）或下降趨勢的更低高點（Lower Highs）的斜線。',detail:'上升趨勢線需要至少2個HL確認，越多觸及點越有效。跌破上升趨勢線是BOS信號。趨勢線越陡，跌破後影響越大。',example:'META連接3個Higher Low：130、145、158，趨勢線斜率向上，只要不跌破趨勢線就繼續持多。',related:'趨勢結構, BOS, 支撐'},
+  {cat:'pattern',name:'頸線',en:'Neckline',def:'頭肩頂/底和雙重頂/底型態中，連接兩個肩部底部（或頂部）的水平線，是確認型態的關鍵。',detail:'頸線突破後型態確認，目標距離=頭部到頸線的高度。常成為突破後的新支撐/壓力。',related:'頭肩頂, 雙重頂, 支撐壓力互換'},
+  {cat:'pattern',name:'Higher High / Higher Low',en:'HH / HL',def:'上升趨勢的定義：每一波高點比前一波高（HH），每一波低點也比前一波高（HL）。',detail:'只要HH+HL結構未被打破，上升趨勢就持續。Schwartz策略建立在順著HH/HL方向交易的邏輯上。',example:'波峰依序：150→170→165（HL）→190（HH）→185（HL）→210（HH）。每次回調到HL附近是買點。',related:'Lower High/Lower Low, 趨勢結構, BOS'},
+  {cat:'pattern',name:'Lower High / Lower Low',en:'LH / LL',def:'下降趨勢的定義：每一波高點比前一波低（LH），每一波低點也比前一波低（LL）。',detail:'LH+LL結構代表空方持續控制市場，不應做多。等到出現第一個不創新低的HL才考慮轉多。',related:'Higher High/Higher Low, 趨勢結構'},
+  {cat:'pattern',name:'Break of Structure (BOS)',en:'BOS',def:'趨勢結構被打破的關鍵信號：上升趨勢中跌破前一個Higher Low，或下降趨勢中突破前一個Lower High。',detail:'BOS是趨勢可能反轉的早期警告。Schwartz說不要預測頂底，但BOS提供了客觀的「趨勢改變」標準。',example:'上升趨勢中前一個HL是150，今日收盤跌到148（跌破150），BOS出現，原有多頭應考慮停損出場。',related:'Change of Character (ChoCH), 趨勢結構, Higher Low'},
+  {cat:'pattern',name:'Change of Character (ChoCH)',en:'ChoCH',def:'比BOS更早的趨勢轉折信號：在下降趨勢中出現第一個Higher High，代表多方開始反抗。',detail:'ChoCH通常發生在底部，是進場做多的早期信號（比等BOS確認的位置更好，但風險也更高）。',related:'BOS, 趨勢反轉'},
+  {cat:'pattern',name:'整理/收斂',en:'Consolidation / Base',def:'價格在一定範圍內橫向波動，成交量縮減，代表多空雙方暫時達到平衡。',detail:'整理是趨勢的休息，不是反轉。在強趨勢中整理後通常繼續原方向。整理越久，突破後的能量越強。',example:'NVDA在880-920整理了3週，成交量逐漸萎縮，像「彈簧被壓縮」。等突破920時放量做多。',related:'布林帶Squeeze, 三角形整理, 旗形整理'},
+
+  // ── 交易策略類 ──────────────────────────────────────────
+  {cat:'strategy',name:'Schwartz 突破策略',en:'Schwartz Breakout',def:'Marty Schwartz的核心做多策略：股價突破20日最高點，並配合成交量放大確認。',detail:'完整條件：①收盤突破20日高點②成交量>均量1.5倍③RSI在50-75（動能存在不過熱）④MACD正向④整體市場環境健康。',example:'NVDA 20日高點=885，今日收盤=892（+0.8%），成交量1.7x均量，RSI=64，MACD正向→完整Schwartz信號。',related:'突破, 量能確認, 20日高點'},
+  {cat:'strategy',name:'Steinhardt 動量策略',en:'Steinhardt Momentum',def:'Michael Steinhardt的動量策略：EMA8>EMA21多頭排列，配合基本面「差異化認知」選股。',detail:'核心思想是Variant Perception（差異化認知）：找到市場共識錯誤的股票。技術面：EMA8>EMA21，RSI>50，MACD正向。',example:'市場認為MSFT雲端成長放緩（共識），但實際數據顯示Azure加速（差異化認知）→逆市場預期做多。',related:'EMA, 動量, 差異化認知, Variant Perception'},
+  {cat:'strategy',name:'順勢交易',en:'Trend Following',def:'在已確認的趨勢方向上交易，不預測頂部或底部，而是跟隨趨勢直到它結束。',detail:'「趨勢是你的朋友，直到它結束」。Schwartz和Steinhardt都是趨勢交易者。核心原則：不與趨勢作對，在回調時找機會順勢進場。',example:'大盤SPY在MA20上方且RSI>50，此時優先做多個股，不做空。即使個股有看跌信號，也要考慮大環境。',related:'趨勢結構, 逆勢交易, Schwartz策略'},
+  {cat:'strategy',name:'逆勢交易',en:'Counter-Trend Trading',def:'試圖在趨勢即將反轉的關鍵位置進場，買在低點賣在高點的交易策略。',detail:'風險極高，需要更精確的時機判斷。必備條件：強力K棒反轉信號+超買超賣確認+量能配合。勝率通常低於順勢交易。',detail2:'Schwartz明確說：「不要試圖接住下跌的刀。」除非你有非常充分的理由，否則不建議短線交易者逆勢操作。',related:'順勢交易, RSI背離, 反轉型態'},
+  {cat:'strategy',name:'做多（Long）',en:'Long / Going Long',def:'買入股票期望價格上漲，是最基本的交易方向。',detail:'做多的獲利 = (賣出價 - 買入價) × 股數。最大虧損理論上是買入金額（股票跌到0），但實際通過停損控制。',example:'在180買入AAPL 100股，在192賣出，獲利(192-180)×100=1200美元。',related:'做空, 停損, 停利'},
+  {cat:'strategy',name:'做空（Short）',en:'Short Selling',def:'借入股票賣出，期望價格下跌後低價買回，賺取差價的交易方式。',detail:'做空的獲利 = (賣出價 - 買回價) × 股數。做空理論上虧損無限（股票可以漲到任意高）。需要券商提供融券。',detail2:'⚠️ 做空風險極高，因為股票漲幅無上限，Short Squeeze（軋空）可造成爆發性損失。初學者不建議做空。',related:'做多, 融券, 停損'},
+  {cat:'strategy',name:'進場（Entry）',en:'Entry',def:'決定買入或賣出某個標的的時機和價格。',detail:'好的進場點需要：①明確的觸發信號（突破/反彈）②可定義的停損位③合理的風報比。衝動進場是最常見的錯誤。',related:'出場, 停損, 風報比'},
+  {cat:'strategy',name:'出場（Exit）',en:'Exit',def:'決定平倉（賣出已持有部位）的時機和方式，包含停利出場和停損出場。',detail:'計畫性出場（在進場前就決定何時出場）遠比臨時決定好。三種出場方式：①時間停損（持倉超過N天）②技術停損（跌破支撐）③目標停利（到達目標價）。',related:'停損, 停利, 移動停損'},
+  {cat:'strategy',name:'加碼（Pyramid）',en:'Pyramiding',def:'在持倉已獲利的前提下，分批增加倉位的策略。',detail:'正確的加碼是在獲利時加，而非虧損時加（那叫攤平）。加碼量應遞減：首倉40%，第一次加碼30%，第二次加碼20%。每次加碼後移動停損到上次加碼點。',example:'100元進場100股（初始），漲到110加購80股，漲到120再加購50股。總持倉230股，均成本≈107。',related:'倉位管理, 停損移動, 反馬丁格爾'},
+  {cat:'strategy',name:'Variant Perception 差異化認知',en:'Variant Perception',def:'Steinhardt的核心概念：找到你的判斷與市場共識不同的地方，且你是對的。',detail:'如果你和市場共識相同，你沒有優勢。差異化認知的來源：提前看到數據改善、市場錯誤定價、情緒面超賣造成的低估。',example:'市場認為某半導體股PE過高應回調（共識），但你看到AI需求超越預期、庫存去化完成（差異化認知）→逆市場做多。',related:'Steinhardt策略, 基本面分析'},
+
+  // ── 市場機制類 ──────────────────────────────────────────
+  {cat:'market',name:'流動性',en:'Liquidity',def:'市場中能夠快速以合理價格完成買賣的難易程度。',detail:'高流動性：大型股、熱門ETF，可以大量買賣不影響股價。低流動性：小型股、冷門股，大單可能造成劇烈波動。短線交易優先選高流動性標的。',example:'S&P500成分股如AAPL日成交量億級，進出容易。而日成交量只有10萬股的小型股，10萬股的買單可能推高5%。',related:'做市商, 滑點'},
+  {cat:'market',name:'做市商',en:'Market Maker',def:'提供雙邊買賣報價（Ask和Bid）的機構，確保市場流動性，賺取買賣價差（Spread）。',detail:'做市商不是「大戶莊家」的概念。他們是中性的流動性提供者，通過高頻交易和對沖管理風險。但他們的行為會影響短期價格（如假突破）。',related:'流動性, 買賣價差'},
+  {cat:'market',name:'開盤30分鐘規則',en:'First 30-Minute Rule',def:'美股開盤後前30分鐘（9:30-10:00 ET）情緒化交易多，機構通常等穩定後才大量進出。',detail:'Schwartz明確建議：不在開盤30分鐘內追高或追低。因為：①隔夜消息導致情緒化開盤②做市商利用開盤時收集流動性③開盤後通常有一次回調再確認方向。',example:'NVDA因財報好消息跳空高開5%，Schwartz建議等30分鐘後確認是否守住跳空缺口再進場，而非立刻追高。',related:'假突破, 開盤跳空, Schwartz策略'},
+  {cat:'market',name:'盤前/盤後',en:'Pre-Market / After-Hours',def:'正式交易時間外（美股9:30前和16:00後）進行的延伸交易，流動性低、波動大。',detail:'財報通常在盤後公布，盤後的劇烈反應往往在次日開盤後「填補」或「反轉」。盤前/後的成交量遠低於正市場，不能代表真正的市場共識。',related:'開盤30分鐘規則, 流動性, 財報'},
+  {cat:'market',name:'除息/除權',en:'Ex-Dividend / Ex-Rights',def:'股票除息（發放現金股利）或除權（發放股票股利）的當日，股價會相應調低。',detail:'除息=現金股利，股價開盤調低股利金額（如配息2元，股價跌2元）。這不是真正的下跌，是權利轉移。技術分析的歷史資料應使用「還原權值」後的數據。',related:'股利, 技術分析資料品質'},
+  {cat:'market',name:'融資',en:'Margin Trading',def:'向券商借款放大購買力，可以用1元資金買入2元（甚至更多）的股票。',detail:'槓桿放大獲利也放大虧損。1:2槓桿時，股票跌50%即爆倉。短線交易使用融資需要更嚴格的停損紀律。',detail2:'⚠️ 初學者嚴格禁止使用融資，直到你有穩定的獲利記錄和嚴格的停損習慣。',related:'停損, 倉位管理, 風控'},
+  {cat:'market',name:'Short Squeeze 軋空',en:'Short Squeeze',def:'當空頭（做空者）被迫大量買回造成股價急速飆升的現象。',detail:'做空比例高的股票，一旦有利好消息，空頭被迫回補→推高股價→更多空頭被強制平倉→股價再度飆升。GameStop 2021年是最著名案例。',example:'GameStop空頭比例140%（超過流通股），散戶聯合做多，造成股價從20飆到480。空頭損失慘重。',related:'融券, 流動性, 做空'},
+
+  // ── 風控類 ──────────────────────────────────────────────
+  {cat:'risk',name:'停損',en:'Stop Loss',def:'預先設定的虧損出場點，當價格達到此水平時無條件出場，保護資金不繼續虧損。',detail:'停損不是「可選」的，是交易的核心紀律。設置方式：①ATR法=進場價-1.5ATR②技術法=跌破關鍵支撐③百分比法=買入價-X%（不推薦，忽略股票特性）。',example:'以890買入NVDA，ATR=25，停損設在865（890-25）。若跌到865立刻出場，不等不看不猶豫。',related:'ATR, 風報比, 倉位計算'},
+  {cat:'risk',name:'停利',en:'Take Profit',def:'預先設定的獲利出場點，當價格達到目標時出場鎖住獲利。',detail:'停利分：①固定目標（1R/2R/3R）②移動停利（股價繼續漲就跟著移動停損）③技術目標（到達壓力位或型態目標）。',example:'在890買入NVDA，停損865（風險25美元=1R），設定：目標一915（+25=1:1），目標二940（+50=1:2）。',related:'停損, 風報比, 移動停損'},
+  {cat:'risk',name:'移動停損',en:'Trailing Stop',def:'隨著股價上漲，將停損線往上移動，鎖住部分利潤的策略。',detail:'移動停損有多種設置方式：①固定點距移動②百分比移動③基於ATR移動④均線移動（如MA8跌破出場）。移動停損讓你的虧損上限是固定的，但獲利空間是無限的。',example:'進場890，初始停損865（ATR法）。股價漲到920，將停損移至895（原進場點上方5美元）→確保不虧損。再漲到950，停損移至925→鎖住35美元獲利。',related:'停損, 停利, ATR'},
+  {cat:'risk',name:'風報比',en:'Risk/Reward Ratio (R:R)',def:'潛在獲利與潛在虧損的比值，是評估每筆交易是否值得進場的核心指標。',detail:'1R=你在這筆交易中願意冒的最大風險（進場價-停損價）。目標2R=獲利是風險的2倍，目標3R=獲利是風險的3倍。即使勝率只有40%，只要R:R達到2:1，長期下來仍然獲利。',example:'買入890，停損865（風險25=1R），目標一915（獲利25=1:1），目標二940（獲利50=2R）。目標二的R:R=2:1。即使只有50%勝率，2:1的R:R長期是正期望值。',related:'停損, 停利, 1%法則, Kelly Criterion'},
+  {cat:'risk',name:'1% 風控法則',en:'1% Risk Rule',def:'每筆交易的最大虧損不超過總資金的1%，是保護資金的核心法則。',detail:'這個法則不限制倉位大小，而是限制停損距離。倉位大小=（資金×1%）÷（進場價-停損價）。即使連續虧損10次，帳戶仍剩90.4%。',example:'資金10萬美元，每次最多虧1000美元。NVDA進場890，停損865（差25），倉位=1000÷25=40股，投入金額=40×890=35600（占倉35.6%）。',related:'風報比, 倉位計算, 停損'},
+  {cat:'risk',name:'1R / 2R / 3R',en:'R-multiples',def:'用「R」（每筆交易的風險單位）來衡量獲利和虧損的統一標準。',detail:'1R=一個風險單位（你設定的最大停損金額）。獲利1R=賺到等同風險金額的利潤，獲利2R=賺到2倍風險。這個標準讓不同股票、不同倉位的績效可以統一比較。',example:'5月進行10筆交易：虧2R, 贏3R, 虧1R, 贏4R, 贏2R... 不管每筆投入多少，可以統一用R來算總績效。',related:'風報比, 1%法則, 績效評估'},
+  {cat:'risk',name:'倉位大小',en:'Position Sizing',def:'決定每筆交易投入多少資金的計算方法，是風控的核心工具。',detail:'公式：股數 = （帳戶資金 × 風險比例%）÷ （進場價 - 停損價）。正確的倉位大小讓每筆交易的實際虧損金額固定，而非讓股票波動決定你虧多少。',example:'帳戶20萬，1%風控=2000。TSLA進場250，停損235（差15），股數=2000÷15=133股，投入金額=133×250=33250。',related:'1%法則, 停損, ATR, Kelly Criterion'},
+  {cat:'risk',name:'Kelly Criterion',en:'Kelly Criterion',def:'根據勝率和賠率計算最佳倉位比例的數學公式：f* = W - (1-W)/R。',detail:'W=勝率，R=平均獲利/平均虧損。f*=最佳倉位比例。注意：Full Kelly波動太大，實務用Half Kelly（f*/2）。Kelly為負=不應該交易這個策略。',example:'勝率55%，平均獲利2R，平均虧損1R，則R=2。f* = 0.55 - 0.45/2 = 0.55 - 0.225 = 0.325（32.5%）。Half Kelly = 16%。',related:'勝率, 風報比, 1%法則'},
+
+  // ── 支撐壓力判斷類 ─────────────────────────────────────
+  {cat:'sr',name:'支撐壓力互換',en:'Role Reversal',def:'當支撐位被有效跌破後，它自動轉變為新的壓力位；當壓力位被有效突破後，轉變為新的支撐位。',detail:'這是技術分析中最重要的概念之一。原理：在支撐買入的人（已虧損）會在股價回升到他們的成本時賣出（解套賣壓），所以原支撐就變成了壓力。',example:'AAPL在150有強支撐，三次反彈後跌破150（收盤148）。一週後反彈到149，在150附近遭遇賣壓下跌。150已由支撐變壓力。',related:'支撐, 壓力, 突破確認'},
+  {cat:'sr',name:'心理關卡',en:'Psychological Level',def:'整數價位（如100、200、500）因為人類心理偏好整數而形成的支撐壓力位。',detail:'機構常在整數位附近設置大量限價單（買入或賣出），形成自我實現的支撐壓力。越「整」的數字越重要（100比105更重要）。',example:'NVDA在500、600、700、800都曾有明顯的支撐壓力，因為大量交易者設定在整數位的停損和目標。',related:'支撐, 壓力, 機構行為'},
+  {cat:'sr',name:'前高前低',en:'Previous High / Low',def:'歷史上的重要高點和低點，因為市場對這些位置有集體記憶，常成為未來的支撐壓力。',detail:'「前高是壓力，前低是支撐」是基本原則。52週高點、歷史高點（All-Time High, ATH）都是重要壓力。在ATH突破時，通常沒有上方壓力，股價可以快速上漲。',related:'支撐壓力互換, 突破'},
+  {cat:'sr',name:'成交量密集區',en:'Volume by Price / HVN',def:'在某個價格範圍內有大量歷史成交的區域，因為大量持有者的成本在此，會形成強力支撐壓力。',detail:'可以在股票圖表的量價分布圖（Volume Profile）看到。HVN（High Volume Node）=高成交量節點，是強支撐壓力。LVN（Low Volume Node）=低成交量節點，是價格快速移動區。',related:'成交量, VWAP, 支撐'},
+];
+
+let _glossaryCat = 'all';
+function setGlossaryCat(cat, btn) {
+  _glossaryCat = cat;
+  document.querySelectorAll('#glossary-cats button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  filterGlossary();
+}
+function filterGlossary() {
+  const q = (document.getElementById('glossary-search')?.value || '').toLowerCase();
+  const srGuide = document.getElementById('sr-guide-card');
+  const filtered = GLOSSARY_TERMS.filter(t => {
+    if (_glossaryCat !== 'all' && t.cat !== _glossaryCat) return false;
+    if (!q) return true;
+    return (t.name+t.en+t.def+t.detail+(t.example||'')+(t.related||'')).toLowerCase().includes(q);
+  });
+  if (srGuide) srGuide.style.display = (_glossaryCat === 'all' || _glossaryCat === 'sr') ? '' : 'none';
+  const el = document.getElementById('glossary-list');
+  if (!el) return;
+  if (!filtered.length) { el.innerHTML = '<div style="color:#94a3b8;padding:20px;grid-column:1/-1">找不到符合的名詞，請嘗試其他關鍵字。</div>'; return; }
+  const catColors = {indicator:'#3b82f6',pattern:'#f59e0b',strategy:'#10b981',market:'#a78bfa',risk:'#ef4444',sr:'#06b6d4'};
+  const catLabels = {indicator:'技術指標',pattern:'型態結構',strategy:'交易策略',market:'市場機制',risk:'風控',sr:'支撐壓力'};
+  el.innerHTML = filtered.map(t => {
+    const c = catColors[t.cat]||'#94a3b8';
+    return '<div style="background:#0a0e17;border-radius:8px;padding:14px;border:1px solid #1e2a3a">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
+        '<div><span style="font-weight:700;font-size:14px">'+t.name+'</span>'+
+        '<span style="font-size:11px;color:#64748b;margin-left:6px">'+t.en+'</span></div>'+
+        '<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:'+c+'22;color:'+c+';white-space:nowrap">'+catLabels[t.cat]+'</span>'+
+      '</div>'+
+      '<div style="font-size:12px;color:#e2e8f0;margin-bottom:6px;font-style:italic">'+t.def+'</div>'+
+      '<div style="font-size:11px;color:#94a3b8;margin-bottom:'+(t.example?'4px':'0')+'">'+t.detail+'</div>'+
+      (t.detail2?'<div style="font-size:11px;color:#f59e0b;margin-bottom:4px">'+t.detail2+'</div>':'')+
+      (t.example?'<div style="font-size:11px;background:#131928;border-radius:4px;padding:6px 8px;color:#a3e635;margin-bottom:4px"><b>📌 範例：</b>'+t.example+'</div>':'')+
+      (t.related?'<div style="font-size:10px;color:#64748b">→ 相關：'+t.related+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+function initGlossarySearch() {
+  _glossaryCat = 'all';
+  document.querySelectorAll('#glossary-cats button').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all'));
+  filterGlossary();
 }
 
 // ============ DASHBOARD + ENTRY GUIDE ============
