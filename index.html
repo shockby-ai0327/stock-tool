@@ -181,21 +181,16 @@ firebase.initializeApp(_fbConfig);
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="logo">📊 智慧選股</div>
+    <div class="logo">智慧選股</div>
     <nav>
-      <button onclick="showPage('dashboard')">🏠 首頁</button>
-      <button class="active" onclick="showPage('stock')">📈 個股分析</button>
-      <button onclick="showPage('indices')">🏛️ 大盤指數</button>
-      <button onclick="showPage('sentiment')">🧠 市場情緒</button>
-      <button onclick="showPage('scanner')">📡 掃描器</button>
-      <button onclick="showPage('news')">📰 國際新聞</button>
-      <button onclick="showPage('journal')">📝 交易日誌</button>
-      <button onclick="showPage('risk')">🛡️ 風控中心</button>
-      <button onclick="showPage('performance')">📊 績效分析</button>
-      <button onclick="showPage('calc')">🧮 試算器</button>
-      <button onclick="showPage('industry')">🏭 產業地圖</button>
-      <button onclick="showPage('heatmap')">🔥 熱力圖</button>
-      <button onclick="showPage('education')">📚 短線教學</button>
+      <button onclick="showPage('dashboard')">首頁</button>
+      <button class="active" onclick="showPage('stock')">個股分析</button>
+      <button onclick="showPage('indices')">大盤指數</button>
+      <button onclick="showPage('scanner')">掃描器</button>
+      <button onclick="showPage('news')">國際新聞</button>
+      <button onclick="showPage('journal')">交易日誌</button>
+      <button onclick="showPage('industry')">產業地圖</button>
+      <button onclick="showPage('education')">短線教學</button>
     </nav>
     <!-- 帳號 / 雲端同步 -->
     <div class="auth-section">
@@ -217,19 +212,14 @@ firebase.initializeApp(_fbConfig);
     </div>
   </div>
   <div class="mobile-nav" id="mobile-nav">
-    <button onclick="showPage('dashboard')">🏠 首頁</button>
-    <button class="active" onclick="showPage('stock')">📈 個股</button>
-    <button onclick="showPage('indices')">🏛️ 指數</button>
-    <button onclick="showPage('sentiment')">🧠 情緒</button>
-    <button onclick="showPage('scanner')">📡 掃描</button>
-    <button onclick="showPage('news')">📰 新聞</button>
-    <button onclick="showPage('journal')">📝 日誌</button>
-    <button onclick="showPage('risk')">🛡️ 風控</button>
-    <button onclick="showPage('performance')">📊 績效</button>
-    <button onclick="showPage('calc')">🧮 試算</button>
-    <button onclick="showPage('industry')">🏭 產業</button>
-    <button onclick="showPage('heatmap')">🔥 熱力圖</button>
-    <button onclick="showPage('education')">📚 教學</button>
+    <button onclick="showPage('dashboard')">首頁</button>
+    <button class="active" onclick="showPage('stock')">個股</button>
+    <button onclick="showPage('indices')">指數</button>
+    <button onclick="showPage('scanner')">掃描</button>
+    <button onclick="showPage('news')">新聞</button>
+    <button onclick="showPage('journal')">日誌</button>
+    <button onclick="showPage('industry')">產業</button>
+    <button onclick="showPage('education')">教學</button>
   </div>
   <div class="main" style="padding-bottom:44px">
     <div id="page-dashboard" class="page">
@@ -262,6 +252,7 @@ firebase.initializeApp(_fbConfig);
       </div>
 
       <!-- T交易精選 -->
+
       <div class="card" style="margin-top:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div>
@@ -274,6 +265,15 @@ firebase.initializeApp(_fbConfig);
           <div style="text-align:center;padding:20px;color:var(--muted);grid-column:1/-1">載入中...</div>
         </div>
       </div>
+
+      <!-- 國際新聞摘要 -->
+      <div class="card" style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">國際財經要聞</h3>
+          <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="renderDashNews(true)">重新整理</button>
+        </div>
+        <div id="dash-news-list"><div style="text-align:center;padding:20px;color:var(--muted)">載入中...</div></div>
+      </div>
     </div>
     <div id="page-stock" class="page active">
       <div class="search-box">
@@ -282,8 +282,15 @@ firebase.initializeApp(_fbConfig);
       </div>
       <div id="stock-result"></div>
     </div>
-    <div id="page-indices" class="page"><h2 style="margin-bottom:20px">台美股大盤指數</h2><div id="indices-content"></div></div>
-    <div id="page-sentiment" class="page"><h2 style="margin-bottom:20px">市場情緒指數</h2><div id="sentiment-content"></div></div>
+    <div id="page-indices" class="page">
+      <h2 style="margin-bottom:16px">大盤指數</h2>
+      <div class="tab-bar" id="indices-tabs">
+        <button class="active" onclick="switchIndicesTab('indices')">大盤指數</button>
+        <button onclick="switchIndicesTab('sentiment')">市場情緒</button>
+      </div>
+      <div id="indices-content"></div>
+      <div id="sentiment-content" style="display:none"></div>
+    </div>
     <div id="page-news" class="page">
       <h2 style="margin-bottom:20px">每日國際財經新聞</h2>
       <div class="tab-bar" id="news-tabs">
@@ -295,8 +302,14 @@ firebase.initializeApp(_fbConfig);
       <div id="news-content"></div>
     </div>
     <div id="page-journal" class="page">
-      <h2 style="margin-bottom:20px">交易日誌</h2>
-      <div style="background:rgba(249,115,22,.12);border:1px solid var(--orange);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--orange);line-height:1.6">⚠️ 交易紀錄儲存於瀏覽器 localStorage，清除瀏覽器資料或更換裝置將導致紀錄遺失。建議定期手動備份重要資料。</div>
+      <h2 style="margin-bottom:16px">交易日誌</h2>
+      <div class="tab-bar" id="journal-tabs">
+        <button class="active" onclick="switchJournalTab('records')">交易記錄</button>
+        <button onclick="switchJournalTab('risk')">風控設定</button>
+        <button onclick="switchJournalTab('performance')">績效分析</button>
+      </div>
+      <div id="journal-tab-records">
+      <div style="background:rgba(249,115,22,.12);border:1px solid var(--orange);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--orange);line-height:1.6">交易紀錄儲存於瀏覽器 localStorage，清除瀏覽器資料或更換裝置將導致紀錄遺失。建議定期手動備份重要資料。</div>
       <div class="card">
         <h3>新增交易紀錄</h3>
         <div class="journal-form">
@@ -310,57 +323,43 @@ firebase.initializeApp(_fbConfig);
           <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addJournal()">新增紀錄</button></div>
           <div class="form-group full"><label>備註</label><textarea id="j-notes" placeholder="交易理由、觀察..."></textarea></div>
         </div>
+        <div id="journal-atr-guide" style="display:none;margin-top:12px;padding:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px">
+          <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:10px">進場計算（ATR 參考）</div>
+          <div id="journal-atr-content"></div>
+        </div>
       </div>
       <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
-    </div>
-    <div id="page-calc" class="page">
-      <h2 style="margin-bottom:20px">股價試算器</h2>
-      <div class="card">
-        <h3>盈虧試算</h3>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">快速計算買賣股票的實際盈虧，含手續費與證交稅。</p>
-        <div class="journal-form" style="grid-template-columns:1fr 1fr">
-          <div class="form-group"><label>市場</label><select id="calc-market" onchange="calcMarketChange()"><option value="tw">台股</option><option value="us">美股</option></select></div>
-          <div class="form-group"><label>股數</label><input type="number" id="calc-qty" value="1000" min="1" step="1"></div>
-          <div class="form-group"><label>買入價格</label><input type="number" id="calc-buy" step="0.01" placeholder="買入價"></div>
-          <div class="form-group"><label>賣出價格</label><input type="number" id="calc-sell" step="0.01" placeholder="賣出價"></div>
-          <div class="form-group" id="calc-fee-group"><label>手續費折扣 <span style="font-size:11px;color:var(--muted)">(台股券商折扣)</span></label><select id="calc-discount"><option value="1">牌價 (0.1425%)</option><option value="0.6">6折 (0.0855%)</option><option value="0.5">5折 (0.07125%)</option><option value="0.38">3.8折 (0.054%)</option><option value="0.28" selected>2.8折 (0.0399%)</option><option value="0.2">2折 (0.0285%)</option><option value="0.15">1.5折 (0.02138%)</option><option value="0">0 (免手續費)</option></select></div>
-          <div class="form-group" id="calc-us-fee-group" style="display:none"><label>美股手續費率</label><input type="number" id="calc-us-fee" value="0.3" step="0.01" min="0"><span style="font-size:11px;color:var(--muted)">% (買賣各收)</span></div>
-          <div class="form-group full" style="margin-top:8px"><button class="btn btn-primary" onclick="calcProfit()" style="width:100%;padding:14px;font-size:16px">計算盈虧</button></div>
-        </div>
+      </div><!-- end journal-tab-records -->
+      <div id="journal-tab-risk" style="display:none">
+        <div id="risk-content"></div>
       </div>
-      <div id="calc-result"></div>
-      <div class="card" style="margin-top:16px">
-        <h3>📚 交易成本說明</h3>
-        <div class="edu-card">
-          <p><span class="edu-term">台股交易成本</span></p>
-          <p>① <b>手續費</b>：買進和賣出各收一次，牌價為成交金額的 <b>0.1425%</b>，但券商通常會打折（常見2.8折～6折），最低收 $20 元。</p>
-          <p>② <b>證交稅</b>：僅在<b>賣出</b>時收取，稅率為成交金額的 <b>0.3%</b>（ETF為0.1%），由政府徵收，無法打折。</p>
-          <p>③ 台股一張 = 1000 股。零股交易同樣收手續費和證交稅。</p>
-          <p style="margin-top:12px"><span class="edu-term">美股交易成本</span></p>
-          <p>① 多數海外券商（如複委託）收取 <b>買賣各 0.3%</b> 左右的手續費，有些有最低手續費門檻。</p>
-          <p>② 美股<b>無證交稅</b>。</p>
-          <p>③ 使用海外券商（如Interactive Brokers）手續費可更低，但需自行處理海外所得稅務。</p>
-          <p>④ 美股以「股」為單位交易，無「張」的概念，1股即可買賣。</p>
-        </div>
+      <div id="journal-tab-performance" style="display:none">
+        <div id="performance-content"></div>
       </div>
     </div>
-    <div id="page-industry" class="page"><h2 style="margin-bottom:20px">🏭 全球產業地圖</h2><div class="tab-bar" id="industry-tabs"><button class="active" onclick="loadIndustry('global')">🌍 全球產業</button><button onclick="loadIndustry('tw')">🇹🇼 台灣產業</button></div><div id="industry-content"></div></div>
-    <div id="page-heatmap" class="page"><h2 style="margin-bottom:20px">🔥 股票熱力圖</h2><div class="tab-bar" id="heatmap-tabs"><button class="active" onclick="loadHeatmap('us')">🇺🇸 美股</button><button onclick="loadHeatmap('tw')">🇹🇼 台股</button></div><div id="heatmap-content"></div></div>
+    <div id="page-industry" class="page">
+      <h2 style="margin-bottom:16px">產業地圖</h2>
+      <div class="tab-bar" id="industry-tabs">
+        <button class="active" onclick="switchIndustryTab('map')">全球產業</button>
+        <button onclick="switchIndustryTab('tw')">台灣產業</button>
+        <button onclick="switchIndustryTab('heatmap')">熱力圖</button>
+      </div>
+      <div id="industry-content"></div>
+      <div id="heatmap-content" style="display:none"></div>
+    </div>
     <div id="page-scanner" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-        <h2 style="margin:0">📡 短線掃描器</h2>
-        <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">
-          ⚡ 一鍵掃描（Schwartz + Steinhardt）
-        </button>
+        <h2 style="margin:0">掃描器</h2>
+        <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">一鍵掃描（Schwartz + Steinhardt）</button>
       </div>
       <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
       <div class="tab-bar" id="scanner-market-tabs">
-        <button class="active" onclick="switchScannerMarket('us')">🇺🇸 美股</button>
-        <button onclick="switchScannerMarket('tw')">🇹🇼 台股</button>
+        <button class="active" onclick="switchScannerMarket('us')">美股</button>
+        <button onclick="switchScannerMarket('tw')">台股</button>
       </div>
       <div class="tab-bar" id="scanner-tabs">
-        <button class="active" onclick="runScan('schwartz')" title="Marty Schwartz: 20日高點突破+量能確認+RSI 50-75+MACD正">⚡ Schwartz突破</button>
-        <button onclick="runScan('steinhardt')" title="Michael Steinhardt: EMA8>21>60均線多排+MACD擴張+RSI 50-70+基本面驗證">📈 Steinhardt動量</button>
+        <button class="active" onclick="runScan('schwartz')">Schwartz 突破</button>
+        <button onclick="runScan('steinhardt')">Steinhardt 動量</button>
       </div>
       <div class="card" id="scanner-results">
         <h3>掃描結果</h3>
@@ -368,28 +367,16 @@ firebase.initializeApp(_fbConfig);
       </div>
       <div class="card" id="scanner-watchlist" style="border:2px solid var(--accent)">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <h3>⚡ 今日標的（即時監控中）</h3>
+          <h3>今日標的（即時監控中）</h3>
           <span id="scanner-market-status"></span>
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-          ⚠️ 數據延遲約 15-20 秒，適合 15 分鐘以上級別的交易決策
-        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">數據延遲約 15-20 秒，適合 15 分鐘以上級別的交易決策</div>
         <div id="watchlist-cards"></div>
-        <div id="watchlist-empty" style="text-align:center;padding:30px;color:var(--muted)">
-          從上方掃描結果點擊 [+] 加入今日標的
-        </div>
+        <div id="watchlist-empty" style="text-align:center;padding:30px;color:var(--muted)">從上方掃描結果點擊 [+] 加入今日標的</div>
       </div>
     </div>
-    <div id="page-risk" class="page">
-      <h2 style="margin-bottom:20px">🛡️ 風控中心</h2>
-      <div id="risk-content"></div>
-    </div>
-    <div id="page-performance" class="page">
-      <h2 style="margin-bottom:20px">📊 績效分析</h2>
-      <div id="performance-content"></div>
-    </div>
     <div id="page-education" class="page">
-      <h2 style="margin-bottom:20px">📚 短線交易教學</h2>
+      <h2 style="margin-bottom:20px">短線交易教學</h2>
       <div id="education-content"></div>
     </div>
   </div>
@@ -700,7 +687,7 @@ async function multiChart(symbols) {
 }
 
 // ============ NAVIGATION ============
-const PAGES = ['dashboard', 'stock', 'indices', 'sentiment', 'scanner', 'news', 'journal', 'risk', 'performance', 'calc', 'industry', 'heatmap', 'education'];
+const PAGES = ['dashboard', 'stock', 'indices', 'scanner', 'news', 'journal', 'industry', 'education'];
 
 // Page re-render throttling — avoid redundant network fetches when switching pages quickly
 const _pageLastRender = {};
@@ -716,11 +703,19 @@ function _shouldRerender(name) {
 function _markRendered(name) { _pageLastRender[name] = Date.now(); }
 
 function showPage(name) {
+  // Redirect merged pages to their new homes
+  if (name === 'sentiment')   { showPage('indices');  setTimeout(() => switchIndicesTab('sentiment'), 50); return; }
+  if (name === 'risk')        { showPage('journal');  setTimeout(() => switchJournalTab('risk'), 50); return; }
+  if (name === 'performance') { showPage('journal');  setTimeout(() => switchJournalTab('performance'), 50); return; }
+  if (name === 'heatmap')     { showPage('industry'); setTimeout(() => switchIndustryTab('heatmap'), 50); return; }
+  if (name === 'calc')        { showPage('journal'); return; }
+
   _currentPage = name;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar nav button').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
+  const pageEl = document.getElementById('page-' + name);
+  if (pageEl) pageEl.classList.add('active');
   const idx = PAGES.indexOf(name);
   if (idx >= 0) {
     const sbBtns = document.querySelectorAll('.sidebar nav button');
@@ -728,20 +723,54 @@ function showPage(name) {
     if (sbBtns[idx]) sbBtns[idx].classList.add('active');
     if (mobBtns[idx]) mobBtns[idx].classList.add('active');
   }
-  if (name === 'dashboard'  && _shouldRerender('dashboard'))  { renderDashboard();         _markRendered('dashboard'); }
-  if (name === 'indices'    && _shouldRerender('indices'))    { loadIndices();              _markRendered('indices'); }
-  if (name === 'sentiment'  && _shouldRerender('sentiment'))  { loadSentiment();            _markRendered('sentiment'); }
-  if (name === 'news'       && _shouldRerender('news'))       { loadNews('general');        _markRendered('news'); }
-  if (name === 'industry'   && _shouldRerender('industry'))   { loadIndustry('global');     _markRendered('industry'); }
-  if (name === 'heatmap'    && _shouldRerender('heatmap'))    { loadHeatmap('us');          _markRendered('heatmap'); }
-  // Pages that always re-render (user-driven or fast local render)
-  if (name === 'journal') renderJournal();
-  if (name === 'scanner') loadScanner();
-  if (name === 'risk') renderRisk();
-  if (name === 'performance') renderPerformance();
-  if (name === 'education') renderEducation();
-  // Scanner page timer management (scan itself runs in background regardless of page)
+  if (name === 'dashboard' && _shouldRerender('dashboard')) { renderDashboard();     _markRendered('dashboard'); }
+  if (name === 'indices'   && _shouldRerender('indices'))   { loadIndices();         _markRendered('indices'); }
+  if (name === 'news'      && _shouldRerender('news'))      { loadNews('general');   _markRendered('news'); }
+  if (name === 'industry'  && _shouldRerender('industry'))  { loadIndustry('global');_markRendered('industry'); }
+  if (name === 'journal')    { renderJournal(); switchJournalTab('records'); }
+  if (name === 'scanner')    loadScanner();
+  if (name === 'education')  renderEducation();
   if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } }
+}
+
+// Tab switchers for merged pages
+function switchIndicesTab(tab) {
+  document.querySelectorAll('#indices-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['indices','sentiment'].indexOf(tab)));
+  const ic = document.getElementById('indices-content');
+  const sc = document.getElementById('sentiment-content');
+  if (!ic || !sc) return;
+  if (tab === 'indices') {
+    ic.style.display = ''; sc.style.display = 'none';
+    if (_shouldRerender('indices')) { loadIndices(); _markRendered('indices'); }
+  } else {
+    ic.style.display = 'none'; sc.style.display = '';
+    if (_shouldRerender('sentiment')) { loadSentiment(); _markRendered('sentiment'); }
+  }
+}
+
+function switchJournalTab(tab) {
+  document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['records','risk','performance'].indexOf(tab)));
+  ['records','risk','performance'].forEach(t => {
+    const el = document.getElementById('journal-tab-' + t);
+    if (el) el.style.display = (t === tab) ? '' : 'none';
+  });
+  if (tab === 'risk') renderRisk();
+  if (tab === 'performance') renderPerformance();
+}
+
+function switchIndustryTab(tab) {
+  document.querySelectorAll('#industry-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['map','tw','heatmap'].indexOf(tab)));
+  const ic = document.getElementById('industry-content');
+  const hc = document.getElementById('heatmap-content');
+  if (!ic || !hc) return;
+  if (tab === 'heatmap') {
+    ic.style.display = 'none'; hc.style.display = '';
+    if (_shouldRerender('heatmap')) { loadHeatmap('us'); _markRendered('heatmap'); }
+  } else {
+    ic.style.display = ''; hc.style.display = 'none';
+    const which = tab === 'tw' ? 'tw' : 'global';
+    if (_shouldRerender('industry')) { loadIndustry(which); _markRendered('industry'); }
+  }
 }
 
 // ============ STOCK ANALYSIS ============
@@ -1421,7 +1450,7 @@ async function loadIndices() {
         const q = quotes.find(r => r.symbol === sym);
         if (!q) continue;
         const up = q.change >= 0;
-        html += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '"><span style="font-size:10px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">即時更新 · 每秒刷新</div></div>';
+        html += '<div class="card index-card" data-sym="' + sym + '" onclick="showIdxChart(\'' + sym + '\',\'' + name + '\')"><div class="idx-name">' + name + '</div><div class="idx-value">' + q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div><div class="idx-change" style="color:' + (up ? 'var(--green)' : 'var(--red)') + '"><span style="font-size:10px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + q.change.toFixed(2) + ' (' + (up ? '+' : '') + q.changePct.toFixed(2) + '%)</div><div style="font-size:10px;color:var(--muted);margin-top:4px">vs 前日收盤 · 延遲約 15 分鐘</div></div>';
       }
       html += '</div><div id="idx-chart-area"></div><div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">資料來源：Yahoo Finance · ' + new Date().toLocaleString('zh-TW') + '</div>';
       div.innerHTML = html;
@@ -1679,6 +1708,37 @@ function addJournal() {
   const j = getJ(); j.unshift(e); saveJ(j);
   document.getElementById('j-ticker').value = ''; document.getElementById('j-price').value = ''; document.getElementById('j-qty').value = ''; document.getElementById('j-notes').value = '';
   renderJournal();
+  if (e.action === 'buy') showJournalATRGuide(e.price, e.ticker);
+  else { const g = document.getElementById('journal-atr-guide'); if (g) g.style.display = 'none'; }
+}
+function showJournalATRGuide(price, ticker) {
+  let atr = null;
+  for (const key in _entryData) { if (key.startsWith(ticker + '_')) { atr = _entryData[key]?.ta?.atr; break; } }
+  if (!atr || atr <= 0) atr = price * 0.02;
+  const fromCache = Object.keys(_entryData).some(k => k.startsWith(ticker + '_'));
+  const sl = price - 1.5 * atr;
+  const r1 = price + atr, r2 = price + 2 * atr, r3 = price + 3 * atr;
+  const fmt = v => '$' + v.toFixed(2);
+  const pct = v => ((v - price) / price * 100).toFixed(1) + '%';
+  const box = (label, val, color, note) =>
+    '<div style="padding:8px;background:rgba(0,0,0,.12);border-radius:6px;border-left:2px solid ' + color + '">' +
+    '<div style="font-size:10px;color:var(--muted)">' + label + '</div>' +
+    '<div style="font-weight:600;color:' + color + '">' + fmt(val) + '</div>' +
+    '<div style="font-size:10px;color:var(--muted)">' + note + '</div></div>';
+  const content = document.getElementById('journal-atr-content');
+  const div = document.getElementById('journal-atr-guide');
+  if (!div || !content) return;
+  content.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">' +
+    '<div style="padding:8px;background:rgba(0,0,0,.12);border-radius:6px;border-left:2px solid var(--muted)"><div style="font-size:10px;color:var(--muted)">ATR（真實波幅）</div><div style="font-weight:600">$' + atr.toFixed(2) + '</div><div style="font-size:10px;color:var(--muted)">' + (atr/price*100).toFixed(1) + '% 日波動</div></div>' +
+    box('停損（-1.5×ATR）', sl, 'var(--red)', pct(sl)) +
+    box('1R 目標（+1×ATR）', r1, 'var(--green)', '+' + pct(r1)) +
+    box('2R 目標（+2×ATR）', r2, 'var(--green)', '+' + pct(r2)) +
+    box('3R 目標（+3×ATR）', r3, 'var(--green)', '+' + pct(r3)) +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:8px">ATR ' + (fromCache ? '來自掃描器快取（精確）' : '以進場價 2% 估算（先掃描該股可獲精確值）') + '。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div>';
+  div.style.display = 'block';
+  setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 }
 function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
 function renderJournal() {
@@ -1743,64 +1803,6 @@ function ichimoku(closes, highs, lows) {
   const tenkan = periodHL(highs, lows, 9, i), kijun = periodHL(highs, lows, 26, i);
   const senkouA = (tenkan + kijun) / 2, senkouB = periodHL(highs, lows, 52, i);
   return { tenkan, kijun, senkouA, senkouB, cloudTop: Math.max(senkouA, senkouB), cloudBottom: Math.min(senkouA, senkouB) };
-}
-
-// ============ CALCULATOR ============
-function calcMarketChange() {
-  const isTW = document.getElementById('calc-market').value === 'tw';
-  document.getElementById('calc-fee-group').style.display = isTW ? '' : 'none';
-  document.getElementById('calc-us-fee-group').style.display = isTW ? 'none' : '';
-}
-function calcProfit() {
-  const market = document.getElementById('calc-market').value;
-  const qty = parseFloat(document.getElementById('calc-qty').value) || 0;
-  const buyPrice = parseFloat(document.getElementById('calc-buy').value) || 0;
-  const sellPrice = parseFloat(document.getElementById('calc-sell').value) || 0;
-  if (!qty || !buyPrice || !sellPrice) { document.getElementById('calc-result').innerHTML = '<div class="card" style="color:var(--red);text-align:center">請填寫完整的股數、買入價和賣出價</div>'; return; }
-  const buyAmt = buyPrice * qty;
-  const sellAmt = sellPrice * qty;
-  let buyFee, sellFee, sellTax, totalCost, netProfit, returnPct;
-  const cur = market === 'tw' ? 'NT$' : '$';
-  const fd = market === 'tw' ? 0 : 2;
-  const fmt = v => cur + v.toLocaleString(undefined, {minimumFractionDigits: fd, maximumFractionDigits: fd});
-  if (market === 'tw') {
-    const disc = parseFloat(document.getElementById('calc-discount').value);
-    const feeRate = 0.001425 * disc;
-    buyFee = Math.max(buyAmt * feeRate, disc > 0 ? 20 : 0);
-    sellFee = Math.max(sellAmt * feeRate, disc > 0 ? 20 : 0);
-    sellTax = sellAmt * 0.003;
-    totalCost = buyFee + sellFee + sellTax;
-    netProfit = (sellAmt - buyAmt) - totalCost;
-    returnPct = ((netProfit) / (buyAmt + buyFee)) * 100;
-  } else {
-    const usFeeRate = (parseFloat(document.getElementById('calc-us-fee').value) || 0) / 100;
-    buyFee = buyAmt * usFeeRate;
-    sellFee = sellAmt * usFeeRate;
-    sellTax = 0;
-    totalCost = buyFee + sellFee;
-    netProfit = (sellAmt - buyAmt) - totalCost;
-    returnPct = ((netProfit) / (buyAmt + buyFee)) * 100;
-  }
-  const up = netProfit >= 0;
-  const priceDiff = sellPrice - buyPrice;
-  const grossProfit = sellAmt - buyAmt;
-  document.getElementById('calc-result').innerHTML =
-    '<div class="card"><h3>📊 試算結果</h3>' +
-    '<div style="text-align:center;padding:20px 0"><div style="font-size:14px;color:var(--muted);margin-bottom:8px">淨損益</div><div style="font-size:42px;font-weight:700;color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + fmt(netProfit) + '</div><div style="font-size:16px;color:' + (up ? 'var(--green)' : 'var(--red)') + ';margin-top:4px">' + (up ? '+' : '') + returnPct.toFixed(2) + '% 報酬率</div></div>' +
-    '<div class="table-wrap"><table>' +
-    '<tr><td style="color:var(--muted)">買入總額</td><td style="text-align:right"><b>' + fmt(buyAmt) + '</b></td></tr>' +
-    '<tr><td style="color:var(--muted)">賣出總額</td><td style="text-align:right"><b>' + fmt(sellAmt) + '</b></td></tr>' +
-    '<tr><td style="color:var(--muted)">價差</td><td style="text-align:right;color:' + (priceDiff >= 0 ? 'var(--green)' : 'var(--red)') + '"><b>' + (priceDiff >= 0 ? '+' : '') + fmt(priceDiff) + ' / 股</b></td></tr>' +
-    '<tr><td style="color:var(--muted)">毛損益</td><td style="text-align:right;color:' + (grossProfit >= 0 ? 'var(--green)' : 'var(--red)') + '"><b>' + (grossProfit >= 0 ? '+' : '') + fmt(grossProfit) + '</b></td></tr>' +
-    '<tr style="border-top:2px solid var(--border)"><td style="color:var(--muted)">買入手續費</td><td style="text-align:right"><b>' + fmt(buyFee) + '</b></td></tr>' +
-    '<tr><td style="color:var(--muted)">賣出手續費</td><td style="text-align:right"><b>' + fmt(sellFee) + '</b></td></tr>' +
-    (market === 'tw' ? '<tr><td style="color:var(--muted)">證交稅 (0.3%)</td><td style="text-align:right"><b>' + fmt(sellTax) + '</b></td></tr>' : '') +
-    '<tr style="border-top:2px solid var(--border)"><td style="color:var(--muted)"><b>總交易成本</b></td><td style="text-align:right;color:var(--red)"><b>' + fmt(totalCost) + '</b></td></tr>' +
-    '<tr><td style="color:var(--muted)"><b>淨損益</b></td><td style="text-align:right;color:' + (up ? 'var(--green)' : 'var(--red)') + '"><b>' + (up ? '+' : '') + fmt(netProfit) + '</b></td></tr>' +
-    '<tr><td style="color:var(--muted)"><b>實際報酬率</b></td><td style="text-align:right;color:' + (up ? 'var(--green)' : 'var(--red)') + '"><b>' + (up ? '+' : '') + returnPct.toFixed(2) + '%</b></td></tr>' +
-    '</table></div>' +
-    (market === 'tw' ? '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">※ 手續費最低收 NT$20（折扣後仍適用）· 證交稅 0.3% 僅賣出時收取 · ETF 證交稅為 0.1%</div>' : '<div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">※ 美股無證交稅 · 手續費依券商而異 · 複委託通常為 0.15%~0.5%</div>') +
-    '</div>';
 }
 
 // ============ INDUSTRY MAP ============
@@ -3297,7 +3299,11 @@ function addToWatchlist(symbol) {
   if (_todayWatchlist.length >= 15) { alert('今日標的最多 15 檔，請先移除不需要的'); return; }
   if (_todayWatchlist.some(w => w.symbol === symbol)) return;
   const result = _scannerResults.find(r => r.symbol === symbol);
-  _todayWatchlist.push({ symbol, name: result ? result.name : symbol, addedPrice: result ? result.price : 0, entryPrice: null, stopPrice: null, strategy: _scannerStrategy, signal: result ? result.signal : '', alerts: [] });
+  const price = result ? result.price : 0;
+  const atr = (result?.ta?.atr) || (price * 0.02);
+  const autoStop = price > 0 ? parseFloat((price - 1.5 * atr).toFixed(2)) : null;
+  const autoEntry = price > 0 ? price : null;
+  _todayWatchlist.push({ symbol, name: result ? result.name : symbol, addedPrice: price, entryPrice: autoEntry, stopPrice: autoStop, atr: parseFloat(atr.toFixed(4)), strategy: _scannerStrategy, signal: result ? result.signal : '', alerts: [] });
   saveTodayWatchlist(); renderWatchlist(); renderScannerResults(_scannerResults, _scannerStrategy); startWatchlistRefresh();
 }
 function removeFromWatchlist(symbol) {
@@ -3380,6 +3386,17 @@ function renderWatchlist() {
       html += '<div style="text-align:center;min-width:80px"><div style="font-size:11px;color:var(--muted)">停利目標</div><div style="font-size:16px;font-weight:700;color:var(--accent)">' + target.toFixed(2) + '</div><div style="font-size:11px;color:var(--yellow)">R倍數 1:' + rr + '</div></div>';
     }
     html += '</div>';
+    if (w.atr && w.entryPrice) {
+      const ep = w.entryPrice, atr = w.atr;
+      const r1 = ep + atr, r2 = ep + 2*atr, r3 = ep + 3*atr;
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;padding:8px;background:rgba(0,0,0,.15);border-radius:8px">' +
+        '<span style="font-size:10px;color:var(--muted);align-self:center">ATR ' + atr.toFixed(2) + ' →</span>' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(239,68,68,.12);color:var(--red)">停損 ' + (ep - 1.5*atr).toFixed(2) + '</span>' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.12);color:var(--green)">1R ' + r1.toFixed(2) + '</span>' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.15);color:var(--green)">2R ' + r2.toFixed(2) + '</span>' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.18);color:var(--green)">3R ' + r3.toFixed(2) + '</span>' +
+      '</div>';
+    }
     if (w.alerts?.includes('entry')) html += '<div style="padding:8px 12px;background:rgba(16,185,129,.15);border-radius:8px;color:var(--green);font-weight:600;margin:8px 0">🔔 已觸及進場價！請確認是否符合交易計畫後決策</div>';
     if (w.alerts?.includes('stop')) html += '<div style="padding:8px 12px;background:rgba(239,68,68,.15);border-radius:8px;color:var(--red);font-weight:600;margin:8px 0">⚠️ 已觸及停損價！建議立即評估是否出場</div>';
     html += '<div style="display:flex;gap:8px;margin-top:8px">';
@@ -4800,6 +4817,8 @@ async function renderDashboard(forceRescan) {
   quickDashboardScan(forceRescan);
   // 5. T交易精選（15 分鐘快取，獨立載入）
   renderDashTTrading();
+  // 6. 國際新聞摘要（10 分鐘快取）
+  renderDashNews();
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
@@ -5333,6 +5352,48 @@ async function renderDashTTrading() {
     }
   });
   el.innerHTML = rows.join('');
+}
+
+// ── 首頁國際新聞摘要（10 分鐘快取）
+let _dashNewsCache = { ts: 0, items: [] };
+async function renderDashNews(force) {
+  const el = document.getElementById('dash-news-list');
+  if (!el) return;
+  const now = Date.now();
+  if (!force && _dashNewsCache.items.length && now - _dashNewsCache.ts < 600000) {
+    _renderDashNewsList(_dashNewsCache.items);
+    return;
+  }
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted)"><div class="spinner" style="margin:0 auto 8px"></div>載入新聞...</div>';
+  try {
+    const r = await pFetch('https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB');
+    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+    const items = [];
+    xml.querySelectorAll('item').forEach(el => {
+      const title = el.querySelector('title')?.textContent || '';
+      const link  = el.querySelector('link')?.textContent  || '';
+      const pub   = el.querySelector('pubDate')?.textContent || '';
+      const src   = el.querySelector('source')?.textContent || 'Google News';
+      items.push({ title, link, pub, src });
+    });
+    const seen = new Set();
+    const deduped = items.filter(it => { const k = it.title.substring(0, 30).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 5);
+    _dashNewsCache = { ts: now, items: deduped };
+    _renderDashNewsList(deduped);
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px">新聞載入失敗，請稍後再試</div>';
+  }
+}
+function _renderDashNewsList(items) {
+  const el = document.getElementById('dash-news-list');
+  if (!el) return;
+  if (!items.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">暫無最新新聞</div>'; return; }
+  el.innerHTML = items.map(it =>
+    '<div style="padding:8px 0;border-bottom:1px solid var(--border)">' +
+    '<a href="' + it.link + '" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-size:13px;font-weight:500;line-height:1.4;display:block;margin-bottom:3px" onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'var(--text)\'">' + it.title + '</a>' +
+    '<span style="font-size:11px;color:var(--muted)">' + it.src + (it.pub ? ' · ' + new Date(it.pub).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '') + '</span>' +
+    '</div>'
+  ).join('') + '<div style="text-align:right;margin-top:6px"><button class="btn btn-sm" style="font-size:11px;background:none;border:none;color:var(--accent);padding:2px 4px;cursor:pointer" onclick="showPage(\'news\')">查看全部新聞 →</button></div>';
 }
 
 // 記錄進場
