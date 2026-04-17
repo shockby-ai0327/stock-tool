@@ -800,12 +800,9 @@ async function analyzeStock() {
     }
     const c = ohlcv.map(d => d.c), h = ohlcv.map(d => d.h), l = ohlcv.map(d => d.l), v = ohlcv.map(d => d.v);
     const price = meta.regularMarketPrice;
-    // meta.chartPreviousClose on a 6-month chart = start-of-period price, NOT yesterday.
-    // Derive prev close from timestamps instead.
-    const todayMidnight = Math.floor(new Date().setHours(0,0,0,0) / 1000);
-    const lastTs = ts.length > 0 ? ts[ts.length - 1] : 0;
-    const lastCandleIsToday = lastTs >= todayMidnight;
-    const prevClose = lastCandleIsToday ? (c[c.length - 2] || c[c.length - 1]) : c[c.length - 1];
+    // For daily charts, always use second-to-last candle as prevClose.
+    // (last candle = today in-progress OR last trading day; either way c[n-2] = previous session close)
+    const prevClose = c.length >= 2 ? c[c.length - 2] : c[c.length - 1];
     _histCloses[ticker] = c; // store for real-time refresh
     const cc = calcChange(price, c, prevClose, _chgTF);
     const change = cc.chg, changePct = cc.chgPct;
@@ -1572,8 +1569,7 @@ async function showIdxChart(sym, name) {
     const price = chart.meta.regularMarketPrice;
     const _ts = chart.timestamp || [];
     const _today0 = Math.floor(new Date().setHours(0,0,0,0) / 1000);
-    const _lastTs = _ts.length ? _ts[_ts.length - 1] : 0;
-    const prev = (_lastTs >= _today0) ? (c[c.length - 2] || c[c.length - 1]) : c[c.length - 1];
+    const prev = c.length >= 2 ? c[c.length - 2] : c[c.length - 1];
     const chgPct = ((price - prev) / prev) * 100;
     const ta = technicalAnalysis(c, h, l, v, price);
     const analysis = idxAnalysis(name, sym, price, chgPct, ta);
@@ -3207,13 +3203,8 @@ async function chartScanFallback(strategy) {
         const vols   = oq.volume.filter(v => v != null);
         if (closes.length < 20) return null;
         const price    = chart.meta.regularMarketPrice || closes[closes.length - 1];
-        // chartPreviousClose on a 3-month chart = start-of-period, not yesterday
-        const tsArr = chart.timestamp || [];
-        const _today0 = Math.floor(new Date().setHours(0,0,0,0) / 1000);
-        const _lastTs  = tsArr.length ? tsArr[tsArr.length - 1] : 0;
-        const prevClose = (_lastTs >= _today0)
-          ? (closes[closes.length - 2] || closes[closes.length - 1])
-          : closes[closes.length - 1];
+        // Always use second-to-last daily candle as prevClose (previous session close)
+        const prevClose = closes.length >= 2 ? closes[closes.length - 2] : closes[closes.length - 1];
         const changePct = prevClose ? (price - prevClose) / prevClose * 100 : 0;
         const avgVol   = vols.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
         const vol      = vols[vols.length - 1] || 0;
