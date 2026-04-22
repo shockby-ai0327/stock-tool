@@ -351,7 +351,7 @@ tr:last-child td{border-bottom:none}
     <!-- CH1: Payment -->
     <section class="chapter" id="ch1">
       <h2>💳 付款方式</h2>
-      <p class="subtitle">從預付到賒帳，掌握每種付款工具的風險與適用場景</p>
+      <p class="subtitle">從預付到賒帳，掌握每種付款工具的風險、流程、控制點與放貨節奏</p>
       <div class="card">
         <h3>主要付款方式風險對比</h3>
         <table>
@@ -365,6 +365,19 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <h3>六種付款方式實際怎麼跑</h3>
+        <table>
+          <tr><th>方式</th><th>基本流程</th><th>誰控制貨權/單據</th><th>最大風險點</th></tr>
+          <tr><td>T/T預付100%</td><td>客戶先付款→確認到帳→安排生產/出貨</td><td>賣方控制到收到款為止</td><td>買方容易擔心供應商履約能力</td></tr>
+          <tr><td>T/T 30%+70%</td><td>訂金到帳→排產→出貨前收尾款→放貨/電放</td><td>尾款到帳前由賣方控制</td><td>業務在尾款未到前就先放貨</td></tr>
+          <tr><td>即期L/C</td><td>開證→審證→出貨→交單→銀行審單→付款</td><td>銀行與單據控制為主</td><td>單據不符點導致延遲或拒付</td></tr>
+          <tr><td>D/P即期</td><td>出貨→交單給代收銀行→買方付款→銀行交單</td><td>正本單據在銀行手上</td><td>買方拒付後貨到港，賣方需處理滯港與轉賣</td></tr>
+          <tr><td>D/A遠期</td><td>出貨→買方承兌遠期票據→先拿單提貨→到期付款</td><td>貨已被買方控制</td><td>到期不付時，賣方追款非常被動</td></tr>
+          <tr><td>OA賒帳</td><td>先出貨→客戶收貨/入庫→約定帳期付款</td><td>貨與單據很快轉到買方端</td><td>壞帳、拖款、折扣爭議、對帳扯皮</td></tr>
+        </table>
+        <div class="highlight">💡 看付款方式時，不要只看誰先付錢，更要看三件事：誰控制提單、誰控制放貨、如果客戶不付錢你還剩下什麼籌碼。</div>
+      </div>
+      <div class="card">
         <h3>L/C（信用狀）操作要點</h3>
         <p>L/C = 銀行信用代替買方信用，<strong>單證相符即付款</strong>。</p>
         <ul>
@@ -374,6 +387,39 @@ tr:last-child td{border-bottom:none}
           <li><strong>UCP600：</strong>L/C的國際規則，銀行有5個工作日審核單據</li>
         </ul>
         <div class="highlight">⚠️ 軟條款警告：若L/C包含「需買方出具合格證才付款」等條款，等於架空了L/C保障，需要立刻要求刪除！</div>
+      </div>
+      <div class="card">
+        <h3>L/C審證Checklist</h3>
+        <ul>
+          <li>開證人、受益人、通知行、金額、幣別、有效期是否正確</li>
+          <li>最遲裝運日、交單期限、信用狀到期地是否可執行</li>
+          <li>品名、規格、數量、單價、貿易條件是否和PI完全一致</li>
+          <li>要求提交的文件是否合理，例如CI、PL、B/L、保險單、產地證、檢驗證明</li>
+          <li>提單要求是否可操作，例如是否要求Full Set、Clean On Board、To Order、Notify Party寫法</li>
+          <li>銀行費用條款是否清楚，避免出貨後才發現不合理費用由賣方承擔</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>L/C最常見的不符點</h3>
+        <table>
+          <tr><th>類型</th><th>常見情況</th><th>如何避免</th></tr>
+          <tr><td>描述不符</td><td>CI、PL、B/L上的品名與L/C不同</td><td>直接複製L/C文字，不自行簡化或改寫</td></tr>
+          <tr><td>日期問題</td><td>晚裝船、晚交單、文件日期前後矛盾</td><td>提前倒排交單時間，不要壓線出貨</td></tr>
+          <tr><td>單據抬頭錯誤</td><td>Consignee、Notify、開證申請人拼寫不同</td><td>用同一份核對表檢查所有單據</td></tr>
+          <tr><td>數量/金額偏差</td><td>發票金額、件數、重量與L/C限制不符</td><td>出貨前和工廠、物流、財務最後對表</td></tr>
+          <tr><td>聲明缺漏</td><td>少了L/C要求的特殊聲明或保證語句</td><td>做交單模板，不要臨時補寫</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>不能接受的L/C軟條款</h3>
+        <ul>
+          <li>需要買方簽字、買方驗貨通過或買方出具文件後銀行才付款</li>
+          <li>文件內容依買方最終確認為準，等於把付款控制權交回買方</li>
+          <li>要求提供賣方無法自行取得的第三方文件，且無明確出具機構</li>
+          <li>過短的裝運或交單期限，實務上根本無法完成</li>
+          <li>寫法模糊，例如「clean documents acceptable as determined by applicant」</li>
+        </ul>
+        <div class="highlight">⚠️ 判斷標準很簡單：如果付款條件最後還是取決於買方一句話，那它就不是你以為的「安全L/C」。</div>
       </div>
       <div class="card">
         <h3>匯率風險管理</h3>
@@ -394,6 +440,16 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <h3>T/T、D/P、D/A、OA 實務差別</h3>
+        <ul>
+          <li><strong>T/T：</strong>最常用，也最直觀。關鍵不是「客戶答應會付」，而是錢是否真的到帳。</li>
+          <li><strong>D/P：</strong>理論上買方付款後才能拿單，但若客戶拒付，貨已經在港口，賣方要面對滯港、退運、轉賣成本。</li>
+          <li><strong>D/A：</strong>買方承兌後就能拿單提貨，本質上更像「帶單據的信用放款」，風險高於D/P。</li>
+          <li><strong>OA：</strong>本質是信用銷售，重點從單據控制轉成信用額度、帳期管理、對帳與催收。</li>
+        </ul>
+        <div class="highlight">💡 很多新人會以為 D/P 很安全、OA 只是客戶晚一點付。實際上只要貨權已經離開你手上，重點就不再是文件漂亮不漂亮，而是你的追款能力夠不夠。</div>
+      </div>
+      <div class="card">
         <h3>收款節點與出貨紅線</h3>
         <ol>
           <li>確認PI、付款條件、受益人帳戶資訊完全一致</li>
@@ -405,6 +461,17 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 紅線：未到帳不電放、未到帳不寄正本B/L、條件未確認不承諾OA。這三條守住，很多壞帳和扯皮都能避免。</div>
       </div>
       <div class="card">
+        <h3>放貨控制矩陣</h3>
+        <table>
+          <tr><th>情況</th><th>能不能放貨</th><th>備註</th></tr>
+          <tr><td>T/T尾款未到</td><td>不能</td><td>不能電放、不能寄正本、不能口頭答應先放</td></tr>
+          <tr><td>L/C條款未改好</td><td>原則上不能安排出貨</td><td>先改證，再出貨，否則後面不符點風險極高</td></tr>
+          <tr><td>D/P條件下買方尚未付款</td><td>銀行不應交單</td><td>但賣方仍要預想客戶拒付後怎麼處理貨物</td></tr>
+          <tr><td>OA在信用額度內</td><td>可放，但需照授權流程</td><td>要有對帳、逾期追收與信保配套</td></tr>
+          <tr><td>客戶要求先電放後付款</td><td>高風險，不建議</td><td>除非已有明確批准與足夠保障</td></tr>
+        </table>
+      </div>
+      <div class="card">
         <h3>新客戶風控清單</h3>
         <ul>
           <li>確認公司名稱、註冊地址、官網、聯絡人職稱與公司郵箱是否一致</li>
@@ -412,6 +479,27 @@ tr:last-child td{border-bottom:none}
           <li>大額訂單先做背景調查：是否有壞帳紀錄、是否真有採購權</li>
           <li>如果要求改收款帳戶、急單、異常高價或異常寬鬆OA，要提高警覺</li>
           <li>必要時搭配SINOSURE或內部信用額度管理，不要只靠感覺判斷</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>應收帳款與催款節奏</h3>
+        <ol>
+          <li>帳期開始前：先確認Invoice、付款到期日、付款路徑與對帳窗口</li>
+          <li>到期前7天：做第一次友善提醒，確認是否已安排付款</li>
+          <li>到期當天：再次確認匯款狀態，保留書面紀錄</li>
+          <li>逾期7天內：升高追蹤頻率，要求明確付款日期與原因</li>
+          <li>逾期超過30天：視內部政策停止新單、停止出貨或啟動管理層介入</li>
+        </ol>
+        <div class="highlight">💡 催款不是等過期才開始。真正有效的催款，是在到期前就把對帳、文件、付款窗口全部理清，讓客戶沒有拖延藉口。</div>
+      </div>
+      <div class="card">
+        <h3>銀行費用與付款細節，也要寫在PI裡</h3>
+        <ul>
+          <li>付款條件要寫完整，例如 `30% deposit, 70% before shipment`，不要只寫 `T/T`</li>
+          <li>L/C要寫清楚是否接受分批裝運、轉運、交單天數、銀行費用承擔方</li>
+          <li>如果客戶分兩個主體付款，要先確認內部是否接受，以及文件如何對應</li>
+          <li>付款幣別要跟報價幣別一致，不要等出貨後才臨時改成人民幣或其他幣別</li>
+          <li>涉及手續費時，事先講清楚 `bank charges outside issuing bank are for applicant` 這類分配原則</li>
         </ul>
       </div>
     </section>
