@@ -105,6 +105,24 @@ table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
 th{background:var(--surface2);padding:10px 14px;text-align:left;font-weight:600;color:var(--text)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text)}
 tr:last-child td{border-bottom:none}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.info-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.info-card strong{display:block;color:var(--text);font-size:.95rem;margin-bottom:4px}
+.info-card span{display:block;color:var(--accent);font-size:.86rem;font-weight:700;margin-bottom:4px}
+.info-card p{font-size:.88rem;line-height:1.55;color:var(--text2)}
+.payment-flow-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.payment-flow-card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.payment-flow-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.payment-flow-title{font-size:1rem;font-weight:800;color:var(--text)}
+.payment-flow-full{font-size:.76rem;font-weight:700;color:var(--accent);background:rgba(79,70,229,.1);border-radius:20px;padding:3px 9px;white-space:nowrap}
+.flow-label{font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-top:10px;margin-bottom:3px}
+.payment-flow-card p{font-size:.9rem;line-height:1.6;color:var(--text)}
+.payment-flow-card .risk{color:var(--red);font-weight:700}
+.scenario-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
+.scenario-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--surface2)}
+.scenario-card h4{font-size:.96rem;line-height:1.45;color:var(--text);margin-bottom:8px}
+.scenario-card p{font-size:.9rem;line-height:1.62;color:var(--text)}
+.scenario-card .scenario-action{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--accent);font-weight:700}
 
 /* ── Quiz Mode ── */
 #quiz-view{width:100%;display:none;padding:32px 20px;flex-direction:column;align-items:center}
@@ -238,6 +256,7 @@ tr:last-child td{border-bottom:none}
   .q-text{font-size:.97rem}
   #quiz-view{padding:20px 12px}
   .fill-wrap{flex-direction:column}
+  .info-grid,.payment-flow-grid,.scenario-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -356,8 +375,8 @@ tr:last-child td{border-bottom:none}
         <h3>主要付款方式風險對比</h3>
         <table>
           <tr><th>方式</th><th>對賣方風險</th><th>對買方風險</th><th>適用場景</th></tr>
-          <tr><td>TT預付100%</td><td>最低</td><td>最高</td><td>小額、新客戶樣品</td></tr>
-          <tr><td>TT 30%+70%</td><td>低</td><td>中</td><td>廣澤標準做法</td></tr>
+          <tr><td>T/T預付100%</td><td>最低</td><td>最高</td><td>小額、新客戶樣品</td></tr>
+          <tr><td>T/T 30%+70%</td><td>低</td><td>中</td><td>廣澤標準做法</td></tr>
           <tr><td>即期L/C</td><td>低</td><td>低</td><td>新客戶大額訂單</td></tr>
           <tr><td>D/P即期</td><td>中</td><td>中</td><td>熟悉客戶</td></tr>
           <tr><td>D/A遠期</td><td>高</td><td>低</td><td>信任客戶，有風控</td></tr>
@@ -365,16 +384,98 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <h3>付款縮寫全名速查</h3>
+        <div class="info-grid">
+          <div class="info-card">
+            <strong>T/T</strong>
+            <span>Telegraphic Transfer</span>
+            <p>電匯。外貿最常見的銀行匯款方式，可做100%預付，也可做30%訂金+70%尾款。</p>
+          </div>
+          <div class="info-card">
+            <strong>L/C</strong>
+            <span>Letter of Credit</span>
+            <p>信用狀/信用證。銀行按單據付款，不是看貨物本身；核心是單證相符。</p>
+          </div>
+          <div class="info-card">
+            <strong>D/P</strong>
+            <span>Documents against Payment</span>
+            <p>付款交單。買方付款後，銀行才交出提單等單據給買方提貨。</p>
+          </div>
+          <div class="info-card">
+            <strong>D/A</strong>
+            <span>Documents against Acceptance</span>
+            <p>承兌交單。買方承諾未來付款後即可取得單據，賣方風險高於D/P。</p>
+          </div>
+          <div class="info-card">
+            <strong>OA</strong>
+            <span>Open Account</span>
+            <p>賒帳。先出貨、後付款，通常只適合長期穩定且有信用額度管理的客戶。</p>
+          </div>
+          <div class="info-card">
+            <strong>SINOSURE</strong>
+            <span>China Export & Credit Insurance</span>
+            <p>中國信保。不是付款方式，而是接受OA或遠期帳期時可搭配的信用風險工具。</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
         <h3>六種付款方式實際怎麼跑</h3>
-        <table>
-          <tr><th>方式</th><th>基本流程</th><th>誰控制貨權/單據</th><th>最大風險點</th></tr>
-          <tr><td>T/T預付100%</td><td>客戶先付款→確認到帳→安排生產/出貨</td><td>賣方控制到收到款為止</td><td>買方容易擔心供應商履約能力</td></tr>
-          <tr><td>T/T 30%+70%</td><td>訂金到帳→排產→出貨前收尾款→放貨/電放</td><td>尾款到帳前由賣方控制</td><td>業務在尾款未到前就先放貨</td></tr>
-          <tr><td>即期L/C</td><td>開證→審證→出貨→交單→銀行審單→付款</td><td>銀行與單據控制為主</td><td>單據不符點導致延遲或拒付</td></tr>
-          <tr><td>D/P即期</td><td>出貨→交單給代收銀行→買方付款→銀行交單</td><td>正本單據在銀行手上</td><td>買方拒付後貨到港，賣方需處理滯港與轉賣</td></tr>
-          <tr><td>D/A遠期</td><td>出貨→買方承兌遠期票據→先拿單提貨→到期付款</td><td>貨已被買方控制</td><td>到期不付時，賣方追款非常被動</td></tr>
-          <tr><td>OA賒帳</td><td>先出貨→客戶收貨/入庫→約定帳期付款</td><td>貨與單據很快轉到買方端</td><td>壞帳、拖款、折扣爭議、對帳扯皮</td></tr>
-        </table>
+        <div class="payment-flow-grid">
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">T/T預付100%</div><div class="payment-flow-full">Telegraphic Transfer</div></div>
+            <div class="flow-label">流程</div>
+            <p>客戶先付款 → 財務確認到帳 → 業務通知排產或出貨。</p>
+            <div class="flow-label">控制點</div>
+            <p>確認實際到帳，不只看水單或客戶截圖。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">買方風險高，通常只適合樣品、小額、新客戶首單。</p>
+          </div>
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">T/T 30%+70%</div><div class="payment-flow-full">Telegraphic Transfer</div></div>
+            <div class="flow-label">流程</div>
+            <p>30%訂金到帳 → 排產 → 出貨前收70%尾款 → 尾款到帳後放貨。</p>
+            <div class="flow-label">控制點</div>
+            <p>尾款未到帳前，不電放、不寄正本B/L、不放貨。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">最大風險是業務因客戶催貨而先放貨，導致尾款失控。</p>
+          </div>
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">即期L/C</div><div class="payment-flow-full">Letter of Credit</div></div>
+            <div class="flow-label">流程</div>
+            <p>客戶開證 → 廣澤審證 → 出貨 → 交單 → 銀行審單 → 單證相符付款。</p>
+            <div class="flow-label">控制點</div>
+            <p>先審證再出貨，文件按L/C逐字核對。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">不符點會造成扣費、延遲付款，嚴重時可能被拒付。</p>
+          </div>
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">D/P即期</div><div class="payment-flow-full">Documents against Payment</div></div>
+            <div class="flow-label">流程</div>
+            <p>廣澤出貨 → 單據交銀行託收 → 買方付款 → 銀行交單 → 買方提貨。</p>
+            <div class="flow-label">控制點</div>
+            <p>正本單據在銀行手上，買方未付款前不應取得提貨單據。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">買方拒付時，貨已到港，賣方面臨滯港費、退運或轉賣壓力。</p>
+          </div>
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">D/A遠期</div><div class="payment-flow-full">Documents against Acceptance</div></div>
+            <div class="flow-label">流程</div>
+            <p>廣澤出貨 → 買方承兌遠期付款 → 銀行交單 → 買方提貨 → 到期付款。</p>
+            <div class="flow-label">控制點</div>
+            <p>只適合有信用額度、歷史交易和管理層批准的客戶。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">買方先拿貨、後付款，到期不付時賣方追款被動。</p>
+          </div>
+          <div class="payment-flow-card">
+            <div class="payment-flow-head"><div class="payment-flow-title">OA賒帳</div><div class="payment-flow-full">Open Account</div></div>
+            <div class="flow-label">流程</div>
+            <p>先出貨 → 客戶收貨入庫 → 月結或帳期付款 → 財務對帳與催收。</p>
+            <div class="flow-label">控制點</div>
+            <p>設定信用額度、帳期、逾期停單規則，必要時搭配信保。</p>
+            <div class="flow-label">風險</div>
+            <p class="risk">壞帳、拖款、折扣爭議與對帳扯皮都會直接影響現金流。</p>
+          </div>
+        </div>
         <div class="highlight">💡 看付款方式時，不要只看誰先付錢，更要看三件事：誰控制提單、誰控制放貨、如果客戶不付錢你還剩下什麼籌碼。</div>
       </div>
       <div class="card">
@@ -501,6 +602,42 @@ tr:last-child td{border-bottom:none}
           <li>付款幣別要跟報價幣別一致，不要等出貨後才臨時改成人民幣或其他幣別</li>
           <li>涉及手續費時，事先講清楚 `bank charges outside issuing bank are for applicant` 這類分配原則</li>
         </ul>
+      </div>
+      <div class="card">
+        <h3>付款情境案例：遇到客戶這樣說怎麼辦</h3>
+        <div class="scenario-grid">
+          <div class="scenario-card">
+            <h4>案例1：新客戶要求OA 60天</h4>
+            <p>客戶說：「我們所有供應商都是OA 60 days，你們也要配合。」這時不能因為客戶看起來大就直接答應。</p>
+            <p class="scenario-action">建議處理：先回到T/T 30%+70%或即期L/C；若客戶堅持，要求信用資料、交易紀錄、信保評估和內部授權。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例2：尾款未到，客戶要求先電放</h4>
+            <p>客戶說：「貨已到港，我們急著清關，你們先Telex Release，我們明天付款。」這是典型放貨風險。</p>
+            <p class="scenario-action">建議處理：禮貌但明確拒絕，說明公司政策為尾款到帳後電放；可提供單據副本協助客戶預先清關準備。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例3：L/C含買方驗貨通過才付款</h4>
+            <p>這種條款表面上是L/C，實際上付款仍掌握在買方手上，銀行保障被削弱。</p>
+            <p class="scenario-action">建議處理：要求amendment刪除軟條款，改成客觀文件要求，例如第三方檢驗證書或出貨前檢驗報告。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例4：D/P貨到港後買方拒付</h4>
+            <p>買方拒絕付款，銀行不交單，但貨已在目的港，滯港費和倉租每天增加。</p>
+            <p class="scenario-action">建議處理：立即確認目的港費用、貨物可轉賣性、退運成本；同步要求客戶書面說明，必要時尋找備用買方。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例5：D/A到期後客戶拖款</h4>
+            <p>買方已承兌並提貨，到期後卻以「財務流程」「客訴未結」為由拖延付款。</p>
+            <p class="scenario-action">建議處理：先對帳並固定付款承諾日期；逾期仍未付時，暫停新單或出貨，升級到管理層與信用保險流程。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例6：客戶通知更改收款帳戶</h4>
+            <p>任何收款帳戶變更都可能涉及詐騙、郵箱被盜或內部流程錯誤，不能只憑郵件執行。</p>
+            <p class="scenario-action">建議處理：用已知電話或原有聯絡渠道二次確認；付款資料變更需財務與主管核准，不接受臨時口頭變更。</p>
+          </div>
+        </div>
+        <div class="highlight">⚠️ 付款問題的核心不是「客戶怎麼說」，而是「公司還剩多少控制權」。只要涉及放貨、OA、遠期、改帳戶，都要先升級確認。</div>
       </div>
     </section>
 
