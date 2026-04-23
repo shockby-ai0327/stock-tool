@@ -45,7 +45,7 @@
 }
 
 /* ── Base ── */
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background var(--trans),color var(--trans)}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--trans),color var(--trans)}
 a{color:var(--accent);text-decoration:none}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
 
@@ -68,17 +68,24 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
   transition:all var(--trans);flex-shrink:0;border:1px solid var(--border)
 }
 #theme-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+#sidebar-toggle{
+  width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);color:var(--text);font-size:1.05rem;
+  transition:all var(--trans);flex-shrink:0;border:1px solid var(--border)
+}
+#sidebar-toggle:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* ── Layout ── */
-#app{padding-top:var(--nav-h);min-height:100vh;display:flex}
+#app{padding-top:var(--nav-h);min-height:100vh;display:flex;min-width:0;width:100%}
 
 /* ── Study Mode ── */
-#study-view{display:flex;width:100%;min-height:calc(100vh - var(--nav-h))}
+#study-view{display:flex;width:100%;min-width:0;min-height:calc(100vh - var(--nav-h))}
 #sidebar{
   width:var(--sidebar);flex-shrink:0;
   background:var(--surface);border-right:1px solid var(--border);
   overflow-y:auto;padding:20px 0;
   position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));
+  transition:width .24s ease,padding .24s ease,opacity .18s ease,border-color .18s ease;
 }
 .sidebar-title{padding:8px 20px;font-size:.7rem;font-weight:700;color:var(--text2);letter-spacing:.08em;text-transform:uppercase}
 .ch-link{
@@ -89,7 +96,10 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .ch-link:hover{background:var(--surface2);color:var(--text);border-left-color:var(--accent)}
 .ch-link.active{background:var(--surface2);color:var(--accent);border-left-color:var(--accent);font-weight:600}
 .ch-icon{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
-#content{flex:1;padding:40px 48px;max-width:900px}
+#content{flex:1;min-width:0;padding:40px 48px;max-width:900px;width:100%;transition:max-width .24s ease,margin .24s ease,padding .24s ease}
+body.sidebar-collapsed #sidebar{width:0;padding-left:0;padding-right:0;opacity:0;pointer-events:none;border-right-color:transparent}
+body.sidebar-collapsed #content{max-width:980px;margin:0 auto}
+body.sidebar-collapsed #study-view{justify-content:center}
 .chapter{display:none}
 .chapter.active{display:block}
 .chapter h2{font-size:1.6rem;font-weight:700;margin-bottom:6px;color:var(--text)}
@@ -97,13 +107,15 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
 .card h3{font-size:1.05rem;font-weight:700;margin-bottom:12px;color:var(--accent)}
 .card p,.card li{font-size:.95rem;line-height:1.7;color:var(--text)}
+.chapter .subtitle,.card p,.card li,.highlight,th,td{overflow-wrap:anywhere;word-break:break-word}
 .card ul,.card ol{padding-left:20px;margin-top:8px}
 .card li{margin-bottom:4px}
 .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600;background:var(--surface2);color:var(--accent);margin-right:6px;margin-bottom:6px}
 .highlight{background:linear-gradient(120deg,rgba(79,70,229,.12),rgba(8,145,178,.08));border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0}
-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
-th{background:var(--surface2);padding:10px 14px;text-align:left;font-weight:600;color:var(--text)}
-td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px;font-size:.9rem;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+th{background:var(--surface2);padding:12px 14px;text-align:left;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;line-height:1.6}
+tr:nth-child(even) td{background:rgba(79,70,229,.025)}
 tr:last-child td{border-bottom:none}
 .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
 .info-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
@@ -123,6 +135,11 @@ tr:last-child td{border-bottom:none}
 .scenario-card h4{font-size:.96rem;line-height:1.45;color:var(--text);margin-bottom:8px}
 .scenario-card p{font-size:.9rem;line-height:1.62;color:var(--text)}
 .scenario-card .scenario-action{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--accent);font-weight:700}
+.template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
+.template-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--surface2)}
+.template-card h4{font-size:.96rem;line-height:1.45;color:var(--text);margin-bottom:8px}
+.mail-copy{background:var(--surface);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;padding:12px 14px;margin-top:8px;font-size:.88rem;line-height:1.65;color:var(--text);overflow-wrap:anywhere}
+.metric-note{font-size:.83rem;color:var(--text2);line-height:1.6;margin-top:8px}
 
 /* ── Quiz Mode ── */
 #quiz-view{width:100%;display:none;padding:32px 20px;flex-direction:column;align-items:center}
@@ -250,13 +267,20 @@ tr:last-child td{border-bottom:none}
 
 /* Mobile */
 @media(max-width:768px){
+  #app{display:block;width:100vw;overflow-x:hidden}
   #sidebar{display:none}
-  #content{padding:20px 16px}
+  #study-view{display:block;width:100vw;overflow-x:hidden}
+  #content{display:block;flex:none;padding:20px 16px;width:100vw;max-width:100vw;overflow-x:hidden}
+  #sidebar-toggle{display:none!important}
+  .card{overflow:hidden}
+  table{display:block;width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table tbody{display:table;width:100%;min-width:560px}
+  th,td{min-width:0}
   .q-card{padding:20px 16px}
   .q-text{font-size:.97rem}
   #quiz-view{padding:20px 12px}
   .fill-wrap{flex-direction:column}
-  .info-grid,.payment-flow-grid,.scenario-grid{grid-template-columns:1fr}
+  .info-grid,.payment-flow-grid,.scenario-grid,.template-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -269,6 +293,7 @@ tr:last-child td{border-bottom:none}
     <button class="mode-tab active" id="tab-study" onclick="setMode('study')">📖 學習</button>
     <button class="mode-tab" id="tab-quiz" onclick="setMode('quiz')">🎯 練習</button>
   </div>
+  <button id="sidebar-toggle" onclick="toggleSidebar()" title="收合導覽" aria-label="收合導覽">‹</button>
   <div class="nav-spacer"></div>
   <button id="theme-btn" onclick="toggleTheme()" title="切換主題">🌙</button>
 </nav>
@@ -1032,6 +1057,34 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <h3>財報速讀：業務人員要看懂什麼</h3>
+        <p>廣澤本身不是單獨上市公司，公開財務主要要看母公司廣華控股（1338）的合併財報與月營收。業務人員不需要像投資分析師一樣算估值，但要能判斷公司目前是「成長、承壓、轉型」哪一種狀態。</p>
+        <table>
+          <tr><th>年度/期間</th><th>公開營收口徑</th><th>獲利狀態</th><th>新人要讀出的訊號</th></tr>
+          <tr><td>2020</td><td>約NT$61.7億元</td><td>淨利約NT$2.9億元</td><td>疫情後仍有獲利，傳統內外飾業務具基本盤</td></tr>
+          <tr><td>2021</td><td>約NT$73.2億元</td><td>淨利約NT$3.4億元</td><td>營收與獲利處在高峰區間，日系與內飾需求支撐明顯</td></tr>
+          <tr><td>2022</td><td>約NT$73.5億元</td><td>淨利約NT$1.4億元</td><td>營收高但獲利下降，代表成本、產品組合或價格壓力開始出現</td></tr>
+          <tr><td>2023</td><td>約NT$57.6億元</td><td>淨損約NT$1.6億元</td><td>需求下滑與產能利用率壓力增加，不能只靠傳統件</td></tr>
+          <tr><td>2024</td><td>約NT$50.9億元</td><td>淨損約NT$1.0億元</td><td>規模仍收縮，但虧損比2023年收斂，重點是提高毛利與良率</td></tr>
+          <tr><td>2025</td><td>自結累計營收約NT$52.3億元</td><td>需等正式年報確認</td><td>營收大致企穩，仍要觀察是否真正恢復獲利</td></tr>
+          <tr><td>2026 Q1</td><td>累計營收約NT$11.6億元，年減約10.6%</td><td>需等季報確認</td><td>短期接單仍有波動，業務開發更要強調新產品與海外客戶</td></tr>
+        </table>
+        <div class="metric-note">資料口徑：公開財務網站與廣華控股月營收公告整理，金額以新台幣計，四捨五入。參考來源包含 <a href="https://stockanalysis.com/quote/tpe/1338/financials/" target="_blank" rel="noopener">StockAnalysis年度財務摘要</a>、<a href="https://www.hiroca.co/article.php?id=1690&lang=en&tb=8" target="_blank" rel="noopener">廣華控股月營收公告</a> 與 <a href="https://tw.stock.yahoo.com/quote/1338.TW/revenue" target="_blank" rel="noopener">Yahoo股市月營收</a>。對外正式簡報請以最新年報、季報與公司核准版本為準。</div>
+      </div>
+      <div class="card">
+        <h3>目前公司遇到的狀況與解法</h3>
+        <table>
+          <tr><th>狀況</th><th>為什麼重要</th><th>對業務的解法</th></tr>
+          <tr><td>傳統內外飾需求波動</td><td>燃油車與傳統格柵需求受車型切換、主機廠銷量與電動車趨勢影響</td><td>開發EV發光格柵、發光車標、智慧表面與中控透光件，不只賣傳統塑膠件</td></tr>
+          <tr><td>客戶年降與價格壓力</td><td>單純比單價會壓縮毛利，容易陷入低價競爭</td><td>用TCO說服客戶：良率、PPAP能力、一站式整合、少返工與少跨廠管理成本</td></tr>
+          <tr><td>獲利承壓</td><td>營收恢復不等於獲利恢復，成本、稼動率與報廢率都會影響利潤</td><td>報價時把模具、材料、測試、包裝、關稅與付款風險算清楚，不做「看起來成交但實際虧損」的案子</td></tr>
+          <tr><td>出口與關稅不確定</td><td>美國關稅、原產地、HS Code與客戶合規要求可能改變成交成本</td><td>報價前先確認目的國、HS Code、Incoterm、是否需原產地證，必要時請貨代與財務一起評估</td></tr>
+          <tr><td>客戶對ESG要求升高</td><td>歐系與新能源客戶越來越重視碳足跡、禁用物質、供應鏈追溯</td><td>把EPF、低VOC、禁用物質合規、IATF/ISO體系整理成標準答覆與文件包</td></tr>
+          <tr><td>新技術賣點需要被理解</td><td>Mini LED、IML/INS、EPF如果只列名詞，客戶不一定知道價值</td><td>用應用場景說明：發光車標提升品牌識別，IML/INS改善外觀一致性，EPF降低環保與成本壓力</td></tr>
+        </table>
+        <div class="highlight">💡 對新人來說，公司現況不能只記「廣澤很強」。更成熟的說法是：傳統件仍是基本盤，但成長故事要靠發光飾件、智慧表面、ESG工藝與海外/EV客戶開發。</div>
+      </div>
+      <div class="card">
         <h3>完整產品線</h3>
         <table>
           <tr><th>分類</th><th>代表產品</th><th>對外說法重點</th></tr>
@@ -1125,105 +1178,180 @@ tr:last-child td{border-bottom:none}
           <li><strong>EPF：</strong>作為ESG與成本優化話題切入點，適合對歐洲和新能源客戶溝通</li>
           <li><strong>集團布局：</strong>不只是單一東莞工廠，而是具備多基地支援能力</li>
           <li><strong>一站式：</strong>對客戶最大的價值不是工藝多，而是少一層外包協調與品質風險</li>
-        </div>
+        </ul>
       </div>
     </section>
 
     <!-- CH9: Email -->
     <section class="chapter" id="ch9">
       <h2>✉️ 商務郵件</h2>
-      <p class="subtitle">清晰、專業、有行動力——外貿郵件的結構和最佳實踐</p>
+      <p class="subtitle">從主旨、語氣、行動要求到追蹤節奏，讓客戶看完就知道下一步</p>
       <div class="card">
-        <h3>郵件結構框架</h3>
+        <h3>一封好外貿郵件的6個要素</h3>
+        <table>
+          <tr><th>要素</th><th>目的</th><th>範例</th></tr>
+          <tr><td>清楚主旨</td><td>讓客戶不用打開郵件也知道事情</td><td>[Action Required] PI #GZ2026-041 - Please Confirm by Apr 26</td></tr>
+          <tr><td>第一句說目的</td><td>避免客戶讀半天才知道你要什麼</td><td>I am writing to confirm the revised payment terms for PO #...</td></tr>
+          <tr><td>背景只寫必要資訊</td><td>補足上下文，但不要變成長篇故事</td><td>Based on our call on April 22, we updated the quotation...</td></tr>
+          <tr><td>分點列出重點</td><td>讓採購、工程、財務可以快速轉寄內部</td><td>Price / Lead time / Payment / Documents</td></tr>
+          <tr><td>明確行動要求</td><td>讓對方知道要確認、付款、改L/C或回覆資料</td><td>Please confirm by April 26 so that we can reserve production capacity.</td></tr>
+          <tr><td>下一次更新時間</td><td>降低客戶焦慮，也讓自己有追蹤節奏</td><td>We will update you again by 5:00 PM GMT+8 tomorrow.</td></tr>
+        </table>
+        <div class="highlight">💡 外貿郵件不是作文，是任務管理工具。每封信都要讓對方知道：現在發生什麼、我要你做什麼、最晚何時做、如果不做會影響什麼。</div>
+      </div>
+      <div class="card">
+        <h3>主旨怎麼寫：不要只寫Hello或Quotation</h3>
+        <table>
+          <tr><th>場景</th><th>弱主旨</th><th>更好的主旨</th></tr>
+          <tr><td>報價</td><td>Quotation</td><td>[Quotation] Illuminated Grille Project - FOB Shenzhen / MOQ 5,000 pcs</td></tr>
+          <tr><td>催確認</td><td>Please check</td><td>[Action Required] Drawing Revision V3 - Confirmation Needed by Apr 26</td></tr>
+          <tr><td>出貨</td><td>Shipment</td><td>[Shipment Update] PO #2481 - ETD Apr 30 / ETA Hamburg Jun 02</td></tr>
+          <tr><td>付款</td><td>Payment</td><td>[Payment Reminder] Invoice #GZ-2026-041 - Balance Due Before Shipment</td></tr>
+          <tr><td>客訴</td><td>Problem</td><td>[8D Update] Door Trim Scratch Issue - Containment Action Completed</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>常見郵件錯誤與修正</h3>
+        <table>
+          <tr><th>錯誤</th><th>問題</th><th>修正方式</th></tr>
+          <tr><td>整封信只有一大段</td><td>客戶很難轉給工程、採購、財務分別處理</td><td>用短段落與bullet points，一段只講一件事</td></tr>
+          <tr><td>只說ASAP</td><td>ASAP沒有明確期限，對方不一定優先處理</td><td>改成具體日期與時區，例如 April 26, 2026 5:00 PM GMT+8</td></tr>
+          <tr><td>語氣太情緒化</td><td>容易讓客戶覺得不專業，尤其是客訴或催款</td><td>先描述事實，再提出要求，不用責備語氣</td></tr>
+          <tr><td>附件檔名中文或太亂</td><td>對方系統可能亂碼，也不利於歸檔</td><td>用英文與文件類型，例如 PI_Guangze_2026-041.pdf</td></tr>
+          <tr><td>沒有下一步</td><td>客戶看完不知道該回什麼</td><td>結尾寫 Please confirm / Please arrange / Please advise</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>情境模板：新人可以直接改資料使用</h3>
+        <div class="template-grid">
+          <div class="template-card">
+            <h4>1. 詢價資料不完整</h4>
+            <p>用途：客戶只丟一張照片或一句「請報價」。</p>
+            <div class="mail-copy">Thank you for your inquiry. To provide an accurate quotation, could you please share the 2D/3D drawing, material requirement, surface finish, estimated annual volume, target market and PPAP level? Once we receive the details, we will review the feasibility and provide our quotation as soon as possible.</div>
+          </div>
+          <div class="template-card">
+            <h4>2. 報價後跟進</h4>
+            <p>用途：報價寄出後3到5天未回覆。</p>
+            <div class="mail-copy">I would like to follow up on the quotation we sent for [project name]. May I know if the price, lead time or payment terms need further review from your side? If there is a target price or project timeline, please feel free to share it with us so that we can evaluate the best possible solution.</div>
+          </div>
+          <div class="template-card">
+            <h4>3. 客戶壓價</h4>
+            <p>用途：客戶說其他供應商便宜20%。</p>
+            <div class="mail-copy">Thank you for your feedback. Our current price includes mold support, injection molding, surface finishing, quality control and final assembly. If the target price is fixed, we can review possible adjustments such as MOQ, material option, surface process or packaging method. Could you please confirm which specification can be adjusted?</div>
+          </div>
+          <div class="template-card">
+            <h4>4. 交期延誤通知</h4>
+            <p>用途：不能等客戶問才說，要先講原因與解法。</p>
+            <div class="mail-copy">We would like to inform you that the shipment originally scheduled for [date] will be delayed to [new date] due to [reason]. We have already taken the following actions: [action 1], [action 2]. We will provide the next update by [date/time]. We sincerely apologize for the inconvenience and will do our best to minimize the impact.</div>
+          </div>
+          <div class="template-card">
+            <h4>5. 尾款提醒</h4>
+            <p>用途：70% balance before shipment。</p>
+            <div class="mail-copy">This is a kind reminder that the 70% balance payment for PI #[number] is due before shipment. The goods are scheduled to be ready on [date]. To avoid any delay in booking and release, please arrange the payment and send us the bank slip once available.</div>
+          </div>
+          <div class="template-card">
+            <h4>6. L/C修改要求</h4>
+            <p>用途：L/C條款與合同不一致或容易產生不符點。</p>
+            <div class="mail-copy">After reviewing the L/C, we noticed several clauses that need amendment before shipment: [clause 1], [clause 2], [clause 3]. To avoid discrepancy during bank negotiation, please kindly arrange the amendment at your earliest convenience. We can proceed with shipment documents once the amended L/C is received.</div>
+          </div>
+          <div class="template-card">
+            <h4>7. 客訴第一封回覆</h4>
+            <p>用途：先穩住客戶，收集證據，不急著承認責任。</p>
+            <div class="mail-copy">Thank you for informing us. We are sorry for the inconvenience caused. We have started an internal investigation and will coordinate with our quality team immediately. To help us identify the root cause, could you please provide photos, quantity affected, batch number, delivery date and a short description of how the issue was found?</div>
+          </div>
+          <div class="template-card">
+            <h4>8. 客訴進度更新</h4>
+            <p>用途：8D還沒完成，但不能讓客戶等太久。</p>
+            <div class="mail-copy">Here is our current update on the quality issue. Temporary containment has been completed for the same batch, and our team is checking production records, inspection data and packaging condition. We expect to provide the initial root cause analysis by [date]. If urgent replacement is required, please advise the priority quantity.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>語氣強度怎麼調</h3>
+        <table>
+          <tr><th>強度</th><th>適用情境</th><th>英文句型</th></tr>
+          <tr><td>友善提醒</td><td>第一次追蹤、關係良好</td><td>May I kindly follow up on...</td></tr>
+          <tr><td>正式提醒</td><td>已影響出貨、付款或文件進度</td><td>To avoid any delay, please confirm by...</td></tr>
+          <tr><td>明確警示</td><td>再不回覆會造成實際損失</td><td>If we do not receive your confirmation by..., the shipment schedule may be affected.</td></tr>
+          <tr><td>升級處理</td><td>付款逾期、重大客訴、合規風險</td><td>We may need to escalate this matter internally if no update is received by...</td></tr>
+        </table>
+        <div class="highlight">⚠️ 語氣越強，越要保留事實證據：PO、PI、付款條款、承諾日期、出貨節點。不要用情緒壓人，用事實推動對方回覆。</div>
+      </div>
+      <div class="card">
+        <h3>商務郵件SOP：寄出前30秒檢查</h3>
         <ol>
-          <li><strong>Subject Line：</strong>[標籤] 訂單/貨物編號 – 核心信息<br><em>例：[Action Required] PI #GZ2024-089 – Please Confirm by April 30</em></li>
-          <li><strong>稱呼：</strong>Dear [Name]（已知）/ Dear Sir/Madam（未知）</li>
-          <li><strong>開門見山：</strong>第一句說明郵件目的</li>
-          <li><strong>主體：</strong>清晰分段，每段一個主題，用bullet point代替長段落</li>
-          <li><strong>行動要求：</strong>清楚說明需要對方做什麼、何時</li>
-          <li><strong>Closing：</strong>Best regards / Kind regards</li>
+          <li>主旨是否包含PO / PI / Invoice / Project name / Shipment No.？</li>
+          <li>第一句是否說清楚這封信的目的？</li>
+          <li>是否有明確要求對方做什麼，以及最晚日期？</li>
+          <li>附件是否真的附上，檔名是否為英文且版本正確？</li>
+          <li>金額、日期、Incoterm、付款條件是否和PI/合約一致？</li>
+          <li>如果是客訴、付款或延誤，是否保留證據與下一次更新時間？</li>
         </ol>
       </div>
       <div class="card">
-        <h3>常見郵件場景模板</h3>
-        <p><strong>投訴回覆（第一封）：</strong></p>
-        <div class="highlight">
-          「Thank you for informing us. We sincerely apologize for the inconvenience caused. We have immediately started a thorough investigation and will provide you with a detailed report by [date]. In the meantime, please send us photos of the defective products to help us identify the issue.」
-        </div>
-        <p style="margin-top:12px"><strong>催款（第一封）：</strong></p>
-        <div class="highlight">
-          「I hope this message finds you well. I would like to kindly follow up on Invoice #[number] for USD [amount], which was due on [date]. Could you please confirm the payment status at your earliest convenience? Please find attached a copy of the invoice for your reference.」
-        </div>
-      </div>
-      <div class="card">
-        <h3>郵件常見錯誤</h3>
-        <ul>
-          <li>❌ 全大寫（相當於大聲吼叫）</li>
-          <li>❌ ASAP（模糊），應該給具體日期</li>
-          <li>❌ 附件中文文件名（可能在對方系統亂碼）</li>
-          <li>❌ 憤怒時立刻回覆（先冷靜，30分鐘後再寫）</li>
-          <li>❌ CC太多人（信息氾濫）</li>
-          <li>✅ 主動說「我確認後回覆」好過沉默</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>更多高頻郵件模板</h3>
-        <p><strong>報價回覆：</strong></p>
-        <div class="highlight">
-          「Thank you for your inquiry. Please find our quotation attached for your review. The price is based on FOB Shenzhen, MOQ [qty], and the lead time is [xx] days after receiving the deposit. If you need a CIF / DAP offer, we can update it accordingly.」
-        </div>
-        <p style="margin-top:12px"><strong>交期延遲通知：</strong></p>
-        <div class="highlight">
-          「We would like to inform you that the shipment originally scheduled for [date] will be delayed to [new date] due to [brief reason]. We are taking corrective actions and will keep you updated on the revised ETD and document schedule.」
-        </div>
-        <p style="margin-top:12px"><strong>樣品寄出通知：</strong></p>
-        <div class="highlight">
-          「This is to inform you that the samples were shipped today via [courier]. The tracking number is [number]. Please find the sample list attached. Kindly let us know once received, and we would appreciate your feedback after evaluation.」
-        </div>
-        <p style="margin-top:12px"><strong>L/C修改要求：</strong></p>
-        <div class="highlight">
-          「After reviewing the L/C, we noticed several clauses that need amendment before shipment, including [item 1], [item 2], and [item 3]. To avoid discrepancy, please kindly arrange the amendment at your earliest convenience.」
-        </div>
-      </div>
-      <div class="card">
-        <h3>附件與回覆節奏Checklist</h3>
-        <ul>
-          <li>附件檔名用英文：`PI_Guangze_2026-041.pdf` 比中文檔名更安全</li>
-          <li>24小時內先回覆收到，即使完整答案還在確認中</li>
-          <li>每封郵件都寫明下一步和時間，例如「We will update you by April 26, 2026」</li>
-          <li>主旨保留關鍵編號：PO / PI / Invoice / Shipment No.</li>
-          <li>對方若超過承諾時間未回覆，可以用簡短追蹤信提醒，不必一次寫太長</li>
-        </ul>
+        <h3>回覆節奏：不要讓客戶覺得你消失</h3>
+        <table>
+          <tr><th>事件</th><th>建議節奏</th><th>最低要求</th></tr>
+          <tr><td>收到詢價</td><td>24小時內回覆收到，資料不足就列清單</td><td>不要等完整報價才第一次回信</td></tr>
+          <tr><td>跨部門確認中</td><td>先說正在確認，並承諾下一次更新時間</td><td>不要只寫 I will check</td></tr>
+          <tr><td>出貨異常</td><td>知道異常當天就通知，後續每天更新到穩定</td><td>要寫原因、影響、解法、下一次更新</td></tr>
+          <tr><td>客訴</td><td>先收資料，24小時內給初步回覆，依8D節奏更新</td><td>不要在未查清前承諾賠償或責任</td></tr>
+          <tr><td>付款逾期</td><td>到期前提醒，到期後正式追蹤，影響出貨時明確告知</td><td>語氣專業，不威脅但要說明後果</td></tr>
+        </table>
       </div>
     </section>
 
     <!-- CH10: Advanced -->
     <section class="chapter" id="ch10">
       <h2>⚡ 進階知識</h2>
-      <p class="subtitle">貿易合規、ESG、供應鏈戰略——在複雜的國際環境中保持競爭力</p>
+      <p class="subtitle">把關稅、合規、ESG、EV轉型和客戶開發，轉成可執行的業務判斷</p>
       <div class="card">
         <h3>時效性提醒</h3>
         <div class="highlight">本章內容屬於培訓用概念整理。涉及關稅、制裁、優惠原產地、客戶合規要求與ESG問卷時，請在實際報價或出貨前再次確認最新官方規定與客戶版本要求。</div>
       </div>
       <div class="card">
-        <h3>關稅與貿易合規</h3>
-        <ul>
-          <li><strong>Section 301：</strong>美國對中國商品加征25%關稅（汽車零件大部分受影響）</li>
-          <li><strong>反傾銷（AD）+ 補貼稅（CVD）：</strong>「雙反」調查可能讓產品在目的國失去競爭力</li>
-          <li><strong>USMCA：</strong>美加墨協定，北美汽車供應鏈的重要規則</li>
-          <li><strong>RCEP：</strong>覆蓋東盟+中日韓澳新的大型FTA，廣澤可用RCEP CO降低客戶進口稅</li>
-          <li><strong>HS Code：</strong>報關時的商品編碼，直接決定關稅率，分類錯誤=法律風險</li>
-        </ul>
-        <div class="highlight">⚠️ 高報/低報發票價格是違法行為，違反中國和進口國海關法規，廣澤絕不配合。</div>
+        <h3>進階知識不是背名詞：要能轉成判斷</h3>
+        <table>
+          <tr><th>名詞</th><th>你要理解的核心</th><th>實務上要問什麼</th></tr>
+          <tr><td>HS Code</td><td>商品分類，決定關稅率、監管條件與原產地判定</td><td>產品材質、用途、是否帶光源/電子模組、目的國分類口徑</td></tr>
+          <tr><td>Section 301</td><td>美國對部分中國商品加徵關稅，會直接影響客戶 landed cost</td><td>目的地是否美國、客戶是否進口商、關稅由誰承擔</td></tr>
+          <tr><td>AD / CVD</td><td>反傾銷與反補貼稅，可能讓低價優勢瞬間消失</td><td>產品是否被目的國調查，是否需要律師或貨代確認</td></tr>
+          <tr><td>FTA / RCEP</td><td>符合原產地規則時，可能幫客戶降低進口稅</td><td>目的國是否適用、材料來源是否滿足規則、是否能出CO</td></tr>
+          <tr><td>REACH / ELV / RoHS</td><td>禁用物質與化學品合規，不只是文件要求，也會影響材料選擇</td><td>客戶要求哪一版聲明、是否需要第三方測試、供應商材料證明是否齊全</td></tr>
+          <tr><td>ESG / Carbon Footprint</td><td>歐洲與新能源客戶把環境數據當作供應商門檻</td><td>客戶要Scope 1/2還是產品碳足跡，是否有問卷格式與截止日期</td></tr>
+        </table>
       </div>
       <div class="card">
-        <h3>ESG要求——新型競爭力</h3>
-        <ul>
-          <li><strong>碳足跡：</strong>歐洲OEM要求Scope 1+2排放數據，越來越成為供應鏈門檻</li>
-          <li><strong>供應鏈盡職調查：</strong>UFLPA（維吾爾強迫勞動法）要求証明原材料來源合規</li>
-          <li><strong>勞工標準：</strong>工時、最低工資、安全記錄是歐洲審廠重點</li>
-          <li><strong>廣澤應對：</strong>建立原材料追溯體系、開始碳盤查、準備ESG問卷回答能力</li>
-        </ul>
+        <h3>貿易合規處理流程</h3>
+        <ol>
+          <li>先確認產品定義：汽車內飾、外飾、發光件、電子模組或單純塑膠件，分類不同會影響稅率。</li>
+          <li>請工程或產品確認材質與功能：ABS、PC+ABS、PP、是否有LED、線束、驅動板、塗裝或電鍍。</li>
+          <li>請貨代或報關行初步判斷HS Code，不要由業務自己憑感覺填。</li>
+          <li>確認目的國關稅、301/反傾銷/原產地要求，並把成本反映到報價條件。</li>
+          <li>確認客戶是否要求REACH、ELV、VOC、禁用物質、供應鏈追溯或ESG問卷。</li>
+          <li>把最終採用的HS Code、Incoterm、付款條件、文件清單寫進PI或合同，避免出貨前才爭議。</li>
+        </ol>
+        <div class="highlight">⚠️ 高報/低報發票價格、雙版本發票、虛假原產地都不能配合。這不是談判技巧，是海關與法律風險。</div>
+      </div>
+      <div class="card">
+        <h3>ESG怎麼變成銷售語言</h3>
+        <table>
+          <tr><th>客戶問題</th><th>背後真正關心</th><th>廣澤回應方向</th></tr>
+          <tr><td>Do you have carbon footprint data?</td><td>是否能進入歐系/新能源供應鏈</td><td>說明可依客戶問卷提供能源、排放、材料與製程資料，並逐步建立碳盤查能力</td></tr>
+          <tr><td>Can you replace chrome plating?</td><td>環保、成本、禁用物質與碳排壓力</td><td>介紹EPF、IML/INS、特殊塗裝或透光紋理方案，依外觀和性能要求評估</td></tr>
+          <tr><td>Do you comply with ELV / REACH?</td><td>禁用物質風險與量產責任</td><td>回覆可配合提供材料聲明、測試報告與供應商資料，不口頭承諾未確認數據</td></tr>
+          <tr><td>Can you support supplier audit?</td><td>客戶要確認現場管理能力</td><td>準備IATF、ISO 14001、製程控制、追溯、8D與改善案例</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>公司轉型：從傳統飾件到智慧表面</h3>
+        <table>
+          <tr><th>傳統能力</th><th>市場壓力</th><th>升級方向</th><th>對客戶怎麼說</th></tr>
+          <tr><td>格柵、門把手、鍍鉻飾條</td><td>EV前臉簡化，部分傳統鍍鉻需求下降</td><td>發光格柵、發光車標、透光飾板</td><td>我們能把品牌識別從「造型」升級到「光效」</td></tr>
+          <tr><td>中控面板、裝飾條</td><td>內飾往大屏、觸控、氛圍燈整合</td><td>IML/INS + Mini LED + 雷雕透光</td><td>我們能做外觀、觸感與光效的一體化表面方案</td></tr>
+          <tr><td>噴塗、電鍍、水轉印</td><td>環保、VOC與碳足跡要求提高</td><td>EPF、低VOC材料、環保替代製程</td><td>我們不只做漂亮，也幫客戶降低合規壓力</td></tr>
+          <tr><td>單一零件供應</td><td>客戶希望減少供應商管理成本</td><td>模具、注塑、表面處理、組裝一站式</td><td>我們能減少跨廠協調、色差、責任界面與交期風險</td></tr>
+        </table>
       </div>
       <div class="card">
         <h3>技術參數速記：外貿業務至少要知道這些</h3>
@@ -1238,14 +1366,29 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
-        <h3>數字化工具</h3>
-        <ul>
-          <li><strong>阿里巴巴國際站：</strong>B2B電商開發新客戶</li>
-          <li><strong>LinkedIn：</strong>專業社交，開發歐美客戶</li>
-          <li><strong>WhatsApp Business：</strong>印度/中東/東南亞客戶首選溝通工具</li>
-          <li><strong>ERP系統：</strong>訂單追蹤、庫存管理、財務核對</li>
-          <li><strong>翻譯工具：</strong>DeepL（比Google Translate更準確的商業翻譯）</li>
-        </ul>
+        <h3>進階情境案例</h3>
+        <div class="scenario-grid">
+          <div class="scenario-card">
+            <h4>案例1：美國客戶說關稅太高，要求降價25%</h4>
+            <p>不要直接用降價吸收關稅。先確認HS Code、進口商、Incoterm和關稅由誰負擔，再討論工藝、包裝、MOQ或長約換成本優化。</p>
+            <p class="scenario-action">建議回應：我們可以共同拆解landed cost，但關稅屬目的國進口成本，需和產品單價分開討論。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例2：歐洲客戶要求ESG問卷三天內完成</h4>
+            <p>先回覆收到並確認截止時間，內部找EHS、品質、採購與人事一起填。不要由業務自己猜數字。</p>
+            <p class="scenario-action">建議回應：我們會協調內部資料，先提供可確認項目，需核准的數據會標註並補交。</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例3：客戶要求低報發票</h4>
+            <p>這是紅線。不能因為想成交就答應，否則會造成出口與進口海關風險，也可能影響公司信用。</p>
+            <p class="scenario-action">建議回應：We are sorry, but we must declare the actual transaction value in compliance with customs regulations.</p>
+          </div>
+          <div class="scenario-card">
+            <h4>案例4：EV新創問發光格柵能不能便宜做</h4>
+            <p>先拆功能：發光面積、亮度、動態效果、防水、法規、線束、控制方式。便宜不是先降價，而是先降低功能複雜度。</p>
+            <p class="scenario-action">建議回應：我們可以提供標準版、部分發光版與完整動態光效版三種成本方案。</p>
+          </div>
+        </div>
       </div>
       <div class="card">
         <h3>電動車轉型下的機會與風險</h3>
@@ -1276,6 +1419,17 @@ tr:last-child td{border-bottom:none}
           <li>確認客戶是否要求填寫供應鏈問卷、原料追溯、ESG / 人權合規聲明</li>
           <li>確認發票金額、付款方式、報關資料一致，避免高報/低報或雙重版本文件</li>
         </ol>
+      </div>
+      <div class="card">
+        <h3>數字化工具：不是工具越多越好</h3>
+        <table>
+          <tr><th>工具</th><th>適合用途</th><th>注意事項</th></tr>
+          <tr><td>Alibaba / B2B平台</td><td>接觸新詢盤、曝光標準產品</td><td>容易遇到比價客，要快速判斷是否有圖紙、量產計劃與真實預算</td></tr>
+          <tr><td>LinkedIn</td><td>開發歐美採購、工程、供應鏈決策者</td><td>不要一開始就硬推產品，先用案例、能力與行業洞察建立可信度</td></tr>
+          <tr><td>WhatsApp / WeChat</td><td>快速跟進樣品、物流、付款與會議</td><td>重大條件仍要回到郵件或PI確認，避免聊天記錄不完整</td></tr>
+          <tr><td>ERP / CRM</td><td>訂單、付款、交期、客戶歷史管理</td><td>所有承諾要落到系統，不能只存在個人聊天裡</td></tr>
+          <tr><td>DeepL / AI翻譯</td><td>提高英文郵件效率</td><td>技術條款、法律條款、付款條件要人工校對，不可直接照貼</td></tr>
+        </table>
       </div>
     </section>
   </main>
@@ -1397,6 +1551,29 @@ function toggleTheme() {
   const t = localStorage.getItem('gz_theme') || 'light';
   document.documentElement.setAttribute('data-theme', t);
   document.getElementById('theme-btn').textContent = t==='dark' ? '☀️' : '🌙';
+})();
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────
+function syncSidebarToggleLabel() {
+  const btn = document.getElementById('sidebar-toggle');
+  if(!btn) return;
+  const collapsed = document.body.classList.contains('sidebar-collapsed');
+  btn.textContent = collapsed ? '☰' : '‹';
+  btn.title = collapsed ? '展開導覽' : '收合導覽';
+  btn.setAttribute('aria-label', collapsed ? '展開導覽' : '收合導覽');
+}
+
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('gz_sidebar_collapsed', collapsed ? '1' : '0');
+  syncSidebarToggleLabel();
+}
+
+(function(){
+  if(localStorage.getItem('gz_sidebar_collapsed') === '1') {
+    document.body.classList.add('sidebar-collapsed');
+  }
+  syncSidebarToggleLabel();
 })();
 
 // ── STUDY ──────────────────────────────────────────────────────────────────
