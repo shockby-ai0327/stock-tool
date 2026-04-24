@@ -55,6 +55,9 @@ th,td{padding:7px 8px;font-size:12px}
 .card{padding:14px;margin-bottom:12px}
 .card h3{font-size:13px}
 .edu-card{grid-template-columns:1fr!important}
+button,.btn,.tab-bar button,.tf-btn,.mobile-nav button{min-height:44px}
+.btn-sm{min-height:36px}
+.tf-btn{min-height:36px}
 }
 .signal{display:inline-block;padding:6px 16px;border-radius:20px;font-weight:600;font-size:14px}
 .signal.buy{background:rgba(16,185,129,.15);color:var(--green)}
@@ -869,7 +872,15 @@ async function analyzeStock() {
     setTimeout(() => renderKline('stock-kline', ohlcv), 50);
   } catch (e) {
     console.error(e);
-    rd.innerHTML = '<div class="card" style="text-align:center;color:var(--red)"><h3>查詢失敗</h3><p style="margin-top:8px">無法取得 ' + ticker + ' 的資料。</p><p style="font-size:13px;color:var(--muted);margin-top:4px">台股請加 .TW（例：2330.TW），美股直接輸入（例：AAPL），債券ETF（例：TLT、AGG、HYG）</p><p style="font-size:12px;color:var(--muted);margin-top:8px">錯誤：' + e.message + '</p></div>';
+    const isNotFound = e.message && (e.message.includes('No data') || e.message.includes('not found') || e.message.includes('404') || e.message.includes('empty') || e.message.includes('undefined'));
+    const isTimeout  = e.message && (e.message.includes('timeout') || e.message.includes('abort') || e.message.toLowerCase().includes('signal'));
+    const title = isNotFound ? '找不到此代號' : isTimeout ? '請求逾時' : '查詢失敗';
+    const hint  = isNotFound
+      ? '請確認代號是否正確：<br>台股請加 <b>.TW</b>（例：2330.TW）；美股直接輸入（例：AAPL）；債券 ETF（例：TLT、AGG、HYG）'
+      : isTimeout
+      ? '網路連線較慢或 API 無回應，請稍後再試。'
+      : '無法取得資料，請稍後再試。台股加 <b>.TW</b>（例：2330.TW），美股直接輸入（例：AAPL）。';
+    rd.innerHTML = '<div class="card" style="text-align:center;padding:32px"><div style="font-size:32px;margin-bottom:12px">' + (isNotFound ? '🔍' : isTimeout ? '⏱️' : '❌') + '</div><h3 style="color:var(--red)">' + title + '</h3><p style="color:var(--muted);margin-top:10px;line-height:1.7">' + hint + '</p>' + (isNotFound || isTimeout ? '' : '<p style="font-size:11px;color:var(--muted);margin-top:12px;opacity:.6">錯誤：' + e.message + '</p>') + '</div>';
   }
 }
 
@@ -1686,12 +1697,20 @@ function isTrusted(source) {
 
 // ============ NEWS ============
 let _newsItems = [];
+window._newsTabCache = window._newsTabCache || {};
 async function loadNews(cat) {
   const div = document.getElementById('news-content');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
   const _newsCats = ['general','us','tw','crypto'];
   document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
+  // Session 快取：同一 tab 10 分鐘內不重抓
+  const cached = window._newsTabCache[cat];
+  if (cached && (Date.now() - cached.ts) < 10 * 60 * 1000) {
+    div.innerHTML = cached.html;
+    _newsItems = cached.items;
+    return;
+  }
+  div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
   // 美股/加密 → Finnhub API 直連（無 proxy，零 403）
   // 綜合/台股 → Google News Topic ID URL（不走搜尋型，proxy 不擋）
   const GNEWS_TOPIC = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB';
@@ -1828,6 +1847,8 @@ async function loadNews(cat) {
     });
     html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)">⚠ 新聞內容來自 Google News RSS 彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + new Date().toLocaleString('zh-TW') + '</div>';
     div.innerHTML = html;
+    // 存入 session 快取（10 分鐘）
+    window._newsTabCache[cat] = { html, items: _newsItems, ts: Date.now() };
   } catch (e) {
     div.innerHTML = '<div class="card" style="text-align:center;color:var(--red)">載入新聞失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="loadNews(\'' + cat + '\')">重試</button></div>';
   }
@@ -1884,21 +1905,29 @@ function openNews(idx) {
   const it = _newsItems[idx]; if (!it) return;
   const analysis = newsAnalysis(it);
   const trusted = isTrusted(it.source);
+  const total = _newsItems.length;
   const srcBadge = trusted
     ? '<span style="background:rgba(16,185,129,.12);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">✓ 核實來源：' + it.source + '</span>'
     : '<span style="background:rgba(255,200,0,.08);color:#f59e0b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">⚠ 未核實：' + (it.source||'未知') + '</span>';
+  const navBtn = (disabled, label, onclick) =>
+    '<button onclick="' + onclick + '" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:' + (disabled ? 'var(--border)' : 'var(--text)') + ';cursor:' + (disabled ? 'default' : 'pointer') + ';font-size:13px"' + (disabled ? ' disabled' : '') + '>' + label + '</button>';
   document.getElementById('news-modal-content').innerHTML =
     '<button class="modal-close" onclick="closeModal()">&times;</button>' +
-    '<h2 style="margin-bottom:12px;padding-right:30px">' + it.title + '</h2>' +
+    // 上下篇導航列
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+    navBtn(idx === 0, '← 上一則', 'openNews(' + (idx-1) + ')') +
+    '<span style="font-size:12px;color:var(--muted)">' + (idx+1) + ' / ' + total + '</span>' +
+    navBtn(idx >= total-1, '下一則 →', 'openNews(' + (idx+1) + ')') +
+    '</div>' +
+    '<h2 style="margin-bottom:12px;padding-right:30px;font-size:16px;line-height:1.5">' + it.title + '</h2>' +
     '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
-    srcBadge +
-    '<span>' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span>' +
+    srcBadge + '<span>' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span>' +
     '</div>' +
     (!trusted ? '<div style="font-size:12px;padding:8px 12px;background:rgba(245,158,11,.06);border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;margin-bottom:14px;color:#f59e0b">此媒體不在核實名單中，內容請自行查證後再作投資判斷。</div>' : '') +
     '<div style="line-height:1.8;margin-bottom:20px">' + (it.desc || '（摘要不可用）') + '</div>' +
     '<div style="margin-bottom:16px"><a href="' + it.link + '" target="_blank" style="color:var(--accent);font-weight:600">前往閱讀完整原文 →</a></div>' +
     '<div style="border-top:1px solid var(--border);padding-top:16px"><h3 style="color:var(--accent);margin-bottom:12px">📊 主題分析與操作參考</h3><div style="line-height:1.9;color:var(--muted)">' + analysis + '</div></div>' +
-    '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;font-size:11px;color:var(--muted)">本分析為系統依新聞主題自動生成，僅供參考，不構成投資建議。實際交易請以自身研究及風控規則為準。</div>';
+    '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;font-size:11px;color:var(--muted)">本分析為系統自動生成，僅供參考，不構成投資建議。</div>';
   document.getElementById('news-modal').style.display = 'flex';
 }
 function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
@@ -2308,7 +2337,10 @@ function showJournalATRGuide(price, ticker) {
     box('2R 目標（+2×ATR）', r2, 'var(--green)', '+' + pct(r2)) +
     box('3R 目標（+3×ATR）', r3, 'var(--green)', '+' + pct(r3)) +
     '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:8px">ATR ' + (fromCache ? '來自掃描器快取（精確）' : '以進場價 2% 估算（先掃描該股可獲精確值）') + '。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div>';
+    (fromCache
+      ? '<div style="font-size:11px;color:var(--muted);margin-top:8px">✅ ATR 來自掃描器快取（精確值）。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div>'
+      : '<div style="font-size:11px;margin-top:8px;padding:8px 10px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:6px;color:var(--yellow)">⚠️ ATR 以進場價 2% <b>粗略估算</b>，非實際波幅。請先在「個股分析」搜尋 <b>' + ticker + '</b> 或執行掃描器，以獲得精確 ATR 後再規劃停損。</div>') +
+    '<div style="font-size:11px;color:var(--muted);margin-top:6px">停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div>';
   div.style.display = 'block';
   setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 }
@@ -3244,12 +3276,14 @@ async function loadIndustry(tab) {
   // Show loading state while fetching ETF prices
   ct.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">載入 ETF 即時數據中...</div>';
 
-  // Fetch all unique ETF tickers in parallel
+  // 分批取 ETF（每批 4 個，避免同時打 proxy 被限流）
   const etfTickers = [...new Set(data.map(ind => SECTOR_ETF[ind.id]).filter(Boolean))];
   const etfData = {};
-  await Promise.all(etfTickers.map(async t => {
-    try { const d = await quickPrice(t); if (d) etfData[t] = d; } catch(e) {}
-  }));
+  for (let i = 0; i < etfTickers.length; i += 4) {
+    await Promise.all(etfTickers.slice(i, i + 4).map(async t => {
+      try { const d = await quickPrice(t); if (d) etfData[t] = d; } catch(e) {}
+    }));
+  }
 
   // Heatmap overview with real ETF badge
   let heatHtml = '<div class="card" style="margin-bottom:20px"><h3 style="margin-bottom:4px">產業景氣概覽</h3>' +
@@ -3872,7 +3906,8 @@ async function runScan(strategy) {
     }
 
     // ── Stage 3: fetch OHLCV + technical analysis (all 15 concurrently, 25s cap) ────
-    setProgress('③ 技術分析中（' + top15.length + ' 檔，逐一取歷史資料）...');
+    let _scanDone = 0;
+    setProgress('③ 技術分析中（0 / ' + top15.length + ' 檔）...');
 
     // Each yfChart call uses pFetch with 6s timeout; cap entire stage at 25s
     const _yfStageDone = { v: false };
@@ -3902,6 +3937,7 @@ async function runScan(strategy) {
           const price = q.regularMarketPrice;
           const ta = technicalAnalysis(c, h, l, v, price);
           const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
+          _scanDone++; setProgress('③ 技術分析中（' + _scanDone + ' / ' + top15.length + ' 檔完成）...');
           if (!signal) return null;
           // Append K-line pattern tags to signalDetail (max 2)
           const patternTags = [...detectCandlePatterns(c, h, l, o), ...detectChartPatterns(c, h, l)]
@@ -5593,7 +5629,18 @@ async function renderDashboard(forceRescan) {
 
   // 4. 觸發掃描（自動，快取 5 分鐘）
   quickDashboardScan(forceRescan);
-  // 5. 盤前/盤後市場預測卡片（先用現有數據渲染，背景抓新聞後自動更新）
+  // 5. 盤前/盤後市場預測卡片：立即顯示骨架，數據到了再填入
+  const _preEl = document.getElementById('dash-premarket');
+  if (_preEl && !_preEl.innerHTML.trim()) {
+    _preEl.innerHTML = '<div class="card" style="margin-bottom:16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+      '<span style="font-weight:700;font-size:14px">📋 今日市場預測</span>' +
+      '<span style="font-size:11px;color:var(--muted)">數據載入中...</span></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+      '<div style="padding:12px;background:var(--bg);border-radius:8px;border-left:3px solid var(--border)"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">🇺🇸 美股方向</div><div style="height:12px;background:var(--border);border-radius:4px;width:60%;margin-bottom:6px"></div><div style="height:10px;background:var(--border);border-radius:4px;width:90%"></div></div>' +
+      '<div style="padding:12px;background:var(--bg);border-radius:8px;border-left:3px solid var(--border)"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">🇹🇼 台股方向</div><div style="height:12px;background:var(--border);border-radius:4px;width:50%;margin-bottom:6px"></div><div style="height:10px;background:var(--border);border-radius:4px;width:80%"></div></div>' +
+      '</div><div style="font-size:11px;color:var(--muted)">新聞情緒分析載入中...</div></div>';
+  }
   renderPreMarketCard(marketData);
   fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
   // 6. T交易精選（15 分鐘快取，獨立載入）
