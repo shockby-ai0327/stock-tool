@@ -297,6 +297,8 @@ firebase.initializeApp(_fbConfig);
         <button class="active" onclick="loadNews('general')">綜合</button>
         <button onclick="loadNews('us')">美股</button>
         <button onclick="loadNews('tw')">台股</button>
+        <button onclick="loadNews('industry')">產業</button>
+        <button onclick="loadNews('geo')">地緣政治</button>
         <button onclick="loadNews('crypto')">加密貨幣</button>
       </div>
       <div id="news-content"></div>
@@ -1662,12 +1664,15 @@ async function loadNews(cat) {
   const div = document.getElementById('news-content');
   div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#news-tabs button')[['general', 'us', 'tw', 'crypto'].indexOf(cat)].classList.add('active');
+  const _newsCats = ['general','us','tw','industry','geo','crypto'];
+  document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
   const urls = {
-    general: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB',
-    us: 'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500&hl=en-US&gl=US',
-    tw: 'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3&hl=zh-TW&gl=TW',
-    crypto: 'https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum&hl=en-US'
+    general:  'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB',
+    us:       'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500+NYSE+NASDAQ&hl=en-US&gl=US',
+    tw:       'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3+%E9%9B%86%E4%B8%AD%E9%81%8E%E5%9B%9E&hl=zh-TW&gl=TW',
+    industry: 'https://news.google.com/rss/search?q=semiconductor+AI+nvidia+biotech+pharma+energy+tech+industry+sector+earnings&hl=en-US&gl=US',
+    geo:      'https://news.google.com/rss/search?q=geopolitics+trade+war+tariff+china+us+taiwan+ukraine+middle+east+sanctions+NATO&hl=en-US&gl=US',
+    crypto:   'https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum+crypto&hl=en-US'
   };
   try {
     const r = await pFetch(urls[cat] || urls.general);
@@ -1710,14 +1715,18 @@ function generateMarketSummary(items) {
   const todayItems = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 86400000);
   const weekItems  = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 7 * 86400000);
   const themes = [
-    { key:/fed|利率|rate|interest|央行|降息|升息|fomc/, label:'貨幣政策', color:'var(--accent)' },
-    { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積/, label:'AI / 半導體', color:'var(--green)' },
-    { key:/tariff|關稅|trade war|貿易|china.*trade|trump.*tariff/, label:'貿易 / 關稅', color:'var(--orange)' },
-    { key:/earning|財報|revenue|eps|profit|quarterly/, label:'財報季', color:'var(--yellow)' },
-    { key:/recession|衰退|inflation|通膨|cpi|gdp|unemployment/, label:'總體經濟', color:'var(--muted)' },
-    { key:/bitcoin|crypto|加密|比特幣|ethereum/, label:'加密貨幣', color:'#f59e0b' },
-    { key:/oil|原油|energy|能源|opec/, label:'能源 / 原油', color:'#78716c' },
-    { key:/geopolit|war|ukraine|middle east|地緣|戰爭|conflict/, label:'地緣政治', color:'var(--red)' },
+    { key:/fed|利率|rate|interest|央行|降息|升息|fomc|monetary policy/, label:'貨幣政策', color:'var(--accent)' },
+    { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積|asml|arm\b/, label:'AI / 半導體', color:'var(--green)' },
+    { key:/tariff|關稅|trade war|貿易戰|china.*trade|trump.*tariff|import duty/, label:'貿易 / 關稅', color:'var(--orange)' },
+    { key:/earning|財報|revenue|eps|profit|quarterly result|guidance/, label:'財報季', color:'var(--yellow)' },
+    { key:/recession|衰退|inflation|通膨|cpi|gdp|unemployment|jobs|nonfarm/, label:'總體經濟', color:'var(--muted)' },
+    { key:/bitcoin|crypto|加密|比特幣|ethereum|stablecoin|defi/, label:'加密貨幣', color:'#f59e0b' },
+    { key:/oil|原油|energy|能源|opec|natural gas|天然氣|lng/, label:'能源 / 原油', color:'#78716c' },
+    { key:/geopolit|war|ukraine|russia|middle east|地緣|戰爭|conflict|missile|iran|israel|hamas|hezbollah/, label:'地緣政治', color:'var(--red)' },
+    { key:/china|taiwan strait|台海|兩岸|習近平|xi jinping|pla|南海|south china sea/, label:'中美台局勢', color:'#e11d48' },
+    { key:/biotech|pharma|fda|drug|clinical|生技|製藥|疫苗|vaccine/, label:'生技醫藥', color:'#7c3aed' },
+    { key:/fintech|bank|banking|finance|fed reserve|goldman|jpmorgan|interest rate/, label:'金融業', color:'#0ea5e9' },
+    { key:/auto|electric vehicle|ev|tesla|byd|toyota|car|automotive/, label:'汽車 / EV', color:'#10b981' },
   ];
   const scored = themes.map(t => ({ ...t, count: (allText.match(t.key) || []).length }))
     .filter(t => t.count > 0).sort((a,b) => b.count - a.count);
@@ -1762,7 +1771,13 @@ function newsAnalysis(it) {
   if (t.match(/bitcoin|crypto|加密|比特幣|ethereum|以太/)) return '<b>加密貨幣分析：</b>加密市場受宏觀流動性、監管政策和機構資金三大因素驅動。比特幣常被視為風險資產領先指標。<br><br><b>投資建議：</b>加密資產波動極大，建議倉位控制在投資組合 5% 以內。關注比特幣 ETF 資金流向和鏈上數據作為趨勢判斷依據。';
   if (t.match(/earning|財報|revenue|營收|profit|獲利|eps/)) return '<b>財報季分析：</b>企業財報是驗證基本面的關鍵時刻。重點：(1) 營收成長率 (2) 毛利率趨勢 (3) 前瞻指引。<br><br><b>投資建議：</b>財報前避免重倉單一個股。優於預期且指引上調，可在回測支撐時加碼；低於預期不要急於抄底，等技術面止穩再進場。';
   if (t.match(/recession|衰退|gdp|inflation|通膨|cpi/)) return '<b>總經分析：</b>經濟數據是判斷景氣循環的重要依據。通膨走向決定央行政策，GDP 和就業反映實體經濟健康度。<br><br><b>投資建議：</b>軟著陸利於降息開啟，有利股債雙多。若出現衰退訊號，增加防禦型部位（公用事業、醫療、必需消費品）和公債配置。';
-  if (t.match(/oil|原油|opec|能源|energy/)) return '<b>能源市場分析：</b>油價受 OPEC+ 減產、地緣政治和全球經濟需求影響。油價上漲推升通膨預期，可能延遲降息。<br><br><b>投資建議：</b>看多油價可配置綜合型能源 ETF，同時留意油價對航空、運輸、化工的成本壓力。';
+  if (t.match(/oil|原油|opec|能源|energy|natural gas|天然氣/)) return '<b>能源市場分析：</b>油價受 OPEC+ 減產、地緣政治和全球經濟需求影響。油價上漲推升通膨預期，可能延遲降息。<br><br><b>投資建議：</b>看多油價可配置綜合型能源 ETF（XLE），同時留意油價對航空（DAL/UAL）、運輸、化工的成本壓力。油價若突破關鍵壓力位，短線有動能交易機會。';
+  if (t.match(/tariff|關稅|trade war|貿易戰|sanction|制裁|import duty/)) return '<b>貿易政策分析：</b>關稅和貿易制裁直接影響供應鏈成本和企業獲利能力。加徵關稅通常對製造業、零售和進口商造成成本壓力。<br><br><b>投資建議：</b>貿易緊張時，關注「在地製造」受益股（美國本土產能）和防禦性消費品。迴避高度依賴跨境供應鏈的企業。台股留意出口訂單動向和匯率影響。';
+  if (t.match(/geopolit|war|ukraine|russia|middle east|israel|iran|hamas|地緣|戰爭|conflict|missile/)) return '<b>地緣政治分析：</b>軍事衝突和地緣緊張推升市場避險情緒，通常造成股市短期震盪、黃金和公債上漲、油價波動。<br><br><b>投資建議：</b>地緣風險高峰期可增配黃金（GLD/IAU）和美國公債 ETF（TLT）。國防航太類股（LMT/RTX/NOC）歷史上在衝突期間表現較強。避免過度反應，地緣事件對股市衝擊通常是短暫的，除非演變為系統性危機。';
+  if (t.match(/china|taiwan strait|台海|兩岸|pla|南海|south china sea|xi jinping|習近平/)) return '<b>中美台局勢分析：</b>台海和中美關係是影響台股、半導體供應鏈和全球科技業的核心地緣風險。<br><br><b>投資建議：</b>台海緊張升溫時，台積電（TSM）等台灣科技股通常承壓；相對受惠的是美國本土晶片廠（英特爾INTC、Micron MU）和印度半導體佈局。長期而言，供應鏈分散化（日本、韓國、美國設廠）是結構性趨勢。';
+  if (t.match(/biotech|pharma|fda|drug approval|clinical trial|生技|製藥|疫苗|vaccine/)) return '<b>生技醫藥分析：</b>FDA 審批結果、臨床試驗數據和專利到期是生技股的核心催化劑，單一事件可造成股價大幅波動。<br><br><b>投資建議：</b>個股風險極高，建議以 ETF（XBI/IBB）分散參與。審批前避免重倉，審批後根據結果快速反應。GLP-1 減重藥（Novo Nordisk、Eli Lilly）和 AI 藥物研發是目前最強主題。';
+  if (t.match(/bank|banking|finance|jpmorgan|goldman|morgan stanley|wells fargo|federal reserve/)) return '<b>金融業分析：</b>銀行股受利率環境、信貸品質和資本市場活絡度影響。高利率有利淨息差，但過高利率增加壞帳風險。<br><br><b>投資建議：</b>Fed 降息周期有利 REITs 和長天期債券，但壓縮銀行息差。投資銀行業務（Goldman、Morgan Stanley）受益於 IPO 市場回暖和 M&A 活動。可透過 XLF 參與整體金融業。';
+  if (t.match(/auto|electric vehicle|\bev\b|tesla|byd|toyota|volkswagen|automotive|car maker/)) return '<b>汽車 / EV 分析：</b>電動車滲透率持續提升，但競爭加劇壓縮毛利。中國 BYD 低價車滲透全球是傳統車廠的主要威脅。<br><br><b>投資建議：</b>特斯拉（TSLA）兼具科技股特性，波動大但流動性高。傳統車廠電動化轉型進度不一。充電基礎設施（CHPT/EVGO）和汽車半導體（ON/NXPI）是 EV 產業鏈受益方向。';
   return '<b>市場綜合分析：</b>此新聞反映當前市場焦點議題。應結合技術面（趨勢、支撐壓力）和基本面（估值、獲利前景）做出決策。<br><br><b>投資建議：</b>維持多元分散投資組合，不因單一新聞做過激調整。價格走勢比新聞標題更值得信賴。控制倉位和停損，不確定性高時保留現金。';
 }
 
