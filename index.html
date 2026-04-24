@@ -828,6 +828,26 @@ async function analyzeStock() {
       const stEntry = shortTermEntry(ta, price, c, h, l);
       rd.innerHTML = renderStock(ticker, meta, ta, va, ltEntry, stEntry, currency, price, change, changePct);
     }
+    // Scanner banner — if this ticker was flagged by scanner, explain the signal context
+    const _scanKey = Object.keys(_entryData).find(k => k.startsWith(ticker + '_'));
+    if (_scanKey) {
+      const _sd = _entryData[_scanKey];
+      const _strat = _scanKey.split('_')[1];
+      const _stratLabel = _strat === 'schwartz' ? 'Schwartz 突破策略' : 'Steinhardt 動量策略';
+      const _stars = '★'.repeat(Math.min(_sd.signalStrength || 0, 5)) || '—';
+      const _scannerBanner =
+        '<div class="card" style="border-left:3px solid var(--green);margin-bottom:0;background:rgba(16,185,129,.04)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
+        '<div>' +
+        '<span style="font-size:12px;font-weight:700;color:var(--green)">掃描器選出</span>' +
+        '<span style="font-size:12px;color:var(--muted);margin-left:8px">' + _stratLabel + ' · ' + _stars + '</span>' +
+        '</div>' +
+        '<button class="btn btn-sm" style="background:rgba(16,185,129,.15);color:var(--green);font-size:12px" onclick="showATRPopup(' + price.toFixed(2) + ',\'' + ticker + '\')">◎ 進場計算</button>' +
+        '</div>' +
+        '<p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6">此股已通過掃描器動能篩選，策略邏輯為<b>趨勢追蹤</b>（RSI 50-75 動能區間），與下方個股分析的<b>超賣反彈</b>策略不同。「不建議進場」指的是反彈型訊號不足，不代表掃描器訊號失效。</p>' +
+        '</div>';
+      rd.innerHTML = _scannerBanner + rd.innerHTML;
+    }
     // Append K-line pattern card (after main render, before kline chart init)
     if (allPatterns.length) {
       const pTag = p => '<span class="tag" title="' + p.desc + '" style="cursor:default;background:' +
@@ -1664,7 +1684,8 @@ async function loadNews(cat) {
     const seen = new Set();
     _newsItems = items.filter(it => { const k = it.title.substring(0, 25).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 20);
     if (!_newsItems.length) throw new Error('No news');
-    let html = '<div class="card" style="padding:0">';
+    const summaryHtml = generateMarketSummary(_newsItems);
+    let html = summaryHtml + '<div class="card" style="padding:0">';
     _newsItems.forEach((it, i) => {
       html += '<div class="news-item" onclick="openNews(' + i + ')"><h4>' + it.title + '</h4><div class="meta"><span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">' + it.source + '</span><span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div><p>' + it.desc.substring(0, 120) + (it.desc.length > 120 ? '...' : '') + '</p></div>';
     });
@@ -1682,6 +1703,57 @@ function openNews(idx) {
   document.getElementById('news-modal').style.display = 'flex';
 }
 function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
+
+function generateMarketSummary(items) {
+  const allText = items.map(it => it.title + ' ' + it.desc).join(' ').toLowerCase();
+  const now = Date.now();
+  const todayItems = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 86400000);
+  const weekItems  = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 7 * 86400000);
+  const themes = [
+    { key:/fed|利率|rate|interest|央行|降息|升息|fomc/, label:'貨幣政策', color:'var(--accent)' },
+    { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積/, label:'AI / 半導體', color:'var(--green)' },
+    { key:/tariff|關稅|trade war|貿易|china.*trade|trump.*tariff/, label:'貿易 / 關稅', color:'var(--orange)' },
+    { key:/earning|財報|revenue|eps|profit|quarterly/, label:'財報季', color:'var(--yellow)' },
+    { key:/recession|衰退|inflation|通膨|cpi|gdp|unemployment/, label:'總體經濟', color:'var(--muted)' },
+    { key:/bitcoin|crypto|加密|比特幣|ethereum/, label:'加密貨幣', color:'#f59e0b' },
+    { key:/oil|原油|energy|能源|opec/, label:'能源 / 原油', color:'#78716c' },
+    { key:/geopolit|war|ukraine|middle east|地緣|戰爭|conflict/, label:'地緣政治', color:'var(--red)' },
+  ];
+  const scored = themes.map(t => ({ ...t, count: (allText.match(t.key) || []).length }))
+    .filter(t => t.count > 0).sort((a,b) => b.count - a.count);
+  const topTheme = scored[0];
+  const outlookMap = {
+    '貨幣政策':  '利率預期主導短期波動，鴿派訊號利科技與成長股，鷹派訊號轉向防禦與金融。',
+    'AI / 半導體':'AI算力需求持續推動半導體產業鏈，高估值下留意回調風險，可於拉回時分批佈局。',
+    '貿易 / 關稅':'貿易政策不確定性壓制風險偏好，出口型企業受壓，關注供應鏈轉移受益標的。',
+    '財報季':     '財報集中驗證基本面，優於預期且指引上修才有追漲動力，結果前避免重倉。',
+    '總體經濟':   '通膨與就業走勢決定政策節奏，軟著陸有利股債，衰退訊號需增配防禦型部位。',
+    '加密貨幣':   '加密市場波動加劇，機構資金流向是核心觀察指標，倉位建議控制在5%以內。',
+    '能源 / 原油':'油價波動影響通膨預期，OPEC+政策是關鍵，注意對航空、化工的成本壓力。',
+    '地緣政治':   '地緣風險推升避險情緒，黃金與公債需求上升，考慮降低高風險資產曝險。',
+  };
+  const outlook = topTheme ? (outlookMap[topTheme.label] || '市場多重因素交織，建議保持多元配置。') : '目前無明顯主題，維持多元配置觀察。';
+  const topHeadlines = (todayItems.length ? todayItems : items).slice(0, 3).map(it =>
+    '<li style="margin-bottom:4px">' + it.title + '</li>').join('');
+  const themeChips = scored.slice(0, 4).map(t =>
+    '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.label + ' ×' + t.count + '</span>').join(' ');
+  return '<div class="card" style="margin-bottom:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">' +
+    '<div style="flex:1;min-width:200px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;margin-bottom:6px">當下焦點</div>' +
+    '<ul style="font-size:13px;line-height:1.7;padding-left:16px;margin:0">' + topHeadlines + '</ul>' +
+    '</div>' +
+    '<div style="flex:1;min-width:200px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;margin-bottom:6px">本週主題</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + (themeChips || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
+    '<div style="font-size:11px;color:var(--muted)">' + weekItems.length + ' 則本週新聞 · ' + todayItems.length + ' 則今日更新</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="margin-top:14px;padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">總結預估</div>' +
+    '<div style="font-size:13px;line-height:1.7">' + outlook + '</div>' +
+    '</div></div>';
+}
 
 function newsAnalysis(it) {
   const t = (it.title + ' ' + it.desc).toLowerCase();
@@ -1783,6 +1855,7 @@ async function renderHoldings() {
       '<td style="color:' + c + ';font-weight:600">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</td>' +
       '<td style="color:' + c + ';font-weight:600">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
       '<td style="color:var(--muted)">' + days + ' 天</td>' +
+      '<td><button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;font-size:12px" title="ATR 進場計算" onclick="showATRPopup(' + avgCost.toFixed(2) + ',\'' + ticker + '\')">◎</button></td>' +
       '</tr>';
   }).join('');
   const totalPnl = totalMV - totalCostAll;
@@ -1796,9 +1869,9 @@ async function renderHoldings() {
     '<div><span style="color:var(--muted);font-size:13px">浮動損益</span><div style="font-size:22px;font-weight:700;color:' + tc + '">' + (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toLocaleString(undefined,{maximumFractionDigits:0}) + ' (' + (totalPnlPct >= 0 ? '+' : '') + totalPnlPct.toFixed(2) + '%)</div></div>' +
     '</div></div>' +
     '<div class="card"><h3>個股明細</h3><div style="overflow-x:auto"><table>' +
-    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th></tr></thead>' +
+    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>' +
-    '<p style="font-size:11px;color:var(--muted);margin-top:10px">現價為即時報價（15分延遲）；損益以含手續費成本計算。</p></div>';
+    '<p style="font-size:11px;color:var(--muted);margin-top:10px">現價為即時報價（15分延遲）；損益以含手續費成本計算。點擊 ◎ 查看 ATR 進場計算。</p></div>';
 }
 
 window._jNotesMap = {};
