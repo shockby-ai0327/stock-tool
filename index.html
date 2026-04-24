@@ -1715,30 +1715,42 @@ async function loadNews(cat) {
       }));
 
     } else if (cat === 'tw') {
-      // ── 台股：先抓台灣財經 RSS（直接來源），再補 Finnhub 國際台股相關新聞
+      // ── 台股：並行嘗試多個台灣財經 RSS（直連優先，proxy 備援）
       const TW_FEEDS = [
-        { url: 'https://ec.ltn.com.tw/rss/news.xml',    name: '自由財經' },
-        { url: 'https://ctee.com.tw/feed',               name: '工商時報' },
-        { url: 'https://www.wealth.com.tw/rss',          name: '財訊' },
+        { url: 'https://ec.ltn.com.tw/rss/news.xml',             name: '自由財經' },
+        { url: 'https://ctee.com.tw/feed',                        name: '工商時報' },
+        { url: 'https://money.udn.com/rssfeed/news/1001/5591',    name: '經濟日報' },
+        { url: 'https://www.businesstoday.com.tw/rss/index.rss',  name: '今周刊' },
+        { url: 'https://www.wealth.com.tw/rss',                   name: '財訊' },
       ];
-      // 嘗試台灣 RSS（任一成功即可）
-      for (const feed of TW_FEEDS) {
-        try {
-          const r = await pFetch(feed.url, true, 6000);
-          const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
-          const parsed = [];
-          xml.querySelectorAll('item').forEach(el => {
-            parsed.push({
-              title:   el.querySelector('title')?.textContent || '',
-              link:    el.querySelector('link')?.textContent || '',
-              pubDate: el.querySelector('pubDate')?.textContent || '',
-              desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
-              source:  feed.name
-            });
+      // 並行嘗試：每個 feed 同時直連 + proxy，哪個先成功就用哪個
+      const parseRSS = (xmlStr, name) => {
+        const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
+        const out = [];
+        xml.querySelectorAll('item').forEach(el => {
+          const title = el.querySelector('title')?.textContent || '';
+          if (!title) return;
+          out.push({
+            title,
+            link:    el.querySelector('link')?.textContent || '',
+            pubDate: el.querySelector('pubDate')?.textContent || '',
+            desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '').slice(0, 200),
+            source:  name
           });
-          if (parsed.length > 3) { allItems = [...allItems, ...parsed]; break; }
-        } catch(_) {}
-      }
+        });
+        return out;
+      };
+      const twResults = await Promise.allSettled(TW_FEEDS.map(async feed => {
+        // 先試直連（部分台媒有 CORS），再試 proxy
+        for (const fetcher of [
+          () => fetch(feed.url, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.text() : Promise.reject()),
+          () => pFetch(feed.url, false, 5000).then(r => r.text())
+        ]) {
+          try { const txt = await fetcher(); const p = parseRSS(txt, feed.name); if (p.length > 2) return p; } catch(_) {}
+        }
+        return [];
+      }));
+      twResults.forEach(r => { if (r.status === 'fulfilled' && r.value.length) allItems = [...allItems, ...r.value]; });
       // 補充 Finnhub 國際台股相關新聞（直連，台灣 / 半導體 / 供應鏈關鍵字過濾）
       try {
         const twKw = /taiwan|tsmc|mediatek|ase group|foxconn|semiconductor.*asia|supply chain.*taiwan|nvidia.*tsmc|asml.*taiwan/i;
@@ -1928,47 +1940,49 @@ function generateMarketSummary(items, cat) {
   const headlinesEN = srcPool.slice(0, 5).map(it =>
     '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
 
-  const themeChipsZH = scored.slice(0, 5).map(t =>
-    '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.label + ' ×' + t.count + '</span>').join(' ');
-  const themeChipsEN = scored.slice(0, 5).map(t =>
-    '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.labelEN + ' ×' + t.count + '</span>').join(' ');
+  // 主題標籤：中英並列  e.g.  AI / 半導體 (Semiconductors) ×3
+  const themeChips = scored.slice(0, 5).map(t =>
+    '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600">' +
+    t.label + '<span style="opacity:.55;font-weight:400;margin-left:3px">(' + t.labelEN + ')</span> ×' + t.count + '</span>').join(' ');
 
-  const covZH = todayItems.length ? '今日已涵蓋 <b>' + todayItems.length + '</b> 則新聞 · 本週 ' + weekItems.length + ' 則' : '抓取最新 ' + items.length + ' 則（部分無日期資訊）';
-  const covEN = todayItems.length ? 'Today: <b>' + todayItems.length + '</b> articles · This week: ' + weekItems.length : 'Latest ' + items.length + ' articles loaded';
-
+  const covLine = todayItems.length
+    ? '今日 <b>' + todayItems.length + '</b> 則 · 本週 ' + weekItems.length + ' 則'
+    : '抓取最新 ' + items.length + ' 則';
   const timeStr = new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  const btnStyle = (active) => 'style="padding:2px 10px;border-radius:4px;border:none;cursor:pointer;font-size:11px;font-weight:600;transition:all .2s;background:' + (active ? 'var(--accent)' : 'transparent') + ';color:' + (active ? '#fff' : 'var(--muted)') + '"';
+
+  // 標題區：台股有中文來源就秀中文，其他明確標示「英文原文」
+  const hasCNHeadlines = cat === 'tw' && zhPool.some(it => TW_SOURCES.has(it.source));
+  const headlineLabel = hasCNHeadlines ? '今日焦點（中文優先）' : '今日焦點 · 英文原文 (Source Headlines)';
 
   return '<div class="card" style="margin-bottom:16px">' +
-    // Header + toggle buttons
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">' +
-    '<span style="font-weight:700;font-size:14px">' + catLabel + ' News Summary</span>' +
-    '<div style="display:flex;align-items:center;gap:6px">' +
-    '<button id="sum-btn-zh-' + cat + '" ' + btnStyle(true) + ' onclick="switchSummaryLang(\'zh\',\'' + cat + '\')">中文</button>' +
-    '<button id="sum-btn-en-' + cat + '" ' + btnStyle(false) + ' onclick="switchSummaryLang(\'en\',\'' + cat + '\')">EN</button>' +
-    '<span style="font-size:11px;color:var(--muted);margin-left:4px">' + timeStr + '</span>' +
+    // ── Header
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<span style="font-weight:700;font-size:14px">' + catLabel + ' 新聞摘要</span>' +
+    '<span style="font-size:11px;color:var(--muted)">' + covLine + ' · ' + timeStr + '</span>' +
     '</div>' +
+
+    // ── 主題標籤
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + (themeChips || '<span style="font-size:12px;color:var(--muted)">分析中...</span>') + '</div>' +
+
+    // ── 今日焦點（標題區，說清楚語言）
+    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">' + headlineLabel + '</div>' +
+    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 14px">' + headlinesZH + '</ul>' +
+
+    // ── 中文分析
+    '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;margin-bottom:10px">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--accent)">總結與操作方向</span><br>' +
+    '<span style="font-size:13px;line-height:1.8">' + zhOutlook + '</span>' +
     '</div>' +
-    // ── 中文版
-    '<div id="sum-zh-' + cat + '">' +
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + (themeChipsZH || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covZH + '</div>' +
-    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">今日焦點' + (cat === 'tw' ? '（優先顯示中文報導）' : '（新聞原文標題）') + '</div>' +
-    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + headlinesZH + '</ul>' +
-    '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
-    '<span style="font-size:11px;font-weight:700;color:var(--accent)">總結與操作方向 · </span>' +
-    '<span style="font-size:13px;line-height:1.7">' + zhOutlook + '</span></div>' +
+
+    // ── English Analysis（小字，折疊式）
+    '<details style="margin-top:4px">' +
+    '<summary style="font-size:11px;color:var(--muted);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:4px">' +
+    '<span style="border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px">EN</span> English Analysis</summary>' +
+    '<div style="margin-top:8px;padding:10px 14px;background:rgba(59,130,246,.04);border-left:3px solid rgba(59,130,246,.3);border-radius:0 6px 6px 0">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--accent)">Outlook & Trading Direction</span><br>' +
+    '<span style="font-size:12px;line-height:1.8;color:var(--muted)">' + enOutlook + '</span>' +
     '</div>' +
-    // ── English版
-    '<div id="sum-en-' + cat + '" style="display:none">' +
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + (themeChipsEN || '<span style="font-size:12px;color:var(--muted)">Analyzing...</span>') + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covEN + '</div>' +
-    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Key Headlines</div>' +
-    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + headlinesEN + '</ul>' +
-    '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
-    '<span style="font-size:11px;font-weight:700;color:var(--accent)">Outlook & Trading Direction · </span>' +
-    '<span style="font-size:13px;line-height:1.7">' + enOutlook + '</span></div>' +
-    '</div>' +
+    '</details>' +
     '</div>';
 }
 
