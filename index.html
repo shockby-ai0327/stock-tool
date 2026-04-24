@@ -295,10 +295,8 @@ firebase.initializeApp(_fbConfig);
       <h2 style="margin-bottom:20px">每日國際財經新聞</h2>
       <div class="tab-bar" id="news-tabs">
         <button class="active" onclick="loadNews('general')">綜合</button>
-        <button onclick="loadNews('us')">美股</button>
-        <button onclick="loadNews('tw')">台股</button>
-        <button onclick="loadNews('industry')">產業</button>
-        <button onclick="loadNews('geo')">地緣政治</button>
+        <button onclick="loadNews('us')">美股 + 產業 + 地緣</button>
+        <button onclick="loadNews('tw')">台股 + 兩岸</button>
         <button onclick="loadNews('crypto')">加密貨幣</button>
       </div>
       <div id="news-content"></div>
@@ -1664,30 +1662,47 @@ async function loadNews(cat) {
   const div = document.getElementById('news-content');
   div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
-  const _newsCats = ['general','us','tw','industry','geo','crypto'];
+  const _newsCats = ['general','us','tw','crypto'];
   document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
-  const urls = {
-    general:  'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB',
-    us:       'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500+NYSE+NASDAQ&hl=en-US&gl=US',
-    tw:       'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3+%E9%9B%86%E4%B8%AD%E9%81%8E%E5%9B%9E&hl=zh-TW&gl=TW',
-    industry: 'https://news.google.com/rss/search?q=semiconductor+AI+nvidia+biotech+pharma+energy+tech+industry+sector+earnings&hl=en-US&gl=US',
-    geo:      'https://news.google.com/rss/search?q=geopolitics+trade+war+tariff+china+us+taiwan+ukraine+middle+east+sanctions+NATO&hl=en-US&gl=US',
-    crypto:   'https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum+crypto&hl=en-US'
+  const urlMap = {
+    general:  ['https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB'],
+    us:       [
+      'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500+NYSE+NASDAQ&hl=en-US&gl=US',
+      'https://news.google.com/rss/search?q=semiconductor+AI+nvidia+biotech+pharma+energy+tech+sector+earnings&hl=en-US&gl=US',
+      'https://news.google.com/rss/search?q=geopolitics+trade+war+tariff+china+us+ukraine+middle+east+sanctions&hl=en-US&gl=US'
+    ],
+    tw:       [
+      'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3&hl=zh-TW&gl=TW',
+      'https://news.google.com/rss/search?q=%E5%8F%B0%E7%81%A3+%E4%B8%AD%E7%BE%8E+%E5%85%A9%E5%B2%B8+%E5%9C%B0%E7%B8%81+%E5%8D%8A%E5%B0%8E%E9%AB%94+%E4%BA%A7%E6%A5%AD&hl=zh-TW&gl=TW'
+    ],
+    crypto:   ['https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum+crypto&hl=en-US']
+  };
+  const parseXml = (text) => {
+    const xml = new DOMParser().parseFromString(text, 'text/xml');
+    const out = [];
+    xml.querySelectorAll('item').forEach(el => {
+      out.push({
+        title:   el.querySelector('title')?.textContent || '',
+        link:    el.querySelector('link')?.textContent || '',
+        pubDate: el.querySelector('pubDate')?.textContent || '',
+        desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
+        source:  el.querySelector('source')?.textContent || 'Google News'
+      });
+    });
+    return out;
   };
   try {
-    const r = await pFetch(urls[cat] || urls.general);
-    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+    const feedUrls = urlMap[cat] || urlMap.general;
+    const results = await Promise.allSettled(feedUrls.map(u => pFetch(u).then(r => r.text())));
     const items = [];
-    xml.querySelectorAll('item').forEach(el => {
-      const title = el.querySelector('title')?.textContent || '';
-      const link = el.querySelector('link')?.textContent || '';
-      const pubDate = el.querySelector('pubDate')?.textContent || '';
-      const desc = (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '');
-      const source = el.querySelector('source')?.textContent || 'Google News';
-      items.push({ title, link, pubDate, desc, source });
-    });
+    for (const res of results) {
+      if (res.status === 'fulfilled') items.push(...parseXml(res.value));
+    }
+    // Sort by date descending
+    items.sort((a, b) => (b.pubDate ? new Date(b.pubDate) : 0) - (a.pubDate ? new Date(a.pubDate) : 0));
     const seen = new Set();
-    _newsItems = items.filter(it => { const k = it.title.substring(0, 25).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 20);
+    const maxItems = (urlMap[cat] || []).length > 1 ? 30 : 20;
+    _newsItems = items.filter(it => { const k = it.title.substring(0, 25).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, maxItems);
     if (!_newsItems.length) throw new Error('No news');
     const summaryHtml = generateMarketSummary(_newsItems);
     let html = summaryHtml + '<div class="card" style="padding:0">';
