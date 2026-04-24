@@ -1692,26 +1692,44 @@ async function loadNews(cat) {
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
   const _newsCats = ['general','us','tw','crypto'];
   document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
-  // 使用短關鍵字搜尋避免 Google News 403（長 query 會被阻擋）
-  const newsUrl = {
-    general: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en',
-    us:      'https://news.google.com/rss/search?q=stock+market+fed+earnings+nasdaq&hl=en-US&gl=US&ceid=US:en',
-    tw:      'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E5%8D%8A%E5%B0%8E%E9%AB%94+%E7%BE%8E%E8%82%A1&hl=zh-TW&gl=TW&ceid=TW:zh-Hant',
-    crypto:  'https://news.google.com/rss/search?q=bitcoin+crypto+ethereum&hl=en-US&gl=US&ceid=US:en'
-  };
+  // 美股/加密 → Finnhub API 直連（無 proxy，零 403）
+  // 綜合/台股 → Google News Topic ID URL（不走搜尋型，proxy 不擋）
+  const GNEWS_TOPIC = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB';
   try {
-    const r = await pFetch(newsUrl[cat] || newsUrl.general);
-    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
-    const allItems = [];
-    xml.querySelectorAll('item').forEach(el => {
-      allItems.push({
-        title:   el.querySelector('title')?.textContent || '',
-        link:    el.querySelector('link')?.textContent || '',
-        pubDate: el.querySelector('pubDate')?.textContent || '',
-        desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
-        source:  el.querySelector('source')?.textContent || 'Google News'
+    let allItems = [];
+    if (cat === 'us' || cat === 'crypto') {
+      // ── Finnhub 直連（已有 CORS 授權，不需 proxy）
+      const finnhubCat = cat === 'crypto' ? 'crypto' : 'general';
+      const r = await fetch(
+        'https://finnhub.io/api/v1/news?category=' + finnhubCat + '&token=' + FINNHUB_KEY,
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (!r.ok) throw new Error('Finnhub ' + r.status);
+      const data = await r.json();
+      allItems = (Array.isArray(data) ? data : []).slice(0, 60).map(it => ({
+        title:   it.headline || '',
+        link:    it.url || '',
+        pubDate: it.datetime ? new Date(it.datetime * 1000).toUTCString() : '',
+        desc:    it.summary || '',
+        source:  it.source || 'Finnhub'
+      }));
+    } else {
+      // ── Google News Topic URL（locale 切換：zh-TW 自動推台灣財經）
+      const locale = cat === 'tw'
+        ? '?hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
+        : '?hl=en-US&gl=US&ceid=US:en';
+      const r = await pFetch(GNEWS_TOPIC + locale);
+      const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+      xml.querySelectorAll('item').forEach(el => {
+        allItems.push({
+          title:   el.querySelector('title')?.textContent || '',
+          link:    el.querySelector('link')?.textContent || '',
+          pubDate: el.querySelector('pubDate')?.textContent || '',
+          desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
+          source:  el.querySelector('source')?.textContent || 'Google News'
+        });
       });
-    });
+    }
     // Deduplicate, sort newest first
     const seen = new Set();
     const allSorted = allItems
@@ -1841,18 +1859,38 @@ async function fetchDashNewsBackground() {
   // 若快取未過期則略過
   if (window._newsSummaryCache && (Date.now() - window._newsSummaryCache.ts) < 30 * 60 * 1000) return;
   try {
-    const url = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en';
-    const r = await pFetch(url);
-    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
-    const rawItems = [];
-    xml.querySelectorAll('item').forEach(el => {
-      rawItems.push({
-        title:   el.querySelector('title')?.textContent || '',
-        desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
-        pubDate: el.querySelector('pubDate')?.textContent || '',
-        source:  el.querySelector('source')?.textContent || ''
+    // 主線：Finnhub general（直連，無 proxy，最穩定）
+    // 備援：Google News topic URL（若 Finnhub 失敗）
+    let rawItems = [];
+    try {
+      const r = await fetch(
+        'https://finnhub.io/api/v1/news?category=general&token=' + FINNHUB_KEY,
+        { signal: AbortSignal.timeout(7000) }
+      );
+      if (r.ok) {
+        const data = await r.json();
+        rawItems = (Array.isArray(data) ? data : []).slice(0, 50).map(it => ({
+          title:   it.headline || '',
+          desc:    it.summary || '',
+          pubDate: it.datetime ? new Date(it.datetime * 1000).toUTCString() : '',
+          source:  it.source || 'Finnhub'
+        }));
+      }
+    } catch(_) {}
+    // 若 Finnhub 無資料則走 Google News topic URL 備援
+    if (!rawItems.length) {
+      const url = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en';
+      const r = await pFetch(url);
+      const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+      xml.querySelectorAll('item').forEach(el => {
+        rawItems.push({
+          title:   el.querySelector('title')?.textContent || '',
+          desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
+          pubDate: el.querySelector('pubDate')?.textContent || '',
+          source:  el.querySelector('source')?.textContent || ''
+        });
       });
-    });
+    }
     const cutoff = Date.now() - 86400000;
     const todayTrusted = rawItems.filter(it => isTrusted(it.source) && it.pubDate && new Date(it.pubDate) >= cutoff);
     const fallback = rawItems.filter(it => isTrusted(it.source)).slice(0, 15);
