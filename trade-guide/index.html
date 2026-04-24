@@ -29,8 +29,8 @@
   --nav-h:60px;
   --sidebar:296px;
   --trans:.2s ease;
-  --font-body:"Avenir Next","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
-  --font-display:"Iowan Old Style","Baskerville","Songti TC","Noto Serif TC",serif;
+  --font-body:"Source Han Sans TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --font-display:"Source Han Serif TC","Noto Serif TC","Songti TC","PMingLiU",serif;
 }
 [data-theme="dark"]{
   --bg:#101521;
@@ -192,6 +192,14 @@ body.sidebar-collapsed #study-view{justify-content:center}
 .card p,.card li,.highlight,.mail-copy{overflow-wrap:anywhere}
 .card ul,.card ol{padding-left:23px;margin-top:10px}
 .card li{margin-bottom:8px}
+.section-lead{
+  font-size:.8rem;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:12px
+}
 .tag{display:inline-block;padding:4px 11px;border-radius:20px;font-size:.75rem;font-weight:700;background:var(--accent-soft);color:var(--accent);margin-right:6px;margin-bottom:6px}
 .highlight{
   background:linear-gradient(135deg,color-mix(in srgb, var(--accent) 8%, var(--surface)),color-mix(in srgb, var(--cyan) 5%, var(--surface3)));
@@ -201,6 +209,27 @@ body.sidebar-collapsed #study-view{justify-content:center}
   border-radius:16px;
   margin:16px 0 8px;
   line-height:1.85
+}
+.table-notes{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px dashed color-mix(in srgb, var(--border) 90%, transparent);
+}
+.table-notes strong{
+  display:block;
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text2);
+  margin-bottom:8px
+}
+.table-notes ul{margin-top:0;padding-left:20px}
+.table-notes li{
+  font-size:.92rem;
+  line-height:1.72;
+  color:var(--text2);
+  margin-bottom:6px
 }
 table{
   width:100%;
@@ -236,7 +265,7 @@ td{
   word-break:normal;
   overflow-wrap:break-word
 }
-th:first-child,td:first-child{min-width:132px}
+th:first-child,td:first-child{min-width:116px}
 tr:nth-child(even) td{background:color-mix(in srgb, var(--accent) 2%, var(--surface))}
 tbody tr:hover td{background:color-mix(in srgb, var(--accent) 4%, var(--surface3))}
 tr:last-child td{border-bottom:none}
@@ -420,7 +449,7 @@ tr:last-child td{border-bottom:none}
   .card{padding:22px 18px;border-radius:16px}
   .card h3{font-size:1.16rem}
   table{display:block;width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table tbody{display:table;width:100%;min-width:640px}
+  table tbody{display:table;width:100%;min-width:560px}
   th,td{min-width:0;padding:14px 14px;font-size:.92rem;line-height:1.7}
   .q-card{padding:20px 16px}
   .q-text{font-size:.97rem}
@@ -469,7 +498,8 @@ tr:last-child td{border-bottom:none}
       <h2>🚢 Incoterms 2020</h2>
       <p class="subtitle">不是背11個縮寫，而是學會判斷：怎麼交貨、誰付主運輸、誰扛風險、誰負責清關</p>
       <div class="card">
-        <h3>這章怎麼學</h3>
+        <div class="section-lead">先懂概念</div>
+        <h3>Incoterms 不是背縮寫，是拆責任</h3>
         <ol>
           <li>先分清運輸方式：海運/內水運 vs. 空運/快遞/多式聯運。</li>
           <li>再看交貨點：工廠、承運人、船上、目的港、客戶倉庫。</li>
@@ -479,7 +509,8 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 新手先掌握 `FCA / FOB / CIF / DAP / DDP`，但實務上 `EXW / CFR / CPT / CIP` 也很重要，尤其 `FCA vs FOB` 和 `CPT/CIP vs CFR/CIF` 最容易用錯。</div>
       </div>
       <div class="card">
-        <h3>11個Incoterms分三層學</h3>
+        <div class="section-lead">先懂概念</div>
+        <h3>11 個 Incoterms 先分三層學</h3>
         <table>
           <tr><th>層級</th><th>條款</th><th>為什麼先學這些</th></tr>
           <tr><td>第一層：新人必懂</td><td>FCA / FOB / CIF / DAP / DDP</td><td>最能理解責任跨度，也最常出現在日常詢價、出貨、客戶提問中</td></tr>
@@ -488,44 +519,71 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>先選運輸方式，再選條款</h3>
         <table>
-          <tr><th>場景</th><th>優先考慮</th><th>原因</th><th>常見誤區</th></tr>
-          <tr><td>集裝箱海運</td><td>FCA / CPT / CIP</td><td>貨通常先交CY或承運人，不是真的在船邊交貨</td><td>習慣性全部寫FOB</td></tr>
-          <tr><td>散雜貨或傳統海運表述</td><td>FOB / CFR / CIF</td><td>海運語境清楚，買賣雙方都容易理解</td><td>沒確認保險責任就寫CIF</td></tr>
-          <tr><td>空運 / 快遞 / 多式聯運</td><td>FCA / CPT / CIP</td><td>風險在交承運人時就移轉，不存在「裝上船」</td><td>空運還寫FOB</td></tr>
-          <tr><td>門到門但不含進口稅</td><td>DAP</td><td>賣方負責送到約定地點，買方仍負責進口清關與稅金</td><td>把DAP誤認為含稅</td></tr>
-          <tr><td>門到門含進口稅</td><td>DDP</td><td>賣方責任最重，適合已掌握目的國清關與稅務能力時</td><td>沒算清稅金與法規就貿然答應</td></tr>
+          <tr><th>場景</th><th>優先考慮</th><th>重點提醒</th></tr>
+          <tr><td>集裝箱海運</td><td>FCA / CPT / CIP</td><td>貨通常先交 CY 或承運人，不是真的在船邊交貨。</td></tr>
+          <tr><td>散雜貨或傳統海運表述</td><td>FOB / CFR / CIF</td><td>海運語境清楚，但保險責任要先講明。</td></tr>
+          <tr><td>空運 / 快遞 / 多式聯運</td><td>FCA / CPT / CIP</td><td>風險在交承運人時就移轉，不存在「裝上船」。</td></tr>
+          <tr><td>門到門但不含進口稅</td><td>DAP</td><td>賣方送到約定地點，買方仍負責進口清關與稅金。</td></tr>
+          <tr><td>門到門含進口稅</td><td>DDP</td><td>賣方責任最重，只能在稅務與清關能力清楚時承諾。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>常見誤區</strong>
+          <ul>
+            <li>集裝箱和空運習慣性全部寫 `FOB`，是新人最常犯的第一個錯。</li>
+            <li>客戶只說「含運費」時，不代表你就應該直接寫 `CIF` 或 `CIP`。</li>
+            <li>`DAP` 不含進口稅，`DDP` 才碰到進口清關與稅金責任。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
-        <h3>11個條款責任全覽</h3>
+        <div class="section-lead">先懂概念</div>
+        <h3>11 個條款責任摘要表</h3>
         <table>
-          <tr><th>條款</th><th>適用運輸</th><th>風險移轉點</th><th>主運輸</th><th>保險</th><th>進口清關 / 稅</th></tr>
-          <tr><td>EXW</td><td>任何運輸</td><td>工廠/倉庫備貨點</td><td>買方</td><td>買方</td><td>買方</td></tr>
-          <tr><td>FCA</td><td>任何運輸</td><td>交給指定承運人時</td><td>買方</td><td>買方</td><td>買方</td></tr>
-          <tr><td>FAS</td><td>海運/內水運</td><td>裝運港船邊</td><td>買方</td><td>買方</td><td>買方</td></tr>
-          <tr><td>FOB</td><td>海運/內水運</td><td>裝上船時</td><td>買方</td><td>買方</td><td>買方</td></tr>
-          <tr><td>CFR</td><td>海運/內水運</td><td>裝上船時</td><td>賣方付運費</td><td>買方</td><td>買方</td></tr>
-          <tr><td>CIF</td><td>海運/內水運</td><td>裝上船時</td><td>賣方付運費</td><td>賣方</td><td>買方</td></tr>
-          <tr><td>CPT</td><td>任何運輸</td><td>交給承運人時</td><td>賣方付運費</td><td>買方</td><td>買方</td></tr>
-          <tr><td>CIP</td><td>任何運輸</td><td>交給承運人時</td><td>賣方付運費</td><td>賣方</td><td>買方</td></tr>
-          <tr><td>DAP</td><td>任何運輸</td><td>目的地交貨未卸貨</td><td>賣方</td><td>依合同</td><td>買方</td></tr>
-          <tr><td>DPU</td><td>任何運輸</td><td>目的地卸貨後</td><td>賣方</td><td>依合同</td><td>買方</td></tr>
-          <tr><td>DDP</td><td>任何運輸</td><td>目的地交貨未卸貨</td><td>賣方</td><td>依合同</td><td>賣方</td></tr>
+          <tr><th>條款</th><th>風險移轉點</th><th>賣方主要責任</th></tr>
+          <tr><td>EXW</td><td>工廠 / 倉庫備貨點</td><td>備貨即可，主運輸、保險與進口責任多由買方處理。</td></tr>
+          <tr><td>FCA</td><td>交給指定承運人時</td><td>完成出口端交貨，之後主運輸與保險多由買方安排。</td></tr>
+          <tr><td>FAS</td><td>裝運港船邊</td><td>做到船邊交貨，之後運輸、保險與進口責任轉給買方。</td></tr>
+          <tr><td>FOB</td><td>裝上船時</td><td>做到裝船，海運費、保險與進口責任通常由買方承擔。</td></tr>
+          <tr><td>CFR</td><td>裝上船時</td><td>賣方付主運輸，但保險與進口責任通常不在賣方。</td></tr>
+          <tr><td>CIF</td><td>裝上船時</td><td>賣方付主運輸並安排保險，進口清關與稅金仍由買方負責。</td></tr>
+          <tr><td>CPT</td><td>交給承運人時</td><td>賣方付主運輸，但保險通常不含在內。</td></tr>
+          <tr><td>CIP</td><td>交給承運人時</td><td>賣方付主運輸並安排保險，適用任何運輸方式。</td></tr>
+          <tr><td>DAP</td><td>目的地交貨未卸貨</td><td>賣方送到約定地點，但進口清關與稅金仍由買方負責。</td></tr>
+          <tr><td>DPU</td><td>目的地卸貨後</td><td>賣方做到目的地卸貨，進口清關與稅金通常仍在買方。</td></tr>
+          <tr><td>DDP</td><td>目的地交貨未卸貨</td><td>賣方責任最重，連進口清關與稅金也要處理。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>速記方式</strong>
+          <ul>
+            <li>`F` 組代表主運輸多由買方主導，`C` 組代表賣方付主運輸但風險提早移轉。</li>
+            <li>`D` 組代表賣方把責任一路往目的地延伸，差別在有沒有卸貨、含不含進口稅。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>四組最常混淆</h3>
         <table>
-          <tr><th>組合</th><th>真正差異</th><th>常見錯法</th><th>新人應怎麼記</th></tr>
-          <tr><td>FCA vs FOB</td><td>FCA在交承運人時移轉；FOB在裝上船時移轉</td><td>集裝箱和空運還是寫FOB</td><td>只要不是典型船邊/船上交貨，就先想FCA</td></tr>
-          <tr><td>CFR vs CIF</td><td>CIF比CFR多了保險責任</td><td>報CIF卻沒把保費算進去</td><td>海運下 `I = Insurance`，有 I 才是賣方買保險</td></tr>
-          <tr><td>CPT vs CIP</td><td>CIP比CPT多了保險責任，且適用任何運輸</td><td>把CIP當成空運版CIF，但忘了風險移轉點不同</td><td>`CP*` 系列都是交承運人就移轉風險</td></tr>
-          <tr><td>DAP vs DDP</td><td>DDP比DAP多了進口清關與稅金責任</td><td>以為送到門口就一定含稅</td><td>只要碰進口稅，就先重新核算，不要口頭答應</td></tr>
+          <tr><th>組合</th><th>真正差異</th><th>新人怎麼記</th></tr>
+          <tr><td>FCA vs FOB</td><td>FCA 在交承運人時移轉；FOB 在裝上船時移轉。</td><td>只要不是典型船邊 / 船上交貨，就先想 FCA。</td></tr>
+          <tr><td>CFR vs CIF</td><td>CIF 比 CFR 多了保險責任。</td><td>海運下 `I = Insurance`，有 I 才是賣方買保險。</td></tr>
+          <tr><td>CPT vs CIP</td><td>CIP 比 CPT 多了保險責任，而且適用任何運輸。</td><td>`CP*` 系列都是交承運人就移轉風險。</td></tr>
+          <tr><td>DAP vs DDP</td><td>DDP 比 DAP 多了進口清關與稅金責任。</td><td>只要碰進口稅，就先重新算成本，不要口頭答應。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>常見錯法</strong>
+          <ul>
+            <li>集裝箱和空運還是寫 `FOB`，是 `FCA vs FOB` 最常見的誤用。</li>
+            <li>報 `CIF` 卻沒把保費算進去，或把 `CIP` 當成空運版 `CIF`，都會讓後面成本失真。</li>
+            <li>以為送到門口就等於含稅，會直接把 `DAP` 和 `DDP` 混掉。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>新手最常踩的四個坑</h3>
         <ul>
           <li><strong>空運寫FOB：</strong>FOB是水路術語，空運應優先考慮FCA / CPT / CIP。</li>
@@ -535,6 +593,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>報價前一定要問的五個問題</h3>
         <ol>
           <li>貨是海運、空運、快遞還是多式聯運？</li>
@@ -561,6 +620,7 @@ tr:last-child td{border-bottom:none}
       <h2>💳 付款方式</h2>
       <p class="subtitle">從預付到賒帳，掌握每種付款工具的風險、流程、控制點與放貨節奏</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>先把付款放回整條交易流程</h3>
         <table>
           <tr><th>交易階段</th><th>付款上要先確認什麼</th><th>如果沒先確認，後面會卡在哪裡</th></tr>
@@ -573,28 +633,40 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 新人最容易把付款看成「財務的事」。其實付款條件一開始就決定了你能不能排產、能不能放貨、能不能把尾款收回來。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>樣品費、模具費、量產貨款要分開設計</h3>
         <table>
-          <tr><th>收款項目</th><th>常見做法</th><th>控制重點</th><th>新手常犯錯</th></tr>
-          <tr><td>樣品費</td><td>T/T 100%預付，或至少先收打樣成本</td><td>先收再做，避免免費反覆改樣</td><td>為了拿詢盤，樣品、快遞、修改次數全都沒界線</td></tr>
-          <tr><td>模具費</td><td>50/50、40/60，或首批量產前收清</td><td>把模具 ownership、驗收節點、修改責任寫進PI/合同</td><td>只收部分模具費，就默認開始大改模</td></tr>
-          <tr><td>量產貨款</td><td>T/T 30%+70%、即期L/C、D/P、OA等</td><td>尾款條件要和放貨條件綁定</td><td>合同只寫 `T/T`，沒有寫清楚是裝船前還是到港後</td></tr>
-          <tr><td>開發費 / 測試費</td><td>視專案另列，不要默認含在單價裡</td><td>誰負責PPAP、實驗、第三方測試要先講清楚</td><td>前期費用沒收，後面靠量產攤提卻接不到量</td></tr>
+          <tr><th>收款項目</th><th>常見做法</th><th>控制重點</th></tr>
+          <tr><td>樣品費</td><td>T/T 100% 預付，或至少先收打樣成本。</td><td>先收再做，避免免費反覆改樣。</td></tr>
+          <tr><td>模具費</td><td>50/50、40/60，或首批量產前收清。</td><td>把模具 ownership、驗收節點與修改責任寫進 PI / 合同。</td></tr>
+          <tr><td>量產貨款</td><td>T/T 30%+70%、即期 L/C、D/P、OA 等。</td><td>尾款條件一定要和放貨條件綁定。</td></tr>
+          <tr><td>開發費 / 測試費</td><td>視專案另列，不要默認含在單價裡。</td><td>PPAP、實驗與第三方測試責任要先講清楚。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>新手最常犯錯</strong>
+          <ul>
+            <li>為了拿詢盤，把樣品、快遞與修改次數全部放成沒有界線的免費項目。</li>
+            <li>只收部分模具費就默認開始大改模，後面容易被客戶綁住修改責任。</li>
+            <li>合同只寫 `T/T` 卻沒寫清楚是裝船前、到港前還是到港後付款。</li>
+            <li>前期費用沒收，最後想靠量產攤提，卻可能根本接不到量。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>主要付款方式風險對比</h3>
         <table>
-          <tr><th>方式</th><th>對賣方風險</th><th>對買方風險</th><th>適用場景</th></tr>
-          <tr><td>T/T預付100%</td><td>最低</td><td>最高</td><td>小額、新客戶樣品</td></tr>
-          <tr><td>T/T 30%+70%</td><td>低</td><td>中</td><td>外貿常見結構示例</td></tr>
-          <tr><td>即期L/C</td><td>低</td><td>低</td><td>新客戶大額訂單</td></tr>
-          <tr><td>D/P即期</td><td>中</td><td>中</td><td>熟悉客戶</td></tr>
-          <tr><td>D/A遠期</td><td>高</td><td>低</td><td>信任客戶，有風控</td></tr>
-          <tr><td>OA賒帳</td><td>最高</td><td>最低</td><td>長期信任老客戶</td></tr>
+          <tr><th>方式</th><th>風險平衡</th><th>適用場景</th></tr>
+          <tr><td>T/T 預付 100%</td><td>賣方風險最低，買方風險最高。</td><td>小額、新客戶樣品或首次測試單。</td></tr>
+          <tr><td>T/T 30%+70%</td><td>賣方風險低，前提是尾款到帳後才放貨。</td><td>外貿最常見的平衡型結構。</td></tr>
+          <tr><td>即期 L/C</td><td>雙方風險都可控，但單證要求高。</td><td>新客戶大額訂單或需銀行信用支持時。</td></tr>
+          <tr><td>D/P 即期</td><td>風險中等，單據還有控制力但拒付成本不低。</td><td>熟悉客戶、能承受目的港風險時。</td></tr>
+          <tr><td>D/A 遠期</td><td>買方先拿貨，賣方追款風險明顯升高。</td><td>有信用額度、歷史交易與風控配套時。</td></tr>
+          <tr><td>OA 賒帳</td><td>本質是信用銷售，壞帳風險最高。</td><td>長期穩定老客戶，且有額度與催收機制時。</td></tr>
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂名詞</div>
         <h3>付款縮寫全名速查</h3>
         <div class="info-grid">
           <div class="info-card">
@@ -630,6 +702,7 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>T/T 水單、實際到帳、電放、正本 B/L 是四件不同的事</h3>
         <table>
           <tr><th>名詞</th><th>代表什麼</th><th>可不可以當成交付依據</th></tr>
@@ -641,6 +714,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 很多放貨事故都不是因為文件不懂，而是把「客戶說已付」誤當成「公司已收到」。真正的分界點永遠是財務確認到帳。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>六種付款方式實際怎麼跑</h3>
         <div class="payment-flow-grid">
           <div class="payment-flow-card">
@@ -753,14 +827,24 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>付款條件選型建議</h3>
         <table>
-          <tr><th>客戶情況</th><th>建議條件</th><th>原因</th><th>補強措施</th></tr>
-          <tr><td>新客戶 / 打樣單</td><td>T/T 100%預付</td><td>控制首次交易風險</td><td>先收款再安排樣品</td></tr>
-          <tr><td>新客戶 / 大額量產</td><td>T/T 30%+70% 或 即期L/C</td><td>兼顧客戶接受度與收款安全</td><td>訂金到帳後再排產</td></tr>
-          <tr><td>熟悉客戶 / 長期合作</td><td>D/P 或有限額OA</td><td>提高成交率與客戶黏性</td><td>設定信用額度、投保信保</td></tr>
-          <tr><td>高風險市場 / 首次遠期付款</td><td>優先即期L/C</td><td>避免只靠買方信用</td><td>先審核開證銀行和條款</td></tr>
+          <tr><th>客戶情況</th><th>建議條件</th><th>為什麼</th></tr>
+          <tr><td>新客戶 / 打樣單</td><td>T/T 100% 預付</td><td>先把首次交易風險壓到最低。</td></tr>
+          <tr><td>新客戶 / 大額量產</td><td>T/T 30%+70% 或 即期 L/C</td><td>兼顧客戶接受度與收款安全。</td></tr>
+          <tr><td>熟悉客戶 / 長期合作</td><td>D/P 或有限額 OA</td><td>成交率會更高，但前提是內部已有信用管理。</td></tr>
+          <tr><td>高風險市場 / 首次遠期付款</td><td>優先即期 L/C</td><td>避免整張單只靠買方信用撐住。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>補強措施</strong>
+          <ul>
+            <li>新客戶先收款再安排樣品或排產，不要被「先做給我們看」帶著走。</li>
+            <li>`T/T 30%+70%` 的關鍵不是條件漂亮，而是訂金到帳後才排產、尾款到帳後才放貨。</li>
+            <li>只要進入 `D/P`、`D/A` 或 `OA`，就要同步設定信用額度、對帳節奏與信保配套。</li>
+            <li>即期 `L/C` 也不是萬靈丹，仍要先審核開證銀行和條款。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
         <h3>T/T、D/P、D/A、OA 實務差別</h3>
@@ -826,6 +910,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境案例</div>
         <h3>付款情境案例：遇到客戶這樣說怎麼辦</h3>
         <div class="scenario-grid">
           <div class="scenario-card">
@@ -868,6 +953,7 @@ tr:last-child td{border-bottom:none}
       <h2>📄 單據處理</h2>
       <p class="subtitle">單據不是獨立工作，它和 Incoterm、付款、放貨、報關、收款是一條線</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>先建立觀念：文件跟著交易走</h3>
         <table>
           <tr><th>你前面做的決定</th><th>後面會影響哪張文件</th></tr>
@@ -878,6 +964,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>三種常見交易場景，文件包長不一樣</h3>
         <table>
           <tr><th>場景</th><th>核心文件</th><th>為什麼要注意</th></tr>
@@ -888,6 +975,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>七大核心單據</h3>
         <ul>
           <li><strong>PI（Proforma Invoice）：</strong>接單前的商務確認文件，後面很多正式文件都會照它走。</li>
@@ -900,16 +988,25 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>單據時間線與責任分工</h3>
         <table>
-          <tr><th>階段</th><th>文件</th><th>主要責任人</th><th>核對重點</th></tr>
-          <tr><td>接單前</td><td>PI / Sales Contract</td><td>業務</td><td>客戶名稱、付款條件、Incoterm、交期、版本號</td></tr>
-          <tr><td>出貨前</td><td>CI / PL / 報關資料</td><td>業務 + 工廠 + 單證</td><td>品名、數量、箱數、毛重/淨重、申報要素</td></tr>
-          <tr><td>訂艙前後</td><td>S/I 或訂艙資料</td><td>業務 / 物流</td><td>港口、收發貨人、件數、尺寸、截關時間</td></tr>
-          <tr><td>裝船後</td><td>B/L Draft</td><td>貨代出稿、業務確認</td><td>Shipper、Consignee、Notify、船名航次、Freight Collect/Prepaid</td></tr>
-          <tr><td>報關前後</td><td>CO / 優惠產地證</td><td>單證 / 報關同事</td><td>HS Code、原產地規則、客戶要求版本</td></tr>
-          <tr><td>交單與收款</td><td>L/C文件 / 銀行文件</td><td>業務 + 財務 / 銀行</td><td>與信用狀逐條一致，避免不符點</td></tr>
+          <tr><th>階段</th><th>核心文件</th><th>核對重點</th></tr>
+          <tr><td>接單前</td><td>PI / Sales Contract</td><td>客戶名稱、付款條件、Incoterm、交期與版本號要一致。</td></tr>
+          <tr><td>出貨前</td><td>CI / PL / 報關資料</td><td>品名、數量、箱數、毛重 / 淨重與申報要素不能錯。</td></tr>
+          <tr><td>訂艙前後</td><td>S/I 或訂艙資料</td><td>港口、收發貨人、件數、尺寸與截關時間要先對齊。</td></tr>
+          <tr><td>裝船後</td><td>B/L Draft</td><td>Shipper、Consignee、Notify、船名航次與 Freight 條件要重查。</td></tr>
+          <tr><td>報關前後</td><td>CO / 優惠產地證</td><td>HS Code、原產地規則與客戶要求版本要先確認。</td></tr>
+          <tr><td>交單與收款</td><td>L/C 文件 / 銀行文件</td><td>與信用狀逐條對齊，避免不符點。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>責任分工提醒</strong>
+          <ul>
+            <li>接單前通常由業務主導，但一進到出貨前就會和工廠、單證、物流一起共用同一套資料。</li>
+            <li>`B/L Draft` 雖然多半由貨代出稿，最終被客戶看到與拿去清關的責任仍會回到業務身上。</li>
+            <li>遇到 `L/C` 或銀行交單時，業務、財務與銀行之間的版本控管必須非常嚴格。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
         <h3>提單（B/L）是文件章最重要的一張</h3>
@@ -923,14 +1020,22 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 誰控制正本B/L，誰通常就還保有最後一道放貨槓桿。所以文件錯不只是麻煩，而是可能直接失去收款控制。</div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>原產地證不是每票都一樣</h3>
         <table>
-          <tr><th>類型</th><th>用途</th><th>出具機構</th><th>新人要先確認什麼</th></tr>
-          <tr><td>一般CO</td><td>證明產地（無優惠）</td><td>貿促會/商會</td><td>客戶只是要產地證，還是要優惠稅率</td></tr>
-          <tr><td>Form E</td><td>中國-東盟FTA優惠</td><td>海關/商務局</td><td>目的國是否適用，產品是否符合規則</td></tr>
-          <tr><td>RCEP CO</td><td>RCEP成員國優惠</td><td>海關/商務局</td><td>材料來源與原產地規則能否成立</td></tr>
-          <tr><td>其他FTA文件</td><td>依客戶目的國要求</td><td>指定機構</td><td>不要先答應，先確認能不能做</td></tr>
+          <tr><th>類型</th><th>用途</th><th>新人先確認什麼</th></tr>
+          <tr><td>一般 CO</td><td>證明產地，但通常不含優惠稅率。</td><td>客戶只是要產地證，還是要關稅優惠。</td></tr>
+          <tr><td>Form E</td><td>對應中國 - 東盟 FTA 優惠。</td><td>目的國是否適用，產品是否符合規則。</td></tr>
+          <tr><td>RCEP CO</td><td>對應 RCEP 成員國優惠。</td><td>材料來源與原產地規則能不能成立。</td></tr>
+          <tr><td>其他 FTA 文件</td><td>依客戶目的國或貿易協定要求。</td><td>不要先答應，先確認公司能不能做。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>出具機構提醒</strong>
+          <ul>
+            <li>一般 `CO` 常見由貿促會或商會出具；`Form E`、`RCEP CO` 則常見由海關或商務系統處理。</li>
+            <li>真正的重點不是背機構，而是先判斷客戶要的是「普通產地證」還是「優惠關稅文件」。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
         <h3>CI / PL / B/L 最容易不一致的地方</h3>
@@ -962,18 +1067,28 @@ tr:last-child td{border-bottom:none}
       <h2>💬 詢報價技巧</h2>
       <p class="subtitle">從詢盤到PI、從PI到訂金、從訂金到排產，建立一條能落地的成交流程</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>詢盤到排產：完整閉環</h3>
         <table>
-          <tr><th>階段</th><th>你要做什麼</th><th>輸出物</th><th>下一步關鍵</th></tr>
-          <tr><td>收到詢盤</td><td>確認客戶身份、產品類型、資料完整度</td><td>收到回信 / 補件清單</td><td>不要急著報價，先確認資料夠不夠</td></tr>
-          <tr><td>內部評估</td><td>找工程、採購、工廠確認可行性與成本</td><td>可做 / 不做 / 有條件做</td><td>決定是正式報價、條件報價或暫不報價</td></tr>
-          <tr><td>正式報價</td><td>報單價、Incoterm、付款條件、交期、有效期</td><td>Quotation / PI draft</td><td>客戶要的是價格，還是整體交易條件</td></tr>
-          <tr><td>客戶確認</td><td>跟進價格、規格、模具、付款、文件要求</td><td>修訂版PI / MOM</td><td>把所有口頭條件轉成書面</td></tr>
-          <tr><td>接單</td><td>確認PI、訂金、模具費、樣品費、排產條件</td><td>正式PI / 訂金憑證</td><td>未達收款條件不要進入排產與備料</td></tr>
-          <tr><td>排產啟動</td><td>交接給工廠、單證、物流、品質</td><td>內部啟動單 / 交期節點</td><td>交期、文件、付款條件要在一開始就對齊</td></tr>
+          <tr><th>階段</th><th>你要做什麼</th><th>關鍵交棒</th></tr>
+          <tr><td>收到詢盤</td><td>先確認客戶身份、產品類型與資料完整度。</td><td>先回信並列補件清單，不要急著報價。</td></tr>
+          <tr><td>內部評估</td><td>找工程、採購、工廠確認可行性與成本。</td><td>先決定可做、不做或有條件做。</td></tr>
+          <tr><td>正式報價</td><td>一起報單價、Incoterm、付款條件、交期與有效期。</td><td>讓客戶知道你報的是整體交易條件，不只是價格。</td></tr>
+          <tr><td>客戶確認</td><td>跟進價格、規格、模具、付款與文件要求。</td><td>把所有口頭條件改成修訂版 PI 或會議紀要。</td></tr>
+          <tr><td>接單</td><td>確認 PI、訂金、模具費、樣品費與排產條件。</td><td>未達收款條件前，不要進入排產與備料。</td></tr>
+          <tr><td>排產啟動</td><td>把資訊交接給工廠、單證、物流與品質。</td><td>交期、文件與付款條件要從一開始就對齊。</td></tr>
         </table>
+        <div class="table-notes">
+          <strong>輸出物提醒</strong>
+          <ul>
+            <li>收到詢盤後至少要留下回信與補件清單；內部評估後要有 `可做 / 不做 / 有條件做` 的結論。</li>
+            <li>正式報價後通常會形成 `Quotation` 或 `PI draft`，客戶確認後則要落成修訂版 `PI` 或 `MOM`。</li>
+            <li>真正啟動排產前，至少要拿到正式 `PI` 與訂金憑證或其他內部授權依據。</li>
+          </ul>
+        </div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>收到詢盤的黃金24小時</h3>
         <ol>
           <li>24小時內先回覆收到，即使完整報價還沒出來，也要讓客戶知道你在處理。</li>
@@ -985,6 +1100,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚡ 新人最容易做錯的不是回太慢，而是「回得快但報得太早」。先把詢盤分類，再決定要不要進入正式報價。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>RFQ資料完整性Checklist</h3>
         <table>
           <tr><th>類別</th><th>至少要拿到的資訊</th><th>如果缺了會怎樣</th></tr>
@@ -997,6 +1113,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 如果圖紙版本、表面處理或需求量不清楚，先問再報。資訊不完整時報出去的價，之後往往最難收回。</div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>不是每張詢盤都要立刻正式報價</h3>
         <table>
           <tr><th>判斷</th><th>適用情況</th><th>你的動作</th></tr>
@@ -1006,6 +1123,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>報價不是只報單價：至少要一起報這四層</h3>
         <table>
           <tr><th>層級</th><th>你要寫什麼</th><th>漏掉的風險</th></tr>
@@ -1063,6 +1181,7 @@ tr:last-child td{border-bottom:none}
       <h2>🏆 品質管理</h2>
       <p class="subtitle">IATF 16949 · PPAP · APQP · 8D——汽車行業的品質語言</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>IATF 16949 核心概念</h3>
         <p>IATF 16949是汽車行業的品質管理體系標準，在ISO 9001基礎上增加汽車行業特定要求。</p>
         <ul>
@@ -1075,6 +1194,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>8D問題解決流程</h3>
         <table>
           <tr><th>D</th><th>步驟</th><th>說明</th></tr>
@@ -1089,6 +1209,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>常見品質問題處理</h3>
         <ul>
           <li><strong>客訴收到：</strong>24小時回應，48小時初步報告，10天8D報告</li>
@@ -1098,6 +1219,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>業務收到客訴後，前2小時要做什麼</h3>
         <ol>
           <li>先回覆客戶已收到資訊，承諾下一次更新時間，不要先失聯</li>
@@ -1108,6 +1230,7 @@ tr:last-child td{border-bottom:none}
         </ol>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>客戶常要求的品質資料</h3>
         <ul>
           <li><strong>客訴時：</strong>8D、分選報告、遏制措施、補貨計畫</li>
@@ -1124,6 +1247,7 @@ tr:last-child td{border-bottom:none}
       <h2>🚛 物流操作</h2>
       <p class="subtitle">從工廠到客戶倉庫——掌握海運、空運和跨境物流的實務操作</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>海運關鍵術語</h3>
         <table>
           <tr><th>縮寫</th><th>全稱</th><th>說明</th></tr>
@@ -1181,12 +1305,13 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 物流異常最怕「晚說」。就算暫時沒有完整解法，也要先告訴客戶：發生了什麼、影響哪一票貨、下一次更新時間是何時。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>FCL / LCL / 空運怎麼選</h3>
         <table>
-          <tr><th>方式</th><th>適合情況</th><th>優點</th><th>注意點</th></tr>
-          <tr><td>FCL</td><td>貨量大、交期穩定</td><td>安全、時效相對穩</td><td>未裝滿也要付整櫃費</td></tr>
-          <tr><td>LCL</td><td>貨量小、無法湊整櫃</td><td>前期成本低</td><td>拼箱/拆箱增加時間與碰損風險</td></tr>
-          <tr><td>空運</td><td>急單、補貨、樣品</td><td>速度快</td><td>成本高，尺寸重量限制多</td></tr>
+          <tr><th>方式</th><th>適合情況</th><th>重點提醒</th></tr>
+          <tr><td>FCL</td><td>貨量大、交期穩定。</td><td>安全且時效相對穩，但未裝滿也要付整櫃費。</td></tr>
+          <tr><td>LCL</td><td>貨量小、無法湊整櫃。</td><td>前期成本低，但拼箱 / 拆箱會拉長時間並增加碰損風險。</td></tr>
+          <tr><td>空運</td><td>急單、補貨或樣品。</td><td>速度快，但成本高且尺寸重量限制多。</td></tr>
         </table>
       </div>
     </section>
@@ -1196,6 +1321,7 @@ tr:last-child td{border-bottom:none}
       <h2>🤝 談判技巧</h2>
       <p class="subtitle">從錨定到BATNA——掌握專業談判者的思維框架和實用技術</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>談判基礎框架</h3>
         <ul>
           <li><strong>BATNA：</strong>談判破裂時的最佳替代方案——知道自己的退路才能有底氣</li>
@@ -1205,6 +1331,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>常見談判場景應對</h3>
         <ul>
           <li><strong>「競爭對手更便宜」：</strong>要求看報價單，強調差異化价值，不盲目降价</li>
@@ -1215,6 +1342,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">先做原則</div>
         <h3>价格談判黃金原則</h3>
         <div class="highlight">
           永遠不要接受第一個還价。<br>
@@ -1224,6 +1352,7 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>四個高頻談判話術</h3>
         <ul>
           <li><strong>客戶壓價：</strong>「如果要到這個價格，我們需要同步調整條件，例如MOQ、付款方式或包裝方案，這樣才有機會評估。」</li>
@@ -1233,6 +1362,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>讓步節奏示例</h3>
         <p>讓步不是直接降價，而是把讓步和條件綁在一起：</p>
         <ul>
@@ -1249,6 +1379,7 @@ tr:last-child td{border-bottom:none}
       <h2>🌍 跨文化溝通</h2>
       <p class="subtitle">高語境vs低語境——了解不同文化的商業習慣，避免溝通誤解</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>主要市場文化特點</h3>
         <table>
           <tr><th>市場</th><th>溝通風格</th><th>關鍵注意事項</th></tr>
@@ -1261,6 +1392,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>跨文化溝通黃金法則</h3>
         <ul>
           <li>商業郵件：清晰、專業、避免俚語和雙關語</li>
@@ -1272,6 +1404,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 「No」的各種說法：英式「That might be difficult」/ 日式「それはちょっと...」/ 中式「我們研究一下」——都可能意味著拒絕。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>跨文化會議前Checklist</h3>
         <ul>
           <li>會議邀請中直接寫明時區，例如「April 25, 2026 3:00 PM GMT+8」</li>
@@ -1289,6 +1422,7 @@ tr:last-child td{border-bottom:none}
       <h2>🏭 廣澤公司知識</h2>
       <p class="subtitle">這章是先修課：先搞懂公司是誰、強在哪裡、目前壓力在哪裡，前面的報價、郵件與談判才會講得準</p>
       <div class="card">
+        <div class="section-lead">先懂路線</div>
         <h3>新手建議學習順序</h3>
         <ol>
           <li>先看本章，建立對公司、產品、工藝與市場位置的基本認知</li>
@@ -1300,6 +1434,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 這份網站不是百科全書式地背章節，而是希望你先建立「公司理解 → 交易流程 → 客戶溝通」的順序。這樣學，會比一開始就背模板有效很多。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>先分清三種資訊層級</h3>
         <table>
           <tr><th>類型</th><th>你可以怎麼用</th><th>例子</th></tr>
@@ -1310,6 +1445,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 本章主要整理自廣華控股公開披露資料、你提供的調查摘要與頁面既有引用。部分細節如員工數、出口占比、供應層級可能因統計口徑不同而有差異；正式對外仍以廣華控股最新年報與公司核准版本為準。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>一句話先講清楚：廣澤是什麼樣的公司</h3>
         <table>
           <tr><th>面向</th><th>公開資料可用口徑</th></tr>
@@ -1321,6 +1457,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>公開資料能讀出的四個基本面</h3>
         <ul>
           <li><strong>工藝深度：</strong>公開資料持續提到水轉印、噴塗、電鍍、IML/INS、EPF、雷雕、貼皮/貼絨等多工藝整合，這是公司對外差異化核心。</li>
@@ -1330,6 +1467,7 @@ tr:last-child td{border-bottom:none}
         </ul>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>財報怎麼看：業務先抓三條線</h3>
         <table>
           <tr><th>先看什麼</th><th>你要讀出什麼</th><th>對業務代表什麼</th></tr>
@@ -1340,21 +1478,23 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 業務不需要把財報看成投資研究，但至少要看懂公司現在是在「成長」「承壓」還是「轉型」。這會直接影響你的客戶開發與報價策略。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>歷年財報與你該讀出的訊號</h3>
         <p>廣澤本身不是單獨上市公司，公開財務主要要看母公司廣華控股（1338）的合併財報與月營收。</p>
         <table>
-          <tr><th>年度/期間</th><th>公開營收口徑</th><th>獲利狀態</th><th>新人要讀出的訊號</th></tr>
-          <tr><td>2020</td><td>約NT$61.7億元</td><td>淨利約NT$2.9億元</td><td>疫情後仍有獲利，傳統內外飾業務具基本盤</td></tr>
-          <tr><td>2021</td><td>約NT$73.2億元</td><td>淨利約NT$3.4億元</td><td>營收與獲利處在高峰區間，日系與內飾需求支撐明顯</td></tr>
-          <tr><td>2022</td><td>約NT$73.5億元</td><td>淨利約NT$1.4億元</td><td>營收高但獲利下降，代表成本、產品組合或價格壓力開始出現</td></tr>
-          <tr><td>2023</td><td>約NT$57.6億元</td><td>淨損約NT$1.6億元</td><td>需求下滑與產能利用率壓力增加，不能只靠傳統件</td></tr>
-          <tr><td>2024</td><td>約NT$50.9億元</td><td>淨損約NT$1.0億元</td><td>規模仍收縮，但虧損比2023年收斂，重點是提高毛利與良率</td></tr>
-          <tr><td>2025</td><td>自結累計營收約NT$52.3億元</td><td>需等正式年報確認</td><td>營收大致企穩，仍要觀察是否真正恢復獲利</td></tr>
-          <tr><td>2026 Q1</td><td>累計營收約NT$11.6億元，年減約10.6%</td><td>需等季報確認</td><td>短期接單仍有波動，業務開發更要強調新產品與海外客戶</td></tr>
+          <tr><th>年度/期間</th><th>營收與獲利摘要</th><th>你要讀出的訊號</th></tr>
+          <tr><td>2020</td><td>營收約 NT$61.7 億，淨利約 NT$2.9 億。</td><td>疫情後仍能獲利，傳統內外飾業務還有基本盤。</td></tr>
+          <tr><td>2021</td><td>營收約 NT$73.2 億，淨利約 NT$3.4 億。</td><td>營收與獲利在高峰區間，日系與內飾需求支撐明顯。</td></tr>
+          <tr><td>2022</td><td>營收約 NT$73.5 億，淨利約 NT$1.4 億。</td><td>營收高但獲利下滑，代表成本與產品組合壓力已開始出現。</td></tr>
+          <tr><td>2023</td><td>營收約 NT$57.6 億，淨損約 NT$1.6 億。</td><td>需求與產能利用率承壓，不能再只靠傳統件撐規模。</td></tr>
+          <tr><td>2024</td><td>營收約 NT$50.9 億，淨損約 NT$1.0 億。</td><td>規模仍收縮，但虧損收斂，重點變成毛利與良率改善。</td></tr>
+          <tr><td>2025</td><td>自結累計營收約 NT$52.3 億，正式年報待確認。</td><td>營收大致企穩，但還要看能不能真正恢復獲利。</td></tr>
+          <tr><td>2026 Q1</td><td>累計營收約 NT$11.6 億，年減約 10.6%。</td><td>短期接單仍有波動，業務更要強調新產品與海外客戶。</td></tr>
         </table>
         <div class="metric-note">資料口徑：公開財務網站與廣華控股月營收公告整理，金額以新台幣計，四捨五入。參考來源包含 <a href="https://stockanalysis.com/quote/tpe/1338/financials/" target="_blank" rel="noopener">StockAnalysis年度財務摘要</a>、<a href="https://www.hiroca.co/article.php?id=1690&lang=en&tb=8" target="_blank" rel="noopener">廣華控股月營收公告</a> 與 <a href="https://tw.stock.yahoo.com/quote/1338.TW/revenue" target="_blank" rel="noopener">Yahoo股市月營收</a>。對外正式簡報請以最新年報、季報與公司核准版本為準。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先看壓力</div>
         <h3>目前公司面對的壓力：已確認事實、訓練性解讀、業務解法</h3>
         <table>
           <tr><th>已確認事實</th><th>訓練性解讀</th><th>對業務代表什麼</th></tr>
@@ -1367,16 +1507,18 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 真正有用的公司知識，不是只背「廣澤很強」。而是知道公司現在哪些能力最值得賣、哪些風險不能亂答、哪些條件要先回到內部確認。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂產品</div>
         <h3>產品地圖：你要知道自己到底在賣什麼</h3>
         <table>
           <tr><th>類別</th><th>代表產品</th><th>客戶真正會在意什麼</th></tr>
-          <tr><td>內飾件</td><td>儀表板飾框、中控面板、門板飾件、座椅飾板、方向盤包覆、中央扶手、安全氣囊蓋</td><td>外觀一致性、耐刮、VOC、氣味、霧化與組裝配合度</td></tr>
-          <tr><td>外飾件</td><td>前格柵、外門把手、車身同色噴塗件、鍍鉻件、牌照燈與迎賓燈</td><td>鹽霧、耐候、耐石擊、表面質感與品牌辨識度</td></tr>
-          <tr><td>光電 / 電子</td><td>Mini LED 光源模組、COB 封裝、發光車標、發光中護板、HUD 等</td><td>不是只有會亮，而是亮度、均勻性、法規、可靠性與量產一致性</td></tr>
-          <tr><td>模具 / 非汽車延伸</td><td>模具設計與製造、電子塑膠零件等</td><td>可補充整體製造能力，但對外主軸仍應聚焦汽車飾件與整合工藝</td></tr>
+          <tr><td>內飾件</td><td>儀表板飾框、中控面板、門板飾件與方向盤包覆等。</td><td>外觀一致性、耐刮、VOC、氣味與組裝配合度。</td></tr>
+          <tr><td>外飾件</td><td>前格柵、外門把手、車身同色噴塗件與鍍鉻件。</td><td>鹽霧、耐候、耐石擊與品牌辨識度。</td></tr>
+          <tr><td>光電 / 電子</td><td>Mini LED 光源模組、COB 封裝、發光車標與 HUD 等。</td><td>亮度、均勻性、法規、可靠性與量產一致性。</td></tr>
+          <tr><td>模具 / 非汽車延伸</td><td>模具設計製造與部分電子塑膠零件。</td><td>可補充整體製造能力，但對外主軸仍應聚焦汽車飾件。</td></tr>
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂工藝</div>
         <h3>工藝地圖：廣澤的價值不只在產品，也在工藝組合</h3>
         <table>
           <tr><th>工藝</th><th>能力亮點</th><th>典型應用</th></tr>
@@ -1392,6 +1534,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 對外介紹工藝時，不要只是列名詞。要把工藝翻成客戶聽得懂的價值，例如「IML/INS 可以把外觀、觸感與量產一致性做得更穩」「EPF 有助於降低環保壓力」。</div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>認證與品質體系：這是進場門檻，不是結束語</h3>
         <table>
           <tr><th>認證/體系</th><th>公開資料節點</th><th>對客戶的意義</th></tr>
@@ -1405,6 +1548,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 新人常見錯誤是把認證當成交理由本身。實際上 IATF、ISO 14001 只是進場門票；客戶更在意的是你怎麼做 APQP、PPAP、8D、追溯與現場稽核配合。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>客戶與市場布局：你可以怎麼講，才不會講得太空</h3>
         <p>公開資料顯示，廣澤已進入或服務以下主機廠 / 供應鏈體系；其中同時包含直接 OEM 配套與 Tier 1 / Tier 1.5 配套關係。</p>
         <ul>
@@ -1417,6 +1561,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 對外介紹客戶時，建議講成「已服務相關 OEM / 供應鏈體系」而不是直接暗示每個專案都是直接供貨。這樣更嚴謹，也比較不容易踩到客戶保密邊界。</div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>對外介紹時：哪些能說、哪些不能直接寫死、哪些要先確認</h3>
         <table>
           <tr><th>類型</th><th>目前較安全的說法</th><th>提醒</th></tr>
@@ -1427,12 +1572,14 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>30 秒公司介紹模板</h3>
         <div class="highlight">
           We are Dongguan Guangze Auto Parts Decoration Co., Ltd., one of the core operating subsidiaries of Hiroca Holdings. Based in Houjie, Dongguan, we focus on automotive interior and exterior decorative parts and provide one-stop support from mold development and injection molding to surface finishing and final assembly. Our strengths include decoration technologies such as water transfer, painting, plating, IML/INS and EPF, and we are also extending our capability into illuminated and Mini LED decorative solutions.
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>差異化賣點速記</h3>
         <ul>
           <li><strong>水轉印：</strong>日本 CUBIC 技術授權，是公開資料中反覆出現的工藝標籤之一</li>
@@ -1459,6 +1606,7 @@ tr:last-child td{border-bottom:none}
       <h2>✉️ 商務郵件</h2>
       <p class="subtitle">不是模板庫而已，而是依業務階段把信寫對：售前、成交推進、出貨異常、客訴、催款各有不同任務</p>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>先看整條流程：每封郵件都在推動某一個節點</h3>
         <table>
           <tr><th>業務階段</th><th>郵件目的</th><th>你最該寫清楚什麼</th></tr>
@@ -1472,6 +1620,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 外貿郵件不是作文，是任務管理工具。每封信都要讓對方知道：現在發生什麼、我要你做什麼、最晚何時做、如果不做會影響什麼。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>商務郵件通用結構：5 句就能把事情講清楚</h3>
         <ol>
           <li><strong>Purpose：</strong>第一句直接說這封信的目的，例如確認條件、追蹤回覆、通知異常</li>
@@ -1482,6 +1631,7 @@ tr:last-child td{border-bottom:none}
         </ol>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>主旨怎麼寫：不要只寫 Hello、Quotation、Please check</h3>
         <table>
           <tr><th>場景</th><th>弱主旨</th><th>更好的主旨</th></tr>
@@ -1493,6 +1643,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境案例</div>
         <h3>售前 / 詢價類郵件：你的任務是把需求補完整</h3>
         <div class="template-grid">
           <div class="template-card">
@@ -1513,6 +1664,7 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">情境案例</div>
         <h3>成交推進類郵件：把口頭往正式文件推</h3>
         <div class="template-grid">
           <div class="template-card">
@@ -1543,6 +1695,7 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">情境案例</div>
         <h3>風險控制類郵件：語氣要穩，但邊界要清楚</h3>
         <div class="template-grid">
           <div class="template-card">
@@ -1573,6 +1726,7 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>寫得差 vs 改寫後：差別通常不在英文，而在任務感</h3>
         <table>
           <tr><th>弱寫法</th><th>問題</th><th>改寫後</th></tr>
@@ -1582,6 +1736,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>常見郵件錯誤與修正</h3>
         <table>
           <tr><th>錯誤</th><th>問題</th><th>修正方式</th></tr>
@@ -1593,6 +1748,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>語氣強度怎麼調</h3>
         <table>
           <tr><th>強度</th><th>適用情境</th><th>英文句型</th></tr>
@@ -1604,6 +1760,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 語氣越強，越要保留事實證據：PO、PI、付款條款、承諾日期、出貨節點。不要用情緒壓人，用事實推動對方回覆。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>回覆節奏：不要讓客戶覺得你消失</h3>
         <table>
           <tr><th>事件</th><th>建議節奏</th><th>最低要求</th></tr>
@@ -1615,6 +1772,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">寄出前檢查</div>
         <h3>商務郵件 SOP：寄出前 30 秒檢查</h3>
         <ol>
           <li>主旨是否包含 PO / PI / Invoice / Project Name / Shipment No.？</li>
@@ -1632,10 +1790,12 @@ tr:last-child td{border-bottom:none}
       <h2>⚡ 進階知識</h2>
       <p class="subtitle">把關稅、合規、ESG、客戶差異與 EV 轉型，變成能直接用在接單判斷的工具</p>
       <div class="card">
+        <div class="section-lead">先看邊界</div>
         <h3>時效性提醒</h3>
         <div class="highlight">本章內容屬於培訓用概念整理。涉及關稅、制裁、優惠原產地、客戶合規要求與ESG問卷時，請在實際報價或出貨前再次確認最新官方規定與客戶版本要求。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>進階章怎麼學：先判斷，再查資料</h3>
         <ol>
           <li>先判斷這是不是值得接、能不能接、要不要附帶條件接的案子</li>
@@ -1645,6 +1805,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 進階知識不是背更多縮寫，而是讓你遇到風險時知道先問哪三個問題、先卡哪一道關、哪些不能口頭答應。</div>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>接單前的判斷順序</h3>
         <table>
           <tr><th>步驟</th><th>先問什麼</th><th>為什麼這一步不能跳過</th></tr>
@@ -1656,6 +1817,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>Landed Cost 拆解：客戶說貴，不一定只是單價問題</h3>
         <table>
           <tr><th>成本項</th><th>誰通常會忽略</th><th>你要怎麼問回去</th></tr>
@@ -1668,6 +1830,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>HS Code、原產地、Incoterm、付款條件的判斷順序</h3>
         <table>
           <tr><th>先後順序</th><th>為什麼</th><th>如果順序倒了，會發生什麼</th></tr>
@@ -1678,6 +1841,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>貿易合規處理流程</h3>
         <ol>
           <li>先確認產品定義：汽車內飾、外飾、發光件、電子模組或單純塑膠件，分類不同會影響稅率。</li>
@@ -1690,6 +1854,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">⚠️ 高報/低報發票價格、雙版本發票、虛假原產地都不能配合。這不是談判技巧，是海關與法律風險。</div>
       </div>
       <div class="card">
+        <div class="section-lead">常見錯誤</div>
         <h3>合規紅線：哪些情況要直接踩煞車</h3>
         <table>
           <tr><th>情況</th><th>為什麼危險</th><th>正確動作</th></tr>
@@ -1701,6 +1866,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>ESG 怎麼變成銷售語言</h3>
         <table>
           <tr><th>客戶問題</th><th>背後真正關心</th><th>廣澤回應方向</th></tr>
@@ -1711,6 +1877,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先懂概念</div>
         <h3>技術參數速記：不一定要背數字，但要知道怎麼回</h3>
         <table>
           <tr><th>項目</th><th>基本口徑</th><th>客戶追問時怎麼回</th></tr>
@@ -1723,6 +1890,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>EV 轉型下：哪些需求在掉、哪些需求在長、你怎麼賣</h3>
         <table>
           <tr><th>方向</th><th>變化</th><th>你可以怎麼講</th></tr>
@@ -1734,6 +1902,7 @@ tr:last-child td{border-bottom:none}
         <div class="highlight">💡 和 EV 客戶談時，別只說「我們會做塑膠件」。更有效的說法是：我們能把裝飾件升級成具有光效、質感與合規優勢的表面方案。</div>
       </div>
       <div class="card">
+        <div class="section-lead">情境應用</div>
         <h3>日系 / 歐系 / 美系採購關注點差異</h3>
         <table>
           <tr><th>客戶類型</th><th>最在意什麼</th><th>你要怎麼講</th></tr>
@@ -1743,6 +1912,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">先做判斷</div>
         <h3>高風險訂單判斷表：Go / Go with Conditions / No-Go</h3>
         <table>
           <tr><th>判斷</th><th>典型情況</th><th>建議做法</th></tr>
@@ -1752,6 +1922,7 @@ tr:last-child td{border-bottom:none}
         </table>
       </div>
       <div class="card">
+        <div class="section-lead">情境案例</div>
         <h3>進階情境案例</h3>
         <div class="scenario-grid">
           <div class="scenario-card">
