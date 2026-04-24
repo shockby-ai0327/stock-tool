@@ -1697,8 +1697,8 @@ async function loadNews(cat) {
   const GNEWS_TOPIC = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB';
   try {
     let allItems = [];
-    if (cat === 'us' || cat === 'crypto' || cat === 'tw') {
-      // ── 美股 / 加密 / 台股：全部 Finnhub 直連，完全不走 proxy
+    if (cat === 'us' || cat === 'crypto') {
+      // ── 美股 / 加密：Finnhub 直連（無 proxy，零 403）
       const finnhubCat = cat === 'crypto' ? 'crypto' : 'general';
       const r = await fetch(
         'https://finnhub.io/api/v1/news?category=' + finnhubCat + '&token=' + FINNHUB_KEY,
@@ -1706,24 +1706,65 @@ async function loadNews(cat) {
       );
       if (!r.ok) throw new Error('Finnhub ' + r.status);
       const data = await r.json();
-      let mapped = (Array.isArray(data) ? data : []).map(it => ({
+      allItems = (Array.isArray(data) ? data : []).slice(0, 60).map(it => ({
         title:   it.headline || '',
         link:    it.url || '',
         pubDate: it.datetime ? new Date(it.datetime * 1000).toUTCString() : '',
         desc:    it.summary || '',
         source:  it.source || 'Finnhub'
       }));
-      // 台股：過濾出台灣 / 半導體 / 亞洲供應鏈相關文章
-      if (cat === 'tw') {
-        const twKw = /taiwan|tsmc|2330|mediatek|ase|foxconn|auo|innolux|delta|semiconductor|chip.*asia|asia.*chip|supply chain|asml.*taiwan|nvidia.*tsmc/i;
-        const twFiltered = mapped.filter(it => twKw.test(it.title + ' ' + it.desc));
-        // 若過濾後太少，補回一般財經新聞到 15 筆
-        allItems = twFiltered.length >= 8 ? twFiltered : [...twFiltered, ...mapped.filter(it => !twKw.test(it.title + ' ' + it.desc))].slice(0, 20);
-      } else {
-        allItems = mapped.slice(0, 60);
+
+    } else if (cat === 'tw') {
+      // ── 台股：先抓台灣財經 RSS（直接來源），再補 Finnhub 國際台股相關新聞
+      const TW_FEEDS = [
+        { url: 'https://ec.ltn.com.tw/rss/news.xml',    name: '自由財經' },
+        { url: 'https://ctee.com.tw/feed',               name: '工商時報' },
+        { url: 'https://www.wealth.com.tw/rss',          name: '財訊' },
+      ];
+      // 嘗試台灣 RSS（任一成功即可）
+      for (const feed of TW_FEEDS) {
+        try {
+          const r = await pFetch(feed.url, true, 6000);
+          const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+          const parsed = [];
+          xml.querySelectorAll('item').forEach(el => {
+            parsed.push({
+              title:   el.querySelector('title')?.textContent || '',
+              link:    el.querySelector('link')?.textContent || '',
+              pubDate: el.querySelector('pubDate')?.textContent || '',
+              desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
+              source:  feed.name
+            });
+          });
+          if (parsed.length > 3) { allItems = [...allItems, ...parsed]; break; }
+        } catch(_) {}
       }
+      // 補充 Finnhub 國際台股相關新聞（直連，台灣 / 半導體 / 供應鏈關鍵字過濾）
+      try {
+        const twKw = /taiwan|tsmc|mediatek|ase group|foxconn|semiconductor.*asia|supply chain.*taiwan|nvidia.*tsmc|asml.*taiwan/i;
+        const fr = await fetch(
+          'https://finnhub.io/api/v1/news?category=general&token=' + FINNHUB_KEY,
+          { signal: AbortSignal.timeout(7000) }
+        );
+        if (fr.ok) {
+          const fdata = await fr.json();
+          (Array.isArray(fdata) ? fdata : []).forEach(it => {
+            if (twKw.test(it.headline + ' ' + it.summary)) {
+              allItems.push({
+                title:   it.headline || '',
+                link:    it.url || '',
+                pubDate: it.datetime ? new Date(it.datetime * 1000).toUTCString() : '',
+                desc:    it.summary || '',
+                source:  it.source || 'Finnhub'
+              });
+            }
+          });
+        }
+      } catch(_) {}
+      if (!allItems.length) throw new Error('台股新聞暫時無法取得，請稍後再試');
+
     } else {
-      // ── 綜合：Google News Topic URL（英文財經 topic，proxy 不擋）
+      // ── 綜合：Google News Topic URL（topic ID 不走搜尋，proxy 不擋）
       const r = await pFetch(GNEWS_TOPIC + '?hl=en-US&gl=US&ceid=US:en');
       const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
       xml.querySelectorAll('item').forEach(el => {
@@ -1803,60 +1844,123 @@ function openNews(idx) {
 }
 function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
 
+// 雙語摘要 toggle
+function switchSummaryLang(lang, cat) {
+  ['zh','en'].forEach(l => {
+    const c = document.getElementById('sum-' + l + '-' + cat);
+    const b = document.getElementById('sum-btn-' + l + '-' + cat);
+    if (c) c.style.display = l === lang ? '' : 'none';
+    if (b) { b.style.background = l === lang ? 'var(--accent)' : 'transparent'; b.style.color = l === lang ? '#fff' : 'var(--muted)'; }
+  });
+}
+
 function generateMarketSummary(items, cat) {
   const allText = items.map(it => it.title + ' ' + it.desc).join(' ').toLowerCase();
   const now = Date.now();
   const todayItems = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 86400000);
   const weekItems  = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 7 * 86400000);
-  const catLabel = { general:'綜合', us:'美股', tw:'台股', crypto:'加密' }[cat] || '市場';
+  const catLabel   = { general:'綜合', us:'美股', tw:'台股', crypto:'加密' }[cat] || '市場';
+  const catLabelEN = { general:'General', us:'US Markets', tw:'Taiwan', crypto:'Crypto' }[cat] || 'Market';
+
   const themes = [
-    { key:/fed|利率|rate|interest|央行|降息|升息|fomc|monetary policy/, label:'貨幣政策', color:'var(--accent)' },
-    { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積|asml|arm\b/, label:'AI / 半導體', color:'var(--green)' },
-    { key:/tariff|關稅|trade war|貿易戰|china.*trade|trump.*tariff|import duty/, label:'貿易 / 關稅', color:'var(--orange)' },
-    { key:/earning|財報|revenue|eps|profit|quarterly result|guidance/, label:'財報季', color:'var(--yellow)' },
-    { key:/recession|衰退|inflation|通膨|cpi|gdp|unemployment|jobs|nonfarm/, label:'總體經濟', color:'var(--muted)' },
-    { key:/bitcoin|crypto|加密|比特幣|ethereum|stablecoin|defi/, label:'加密貨幣', color:'#f59e0b' },
-    { key:/oil|原油|energy|能源|opec|natural gas|天然氣|lng/, label:'能源 / 原油', color:'#78716c' },
-    { key:/geopolit|war|ukraine|russia|middle east|地緣|戰爭|conflict|missile|iran|israel|hamas|hezbollah/, label:'地緣政治', color:'var(--red)' },
-    { key:/china|taiwan strait|台海|兩岸|習近平|xi jinping|pla|南海|south china sea/, label:'中美台局勢', color:'#e11d48' },
-    { key:/biotech|pharma|fda|drug|clinical|生技|製藥|疫苗|vaccine/, label:'生技醫藥', color:'#7c3aed' },
-    { key:/fintech|bank|banking|finance|fed reserve|goldman|jpmorgan|interest rate/, label:'金融業', color:'#0ea5e9' },
-    { key:/auto|electric vehicle|ev|tesla|byd|toyota|car|automotive/, label:'汽車 / EV', color:'#10b981' },
+    { key:/fed|利率|rate|interest|央行|降息|升息|fomc|monetary policy/, label:'貨幣政策',  labelEN:'Monetary Policy',    color:'var(--accent)' },
+    { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積|asml|arm\b/, label:'AI / 半導體', labelEN:'AI / Semiconductors', color:'var(--green)' },
+    { key:/tariff|關稅|trade war|貿易戰|china.*trade|trump.*tariff|import duty/, label:'貿易 / 關稅', labelEN:'Trade / Tariffs',     color:'var(--orange)' },
+    { key:/earning|財報|revenue|eps|profit|quarterly result|guidance/, label:'財報季',    labelEN:'Earnings Season',    color:'var(--yellow)' },
+    { key:/recession|衰退|inflation|通膨|cpi|gdp|unemployment|jobs|nonfarm/, label:'總體經濟', labelEN:'Macro Economy',      color:'var(--muted)' },
+    { key:/bitcoin|crypto|加密|比特幣|ethereum|stablecoin|defi/, label:'加密貨幣',  labelEN:'Crypto',              color:'#f59e0b' },
+    { key:/oil|原油|energy|能源|opec|natural gas|天然氣|lng/, label:'能源 / 原油', labelEN:'Energy / Oil',        color:'#78716c' },
+    { key:/geopolit|war|ukraine|russia|middle east|地緣|戰爭|conflict|missile|iran|israel|hamas/, label:'地緣政治', labelEN:'Geopolitics',         color:'var(--red)' },
+    { key:/china|taiwan strait|台海|兩岸|習近平|xi jinping|pla|南海|south china sea/, label:'中美台局勢', labelEN:'US-China-Taiwan',    color:'#e11d48' },
+    { key:/biotech|pharma|fda|drug|clinical|生技|製藥|疫苗|vaccine/, label:'生技醫藥',  labelEN:'Biotech / Pharma',   color:'#7c3aed' },
+    { key:/bank|banking|finance|goldman|jpmorgan|morgan stanley|interest rate/, label:'金融業',    labelEN:'Financials',          color:'#0ea5e9' },
+    { key:/auto|electric vehicle|\bev\b|tesla|byd|toyota|car|automotive/, label:'汽車 / EV', labelEN:'Auto / EV',          color:'#10b981' },
   ];
   const scored = themes.map(t => ({ ...t, count: (allText.match(t.key) || []).length }))
     .filter(t => t.count > 0).sort((a,b) => b.count - a.count);
   const topTheme = scored[0];
-  const outlookMap = {
-    '貨幣政策':  '利率預期主導短期波動，鴿派訊號利科技與成長股，鷹派訊號轉向防禦與金融。',
-    'AI / 半導體':'AI算力需求持續推動半導體產業鏈，高估值下留意回調風險，可於拉回時分批佈局。',
-    '貿易 / 關稅':'貿易政策不確定性壓制風險偏好，出口型企業受壓，關注供應鏈轉移受益標的。',
-    '財報季':     '財報集中驗證基本面，優於預期且指引上修才有追漲動力，結果前避免重倉。',
-    '總體經濟':   '通膨與就業走勢決定政策節奏，軟著陸有利股債，衰退訊號需增配防禦型部位。',
-    '加密貨幣':   '加密市場波動加劇，機構資金流向是核心觀察指標，倉位建議控制在5%以內。',
-    '能源 / 原油':'油價波動影響通膨預期，OPEC+政策是關鍵，注意對航空、化工的成本壓力。',
-    '地緣政治':   '地緣風險推升避險情緒，黃金與公債需求上升，考慮降低高風險資產曝險。',
+
+  // ── 中文操作結論
+  const outlookZH = {
+    '貨幣政策': '利率預期主導短期波動，鴿派訊號利科技與成長股，鷹派訊號轉向防禦與金融。',
+    'AI / 半導體': 'AI算力需求持續推動半導體產業鏈，高估值下留意回調風險，可於拉回時分批佈局。',
+    '貿易 / 關稅': '貿易政策不確定性壓制風險偏好，出口型企業受壓，關注供應鏈轉移受益標的。',
+    '財報季': '財報集中驗證基本面，優於預期且指引上修才有追漲動力，結果前避免重倉。',
+    '總體經濟': '通膨與就業走勢決定政策節奏，軟著陸有利股債，衰退訊號需增配防禦型部位。',
+    '加密貨幣': '加密市場波動加劇，機構資金流向是核心觀察指標，倉位建議控制在5%以內。',
+    '能源 / 原油': '油價波動影響通膨預期，OPEC+政策是關鍵，注意對航空、化工的成本壓力。',
+    '地緣政治': '地緣風險推升避險情緒，黃金與公債需求上升，考慮降低高風險資產曝險。',
+    '中美台局勢': '台海與中美關係影響台股及半導體供應鏈，供應鏈分散化為長期結構趨勢。',
+    '生技醫藥': 'FDA審批與臨床數據為核心催化劑，建議以ETF分散參與，審批前避免重倉。',
+    '金融業': '利率環境主導銀行股走勢，降息周期有利REITs，可透過XLF參與整體金融業。',
+    '汽車 / EV': '電動車滲透率提升但競爭加劇，特斯拉兼具科技股特性，留意中國BYD競爭壓力。',
   };
-  const outlook = topTheme ? (outlookMap[topTheme.label] || '市場多重因素交織，建議保持多元配置。') : '目前無明顯主題，維持多元配置觀察。';
-  const topHeadlines = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
+  // ── 英文操作結論
+  const outlookEN = {
+    'Monetary Policy': 'Rate expectations drive near-term volatility. Dovish signals favor tech & growth; hawkish shifts favor defensives and financials.',
+    'AI / Semiconductors': 'AI compute demand sustains semiconductor supply chain growth. High valuations warrant caution — consider scaling in on pullbacks.',
+    'Trade / Tariffs': 'Trade policy uncertainty suppresses risk appetite. Export-exposed firms face cost pressure; watch supply chain relocation beneficiaries.',
+    'Earnings Season': 'Quarterly results test fundamentals. Beat + raised guidance drives upside momentum; avoid chasing into earnings releases.',
+    'Macro Economy': 'Inflation and jobs data set the policy tempo. Soft landing favors equities & bonds; recession signals warrant a defensive tilt.',
+    'Crypto': 'Crypto volatility is elevated. Institutional flows are the key signal; keep crypto exposure under 5% of portfolio.',
+    'Energy / Oil': 'Oil price swings affect inflation expectations. OPEC+ decisions are the key driver; watch cost impact on airlines, chemicals, and transport.',
+    'Geopolitics': 'Geopolitical flare-ups boost safe-haven demand. Gold and Treasuries benefit; consider trimming high-beta risk positions.',
+    'US-China-Taiwan': 'Cross-strait and US-China tensions are key risks for Taiwan equities and the global semiconductor supply chain. Supply chain diversification is the structural trend.',
+    'Biotech / Pharma': 'FDA approvals and trial data are the core catalysts. Use ETFs (XBI/IBB) to diversify single-name risk; avoid heavy positions ahead of binary events.',
+    'Financials': 'Interest rate environment drives bank stocks. Rate cuts benefit REITs; rising rates compress margins. XLF offers broad sector exposure.',
+    'Auto / EV': 'EV penetration is rising but intensifying competition squeezes margins. Tesla remains a high-beta tech proxy; watch BYD\'s global expansion pressure.',
+  };
+
+  const zhOutlook = topTheme ? (outlookZH[topTheme.label] || '市場多重因素交織，建議保持多元配置。') : '目前無明顯主題，維持多元配置觀察。';
+  const enOutlook = topTheme ? (outlookEN[topTheme.labelEN] || 'Multiple cross-currents in play. Maintain diversified positioning and await clearer signals.') : 'No dominant theme detected. Maintain diversified allocation and monitor incoming data.';
+
+  const headlinesZH = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
     '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
-  const themeChips = scored.slice(0, 5).map(t =>
+  const headlinesEN = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
+    '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
+
+  const themeChipsZH = scored.slice(0, 5).map(t =>
     '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.label + ' ×' + t.count + '</span>').join(' ');
-  const covLine = todayItems.length
-    ? '今日已涵蓋 <b>' + todayItems.length + '</b> 則新聞 · 本週 ' + weekItems.length + ' 則'
-    : '抓取最新 ' + items.length + ' 則新聞（部分無日期資訊）';
+  const themeChipsEN = scored.slice(0, 5).map(t =>
+    '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.labelEN + ' ×' + t.count + '</span>').join(' ');
+
+  const covZH = todayItems.length ? '今日已涵蓋 <b>' + todayItems.length + '</b> 則新聞 · 本週 ' + weekItems.length + ' 則' : '抓取最新 ' + items.length + ' 則（部分無日期資訊）';
+  const covEN = todayItems.length ? 'Today: <b>' + todayItems.length + '</b> articles · This week: ' + weekItems.length : 'Latest ' + items.length + ' articles loaded';
+
+  const timeStr = new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const btnStyle = (active) => 'style="padding:2px 10px;border-radius:4px;border:none;cursor:pointer;font-size:11px;font-weight:600;transition:all .2s;background:' + (active ? 'var(--accent)' : 'transparent') + ';color:' + (active ? '#fff' : 'var(--muted)') + '"';
+
   return '<div class="card" style="margin-bottom:16px">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-    '<span style="font-weight:700;font-size:14px">' + catLabel + '新聞摘要</span>' +
-    '<span style="font-size:11px;color:var(--muted)">' + new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
+    // Header + toggle buttons
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">' +
+    '<span style="font-weight:700;font-size:14px">' + catLabel + ' News Summary</span>' +
+    '<div style="display:flex;align-items:center;gap:6px">' +
+    '<button id="sum-btn-zh-' + cat + '" ' + btnStyle(true) + ' onclick="switchSummaryLang(\'zh\',\'' + cat + '\')">中文</button>' +
+    '<button id="sum-btn-en-' + cat + '" ' + btnStyle(false) + ' onclick="switchSummaryLang(\'en\',\'' + cat + '\')">EN</button>' +
+    '<span style="font-size:11px;color:var(--muted);margin-left:4px">' + timeStr + '</span>' +
     '</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + (themeChips || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covLine + '</div>' +
+    '</div>' +
+    // ── 中文版
+    '<div id="sum-zh-' + cat + '">' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + (themeChipsZH || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covZH + '</div>' +
     '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">今日焦點</div>' +
-    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + topHeadlines + '</ul>' +
+    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + headlinesZH + '</ul>' +
     '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
     '<span style="font-size:11px;font-weight:700;color:var(--accent)">總結與操作方向 · </span>' +
-    '<span style="font-size:13px;line-height:1.7">' + outlook + '</span>' +
-    '</div></div>';
+    '<span style="font-size:13px;line-height:1.7">' + zhOutlook + '</span></div>' +
+    '</div>' +
+    // ── English版
+    '<div id="sum-en-' + cat + '" style="display:none">' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + (themeChipsEN || '<span style="font-size:12px;color:var(--muted)">Analyzing...</span>') + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covEN + '</div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Key Headlines</div>' +
+    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + headlinesEN + '</ul>' +
+    '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--accent)">Outlook & Trading Direction · </span>' +
+    '<span style="font-size:13px;line-height:1.7">' + enOutlook + '</span></div>' +
+    '</div>' +
+    '</div>';
 }
 
 // ── 首頁背景抓取新聞（供盤前預測卡使用，30 分鐘快取）
