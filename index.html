@@ -1914,9 +1914,18 @@ function generateMarketSummary(items, cat) {
   const zhOutlook = topTheme ? (outlookZH[topTheme.label] || '市場多重因素交織，建議保持多元配置。') : '目前無明顯主題，維持多元配置觀察。';
   const enOutlook = topTheme ? (outlookEN[topTheme.labelEN] || 'Multiple cross-currents in play. Maintain diversified positioning and await clearer signals.') : 'No dominant theme detected. Maintain diversified allocation and monitor incoming data.';
 
-  const headlinesZH = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
-    '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
-  const headlinesEN = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
+  // 中文版：台股 tab 優先抓台灣媒體的中文標題；其他 tab 內容本身為英文，加注說明
+  const TW_SOURCES = new Set(['自由財經','工商時報','財訊','經濟日報','聯合財經','鉅亨網','MoneyDJ理財網','中央社','今周刊','Smart智富']);
+  const srcPool = todayItems.length ? todayItems : items;
+  const zhPool = cat === 'tw'
+    ? [...srcPool.filter(it => TW_SOURCES.has(it.source)), ...srcPool.filter(it => !TW_SOURCES.has(it.source))]
+    : srcPool;
+  const headlinesZH = zhPool.slice(0, 5).map(it => {
+    const isTW = TW_SOURCES.has(it.source);
+    const note = (!isTW && cat !== 'tw') ? ' <span style="font-size:10px;color:var(--muted)">(原文)</span>' : '';
+    return '<li style="margin-bottom:5px;line-height:1.5">' + it.title + note + '</li>';
+  }).join('');
+  const headlinesEN = srcPool.slice(0, 5).map(it =>
     '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
 
   const themeChipsZH = scored.slice(0, 5).map(t =>
@@ -1944,7 +1953,7 @@ function generateMarketSummary(items, cat) {
     '<div id="sum-zh-' + cat + '">' +
     '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + (themeChipsZH || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
     '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covZH + '</div>' +
-    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">今日焦點</div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">今日焦點' + (cat === 'tw' ? '（優先顯示中文報導）' : '（新聞原文標題）') + '</div>' +
     '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + headlinesZH + '</ul>' +
     '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
     '<span style="font-size:11px;font-weight:700;color:var(--accent)">總結與操作方向 · </span>' +
