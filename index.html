@@ -231,6 +231,10 @@ firebase.initializeApp(_fbConfig);
         <div class="card" style="flex:1;min-width:180px;text-align:center" id="dash-fgi-card"></div>
         <div class="card" style="flex:2;min-width:240px" id="dash-market-status"></div>
       </div>
+
+      <!-- 盤前/盤後市場預測卡片 -->
+      <div id="dash-premarket"></div>
+
       <div class="dash-scan-grid">
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -295,8 +299,8 @@ firebase.initializeApp(_fbConfig);
       <h2 style="margin-bottom:20px">每日國際財經新聞</h2>
       <div class="tab-bar" id="news-tabs">
         <button class="active" onclick="loadNews('general')">綜合</button>
-        <button onclick="loadNews('us')">美股 + 產業 + 地緣</button>
-        <button onclick="loadNews('tw')">台股 + 兩岸</button>
+        <button onclick="loadNews('us')">美股</button>
+        <button onclick="loadNews('tw')">台股</button>
         <button onclick="loadNews('crypto')">加密貨幣</button>
       </div>
       <div id="news-content"></div>
@@ -1664,24 +1668,19 @@ async function loadNews(cat) {
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
   const _newsCats = ['general','us','tw','crypto'];
   document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
-  const urlMap = {
-    general:  ['https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB'],
-    us:       [
-      'https://news.google.com/rss/search?q=stock+market+wall+street+S%26P500+NYSE+NASDAQ&hl=en-US&gl=US',
-      'https://news.google.com/rss/search?q=semiconductor+AI+nvidia+biotech+pharma+energy+tech+sector+earnings&hl=en-US&gl=US',
-      'https://news.google.com/rss/search?q=geopolitics+trade+war+tariff+china+us+ukraine+middle+east+sanctions&hl=en-US&gl=US'
-    ],
-    tw:       [
-      'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E5%8F%B0%E7%81%A3&hl=zh-TW&gl=TW',
-      'https://news.google.com/rss/search?q=%E5%8F%B0%E7%81%A3+%E4%B8%AD%E7%BE%8E+%E5%85%A9%E5%B2%B8+%E5%9C%B0%E7%B8%81+%E5%8D%8A%E5%B0%8E%E9%AB%94+%E4%BA%A7%E6%A5%AD&hl=zh-TW&gl=TW'
-    ],
-    crypto:   ['https://news.google.com/rss/search?q=bitcoin+cryptocurrency+ethereum+crypto&hl=en-US']
+  // Single RSS per tab — combined keywords avoid parallel proxy rate-limiting
+  const newsUrl = {
+    general: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB',
+    us:      'https://news.google.com/rss/search?q=stock+market+S%26P500+wall+street+semiconductor+AI+tariff+trade+war+geopolitics+fed+earnings+nasdaq&hl=en-US&gl=US',
+    tw:      'https://news.google.com/rss/search?q=%E5%8F%B0%E8%82%A1+%E8%82%A1%E5%B8%82+%E7%BE%8E%E8%82%A1+%E5%8D%8A%E5%B0%8E%E9%AB%94+%E7%94%A2%E6%A5%AD+%E5%85%A9%E5%B2%B8+%E7%BE%8E%E4%B8%AD&hl=zh-TW&gl=TW',
+    crypto:  'https://news.google.com/rss/search?q=bitcoin+ethereum+cryptocurrency+crypto+defi&hl=en-US'
   };
-  const parseXml = (text) => {
-    const xml = new DOMParser().parseFromString(text, 'text/xml');
-    const out = [];
+  try {
+    const r = await pFetch(newsUrl[cat] || newsUrl.general);
+    const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
+    const allItems = [];
     xml.querySelectorAll('item').forEach(el => {
-      out.push({
+      allItems.push({
         title:   el.querySelector('title')?.textContent || '',
         link:    el.querySelector('link')?.textContent || '',
         pubDate: el.querySelector('pubDate')?.textContent || '',
@@ -1689,22 +1688,21 @@ async function loadNews(cat) {
         source:  el.querySelector('source')?.textContent || 'Google News'
       });
     });
-    return out;
-  };
-  try {
-    const feedUrls = urlMap[cat] || urlMap.general;
-    const results = await Promise.allSettled(feedUrls.map(u => pFetch(u).then(r => r.text())));
-    const items = [];
-    for (const res of results) {
-      if (res.status === 'fulfilled') items.push(...parseXml(res.value));
-    }
-    // Sort by date descending
-    items.sort((a, b) => (b.pubDate ? new Date(b.pubDate) : 0) - (a.pubDate ? new Date(a.pubDate) : 0));
+    // Deduplicate, sort newest first
     const seen = new Set();
-    const maxItems = (urlMap[cat] || []).length > 1 ? 30 : 20;
-    _newsItems = items.filter(it => { const k = it.title.substring(0, 25).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, maxItems);
+    const items = allItems
+      .sort((a,b) => (b.pubDate ? new Date(b.pubDate) : 0) - (a.pubDate ? new Date(a.pubDate) : 0))
+      .filter(it => { const k = it.title.substring(0,28).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+    // Today's items = published within last 24h (used for summary)
+    const todayCutoff = Date.now() - 86400000;
+    const todayItems = items.filter(it => it.pubDate && new Date(it.pubDate) >= todayCutoff);
+    // Show up to 25 items; use ALL today's items for summary
+    _newsItems = items.slice(0, 25);
+    window._newsSummaryCache = { cat, items: todayItems.length ? todayItems : items.slice(0, 10), ts: Date.now() };
     if (!_newsItems.length) throw new Error('No news');
-    const summaryHtml = generateMarketSummary(_newsItems);
+    // Summary uses today's full items; fallback to all items
+    const summarySource = (window._newsSummaryCache?.items?.length) ? window._newsSummaryCache.items : _newsItems;
+    const summaryHtml = generateMarketSummary(summarySource, cat);
     let html = summaryHtml + '<div class="card" style="padding:0">';
     _newsItems.forEach((it, i) => {
       html += '<div class="news-item" onclick="openNews(' + i + ')"><h4>' + it.title + '</h4><div class="meta"><span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">' + it.source + '</span><span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div><p>' + it.desc.substring(0, 120) + (it.desc.length > 120 ? '...' : '') + '</p></div>';
@@ -1724,11 +1722,12 @@ function openNews(idx) {
 }
 function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
 
-function generateMarketSummary(items) {
+function generateMarketSummary(items, cat) {
   const allText = items.map(it => it.title + ' ' + it.desc).join(' ').toLowerCase();
   const now = Date.now();
   const todayItems = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 86400000);
   const weekItems  = items.filter(it => it.pubDate && (now - new Date(it.pubDate)) < 7 * 86400000);
+  const catLabel = { general:'綜合', us:'美股', tw:'台股', crypto:'加密' }[cat] || '市場';
   const themes = [
     { key:/fed|利率|rate|interest|央行|降息|升息|fomc|monetary policy/, label:'貨幣政策', color:'var(--accent)' },
     { key:/ai|人工智慧|nvidia|semiconductor|chip|半導體|tsmc|台積|asml|arm\b/, label:'AI / 半導體', color:'var(--green)' },
@@ -1757,26 +1756,91 @@ function generateMarketSummary(items) {
     '地緣政治':   '地緣風險推升避險情緒，黃金與公債需求上升，考慮降低高風險資產曝險。',
   };
   const outlook = topTheme ? (outlookMap[topTheme.label] || '市場多重因素交織，建議保持多元配置。') : '目前無明顯主題，維持多元配置觀察。';
-  const topHeadlines = (todayItems.length ? todayItems : items).slice(0, 3).map(it =>
-    '<li style="margin-bottom:4px">' + it.title + '</li>').join('');
-  const themeChips = scored.slice(0, 4).map(t =>
+  const topHeadlines = (todayItems.length ? todayItems : items).slice(0, 5).map(it =>
+    '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
+  const themeChips = scored.slice(0, 5).map(t =>
     '<span style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:' + t.color + ';font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600">' + t.label + ' ×' + t.count + '</span>').join(' ');
+  const covLine = todayItems.length
+    ? '今日已涵蓋 <b>' + todayItems.length + '</b> 則新聞 · 本週 ' + weekItems.length + ' 則'
+    : '抓取最新 ' + items.length + ' 則新聞（部分無日期資訊）';
   return '<div class="card" style="margin-bottom:16px">' +
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">' +
-    '<div style="flex:1;min-width:200px">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;margin-bottom:6px">當下焦點</div>' +
-    '<ul style="font-size:13px;line-height:1.7;padding-left:16px;margin:0">' + topHeadlines + '</ul>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+    '<span style="font-weight:700;font-size:14px">' + catLabel + '新聞摘要</span>' +
+    '<span style="font-size:11px;color:var(--muted)">' + new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
     '</div>' +
-    '<div style="flex:1;min-width:200px">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;margin-bottom:6px">本週主題</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + (themeChips || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
-    '<div style="font-size:11px;color:var(--muted)">' + weekItems.length + ' 則本週新聞 · ' + todayItems.length + ' 則今日更新</div>' +
-    '</div>' +
-    '</div>' +
-    '<div style="margin-top:14px;padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">總結預估</div>' +
-    '<div style="font-size:13px;line-height:1.7">' + outlook + '</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + (themeChips || '<span style="font-size:12px;color:var(--muted)">統計中...</span>') + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + covLine + '</div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">今日焦點</div>' +
+    '<ul style="font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 12px">' + topHeadlines + '</ul>' +
+    '<div style="padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--accent)">總結與操作方向 · </span>' +
+    '<span style="font-size:13px;line-height:1.7">' + outlook + '</span>' +
     '</div></div>';
+}
+
+// Cache for homepage pre-market card
+window._newsSummaryCache = window._newsSummaryCache || null;
+function renderPreMarketCard(md) {
+  const el = document.getElementById('dash-premarket');
+  if (!el) return;
+  const cache = window._newsSummaryCache;
+  const sp = md['^GSPC'], vix = md['^VIX'], tw = md['^TWII'], nq = md['^IXIC'];
+  const spChg = sp && sp.prevClose ? (sp.price - sp.prevClose) / sp.prevClose * 100 : null;
+  const nqChg = nq && nq.prevClose ? (nq.price - nq.prevClose) / nq.prevClose * 100 : null;
+  const twChg = tw && tw.prevClose ? (tw.price - tw.prevClose) / tw.prevClose * 100 : null;
+  const vixV  = vix ? vix.price : null;
+  // Determine market sessions (UTC offset: US EST = -5, TW = +8)
+  const nowUTC = new Date();
+  const estH = (nowUTC.getUTCHours() - 5 + 24) % 24;
+  const twtH = (nowUTC.getUTCHours() + 8) % 24;
+  const usPreMkt  = estH >= 4 && estH < 9.5;
+  const usOpen    = estH >= 9.5 && estH < 16;
+  const usPostMkt = estH >= 16 && estH < 20;
+  const twPreMkt  = twtH >= 8 && twtH < 9;
+  const twOpen    = twtH >= 9 && twtH < 13.5;
+  // Sentiment from news cache
+  let newsOutlook = '', newsTheme = '';
+  if (cache && cache.items && cache.items.length) {
+    const allText = cache.items.map(it => it.title + ' ' + it.desc).join(' ').toLowerCase();
+    const bearSigs = (allText.match(/recession|衰退|tariff|關稅|sell.off|plunge|crash|fear|war|conflict/g)||[]).length;
+    const bullSigs = (allText.match(/rally|surge|gain|record|growth|beat|upgrade|bull|ai|nvidia|recovery/g)||[]).length;
+    newsOutlook = bullSigs > bearSigs ? '新聞偏多' : bearSigs > bullSigs ? '新聞偏空' : '新聞中性';
+    newsTheme = cache.cat === 'tw' ? '台股' : cache.cat === 'us' ? '美股' : '市場';
+  }
+  const fmt = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '—';
+  const col = v => v == null ? 'var(--muted)' : v >= 0 ? 'var(--green)' : 'var(--red)';
+  // Build session label
+  let sessionText = '';
+  if (usPreMkt)  sessionText = '美股盤前';
+  else if (usOpen)    sessionText = '美股盤中';
+  else if (usPostMkt) sessionText = '美股盤後';
+  if (twPreMkt)  sessionText += (sessionText ? ' · ' : '') + '台股盤前';
+  else if (twOpen)    sessionText += (sessionText ? ' · ' : '') + '台股盤中';
+  if (!sessionText)  sessionText = '亞市 / 夜盤';
+  // Direction summary
+  const usDir = spChg == null ? '等待數據' : spChg > 0.5 ? '偏多，關注追漲風控' : spChg < -0.5 ? '偏空，等待止穩訊號' : '震盪，觀望為主';
+  const twDir = twChg == null ? '等待開盤' : twChg > 0.5 ? '跟漲美股，留意高點壓力' : twChg < -0.5 ? '跟跌，空方佔優' : '小幅震盪，跟隨美股方向';
+  const vixNote = vixV == null ? '' : vixV > 25 ? '・VIX ' + vixV.toFixed(1) + ' 恐慌偏高，波動加大' : vixV < 15 ? '・VIX ' + vixV.toFixed(1) + ' 市場樂觀，回調風險上升' : '・VIX ' + vixV.toFixed(1) + ' 正常區間';
+  el.innerHTML =
+    '<div class="card" style="margin-bottom:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<span style="font-weight:700;font-size:13px">盤前/盤後市場預測</span>' +
+    '<span style="font-size:11px;color:var(--muted)">' + sessionText + vixNote + '</span>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
+    '<div style="padding:10px;background:var(--bg);border-radius:8px;border-left:2px solid ' + col(spChg) + '">' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:3px">美股（S&P 500 / Nasdaq）</div>' +
+    '<div style="font-size:14px;font-weight:700"><span style="color:' + col(spChg) + '">' + fmt(spChg) + '</span> / <span style="color:' + col(nqChg) + '">' + fmt(nqChg) + '</span></div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + usDir + '</div>' +
+    '</div>' +
+    '<div style="padding:10px;background:var(--bg);border-radius:8px;border-left:2px solid ' + col(twChg) + '">' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:3px">台股（加權指數）</div>' +
+    '<div style="font-size:14px;font-weight:700;color:' + col(twChg) + '">' + fmt(twChg) + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + twDir + '</div>' +
+    '</div>' +
+    '</div>' +
+    (newsOutlook ? '<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg);border-radius:6px">根據最新 ' + newsTheme + ' 新聞：<b style="color:' + (newsOutlook==='新聞偏多'?'var(--green)':newsOutlook==='新聞偏空'?'var(--red)':'var(--muted)') + '">' + newsOutlook + '</b>・<a href="#" onclick="showPage(\'news\');return false;" style="color:var(--accent);font-size:11px">查看完整新聞 →</a></div>' : '<div style="font-size:12px;color:var(--muted)">前往<a href="#" onclick="showPage(\'news\');return false;" style="color:var(--accent)">國際新聞</a>頁面載入後，此處將顯示新聞情緒分析</div>') +
+    '</div>';
 }
 
 function newsAnalysis(it) {
@@ -5120,9 +5184,11 @@ async function renderDashboard(forceRescan) {
 
   // 4. 觸發掃描（自動，快取 5 分鐘）
   quickDashboardScan(forceRescan);
-  // 5. T交易精選（15 分鐘快取，獨立載入）
+  // 5. 盤前/盤後市場預測卡片
+  renderPreMarketCard(marketData);
+  // 6. T交易精選（15 分鐘快取，獨立載入）
   renderDashTTrading();
-  // 6. 國際新聞摘要（10 分鐘快取）
+  // 7. 國際新聞摘要（10 分鐘快取）
   renderDashNews();
 }
 
