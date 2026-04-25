@@ -367,101 +367,56 @@ th:first-child,td:first-child{min-width:100px}
     <!-- CH0: Incoterms -->
     <section class="chapter" id="ch0">
       <h2>🚢 Incoterms 2020</h2>
-      <p class="subtitle">不是背11個縮寫，而是學會判斷：怎麼交貨、誰付主運輸、誰扛風險、誰負責清關</p>
+      <p class="subtitle">國際貿易術語解釋通則——11個術語，掌握風險與費用的分界點</p>
       <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>Incoterms 不是背縮寫，是拆責任</h3>
-        <ol>
-          <li>先分清運輸方式：海運/內水運 vs. 空運/快遞/多式聯運。</li>
-          <li>再看交貨點：工廠、承運人、船上、目的港、客戶倉庫。</li>
-          <li>再拆四件事：主運輸、保險、進口清關、進口稅到底誰負責。</li>
-          <li>最後才談「哪個最常用」。常用不代表永遠正確，運輸方式和控制權才是核心。</li>
-        </ol>
-        <div class="highlight">💡 新手先掌握 `FCA / FOB / CIF / DAP / DDP`，但實務上 `EXW / CFR / CPT / CIP` 也很重要，尤其 `FCA vs FOB` 和 `CPT/CIP vs CFR/CIF` 最容易用錯。</div>
+        <h3>什麼是 Incoterms？</h3>
+        <p>Incoterms（國際商業術語）由 ICC（國際商會）制定，規範買賣雙方在貿易合同中的<strong>風險移轉點</strong>和<strong>費用分擔</strong>。Incoterms 2020 共 11 個術語，分為兩大類：</p>
+        <ul>
+          <li><strong>適用任何運輸方式（7個）：</strong>EXW、FCA、CPT、CIP、DAP、DPU、DDP</li>
+          <li><strong>僅適用海運／內水運輸（4個）：</strong>FAS、FOB、CFR、CIF</li>
+        </ul>
+        <div class="highlight">💡 關鍵原則：術語越靠前（如 EXW），賣方義務越少；越靠後（如 DDP），賣方義務越多。核心是搞清楚三件事：誰負責主運輸、誰買保險、誰辦進口清關。</div>
       </div>
       <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>11 個 Incoterms 先分三層學</h3>
+        <h3>11 個術語速覽</h3>
         <table>
-          <tr><th>層級</th><th>條款</th><th>為什麼先學這些</th></tr>
-          <tr><td>第一層：新人必懂</td><td>FCA / FOB / CIF / DAP / DDP</td><td>最能理解責任跨度，也最常出現在日常詢價、出貨、客戶提問中</td></tr>
-          <tr><td>第二層：要會分辨</td><td>EXW / CFR / CPT / CIP</td><td>和第一層長得像，但差一個保險、風險點或出口報關責任就會出大問題</td></tr>
-          <tr><td>第三層：知道何時出現</td><td>FAS / DPU</td><td>相對小眾，但遇到特殊海運或目的地卸貨責任時必須知道</td></tr>
+          <tr><th>術語</th><th>全稱</th><th>風險移轉點</th><th>賣方費用</th></tr>
+          <tr><td><strong>EXW</strong></td><td>Ex Works 工廠交貨</td><td>工廠門口</td><td>最少</td></tr>
+          <tr><td><strong>FCA</strong></td><td>Free Carrier 貨交承運人</td><td>交給指定承運人</td><td>含出口報關</td></tr>
+          <tr><td><strong>FAS</strong></td><td>Free Alongside Ship 船邊交貨</td><td>裝運港船邊</td><td>含港口費（船邊）</td></tr>
+          <tr><td><strong>FOB</strong></td><td>Free On Board 裝運港船上</td><td>裝上船甲板</td><td>含裝船費</td></tr>
+          <tr><td><strong>CFR</strong></td><td>Cost and Freight 成本加運費</td><td>裝上船</td><td>含海運費</td></tr>
+          <tr><td><strong>CIF</strong></td><td>Cost Insurance Freight 成本保險加運費</td><td>裝上船</td><td>含運費＋保險</td></tr>
+          <tr><td><strong>CPT</strong></td><td>Carriage Paid To 運費付至</td><td>交給承運人</td><td>含至目的地運費</td></tr>
+          <tr><td><strong>CIP</strong></td><td>Carriage and Insurance Paid 運保費付至</td><td>交給承運人</td><td>含運費＋全險</td></tr>
+          <tr><td><strong>DAP</strong></td><td>Delivered At Place 目的地交貨</td><td>目的地，未卸貨</td><td>不含進口關稅</td></tr>
+          <tr><td><strong>DPU</strong></td><td>Delivered at Place Unloaded 目的地卸貨</td><td>目的地卸貨後</td><td>含卸貨費</td></tr>
+          <tr><td><strong>DDP</strong></td><td>Delivered Duty Paid 完稅後交貨</td><td>目的地買方處</td><td>最多（含關稅）</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>先選運輸方式，再選條款</h3>
-        <table>
-          <tr><th>場景</th><th>優先考慮</th><th>重點提醒</th></tr>
-          <tr><td>集裝箱海運</td><td>FCA / CPT / CIP</td><td>貨通常先交 CY 或承運人，不是真的在船邊交貨。</td></tr>
-          <tr><td>散雜貨或傳統海運表述</td><td>FOB / CFR / CIF</td><td>海運語境清楚，但保險責任要先講明。</td></tr>
-          <tr><td>空運 / 快遞 / 多式聯運</td><td>FCA / CPT / CIP</td><td>風險在交承運人時就移轉，不存在「裝上船」。</td></tr>
-          <tr><td>門到門但不含進口稅</td><td>DAP</td><td>賣方送到約定地點，買方仍負責進口清關與稅金。</td></tr>
-          <tr><td>門到門含進口稅</td><td>DDP</td><td>賣方責任最重，只能在稅務與清關能力清楚時承諾。</td></tr>
-        </table>
-        <div class="table-notes">
-          <strong>常見誤區</strong>
-          <ul>
-            <li>集裝箱和空運習慣性全部寫 `FOB`，是新人最常犯的第一個錯。</li>
-            <li>客戶只說「含運費」時，不代表你就應該直接寫 `CIF` 或 `CIP`。</li>
-            <li>`DAP` 不含進口稅，`DDP` 才碰到進口清關與稅金責任。</li>
-          </ul>
+        <h3>廣澤最常用：FOB vs CIF vs DAP</h3>
+        <div class="highlight">
+          <strong>FOB 深圳／廣州</strong>：廣澤負責到裝船，客戶自行安排運輸。適合歐美大客戶（他們有自己的貨代）。<br><br>
+          <strong>CIF 目的港</strong>：廣澤負責到目的港並附保險，適合中小客戶，讓對方省心。<br><br>
+          <strong>DAP 門到門</strong>：廣澤負責送到客戶倉庫門口，不含進口稅。適合目的地物流能力可控時。
         </div>
-      </div>
-      <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>11 個條款責任摘要表</h3>
-        <table>
-          <tr><th>條款</th><th>風險移轉點</th><th>賣方主要責任</th></tr>
-          <tr><td>EXW</td><td>工廠 / 倉庫備貨點</td><td>備貨即可，主運輸、保險與進口責任多由買方處理。</td></tr>
-          <tr><td>FCA</td><td>交給指定承運人時</td><td>完成出口端交貨，之後主運輸與保險多由買方安排。</td></tr>
-          <tr><td>FAS</td><td>裝運港船邊</td><td>做到船邊交貨，之後運輸、保險與進口責任轉給買方。</td></tr>
-          <tr><td>FOB</td><td>裝上船時</td><td>做到裝船，海運費、保險與進口責任通常由買方承擔。</td></tr>
-          <tr><td>CFR</td><td>裝上船時</td><td>賣方付主運輸，但保險與進口責任通常不在賣方。</td></tr>
-          <tr><td>CIF</td><td>裝上船時</td><td>賣方付主運輸並安排保險，進口清關與稅金仍由買方負責。</td></tr>
-          <tr><td>CPT</td><td>交給承運人時</td><td>賣方付主運輸，但保險通常不含在內。</td></tr>
-          <tr><td>CIP</td><td>交給承運人時</td><td>賣方付主運輸並安排保險，適用任何運輸方式。</td></tr>
-          <tr><td>DAP</td><td>目的地交貨未卸貨</td><td>賣方送到約定地點，但進口清關與稅金仍由買方負責。</td></tr>
-          <tr><td>DPU</td><td>目的地卸貨後</td><td>賣方做到目的地卸貨，進口清關與稅金通常仍在買方。</td></tr>
-          <tr><td>DDP</td><td>目的地交貨未卸貨</td><td>賣方責任最重，連進口清關與稅金也要處理。</td></tr>
-        </table>
-        <div class="table-notes">
-          <strong>速記方式</strong>
-          <ul>
-            <li>`F` 組代表主運輸多由買方主導，`C` 組代表賣方付主運輸但風險提早移轉。</li>
-            <li>`D` 組代表賣方把責任一路往目的地延伸，差別在有沒有卸貨、含不含進口稅。</li>
-          </ul>
-        </div>
+        <ul style="margin-top:16px">
+          <li><strong>集裝箱和空運不要習慣寫 FOB：</strong>貨交 CY 或承運人時就已移轉，應優先考慮 FCA 或 CPT。</li>
+          <li><strong>客戶要 EXW 要先確認：</strong>外國買方常無中國出口報關能力，實務上多要改成 FCA。</li>
+          <li><strong>答應 DDP 前先算清楚：</strong>DDP 含目的國進口稅與清關，成本遠超單純加運費。</li>
+        </ul>
       </div>
       <div class="card">
         <div class="section-lead">常見錯誤</div>
         <h3>四組最常混淆</h3>
         <table>
           <tr><th>組合</th><th>真正差異</th><th>新人怎麼記</th></tr>
-          <tr><td>FCA vs FOB</td><td>FCA 在交承運人時移轉；FOB 在裝上船時移轉。</td><td>只要不是典型船邊 / 船上交貨，就先想 FCA。</td></tr>
-          <tr><td>CFR vs CIF</td><td>CIF 比 CFR 多了保險責任。</td><td>海運下 `I = Insurance`，有 I 才是賣方買保險。</td></tr>
-          <tr><td>CPT vs CIP</td><td>CIP 比 CPT 多了保險責任，而且適用任何運輸。</td><td>`CP*` 系列都是交承運人就移轉風險。</td></tr>
-          <tr><td>DAP vs DDP</td><td>DDP 比 DAP 多了進口清關與稅金責任。</td><td>只要碰進口稅，就先重新算成本，不要口頭答應。</td></tr>
+          <tr><td>FCA vs FOB</td><td>FCA 在交承運人時移轉；FOB 在裝上船時移轉。</td><td>只要不是典型船邊／船上交貨，就先想 FCA。</td></tr>
+          <tr><td>CFR vs CIF</td><td>CIF 比 CFR 多了保險責任。</td><td>有「I」才是賣方買保險。</td></tr>
+          <tr><td>CPT vs CIP</td><td>CIP 比 CPT 多了保險責任，且適用任何運輸方式。</td><td>CP* 系列都是交承運人就移轉風險。</td></tr>
+          <tr><td>DAP vs DDP</td><td>DDP 比 DAP 多了進口清關與稅金責任。</td><td>只要碰進口稅，就先重新算成本再答應。</td></tr>
         </table>
-        <div class="table-notes">
-          <strong>常見錯法</strong>
-          <ul>
-            <li>集裝箱和空運還是寫 `FOB`，是 `FCA vs FOB` 最常見的誤用。</li>
-            <li>報 `CIF` 卻沒把保費算進去，或把 `CIP` 當成空運版 `CIF`，都會讓後面成本失真。</li>
-            <li>以為送到門口就等於含稅，會直接把 `DAP` 和 `DDP` 混掉。</li>
-          </ul>
-        </div>
-      </div>
-      <div class="card">
-        <div class="section-lead">常見錯誤</div>
-        <h3>新手最常踩的四個坑</h3>
-        <ul>
-          <li><strong>空運寫FOB：</strong>FOB是水路術語，空運應優先考慮FCA / CPT / CIP。</li>
-          <li><strong>報CIF沒保險：</strong>一旦報價寫CIF，保險通常不能省略。</li>
-          <li><strong>客戶要EXW就直接答應：</strong>外國買方常沒有中國出口報關能力，實務上常要改成FCA。</li>
-          <li><strong>DDP只加運費沒加稅：</strong>DDP不只是送到門口，還包含目的國進口稅與進口清關責任。</li>
-        </ul>
       </div>
       <div class="card">
         <div class="section-lead">情境應用</div>
@@ -469,20 +424,19 @@ th:first-child,td:first-child{min-width:100px}
         <ol>
           <li>貨是海運、空運、快遞還是多式聯運？</li>
           <li>客戶要自己控物流，還是希望賣方一起安排？</li>
-          <li>保險由誰買？如果客戶要我們買，保額和條款有沒有指定？</li>
-          <li>目的地清關與進口稅由誰負責？客戶是否已明確知道DAP和DDP差異？</li>
-          <li>合同、PI、L/C、貨代訂艙資料上的條款是否一致？</li>
+          <li>保險由誰買？若客戶要廣澤買，保額和條款有沒有指定？</li>
+          <li>目的地清關與進口稅由誰負責？客戶是否清楚 DAP 和 DDP 的差異？</li>
+          <li>合同、PI、L/C、貨代訂艙資料上的條款是否完全一致？</li>
         </ol>
-        <div class="highlight">💡 Incoterm不是「填一個縮寫」而已，它會直接影響報價、付款、文件、保險、放貨與索賠責任。條款一寫錯，後面整串都會跟著錯。</div>
+        <div class="highlight">💡 Incoterm 不是「填一個縮寫」，它決定報價、保險、文件、放貨與索賠的整條責任鏈。條款寫錯，後面整串都會跟著錯。</div>
       </div>
       <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>2020版重要更新</h3>
+        <h3>Incoterms 2020 重要更新</h3>
         <ul>
-          <li><strong>FCA新增：</strong>可約定裝船後出具On Board B/L，解決L/C項下的文件問題。</li>
-          <li><strong>DPU取代DAT：</strong>更清楚表明「目的地卸貨後」交貨。</li>
-          <li><strong>CIP保險升級：</strong>最低要求提升至ICC(A)；CIF仍是較基礎的ICC(C)。</li>
-          <li><strong>自有運輸：</strong>FCA、DAP、DPU、DDP明確允許賣方使用自有運輸工具。</li>
+          <li><strong>FCA 新增：</strong>可約定裝船後出具 On Board B/L，解決 L/C 項下的文件問題。</li>
+          <li><strong>DPU 取代 DAT：</strong>更清楚表明「目的地卸貨後」交貨。</li>
+          <li><strong>CIP 保險升級：</strong>最低要求提升至 ICC(A) 全險；CIF 仍維持較基礎的 ICC(C)。</li>
+          <li><strong>自有運輸：</strong>FCA、DAP、DPU、DDP 明確允許賣方使用自有運輸工具。</li>
         </ul>
       </div>
     </section>
