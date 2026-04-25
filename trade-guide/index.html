@@ -174,6 +174,11 @@ body.sidebar-collapsed #study-view{justify-content:center}
   margin-bottom:24px;
   box-shadow:var(--shadow);
   position:relative;
+  transition:box-shadow .2s ease,transform .2s ease;
+}
+.card:hover{
+  box-shadow:0 20px 56px rgba(23,32,51,.11);
+  transform:translateY(-2px);
 }
 .card::before{
   content:"";position:absolute;left:0;top:0;right:0;height:1px;
@@ -193,12 +198,24 @@ body.sidebar-collapsed #study-view{justify-content:center}
 .card ul,.card ol{padding-left:23px;margin-top:10px}
 .card li{margin-bottom:8px}
 .section-lead{
-  font-size:.8rem;
-  font-weight:800;
-  letter-spacing:.12em;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.1em;
   text-transform:uppercase;
-  color:var(--accent);
-  margin-bottom:12px
+  color:var(--text2);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.section-lead::before{
+  content:'';
+  display:inline-block;
+  width:5px;height:5px;
+  border-radius:50%;
+  background:var(--accent);
+  opacity:.55;
+  flex-shrink:0;
 }
 .tag{display:inline-block;padding:4px 11px;border-radius:20px;font-size:.75rem;font-weight:700;background:var(--accent-soft);color:var(--accent);margin-right:6px;margin-bottom:6px}
 .highlight{
@@ -853,17 +870,6 @@ tr:last-child td{border-bottom:none}
             <li>即期 `L/C` 也不是萬靈丹，仍要先審核開證銀行和條款。</li>
           </ul>
         </div>
-      </div>
-      <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>T/T、D/P、D/A、OA 實務差別</h3>
-        <ul>
-          <li><strong>T/T：</strong>最常用，也最直觀。關鍵不是「客戶答應會付」，而是錢是否真的到帳。</li>
-          <li><strong>D/P：</strong>理論上買方付款後才能拿單，但若客戶拒付，貨已經在港口，賣方要面對滯港、退運、轉賣成本。</li>
-          <li><strong>D/A：</strong>買方承兌後就能拿單提貨，本質上更像「帶單據的信用放款」，風險高於D/P。</li>
-          <li><strong>OA：</strong>本質是信用銷售，重點從單據控制轉成信用額度、帳期管理、對帳與催收。</li>
-        </ul>
-        <div class="highlight">💡 很多新人會以為 D/P 很安全、OA 只是客戶晚一點付。實際上只要貨權已經離開你手上，重點就不再是文件漂亮不漂亮，而是你的追款能力夠不夠。</div>
       </div>
       <div class="card">
         <div class="section-lead">先做控制</div>
@@ -1670,17 +1676,6 @@ tr:last-child td{border-bottom:none}
           <tr><td>量產後異常</td><td>首批出貨到港後，客戶反映部分表面刮傷並要求 8D。</td><td>你要知道何時先止血、何時回客戶、何時不能先承認責任。</td></tr>
         </table>
         <div class="highlight">➡️ 後面你看到的報價、付款、單據、品質、郵件與進階章節，都可以拿這個案例去對照。這樣學起來會像走完一張訂單，而不是背一堆散的知識點。</div>
-      </div>
-      <div class="card">
-        <div class="section-lead">先懂概念</div>
-        <h3>先分清三種資訊層級</h3>
-        <table>
-          <tr><th>類型</th><th>你可以怎麼用</th><th>例子</th></tr>
-          <tr><td>已確認事實</td><td>可作為對外背景介紹，但仍要對照最新版本</td><td>母公司為廣華控股、主要工藝、已公開認證、公開客戶體系與據點</td></tr>
-          <tr><td>訓練性解讀</td><td>用來幫助新人理解公司處境，不要包裝成公司官方定調</td><td>為何毛利承壓、為何要推EPF與發光飾件、為何要強化海外開發</td></tr>
-          <tr><td>對外前需確認</td><td>未經核准不要寫死，也不要在郵件裡直接承諾</td><td>MOQ、樣品交期、量產交期、產能數字、指定客戶專案、良率與交付KPI</td></tr>
-        </table>
-        <div class="highlight">⚠️ 本章主要整理自廣華控股公開披露資料、你提供的調查摘要與頁面既有引用。部分細節如員工數、出口占比、供應層級可能因統計口徑不同而有差異；正式對外仍以廣華控股最新年報與公司核准版本為準。</div>
       </div>
       <div class="card">
         <div class="section-lead">先懂概念</div>
