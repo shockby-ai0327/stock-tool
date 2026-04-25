@@ -316,7 +316,7 @@ tr:last-child td{border-bottom:none}
 #quiz-view{width:100%;display:none;padding:32px 20px;flex-direction:column;align-items:center}
 #quiz-view.active{display:flex}
 
-.quiz-header{width:100%;max-width:700px;margin-bottom:24px}
+.quiz-header{width:100%;max-width:min(860px,90vw);margin-bottom:24px}
 .quiz-title{font-size:1.4rem;font-weight:700;margin-bottom:16px}
 
 /* Stats bar */
@@ -338,16 +338,16 @@ tr:last-child td{border-bottom:none}
 .filter-label{font-size:.82rem;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.07em}
 .filter-chips{display:flex;flex-wrap:wrap;gap:8px}
 .filter-chip{
-  padding:6px 14px;border-radius:20px;font-size:.83rem;font-weight:600;
+  padding:8px 14px;border-radius:20px;font-size:.83rem;font-weight:600;
   background:var(--surface);border:1.5px solid var(--border);color:var(--text2);
-  transition:all var(--trans);
+  transition:all var(--trans);min-height:36px;
 }
 .filter-chip:hover{border-color:var(--accent);color:var(--accent)}
 .filter-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* Question card */
 .q-card{
-  width:100%;max-width:700px;background:var(--surface);
+  width:100%;max-width:min(860px,90vw);background:var(--surface);
   border:1px solid color-mix(in srgb, var(--border) 88%, transparent);border-radius:22px;
   padding:32px;box-shadow:var(--shadow-lg);
   position:relative;
@@ -363,7 +363,7 @@ tr:last-child td{border-bottom:none}
 .q-cat{font-size:.8rem;color:var(--text2);font-weight:600}
 .q-num{margin-left:auto;font-size:.8rem;color:var(--text2)}
 
-.q-text{font-size:1.05rem;line-height:1.65;font-weight:500;margin-bottom:24px;color:var(--text)}
+.q-text{font-size:1.15rem;line-height:1.65;font-weight:500;margin-bottom:24px;color:var(--text)}
 
 /* Options */
 .options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
@@ -389,12 +389,14 @@ tr:last-child td{border-bottom:none}
 
 /* Explanation */
 .explain-box{
-  background:var(--surface2);border-radius:10px;padding:16px 18px;
+  background:var(--surface2);border-radius:10px;
   font-size:.9rem;line-height:1.65;color:var(--text);
   border-left:4px solid var(--accent);
-  display:none;margin-bottom:20px;
+  max-height:0;overflow:hidden;
+  padding:0 18px;margin-bottom:0;
+  transition:max-height .25s ease,padding .25s ease,margin .25s ease;
 }
-.explain-box.show{display:block}
+.explain-box.show{max-height:500px;padding:16px 18px;margin-bottom:20px}
 .explain-label{font-weight:700;color:var(--accent);margin-bottom:6px;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em}
 
 /* Action buttons */
@@ -411,7 +413,7 @@ tr:last-child td{border-bottom:none}
 .btn-ghost:hover{background:var(--surface2);color:var(--text)}
 
 /* Progress bar */
-.progress-wrap{width:100%;max-width:700px;margin-bottom:20px}
+.progress-wrap{width:100%;max-width:min(860px,90vw);margin-bottom:20px}
 .progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:3px;transition:width .4s ease}
 .progress-label{font-size:.78rem;color:var(--text2);margin-top:6px;text-align:right}
@@ -2496,7 +2498,7 @@ function loadQuestion() {
     opts.innerHTML = `
       <div class="fill-wrap">
         <input type="text" id="fill-input" class="fill-input"
-          placeholder="輸入你的答案..." autocomplete="off" autocorrect="off"
+          placeholder="請輸入答案" autocomplete="off" autocorrect="off"
           autocapitalize="off" spellcheck="false">
         <button class="btn btn-primary" id="fill-submit-btn" onclick="checkFill()">確認</button>
       </div>
