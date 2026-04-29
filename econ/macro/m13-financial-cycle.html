@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M13 金融週期與危機 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link active">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M13</span>
+          <span class="topbar-title">金融週期、槓桿與系統性危機</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 13</div>
+          <h1 class="lecture-hero-title">金融週期、槓桿與系統性危機</h1>
+          <p class="lecture-hero-subtitle">Financial Cycles, Leverage, and Systemic Crises</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：金融穩定</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">標準宏觀模型長期忽略金融部門：IS-LM 將利率視為傳導的唯一管道，DSGE 模型假設完美資本市場，甚至 2008 年前的主流宏觀預測完全未能識別即將到來的危機。Bernanke（2015）回顧指出，Fed 在 2007 年底的預測仍假設次貸問題「可控（contained）」。這場認知失敗催生了一個新研究議程：金融週期（financial cycle）如何與實體週期（business cycle）相互影響、互相放大？Minsky（1986）、Kindleberger（1978）早已提出答案——金融系統本質上具有內生不穩定性，繁榮孕育危機，危機清掃過度，如此循環。本講系統梳理金融週期的驅動力、槓桿螺旋、銀行恐慌、系統性風險測量，以及總體審慎監管（macroprudential regulation）的工具設計。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、金融週期與商業週期的雙週期框架</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">金融週期 vs 商業週期：關鍵差異</div>
+            <pre>
+【Borio（BIS，2012）雙週期框架】
+
+商業週期（Business Cycle）：
+  ・週期長度：3–8 年（平均約 5 年）
+  ・主要變數：GDP、失業率、通膨
+  ・傳統貨幣政策關注對象
+  ・峰谷振幅：GDP ±2–5%
+
+金融週期（Financial Cycle）：
+  ・週期長度：15–20 年（遠長於商業週期）
+  ・主要變數：信用（credit）、資產價格（房價、股價）
+  ・超出標準貨幣政策視野
+  ・峰谷振幅：信用/GDP 比 ±20–40 個百分點
+
+┌────────────────────────────────────────────┐
+│  金融週期四個階段                           │
+├──────────────┬─────────────────────────────┤
+│ 1. 擴張期    │ 信用增長 > GDP 增長           │
+│ (Expansion)  │ 資產價格上漲 → 抵押品價值↑   │
+│              │ 借貸能力進一步擴大（正反饋）  │
+│              │ 風險意識下降、槓桿率上升      │
+├──────────────┼─────────────────────────────┤
+│ 2. 頂峰     │ 信用/GDP 比達高點              │
+│ (Peak)       │ 資產估值過高                  │
+│              │ 「這次不一樣（this time is    │
+│              │  different）」心態盛行         │
+├──────────────┼─────────────────────────────┤
+│ 3. 收縮期    │ 觸發事件（利率↑、外部衝擊）  │
+│ (Contraction)│ 資產價格↓ → 抵押品↓         │
+│              │ 被迫去槓桿 → 信用收縮        │
+│              │ 實體經濟衰退（負反饋放大）   │
+├──────────────┼─────────────────────────────┤
+│ 4. 底部修復  │ 資產負債表修復（3–7 年）     │
+│ (Trough)     │ 信用增長緩慢恢復              │
+│              │ 常伴隨「資產負債表衰退」      │
+│              │ (Koo 2008，日本失落十年)      │
+└──────────────┴─────────────────────────────┘
+
+金融危機通常發生在金融週期頂峰之後：
+  ・頂峰 + 外部觸發 → 系統性危機概率大增
+  ・信用/GDP 缺口（credit-to-GDP gap）是 BIS
+    最重要的金融脆弱性先行指標（leading indicator）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、明斯基時刻：內生不穩定的理論</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：明斯基金融不穩定假說（Minsky's Financial Instability Hypothesis）</div>
+            <p>Minsky（1986）：「穩定本身製造不穩定（stability is destabilizing）」。長期穩定讓投資者降低對風險的警惕，逐步積累脆弱性，直至崩潰。</p>
+            <p><strong>三種融資單位（Three Financing Units）</strong>：</p>
+            <p>① <strong>避險融資（Hedge Finance）</strong>：現金流足以覆蓋本息。最穩健，但在繁榮期被嘲為「過度保守」。</p>
+            <p>② <strong>投機融資（Speculative Finance）</strong>：現金流只能覆蓋利息，必須通過再融資（滾動債務）還本。依賴信貸市場持續開放。</p>
+            <p>③ <strong>龐氏融資（Ponzi Finance）</strong>：現金流連利息都無法覆蓋，完全依賴資產升值還款。只要資產漲價就能存活；一旦停漲即刻崩潰。</p>
+            <p>Minsky 的主張：在繁榮期，經濟中「避險→投機→龐氏」的比例自然移動，直到某個觸發事件引發「明斯基時刻（Minsky Moment）」——投機者和龐氏借款人被迫同時出售資產，觸發資產價格崩潰的自我強化螺旋。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">明斯基週期的五個階段（Kindleberger 版）</div>
+            <pre>
+Kindleberger（1978）《狂熱、恐慌與崩潰》
+在明斯基框架基礎上提出歷史化的五階段：
+
+1. 位移（Displacement）
+   外生衝擊改變盈利預期：
+   新技術（互聯網、鐵路）、制度變革（金融自由化）
+   → 投資機會出現
+
+2. 繁榮（Boom）
+   信用擴張 + 資產價格上升的正反饋迴圈
+   資本湧入 → 更多投資 → 價格更高
+
+3. 過度興奮（Euphoria）
+   「新時代（New Era）」思維
+   估值指標被合理化忽視（P/E 過高「但這次不同」）
+   杠桿急速上升，風險溢酬壓縮至極端低點
+
+4. 困境（Distress）
+   早期知情者退出（insider selling）
+   信貸條件收緊，部分資產開始拋售
+
+5. 恐慌（Panic / Revulsion）
+   關鍵觸發事件（違約、破產、政策轉向）
+   →「跑得最快的人損失最少」
+   → 大規模拋售、市場流動性消失
+   → 資產價格暴跌、信用凍結
+
+歷史案例對照：
+  1637 鬱金香狂熱         → 5 個階段
+  1720 南海泡沫
+  1929 大崩盤
+  1989 日本房地產泡沫
+  2000 科技股泡沫
+  2008 次貸危機           → 最完整的現代案例</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、槓桿螺旋：抵押品與信用的正反饋</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">槓桿螺旋（Leverage Spiral）— Brunnermeier &amp; Pedersen 2009</div>
+            <pre>
+【正常時期：資產價格 ↑ 的正反饋】
+
+資產價格 ↑
+  → 抵押品價值 ↑
+  → 可借款額度 ↑（LTV 不變）
+  → 借更多 → 買更多資產
+  → 資產價格進一步 ↑
+
+【危機時期：資產價格 ↓ 的負反饋（火力全開）】
+
+資產價格 ↓
+  → 抵押品價值 ↓
+  → 保證金追繳（margin call）
+  → 被迫賣出資產（fire sale）
+  → 資產價格進一步 ↓
+  → 再次追繳保證金 → 再賣出 ...
+
+┌─────────────────────────────────────────┐
+│          槓桿螺旋的數學放大效果            │
+│                                         │
+│ 槓桿率 = 資產 / 淨值                    │
+│ 假設：槓桿率 = 10x（借 9，自有 1）      │
+│                                         │
+│ 資產跌 10%：                            │
+│   資產：100 → 90                        │
+│   負債：90（不變）                      │
+│   淨值：10 → 0（完全虧光）              │
+│                                         │
+│ 資產跌 5%：                             │
+│   資產：100 → 95                        │
+│   槓桿率：95/5 = 19x（被動槓桿升高）   │
+│   → 被迫去槓桿以維持原始槓桿目標       │
+│   → 必須賣出資產                        │
+└─────────────────────────────────────────┘
+
+【資金流動性 vs 市場流動性的螺旋】
+
+資金流動性（Funding Liquidity）：
+  機構能以合理成本獲得融資的能力
+
+市場流動性（Market Liquidity）：
+  資產能以接近基本價值成交的能力
+
+兩者互相依存：
+  資金緊縮 → 機構被迫賣出 → 市場流動性↓
+  市場流動性↓ → 抵押品折扣（haircut）↑
+  → 資金進一步緊縮 → 惡性螺旋</pre>
+          </div>
+
+          <p>Brunnermeier &amp; Pedersen（2009）的「資金與市場流動性螺旋」是 2008 年危機中最清晰的理論描述。關鍵洞見：在危機時期，機構被迫去槓桿的行為本身成為危機的放大器——即便資產的基本面沒有惡化，純粹由於資金流動性危機，資產也可以跌至遠低於基本值。這解釋了央行在 2008 年最終需要直接購買資產（QE）而非僅降息的原因。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、銀行擠兌與自我實現危機</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">Diamond-Dybvig 模型：銀行擠兌的均衡選擇</div>
+            <pre>
+【Diamond &amp; Dybvig（1983）— 2022 年諾貝爾獎】
+
+銀行的核心功能：
+  ・吸收「短期存款（short-term deposits）」
+  ・投資「長期資產（long-term illiquid assets）」
+  ・提供流動性轉化（liquidity transformation）
+
+兩個均衡（Multiple Equilibria）：
+
+均衡 A（正常均衡）：
+  存款人相信其他人不會擠兌
+  → 只有真正需要流動性的人提款
+  → 銀行可正常運作
+  → 預期自我實現
+
+均衡 B（擠兌均衡）：
+  存款人相信其他人會擠兌
+  → 所有人搶先提款（「跑得快損失少」）
+  → 銀行被迫低價拋售長期資產
+  → 資產損失 → 後提款者血本無歸
+  → 預期自我實現
+
+→ 擠兌是「協調失敗（coordination failure）」
+  不需要銀行有任何實際問題
+
+【解決方案】
+
+1. 存款保險（Deposit Insurance）
+   政府擔保存款安全 → 消除擠兌誘因
+   美國 FDIC（1933 年大蕭條後建立）
+   台灣：最高保障 300 萬台幣
+
+2. 最後貸款人（Lender of Last Resort）
+   Bagehot（1873）：流動性危機下
+   「以高利率，對好抵押品，無限量放款」
+   → 央行作為最後貸款人打破擠兌均衡
+
+3. 暫時關閉（Bank Holiday）
+   1933 年 Roosevelt 全美銀行假期
+   → 打破擠兌恐慌協調點
+
+【現代數字銀行擠兌：SVB 2023】
+Twitter 加速了擠兌速度
+・傳統擠兌：幾天（人工排隊）
+・數字擠兌：幾小時（線上轉帳 + 社群媒體）
+・48 小時內 420 億美元提款
+→ Diamond-Dybvig 模型在 TikTok 時代依然成立</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、系統性風險：傳染與網絡效應</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">系統性危機傳導：從個體衝擊到系統崩潰</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">初始衝擊（Initial Shock）</div>
+                <div class="step-desc">某一機構 / 資產類別 / 地理區域出現虧損<br>例：次級房貸違約率上升（2007）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">直接損失傳染（Direct Contagion）</div>
+                <div class="step-desc">相互持有風險資產的機構直接受損<br>銀行間市場（interbank market）信任崩潰<br>Lehman 破產 → 貨幣市場基金「跌破面值（break the buck）」</div>
+              </div>
+              <div class="transmission-arrow">↓</invoke>
+              <div class="transmission-step">
+                <div class="step-label">間接傳染：資產價格通道</div>
+                <div class="step-desc">集體拋售同類資產（fire sale externality）<br>未受直接損失的機構因資產價格下跌受損<br>「共同因子曝險（common factor exposure）」</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">流動性凍結（Liquidity Freeze）</div>
+                <div class="step-desc">銀行間拆借市場停擺（LIBOR-OIS 利差飆升）<br>商業票據（CP）市場凍結<br>信貸供給急劇收縮</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">實體經濟衝擊</div>
+                <div class="step-desc">企業無法再融資 → 裁員、投資停止<br>消費者信心崩潰（財富效果 + 不確定性）<br>GDP 下滑、失業率飆升</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">主權風險惡化（部分案例）</div>
+                <div class="step-desc">銀行紓困成本 → 政府債務上升<br>2010–12 歐債危機：「銀行-主權螺旋（doom loop）」<br>銀行持有政府債 → 主權信評↓ → 銀行資產↓ → 循環</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">系統性風險測量工具</div>
+            <pre>
+【CoVaR — Adrian &amp; Brunnermeier（2016）】
+
+CoVaR_i|j = 機構 j 處於危機時
+             機構 i 的在險價值
+
+ΔCoVaR = CoVaR_i|j(危機) - CoVaR_i|j(中性)
+→ 衡量機構 j 對整體系統的「溢出（spillover）」貢獻
+
+【SRISK — Acharya et al.（2012）】
+
+SRISK_i = E[資本缺口 | 市場崩潰 40% 以上]
+= MES(邊際預期損失) × 槓桿 × 市值
+
+→ 壓力情境下機構需要的資本補充量
+→ 紐約大學 Stern 每週更新全球主要銀行 SRISK
+
+【信用/GDP 缺口（BIS 先行指標）】
+
+gap = 實際信用/GDP比 - 長期趨勢
+gap > 10 個百分點 → 銀行危機三年內概率大幅上升
+（BIS 研究：預測準確率 > 60%，假陽性較多）
+
+2007 年美國信用/GDP 缺口：+12%
+2018 年中國信用/GDP 缺口：+15%（警示訊號）
+
+【VIX 指數（隱含波動率 / 恐慌指數）】
+
+VIX > 30：市場高度不安（2008 年 VIX 達 80）
+VIX < 15：市場平靜，可能孕育過度風險承擔
+Nassim Taleb 批評：VIX 低時最危險，因為
+低波動性鼓勵槓桿積累（「波動性悖論」）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、總體審慎監管：政策回應</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：總體審慎監管（Macroprudential Regulation）</div>
+            <p>2008 年後興起的監管理念，核心是將金融系統視為整體（而非個別機構），針對系統性風險的積累設計逆週期工具。與傳統「個體審慎（microprudential）」監管（確保單一機構健全）形成互補。</p>
+            <p>Borio（BIS）、Hanson、Kashyap &amp; Stein（2011）等人奠定理論基礎。主要監管工具如下：</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">總體審慎工具箱</div>
+            <pre>
+┌────────────────────┬────────────────────────────┐
+│ 工具               │ 運作機制                    │
+├────────────────────┼────────────────────────────┤
+│ 逆週期資本緩衝     │ 繁榮期要求銀行積累額外資本  │
+│ (CCyB)             │ 衰退期釋放 → 維持放款能力  │
+│ Basel III 要求     │ 0–2.5% 額外資本要求        │
+├────────────────────┼────────────────────────────┤
+│ 貸款價值比上限     │ 限制房貸 LTV（如最高 80%） │
+│ (LTV Cap)          │ 防止房市信用過度擴張        │
+│                    │ 新加坡、香港廣泛使用        │
+├────────────────────┼────────────────────────────┤
+│ 債務所得比上限     │ 限制借款人總債務/年收入比  │
+│ (DTI / DSCR Cap)   │ 防止過度負債（台灣 2021）  │
+├────────────────────┼────────────────────────────┤
+│ 系統重要性機構     │ SIFI 額外資本附加要求      │
+│ 附加要求（SIFI）   │ G-SIB：1–3.5% 額外資本    │
+│ Basel III          │ 強迫縮減「大到不能倒」誘因 │
+├────────────────────┼────────────────────────────┤
+│ 壓力測試           │ 極端情境下的資本充足模擬   │
+│ (Stress Test)      │ Fed DFAST / ECB AQR        │
+│                    │ 透明度 → 市場紀律（訊號）  │
+├────────────────────┼────────────────────────────┤
+│ 流動性監管         │ LCR（流動性覆蓋率）≥ 100% │
+│ (LCR / NSFR)       │ NSFR（淨穩定資金比率）    │
+│ Basel III          │ 確保 30 天壓力情境下流動性 │
+└────────────────────┴────────────────────────────┘
+
+【Basel III 資本架構（簡化）】
+
+一級核心資本（CET1）≥ 4.5%（風險加權資產）
+一級資本（Tier 1）   ≥ 6%
+總資本（Total）       ≥ 8%
+資本保存緩衝         +2.5%（CET1）
+逆週期緩衝（CCyB）   +0–2.5%
+SIFI 附加要求         +1–3.5%
+
+→ 系統重要性銀行（G-SIB）有效最低 CET1
+  ≈ 4.5 + 2.5 + 3.5 = 10.5%（最高要求情境）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">七、「大到不能倒」：道德風險的制度困境</h2>
+
+          <div class="case-study">
+            <div class="case-study-title">案例分析：2008 年雷曼兄弟破產 vs 貝爾斯登救援——「大到不能倒」的邊界在哪裡？</div>
+            <p><strong>背景</strong>：2008 年 3 月，Bear Stearns（貝爾斯登）在摩根大通協助、Fed 提供緊急融資的安排下被接管，股東幾乎血本無歸但存款人和交易對手得到保護。市場解讀為「銀行不會被允許倒閉」。</p>
+            <p><strong>六個月後的逆轉</strong>：2008 年 9 月 15 日，雷曼兄弟（Lehman Brothers）宣布破產。Fed 和財政部選擇不救援，官方理由是「缺乏法律授權」和「不想製造道德風險（moral hazard）」。</p>
+            <p><strong>後果比預期嚴重得多</strong>：雷曼破產觸發的系統性連鎖效應超出了所有政策者的預期：①貨幣市場基金「Reserve Primary Fund」因持有雷曼票據跌破面值，觸發全球基金贖回潮；②商業票據市場（企業短期融資的重要來源）幾乎完全凍結；③信用違約掉期（CDS）網絡因不透明的場外交易（OTC）形成無法估算的連鎖違約風險；④Bernanke 後來承認雷曼破產是危機最深的觸發點。</p>
+            <p><strong>制度困境的揭示</strong>：① 事前承諾不救援 → 減少道德風險，但若市場不相信，拉不緊紀律；② 事後確實不救援 → 引發真實的系統性崩潰，代價遠超救援成本；③ Bagehot 原則（「對好抵押品」才救）在系統性危機中難以應用：雷曼的問題是資不抵債（insolvency），而非流動性不足（illiquidity），使 Bagehot 原則無法適用。</p>
+            <p><strong>事後改革</strong>：2010 年《多德-弗蘭克法》（Dodd-Frank Act）建立「有序清算機制（Orderly Liquidation Authority）」，試圖為系統重要性機構提供「可信的有序破產路徑」，解決「大到不能倒的制度困境」。但批評者（如 Admati &amp; Hellwig 2013）認為根本解方是大幅提高資本要求，而非設計更複雜的破產程序。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">八、房地產週期：金融週期的核心驅動</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">房地產與金融週期的共振機制</div>
+            <pre>
+【為何房地產是金融週期的核心？】
+
+1. 土地供給的固定性 + 地點獨特性
+   → 需求增加 → 價格上升（而非供給增加）
+   → 資本收益（capital gain）預期持續正向
+
+2. 高槓桿的天然資產類別
+   首付 20% → 槓桿 5x
+   價格漲 10% → 資本報酬 50%（槓桿放大）
+   → 投機誘因極大
+
+3. 最主要的抵押品資產
+   銀行放貸 → 房地產抵押品
+   房價↑ → 放貸能力↑ → 更多資金買房 → 正反饋
+
+4. 財富效果顯著
+   大多數家庭的最大單一資產
+   房價↑ → 消費↑（財富效果）
+   房價↓ → 消費↓（負財富效果）
+
+【Reinhart &amp; Rogoff「這次不一樣」的八百年歷史】
+
+分析 66 國八百年的金融危機史：
+・幾乎所有嚴重銀行危機前
+  都有大規模的房地產或股票價格泡沫
+・「這次真的不一樣」的論點幾乎從未成立
+・共同模式：信用激增 + 資產价格泡沫 +
+  經常帳惡化 + 外債積累 → 危機
+
+日本（1980年代）：商業地產漲 3–4 倍
+美國（2000–2007）：Case-Shiller 全國房價漲 124%
+中國（2010–2021）：一線城市房價漲 3–5 倍
+
+【Case-Shiller 房價指數的市場含義】
+
+S&amp;P Case-Shiller 指數（美國）：
+・追蹤同一房屋的重複交易價格
+・比新屋中位價更能反映真實價格趨勢
+・Shiller 1981 年率先測量房價泡沫
+・2005 年 Shiller 在泡沫頂峰公開警告
+  (Greenspan 同期稱「只是泡沫」，非系統性危機)</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解一：「嚴格監管的銀行不會引發系統性危機」</div>
+            <p><strong>問題所在</strong>：嚴格監管的傳統銀行系統在 2008 年之前確實穩健，但系統性風險轉移到了影子銀行（shadow banking）：貨幣市場基金、券商、特殊目的載體（SPV）、回購市場（repo）等。這些機構執行銀行的功能（期限轉換、流動性轉換），但不受存款保險或 Fed 流動性支持保護。Gorton &amp; Metrick（2012）指出，2008 年危機本質上是「影子銀行擠兌（shadow bank run）」——回購市場中的折扣（haircut）突然飆升，相當於大規模提款。監管永遠有滲漏（regulatory arbitrage）：資本要求越嚴，誘因越強把活動移出監管視野。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解二：「信用評等機構的 AAA 評級確保了安全」</div>
+            <p><strong>問題所在</strong>：2008 年危機中，評級為 AAA 的 CDO（擔保債務憑證）在幾個月內從最高評級跌至垃圾級。根本問題有三：①模型假設：評級機構使用的 Gaussian Copula 模型假設房貸違約相關係數較低（不同地區的違約獨立），忽視了全國性房價下跌的系統性共相關；②發行人付費（issuer-pays）模式製造利益衝突——被評級的機構付費，評級機構有動機高估；③複雜度陷阱：評級機構和投資者都無法真正理解 CDO-squared（CDO 的 CDO）的底層風險，信任評級代替了自身分析。Felix Salmon（2009）稱 Gaussian Copula 為「毀掉了華爾街的公式」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解三：「金融危機後的監管改革已消除系統性風險」</div>
+            <p><strong>問題所在</strong>：2008 年後的改革顯著改善了銀行體系的資本充足率，但系統性風險並未消失，只是轉移。① 私募股權（private equity）和私人信貸市場在低利率時代大規模擴張，多數不受 Basel III 監管；② 貨幣市場基金在 2020 年 3 月再次需要 Fed 緊急支持；③ 2023 年 SVB 危機顯示，中型銀行（資產低於 2,500 億美元門檻）在 2018 年多德-弗蘭克修正後被豁免了最嚴格的流動性要求。IMF 在 2023 年全球金融穩定報告中指出，非銀行金融機構（NBFI）持有的資產已超過銀行，成為下一個系統性風險的潛在來源。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">教授示範答題</h2>
+          <div class="key-concept">
+            <div class="key-concept-title">考試題目：「用明斯基假說和槓桿螺旋分析 2008 年次貸危機。為何在 2005–06 年房價巔峰時，主流機構（Fed、IMF、信評機構）均未識別系統性危機風險？」</div>
+            <p><strong>第一層——明斯基分析</strong>：2000–2007 年美國住宅市場的演進完美契合明斯基的三融資階段轉移。2000 年初：傳統的「避險融資」30 年固定利率房貸為主。2004–06 年：「投機融資」的 ARM（可調整利率）、Interest-Only 房貸擴散，借款人依賴再融資而非自有現金流還本。2006–07 年頂峰：「龐氏融資」的 Negative Amortization（付款連利息都不夠，本金反而增加）、NINJA 貸款（No Income, No Job, No Assets）——完全依賴房價上漲維持。Kindleberger 的五階段：技術革新 = 金融創新（MBS、CDO）；繁榮 = 2002–06；過度興奮 = 「全國性房價不會下跌」的共識；困境 = 2007 年次貸違約率上升；恐慌 = 2008 年 9 月雷曼破產。</p>
+            <p><strong>第二層——槓桿螺旋的放大</strong>：危機的深度源於多層槓桿的同步去槓桿：房屋購買者（5–10x 槓桿）→ MBS 基礎抵押品；商業銀行（10–15x）持有 MBS；投資銀行（30–40x，高盛、雷曼）持有 CDO；對沖基金通過回購市場（repo）進一步加槓桿。資產價格下跌時，每一層都在同時拋售，火力銷售（fire sale）效果呈幾何倍數放大。Brunnermeier &amp; Pedersen 的資金-市場流動性螺旋在此完整呈現。</p>
+            <p><strong>第三層——為何未被預見</strong>：① 認知捕獲（intellectual capture）：主流 DSGE 模型假設高效率的金融市場，無法生成危機路徑；② 大穩健（Great Moderation）的錯覺：1985–2007 年間波動性持續下降，Minsky 式的不穩定被視為過時理論；③ 監管套利的不透明：危機最深的資產（CDO-squared）位於監管視野之外；④ 局部 vs 全局理性：個別機構的理性行為（持有高評級資產）在系統層面製造了「構成謬誤（fallacy of composition）」——每人都試圖同時出售則無人能賣出；⑤ Greenspan 的意識形態盲點：市場自我修正的信念阻礙了早期干預。</p>
+            <p><strong>結論</strong>：2008 年危機是「知識失敗（intellectual failure）與制度失敗（institutional failure）的結合」（Bernanke 語）。明斯基和 Kindleberger 的框架提供了事後最準確的描述，但在事前被主流忽視，部分原因是它的警告不夠精確（「總會發生」但說不清「何時」），使得政策者難以據此行動。</p>
+          </div>
+        </section>
+
+        <section class="section exercise-section">
+          <h2 class="section-title">課後練習</h2>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習一</span>
+              <span class="exercise-difficulty difficulty-basic">基礎</span>
+            </div>
+            <p class="exercise-question">某投資機構持有 1 億美元資產，以 5% 自有資金（500 萬）、95% 借款（9,500 萬）操作，槓桿率 20x。假設資產價格下跌 6%，（1）計算機構的新淨值，（2）若機構必須維持最高 20x 槓桿率，需賣出多少資產？（3）若市場上有 100 家類似機構同時被迫去槓桿，描述可能引發的系統性效應。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>（1）資產下跌 6%</strong>：新資產 = 1 億 × 0.94 = 9,400 萬；負債不變 9,500 萬；新淨值 = 9,400 − 9,500 = <strong>−100 萬（資不抵債）</strong>。</p>
+                <p>若資產只跌 5%：新資產 9,500 萬，淨值 = 0（恰好被清零）。</p>
+                <p>若資產跌 4%：新資產 9,600 萬，淨值 = 100 萬，槓桿 = 9,600/100 = 96x（被動槓桿暴升）。</p>
+                <p><strong>（2）去槓桿計算（以資產跌 4% 為例，淨值 100 萬）</strong>：要維持最高 20x，最大資產 = 20 × 100 萬 = 2,000 萬。需賣出資產 = 9,600 − 2,000 = <strong>7,600 萬</strong>（賣出約 79% 的持倉）。</p>
+                <p><strong>（3）系統性效應</strong>：100 家類似機構同時被迫出售 → 同類資產拋售量龐大 → 流動性急劇下降 → 資產價格進一步下跌（超出基本面） → 觸發新一輪追繳保證金 → 被迫賣更多 → 槓桿螺旋。這正是 Brunnermeier &amp; Pedersen 的「資產共同因子」問題：每家機構看似理性的去槓桿行為，在總體上製造了「構成謬誤」——集體行為使市場清算價遠低於基本價值，甚至傷害到完全健康的機構（因持有同類資產）。監管啟示：個體層面理性（自我保護）= 系統層面非理性（共同崩潰）。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>（1）（2）計算正確，但（3）的系統性分析過於簡略，未能說明「構成謬誤」的邏輯或槓桿螺旋的正反饋機制。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>計算（1）（2）有誤，或不知道如何計算去槓桿需要賣出的資產規模；（3）僅說「大家都賣股票所以市場會跌」，未連結系統性風險的正反饋機制。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確計算（1）新淨值（說明槓桿下的脆弱性）</td><td>25%</td></tr>
+                <tr><td>正確計算（2）被迫去槓桿的資產出售規模</td><td>35%</td></tr>
+                <tr><td>說明（3）系統性效應的正反饋機制（槓桿螺旋）</td><td>25%</td></tr>
+                <tr><td>聯結「構成謬誤」與總體審慎監管的必要性</td><td>15%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習二</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">Diamond-Dybvig 模型預測，銀行擠兌是「多重均衡（multiple equilibria）」的結果。請說明：（1）什麼讓兩個均衡都在邏輯上自我一致？（2）存款保險如何打破擠兌均衡、又引入了什麼新問題？（3）2023 年矽谷銀行（SVB）危機與 Diamond-Dybvig 的標準模型有哪些符合之處，又有哪些現代差異？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>（1）多重均衡的自我一致性</strong>：均衡 A（不擠兌）：存款人相信其他人不提款 → 只有真正需要的人提款 → 銀行資產足以覆蓋 → 相信確認。均衡 B（擠兌）：存款人預期其他人提款 → 跑得快的人全額拿回（因為銀行被迫低價清算長期資產時仍有部分資金）→ 跑得慢的人損失 → 理性選擇搶先提款 → 預期確認。兩個均衡的關鍵差異在於「協調預期」，而非銀行基本面的不同。這是博弈論中的「協調博弈（coordination game）」——人們的行為相互依賴，「我的最優行動取決於你怎麼做」。</p>
+                <p><strong>（2）存款保險的效果與代價</strong>：效果：若政府保證存款全額賠付，存款人不論其他人是否提款都能拿回本金 → 擠兌的「跑得快才有」邏輯不再成立 → 擠兌均衡消失。1933 年 FDIC 建立後，美國銀行擠兌幾乎絕跡（直至 21 世紀）。代價：道德風險（moral hazard）。存款有保障 → 存款人不再審查銀行的風險行為 → 銀行可以冒更大風險（知道倒了有政府兜底）。Merton（1977）指出，存款保險本質上是政府向銀行提供的「免費賣出期權」——虧損由政府承擔，利潤由股東保留。解決方案：風險調整保費（高風險銀行付更高保費）+ 資本要求（有效限制「賭博衝動」）。</p>
+                <p><strong>（3）SVB 與 Diamond-Dybvig：符合與差異</strong>：符合之處：SVB 擁有大量長期低利率固定收益資產（長期美國國債和 MBS），負債端是活期存款——標準的期限錯配。2023 年 3 月，利率上升導致資產市值虧損曝光，引發存款人恐慌提款，完全契合擠兌的雙均衡邏輯。現代差異：① 速度：數字工具（網路轉帳）使擠兌從幾天壓縮至 48 小時；② 社群媒體協調：Twitter / VC 社群的協調效應（Founders Fund 通知被投企業提款），使「協調預期」的形成比 1930 年代快得多；③ 存款規模超過 FDIC 保障上限（25 萬美元），SVB 存款人中大量是科技企業，存款動輒數百萬，未受保護，更有強烈提款誘因；④ 監管豁免：SVB 資產規模低於 2018 年後的高監管門檻，未要求 LCR（流動性覆蓋率），放大了流動性脆弱性。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能說明兩個均衡的基本邏輯，指出存款保險打破擠兌並製造道德風險，但對 SVB 的分析停留在表面（「大家一起提款所以倒閉」），未分析數字化加速、社群媒體協調或監管豁免的現代因素。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>不理解「多重均衡」的含義（認為擠兌一定是銀行「本來就有問題」造成），或認為「存款保險沒有代價」，完全忽視道德風險。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>說明兩個均衡如何各自自我一致（預期協調邏輯）</td><td>30%</td></tr>
+                <tr><td>存款保險的機制 + 道德風險代價</td><td>25%</td></tr>
+                <tr><td>SVB 與模型的符合之處</td><td>20%</td></tr>
+                <tr><td>SVB 的現代差異（數字速度、社群媒體、監管豁免）</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習三</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">BIS 使用「信用/GDP 缺口（credit-to-GDP gap）」作為銀行危機的先行指標。請說明這一指標的理論基礎，並分析中國信用/GDP 缺口在 2016 年達到 +26 個百分點的含義。中國是否發生了大規模銀行危機？這對指標的有效性有何啟示？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>理論基礎</strong>：信用/GDP 缺口 = 實際信用/GDP 比 − 長期趨勢（HP 濾波器估算）。理論基礎來自 Minsky-Kindleberger：金融危機通常發生在信用過度擴張之後；信用增速持續超過 GDP 增速，意味著經濟中的槓桿率在相對上升。BIS（Borio &amp; Lowe 2002）的實證研究顯示，缺口超過 10 個百分點時，三年內銀行危機的概率顯著上升（歷史準確率約 60–70%，但假陽性較多）。</p>
+                <p><strong>中國 2016 年缺口 +26 個百分點的含義</strong>：2008 年金融危機後，中國以大規模信貸刺激應對（4 兆人民幣刺激計畫），信用/GDP 比從 2008 年的 130% 急升至 2016 年的 215% 以上。+26 個缺口是歷史上最高值之一，遠超 BIS 的危機警戒門檻（+10），理論上預示嚴重危機風險。</p>
+                <p><strong>為何未發生大規模危機？</strong>：①國家主導的金融體系：四大國有銀行佔市場主導，政府可通過行政手段阻止擠兌（隱性擔保）；②資本帳管制：人民幣不完全可兌換，資本外流受控，無法發生典型的外部衝擊；③「地方政府融資平台（LGFV）」的隱性重組：大量地方政府的表外債務被重組入地方政府債券，「消化」了部分潛在不良貸款；④以時間換空間：銀行「以貸還貸（evergreening）」維持表面不良貸款率低於實際水準。</p>
+                <p><strong>對指標有效性的啟示</strong>：中國案例說明，信用/GDP 缺口是危機脆弱性（vulnerability）的衡量，而非危機發生（crisis）的預測。脆弱性需要「觸發事件 × 傳導機制」才能演變為危機。在國家主導的金融體系中，資本管制和政府隱性擔保能推遲甚至規避市場化危機，但代價是資源錯配的累積和金融效率的持續損耗（「安靜的危機（quiet crisis）」，IMF 2022）。指標適合市場化金融體系，在國家干預能力強的體系中需要調整解讀框架。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能解釋指標定義和 BIS 的危機警示邏輯，說明中國未發生危機，但無法深入分析中國體制差異（資本管制、國有銀行隱性擔保）對指標有效性的限制。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>僅說「中國沒有危機所以指標不準」，未能識別脆弱性 vs 危機的區別，或無法解釋信用/GDP 缺口的計算邏輯。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>說明指標定義與 Minsky 理論基礎</td><td>25%</td></tr>
+                <tr><td>分析中國 +26 缺口的含義（脆弱性）</td><td>20%</td></tr>
+                <tr><td>解釋未發生危機的中國體制性因素</td><td>30%</td></tr>
+                <tr><td>討論指標對不同金融體制的適用性差異</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <nav class="lecture-nav">
+          <a href="m12-inequality.html" class="nav-btn nav-btn-prev">← M12 不平等與分配</a>
+          <a href="m14-market-drivers.html" class="nav-btn nav-btn-next">M14 總體如何驅動市場 →</a>
+        </nav>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

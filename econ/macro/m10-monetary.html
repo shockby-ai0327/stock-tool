@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M10 貨幣政策與央行溝通 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link active">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M10</span>
+          <span class="topbar-title">貨幣政策與央行溝通</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 10</div>
+          <h1 class="lecture-hero-title">貨幣政策與央行溝通</h1>
+          <p class="lecture-hero-subtitle">Monetary Policy and Central Bank Communication</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：政策架構</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">現代央行已從「神秘的守護者」蛻變為「透明的溝通者」。1990 年代以前，英格蘭銀行的決策從不對外說明理由；如今，聯準會（Federal Reserve）每次利率決策後舉行記者會，公布詳細聲明與季度經濟預測，官員在全球各地發表演講，甚至透過「點狀圖（dot plot）」向市場洩露未來路徑。這場從不透明到極端透明的革命，背後有深刻的理論邏輯：若「預期（expectations）」才是真正驅動通膨與產出的引擎，那麼管理預期就比調整利率更重要。本講系統梳理現代貨幣政策的工具體系、傳導機制、通膨目標制（inflation targeting）的制度設計，以及央行溝通如何成為政策本身。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、貨幣政策工具：傳統與非傳統</h2>
+          <p>貨幣政策工具可分為兩大類：<strong>傳統工具（conventional tools）</strong>依賴短期政策利率調整；<strong>非傳統工具（unconventional tools / UMP）</strong>在政策利率觸及零下限（zero lower bound, ZLB）後動用。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">傳統貨幣政策工具體系</div>
+            <pre>
+┌─────────────────────────────────────────────────────────┐
+│              傳統工具（政策利率 > 0% 時）                │
+├──────────────────┬──────────────────────────────────────┤
+│ 工具             │ 機制                                  │
+├──────────────────┼──────────────────────────────────────┤
+│ 政策利率         │ 聯邦基金利率（Fed funds rate）        │
+│ (Policy Rate)    │ 銀行間隔夜拆借的目標區間              │
+│                  │ → 影響整條殖利率曲線（yield curve）   │
+├──────────────────┼──────────────────────────────────────┤
+│ 公開市場操作     │ 買賣短期國債 → 調節準備金供給        │
+│ (OMO)            │ 買債 = 注入流動性 = 壓低利率          │
+│                  │ 賣債 = 回收流動性 = 推高利率          │
+├──────────────────┼──────────────────────────────────────┤
+│ 貼現窗口         │ 央行直接借款給商業銀行               │
+│ (Discount Window)│ 利率 = 貼現率（discount rate）        │
+│                  │ 污名效應：銀行不願使用               │
+├──────────────────┼──────────────────────────────────────┤
+│ 超額準備金利率   │ IOER / IORB（2008 後 Fed 新工具）    │
+│ (IORB)           │ 支付銀行存放央行準備金的利息          │
+│                  │ → 設定聯邦基金利率的事實下限          │
+└──────────────────┴──────────────────────────────────────┘
+
+政策利率傳導路徑：
+i（短期）→ 實際利率 r → 消費 C ↓、投資 I ↓
+         → 匯率升值 → 淨出口 NX ↓
+         → 資產價格 ↓ → 財富效果 ↓
+         → 信貸條件收緊 → 信用管道效果</pre>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">非傳統貨幣政策工具（ZLB 下的武器庫）</div>
+            <pre>
+┌─────────────────────────────────────────────────────────┐
+│         非傳統工具（政策利率接近或低於零時）             │
+├──────────────────┬──────────────────────────────────────┤
+│ 工具             │ 機制與侷限                            │
+├──────────────────┼──────────────────────────────────────┤
+│ 量化寬鬆 QE      │ 大規模購買長期國債 + MBS              │
+│ (Quantitative    │ → 壓低長端殖利率（term premium ↓）   │
+│  Easing)         │ → 投資組合再平衡效果（portfolio      │
+│                  │   balance effect）→ 推高風險資產      │
+│                  │ 侷限：流動性陷阱下效果衰減            │
+├──────────────────┼──────────────────────────────────────┤
+│ 量化緊縮 QT      │ 不再滾動到期債券（被動 QT）           │
+│ (Quantitative    │ 或主動出售資產（主動 QT）             │
+│  Tightening)     │ → 縮減資產負債表 → 推高長端利率      │
+├──────────────────┼──────────────────────────────────────┤
+│ 負利率 NIRP      │ 向準備金餘額收費 → 逼迫銀行放貸      │
+│ (Negative Rate)  │ 歐元區 −0.5%（2014-22）              │
+│                  │ 日本 −0.1%（2016-24）                 │
+│                  │ 爭議：壓縮銀行利差、逆效果風險        │
+├──────────────────┼──────────────────────────────────────┤
+│ 殖利率曲線控制   │ 日本 YCC：釘住 10 年期利率上限        │
+│ (YCC)            │ 2016 年導入；2024 年全面退出          │
+│                  │ 代價：外匯貶值、被迫無限購債          │
+├──────────────────┼──────────────────────────────────────┤
+│ 前瞻指引         │ 承諾未來政策路徑 → 影響長期預期       │
+│ (Forward         │ 德爾菲式 vs 奧德賽式（見 M07）        │
+│  Guidance)       │ 效果取決於公信力                      │
+└──────────────────┴──────────────────────────────────────┘</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、貨幣政策傳導機制的五條路徑</h2>
+          <p>Bernanke &amp; Gertler（1995）系統整理了貨幣政策傳導的多重管道。理解各管道的強度與時滯，是判斷政策效果的關鍵。</p>
+
+          <div class="transmission">
+            <div class="transmission-title">貨幣政策傳導機制（Transmission Mechanism）</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">政策利率調整</div>
+                <div class="step-desc">聯邦基金利率 ±</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">① 利率管道</div>
+                <div class="step-desc">實際借貸成本↑ → 消費、投資↓<br>時滯：6–18 個月</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">② 信用管道</div>
+                <div class="step-desc">銀行放貸意願↓（bank lending channel）<br>借款人資產負債表惡化（balance sheet channel）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">③ 匯率管道</div>
+                <div class="step-desc">利差↑ → 資本流入 → 本幣升值<br>出口競爭力↓，進口通縮</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">④ 資產價格管道</div>
+                <div class="step-desc">股票 q↓ → 投資↓；房價↓ → 財富效果↓<br>Tobin's q 機制逆轉</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">⑤ 預期管道</div>
+                <div class="step-desc">最重要的現代管道<br>央行公信力 → 通膨預期錨定<br>預期本身影響工資談判、合約訂價</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">總合需求 AD 移動</div>
+                <div class="step-desc">通膨率、產出缺口調整</div>
+              </div>
+            </div>
+          </div>
+
+          <p>傳導強度取決於：<strong>金融深度</strong>（信用市場的發展程度）、<strong>外部融資溢酬（external finance premium）</strong>的敏感性，以及<strong>預期的錨定程度</strong>。在通膨預期已脫錨時，央行必須大幅升息才能重建公信力——這解釋了 Volcker 在 1979–82 年將政策利率推至 20% 的歷史必要性。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、央行獨立性的理論基礎</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：央行獨立性（Central Bank Independence）</div>
+            <p>Rogoff（1985）提出「保守型央行（conservative central banker）」理論：將貨幣政策委託給比社會平均更厭惡通膨的獨立機構，可在不增加實際產出損失的情況下降低均衡通膨率。這奠定了現代央行獨立性制度的理論基礎。</p>
+            <p><strong>工具獨立性（instrument independence）</strong> vs <strong>目標獨立性（goal independence）</strong>：大多數現代央行擁有工具獨立性（自主決定如何達成目標），但目標由政府或立法機關設定（如 2% 通膨目標）。美聯儲因「雙重使命（dual mandate）」——物價穩定 + 充分就業——而具有相對較廣泛的目標獨立性。</p>
+            <p><strong>實證支持</strong>：Alesina &amp; Summers（1993）分析 16 個 OECD 國家，發現央行獨立性與低通膨高度相關，且不以更低產出或更高失業為代價。但 2008 年後，獨立性的政治基礎受到考驗：QE 的分配效果被批評侵入財政政策領域。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">時間不一致性與委託解方</div>
+            <pre>
+【時間不一致（Time Inconsistency）困境 — Kydland & Prescott 1977】
+
+社會最優：宣告 π* = 0%，建立低通膨預期
+時間不一致：事後政府有激勵「製造通膨驚喜」
+           → 推動就業超過自然率（短期政治利益）
+
+理性預期下，民眾預見此誘惑 → π^e ↑
+最終均衡：高通膨、無就業收益（通膨偏誤 / inflation bias）
+
+┌─────────────────────────────────────────┐
+│           三種解方                       │
+├────────────────┬────────────────────────┤
+│ 解方           │ 機制                    │
+├────────────────┼────────────────────────┤
+│ 央行獨立性     │ 委託給厭惡通膨者        │
+│ (Rogoff 1985)  │ 降低承諾的可信度問題    │
+├────────────────┼────────────────────────┤
+│ 通膨目標制     │ 明確數值錨定預期        │
+│ (Svensson 1997)│ 可問責性增加            │
+├────────────────┼────────────────────────┤
+│ 規則制度化     │ 泰勒規則等明確反應函數  │
+│ (Taylor 1993)  │ 減少相機抉擇空間        │
+└────────────────┴────────────────────────┘</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、通膨目標制：設計、演進與爭議</h2>
+          <p><strong>通膨目標制（inflation targeting, IT）</strong>起源於 1990 年紐西蘭，目前全球 40 餘個主要央行採用。核心原則是公開承諾以特定通膨率（通常 2%）為中期目標，並以透明的決策過程提升問責性。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">通膨目標制的演進：1990→2020</div>
+            <pre>
+1990  紐西蘭央行（RBNZ）— 全球首個正式通膨目標制
+1992  加拿大、英國（英格蘭銀行）
+1993  瑞典、芬蘭
+1994  澳洲
+1999  歐洲央行（ECB）— 「低於但接近 2%」（非正式）
+2012  美聯儲正式宣告 2% PCE 通膨目標（Bernanke 主導）
+      注：Fed 比多數央行晚 20 年才正式採用
+
+2020  聯準會「平均通膨目標制 FAIT」
+  (Flexible Average Inflation Targeting)
+  ↓
+  核心改變：
+  ・允許通膨在達成就業之後短暫超過 2%
+  ・「看到實際就業數據，而非預測」才升息
+  ・背景：2010-19 年 PCE 長期低於 2%，担心通縮
+
+  事後評估：
+  FAIT 在 2021-22 通膨大幅超標後遭到批評
+  → Fed 未能及時轉向，「transitory」錯判
+  → FAIT 框架被實際操作拋在一旁</pre>
+          </div>
+
+          <p>學界對 2% 目標的爭議持續：Blanchard、Ball 等人認為應考慮提高目標至 3–4%，以保留更大的降息空間（避免 ZLB）。目前各大央行維持 2% 目標，但未排除未來檢討的可能性。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、央行反應函數：泰勒規則的精確化</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">泰勒規則與損失函數</div>
+            <pre>
+【央行損失函數（Loss Function）】
+
+L = (π - π*)² + λ(y - y*)²
+
+π  = 實際通膨率
+π* = 目標通膨率（通常 2%）
+y  = 實際產出
+y* = 潛在產出（產出缺口 = y - y*）
+λ  = 對就業/產出的相對權重
+
+・若 λ = 0：純通膨目標制（鷹派）
+・若 λ 較大：雙重使命（Fed 型，鴿派）
+・ECB 設計偏 λ = 0（物價穩定優先）
+
+────────────────────────────────────────
+
+【泰勒規則（Taylor Rule, 1993）】
+
+i = r* + π + 0.5(π - π*) + 0.5(y - y*)
+
+i   = 名目政策利率
+r*  = 自然實質利率（natural rate, r-star）
+π   = 通膨率（使用 PCE）
+π* = 2%（目標）
+0.5 = 通膨反應係數（Taylor 原始值）
+0.5 = 產出缺口反應係數
+
+【示例計算 — 2022 年 Q1】
+r* = 0.5%（估計），π = 6.3%，π* = 2%
+產出缺口 ≈ +2%（就業過熱）
+
+i* = 0.5 + 6.3 + 0.5×(6.3-2) + 0.5×2
+   = 0.5 + 6.3 + 2.15 + 1.0
+   = 9.95%
+
+→ 實際聯邦基金利率 2022 Q1：0-0.25%
+→ 落後泰勒規則近 10 個百分點
+→ 解釋了後來大幅快速升息的必要性</pre>
+          </div>
+
+          <p><strong>r-star（r*，自然實質利率）</strong>的估算是現代央行最棘手的問題之一。Laubach &amp; Williams（2003）的估計顯示，r* 從 1990 年代的約 3% 下降至 2020 年前後的 0.5% 甚至更低，這意味著傳統政策空間大幅收窄。Holston、Laubach &amp; Williams（2017）的更新估計在學界廣泛引用。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、央行溝通：從沉默到前瞻指引</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">央行溝通工具的演進</div>
+            <pre>
+【溝通工具層次】
+
+1. 政策聲明（Policy Statement）
+   ・每次議息後發布
+   ・措辭細節被市場逐字解讀
+   ・「耐心（patient）」→「將考慮（consider）」→「適宜（appropriate）」
+   ・一個詞的改變 = 10-20 bps 的市場移動
+
+2. 季度經濟預測（SEP / Quarterly Projections）
+   ・通膨、GDP、失業率的官員預測中位數
+   ・讓市場「進入官員腦袋」
+
+3. 點狀圖（Dot Plot）— 2012 年導入
+   ・每位 FOMC 委員對未來政策利率路徑的預測
+   ・市場反應最強烈的溝通工具
+   ・爭議：是承諾？還是預測？
+   ・誤導風險：點位分散時市場難以解讀
+
+4. 記者會（Press Conference）— 2011 年 Bernanke 導入
+   ・主席解釋決策理由、回答記者問題
+   ・即時問答創造「口誤風險」
+   ・Draghi「whatever it takes」即興聲明（2012）
+     → 歐元危機轉折點，未動用一分錢資金
+
+5. 議息會議紀要（Minutes）— 滯後 3 週公布
+   ・委員詳細辯論過程
+   ・「一些（some）」vs「幾位（several）」vs「多數（most）」
+   ・市場交易員逐字解析
+
+6. 官員演講（Speeches）
+   ・聯準會 19 位有投票權/無投票權官員各自發言
+   ・形成「消息迷霧」，有時立場相互矛盾
+   ・Blinder (2004)：委員會制溝通比個人更困難</pre>
+          </div>
+
+          <div class="case-study">
+            <div class="case-study-title">案例分析：Fed 2022–2023 升息週期的溝通失敗與補救</div>
+            <p><strong>背景</strong>：2021 年 Fed 在 FAIT 框架下維持「通膨是暫時性（transitory）」論述，推遲升息。2022 年 3 月首次升息 25 bps，隨後節奏急速加快。</p>
+            <p><strong>溝通時間軸</strong>：</p>
+            <ul>
+              <li><strong>2021 年全年</strong>：主席 Powell 多次強調通膨「暫時性」，點狀圖顯示 2023 年前不升息。市場相信前瞻指引。</li>
+              <li><strong>2021 年 11 月</strong>：Powell 在國會聽證承認「或許是時候停用 transitory」，市場開始重新定價。</li>
+              <li><strong>2022 年 3 月</strong>：升息 25 bps，點狀圖顯示全年升息 7 次。市場震驚——與此前指引落差過大。</li>
+              <li><strong>2022 年 6 月</strong>：緊急升息 75 bps（1994 年後最大單次），此前兩週官員才否認此可能性。信用損失。</li>
+              <li><strong>2022 年 8 月，Jackson Hole</strong>：Powell 發表「痛苦不可避免（pain）」演講，明確錨定鷹派預期，市場單日暴跌 3.4%。</li>
+              <li><strong>2023 年 2 月</strong>：「去通膨（disinflation）」措辭引發市場過度樂觀，Powell 迅速糾偏。</li>
+            </ul>
+            <p><strong>教訓</strong>：前瞻指引是雙面刃。在不確定性極高的時期，過度具體的承諾會降低央行靈活應對的空間，且一旦轉向，公信力損失是真實的代價。Blinder 等人（2008）的研究顯示，央行溝通的最優策略是「描述反應函數，而非承諾特定路徑」。</p>
+            <p><strong>市場含義</strong>：Fed 溝通失誤期間，2 年期美債殖利率（最敏感的政策預期指標）在 2022 年全年從 0.7% 飆升至 4.4%，創 1982 年以來最大年度漲幅，引發全球債市歷史性熊市。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">七、量化寬鬆（QE）的機制、效果與爭議</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">QE 運作機制與資產負債表</div>
+            <pre>
+【QE 的會計恆等式】
+
+Fed 資產負債表（大幅簡化）：
+
+資產端         │ 負債端
+─────────────────────────────────────
+國債、MBS  +X  │ 銀行準備金（超額）+X
+               │ （存於 Fed 的超額存款）
+
+→ Fed「憑空創造」準備金購買資產
+→ 準備金不直接進入實體經濟（非直升機撒錢）
+→ 機制：「投資組合再平衡效果」
+
+【投資組合再平衡效果（Portfolio Balance Effect）】
+
+Fed 買走長期國債
+  → 機構投資人被迫尋找替代資產
+  → 轉向公司債、股票、REITs、新興市場債
+  → 全球風險資產價格上漲
+  → 財富效果 → 消費略升
+
+【期限溢酬壓縮（Term Premium Compression）】
+
+長端殖利率 = r* + 通膨預期 + 期限溢酬（TP）
+
+QE → TP 被壓縮（供給減少 + 需求增加）
+  → 10 年期殖利率下行 → 抵押貸款利率↓
+  → 房市刺激（2010-2021 美國房市強勁）
+
+【QE 效果估計（學術爭議）】
+
+Gagnon et al. (2011)：QE1 壓低長端利率 91 bps
+Krishnamurthy & Vissing-Jorgensen (2011)：
+  效果主要集中在購買的資產類別本身，
+  溢出至其他風險資產效果有限
+Woodford (2012)：
+  QE 效果幾乎全部來自「前瞻指引信號」，
+  而非資產購買本身的流動性注入</pre>
+          </div>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：QT（量化緊縮）與被動/主動之分</div>
+            <p>量化緊縮（Quantitative Tightening, QT）是 QE 的逆轉，但機制並非對稱。<strong>被動 QT（Passive QT / Balance Sheet Runoff）</strong>：到期債券不再滾動再投資，資產負債表自然縮減，每月上限（2022 年 Fed 設為 950 億美元/月）。<strong>主動 QT（Active QT）</strong>：主動出售資產，速度更快但市場衝擊更大（Fed 2022 年未採用）。</p>
+            <p>關鍵問題：準備金的「充裕區間（ample regime）」下限在哪裡？2019 年 9 月 Fed 縮表過度，引發回購市場（repo market）利率短暫飆升至 10%，被迫重啟操作。這說明準備金的下限很難事先精確估計——QT 是一個「在黑暗中摸索」的過程（Powell 語）。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">八、各主要央行的制度差異</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">主要央行制度比較</div>
+            <pre>
+┌──────────┬──────────┬───────────┬────────────┬───────────┐
+│          │ 美聯儲   │ 歐洲央行  │ 英格蘭銀行 │ 日本銀行  │
+│          │ (Fed)    │ (ECB)     │ (BoE)      │ (BoJ)     │
+├──────────┼──────────┼───────────┼────────────┼───────────┤
+│ 成立     │ 1913     │ 1998      │ 1694       │ 1882      │
+├──────────┼──────────┼───────────┼────────────┼───────────┤
+│ 使命     │ 雙重     │ 單一      │ 雙重       │ 物價+金融 │
+│          │ 物價穩定 │ 物價穩定  │ 物價穩定   │ 穩定      │
+│          │ +充分就業│ 優先      │ +成長      │           │
+├──────────┼──────────┼───────────┼────────────┼───────────┤
+│ 通膨目標 │ 2% PCE  │ 2% HICP  │ 2% CPI     │ 2% CPI    │
+├──────────┼──────────┼───────────┼────────────┼───────────┤
+│ 決策     │ FOMC    │ 管委會    │ MPC        │ 政策委員會│
+│ 機構     │ 12 人   │ 26 人     │ 9 人       │ 9 人      │
+├──────────┼──────────┼───────────┼────────────┼───────────┤
+│ 特殊挑戰 │ 政治壓力 │ 成員國    │ 脫歐後     │ 長期通縮  │
+│          │ 獨立受考 │ 財政分歧  │ 通膨衝擊   │ YCC 退場  │
+│          │ 驗      │ (德 vs 南)│            │ 難題      │
+└──────────┴──────────┴───────────┴────────────┴───────────┘
+
+ECB 特殊挑戰：
+・19（現 20）個成員國共用一個貨幣政策
+・但各國財政政策獨立（最優貨幣區 OCA 問題）
+・德國（低通膨偏好）vs 義大利（需要低利率）
+・2012 年 Draghi「whatever it takes」
+→ OMT（直接貨幣交易）計畫威懾效果
+→ 承諾購買成員國短期國債（從未實際動用）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">九、貨幣政策的市場傳導：投資含義</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">貨幣政策週期 → 資產市場傳導地圖</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">升息週期啟動信號</div>
+                <div class="step-desc">點狀圖上移 / 鷹派聲明 / CPI 持續超標</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">短端利率上升（即時）</div>
+                <div class="step-desc">2 年期美債殖利率最敏感<br>→ 貨幣市場基金收益率↑</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">殖利率曲線形態變化</div>
+                <div class="step-desc">升息初期：熊式陡峭化（bear steepening）<br>升息末期：熊式平坦化或倒掛（inversion）<br>2 年－10 年倒掛 = 衰退領先指標（Estrella 1996）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">股票市場重新定價</div>
+                <div class="step-desc">DCF 折現率↑ → 成長股估值壓縮（高 duration）<br>價值股相對受益（現金流近期）<br>銀行股：NIM 擴大（正面）vs 信用損失（負面）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">美元升值（通常）</div>
+                <div class="step-desc">美元利差優勢 → 資本流入<br>新興市場承壓：外債償還成本↑、資本外流<br>大宗商品（美元計價）承壓</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">信用市場收緊（滯後 3–6 月）</div>
+                <div class="step-desc">高收益信用利差（HY spread）擴大<br>槓桿貸款市場（leveraged loans）收緊<br>再融資壓力上升</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">實體經濟影響（滯後 12–18 月）</div>
+                <div class="step-desc">房市首當其衝（抵押貸款利率敏感）<br>資本開支（CAPEX）延遲<br>消費信貸減少</div>
+              </div>
+            </div>
+          </div>
+
+          <p><strong>關鍵觀察</strong>：市場不等待傳導機制發生——它立即對<em>預期路徑</em>定價。因此央行的點狀圖、會議措辭，有時比實際的利率決定更具市場影響力。2023 年 11 月 Fed 暫停升息後，市場迅速定價降息，10 年期殖利率在 6 週內從 5% 跌至 3.9%，完全由預期重定價驅動，而非任何實際的政策行動。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">十、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解一：「QE 就是印鈔票，必然導致惡性通膨」</div>
+            <p><strong>問題所在</strong>：QE 創造的是<em>銀行準備金（bank reserves）</em>，而非直接流通的貨幣（M1/M2）。準備金存在 Fed，不直接進入實體經濟消費。2008 年後 Fed 推出 QE1/QE2/QE3，資產負債表從 9,000 億美元擴至 4.5 兆美元，但 2010–2019 年 PCE 通膨率平均僅 1.6%，長期低於 2% 目標。</p>
+            <p><strong>為何沒有高通膨</strong>：貨幣乘數（money multiplier）並非穩定常數。2008 後銀行寧願持有超額準備金（因 IOER 支付利息），而非放貸。準備金速度接近於零。通膨最終出現（2021-22）的主因是<em>財政政策</em>直接轉移支付（直升機撒錢效果），而非 QE 本身。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解二：「央行獨立就能完全免疫政治壓力」</div>
+            <p><strong>問題所在</strong>：獨立性是程度問題，不是二元狀態。即便是美聯儲，也在 Trump 政府期間持續面對公開施壓（推文批評 Powell）；ECB 在歐債危機中被批評偏袒德國利益；日本銀行在安倍經濟學期間被迫深度配合財政政策。Dincer &amp; Eichengreen（2014）的央行獨立性指數顯示，全球趨勢是制度獨立性上升，但實際操作獨立性受政治壓力程度因國而異。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解三：「降息一定刺激經濟」</div>
+            <p><strong>問題所在</strong>：流動性陷阱（liquidity trap）下，利率接近零時，降息的邊際刺激效果衰竭。Keynes 將此比喻為「推繩子（pushing on a string）」。日本 1990 年代即是典型：政策利率降至接近零，但通縮持續 20 年。此外，若降息反映的是<em>對衰退的恐慌</em>（恐慌性降息），市場可能解讀為負面信號，反而壓低消費者信心和資產價格。2001 年 9/11 後緊急降息、2020 年 3 月疫情緊急降息，均一度引發市場恐慌性拋售。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">教授示範答題</h2>
+          <div class="key-concept">
+            <div class="key-concept-title">考試題目：「為何 2021 年 Fed 的前瞻指引失敗？通膨目標制的框架設計出了什麼問題？」</div>
+            <p><strong>第一層——制度背景</strong>：Fed 在 2020 年 8 月採用「靈活平均通膨目標制（FAIT）」，理由是 2010–19 年通膨長期低於目標，就業不足問題持續。FAIT 承諾在通膨<em>持續</em>超標後才升息，並以「實際就業數據」而非「就業預測」為依據。</p>
+            <p><strong>第二層——失敗機制</strong>：FAIT 的設計假設供給衝擊不會成為主要通膨驅動力，但 2021–22 年的通膨恰恰是供給（半導體短缺、供應鏈斷裂）與需求（財政轉移支付）雙重衝擊的結合。「等到就業充分」再升息，意味著 Fed 系統性落後於曲線（behind the curve）。</p>
+            <p><strong>第三層——深層問題</strong>：FAIT 使 Fed 的反應函數在供給衝擊下失去對稱性。Bernanke &amp; Blanchard（2023）事後研究顯示，2021–22 年約 1/3 的通膨來自特定商品供給衝擊，這恰恰是貨幣政策最難以應對的類型——升息可以壓制需求，但無法修復半導體工廠或疏通港口。</p>
+            <p><strong>第四層——公信力代價</strong>：「暫時性（transitory）」論述持續至 2021 年底，導致市場錨定低利率預期。一旦轉向，信用損失要求 Fed 超常升息以重建公信力。2022 年 75 bps 的四次連續升息，部分動機正是補救公信力赤字（credibility deficit），而非完全由當時的宏觀數據驅動。</p>
+            <p><strong>結論</strong>：FAIT 失敗不代表通膨目標制本身錯誤，而是說明框架需要對不同類型衝擊（需求 vs 供給）保留不同的反應函數，且前瞻指引的可信度需與靈活性之間取得平衡——過度具體的承諾在不確定性高的環境中成為制度弱點。</p>
+          </div>
+        </section>
+
+        <section class="section exercise-section">
+          <h2 class="section-title">課後練習</h2>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習一</span>
+              <span class="exercise-difficulty difficulty-basic">基礎</span>
+            </div>
+            <p class="exercise-question">使用泰勒規則（Taylor Rule），假設 r* = 0.5%、通膨目標 π* = 2%，若當前 PCE 通膨率為 4%，產出缺口為 −1%（輕度衰退），計算泰勒規則建議的名目政策利率，並說明央行面臨的政策兩難。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p>代入泰勒規則：i = r* + π + 0.5(π − π*) + 0.5(y − y*) = 0.5 + 4 + 0.5×(4−2) + 0.5×(−1) = 0.5 + 4 + 1 − 0.5 = <strong>5%</strong>。</p>
+                <p>政策兩難：泰勒規則建議 5% 的名目利率來壓制超標的通膨。然而，產出缺口為負（輕度衰退）意味著加息將進一步惡化就業和產出。央行的損失函數 L = (π−π*)² + λ(y−y*)² 中，兩個目標同時偏離（通膨超標 + 就業不足），且方向相反（升息解決通膨但惡化就業），形成典型的「供給衝擊難題（supply shock dilemma）」。</p>
+                <p>實務上，央行需判斷通膨的持久性：若通膨主要來自暫時性供給衝擊，犧牲產出過度升息可能得不償失；若通膨預期脫錨，必須升息即使代價是衰退加深（Volcker 1979–82 的邏輯）。優秀答案應指出：在供需雙重衝擊下，泰勒規則是有用的起點，但不能機械遵循，需結合通膨預期數據（如 5 年 breakeven rate）判斷是否脫錨。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>計算正確得 5%，並指出「升息會加重衰退」，但未能說明損失函數的結構或通膨預期脫錨對決策的影響。未討論供給衝擊的特殊性（貨幣政策無法修復供給端）。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>計算錯誤，或僅說「通膨高就應該升息」，完全忽略產出缺口的反向壓力與政策兩難的本質。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>泰勒規則代入計算正確</td><td>30%</td></tr>
+                <tr><td>識別政策兩難（通膨 vs 衰退的損失函數衝突）</td><td>30%</td></tr>
+                <tr><td>討論通膨預期脫錨的判斷依據</td><td>20%</td></tr>
+                <tr><td>聯繫供給衝擊的貨幣政策侷限</td><td>20%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習二</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">比較「Delphic 前瞻指引」與「Odyssean 前瞻指引」的本質差異。2022 年 Fed 的升息操作中，哪種類型的溝通失誤代價更高？為什麼承諾型前瞻指引在不確定性高的環境中是一把雙面刃？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>Delphic 指引</strong>：央行基於當前資訊，預測未來政策路徑（「我們預計……」），不構成承諾。若經濟數據改變，央行可自由調整，信用損失較小。</p>
+                <p><strong>Odyssean 指引</strong>：央行做出有條件的政策承諾（「在 X 條件達成前，我們不會……」）。承諾型指引的可信度取決於條件設定是否可驗證，且一旦違背，公信力損失嚴重。典型例子：2020 年 Fed 承諾在就業達到「廣泛且包容性的充分就業」前不升息。</p>
+                <p><strong>2022 年的代價</strong>：2021 年 FAIT 框架下的前瞻指引更接近 Odyssean——承諾以就業實際數據為標準，形成「就業達標前不升息」的隱性承諾。當通膨迫使 Fed 在就業超標前大幅升息，違背了市場理解的承諾，導致信用損失大於 Delphic 式「預測調整」的代價。</p>
+                <p><strong>雙面刃邏輯</strong>：承諾型前瞻指引的優勢在於壓低長端利率（市場確信短期不升息），強化刺激效果。但其脆弱性在於：若衝擊改變了最優政策路徑，央行面臨「守諾（維持低利率→加劇通膨）」vs「毀諾（升息→公信力損失）」的兩難。不確定性越高，Odyssean 指引的「選項價值（option value）」損失越大——相當於出售了應對意外衝擊的保險。Campbell、Evans 等（2012）分析顯示，Delphic 指引在正常環境下效果接近 Odyssean，但尾部風險暴露更小。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能區分兩種前瞻指引的定義，指出 Odyssean 是承諾而 Delphic 是預測，但分析 2022 年案例時過於籠統，未能連接 FAIT 框架的具體設計與承諾型指引的脆弱性。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>混淆兩種類型，或僅描述「Fed 說了要升息但沒升息所以失去信任」，未觸及前瞻指引的制度設計邏輯。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>準確定義兩種前瞻指引</td><td>25%</td></tr>
+                <tr><td>分析 FAIT 屬於 Odyssean 型及其違諾機制</td><td>25%</td></tr>
+                <tr><td>解釋承諾型指引的「選項價值損失」邏輯</td><td>25%</td></tr>
+                <tr><td>引用理論文獻或具體數據支撐論點</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習三</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">ECB（歐洲央行）在制度設計上面臨「一個貨幣政策，多個財政政策」的根本矛盾。試分析 2010–12 年歐債危機期間，ECB 的貨幣政策如何既無法解決希臘問題，又被德國批評為「財政赤字貨幣化」。這揭示了最優貨幣區（OCA）理論的什麼核心問題？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>根本矛盾</strong>：歐元區 19 個成員國共用一個 ECB 設定的政策利率，但各國財政政策獨立，勞動力流動性有限，沒有中央財政轉移機制（如美國各州與聯邦財政的再分配）。Mundell（1961）的最優貨幣區理論指出，若成員國缺乏足夠的勞動/資本流動性或財政聯合機制，共同貨幣下的不對稱衝擊將無法有效調整。</p>
+                <p><strong>希臘的困境</strong>：希臘面對主權債務危機，在金本位制式約束下（無法貶值、無法印鈔），唯一調整工具是內部貶值（工資/價格下調）。但 ECB 的政策利率由德、法等核心國需求決定，對希臘（需要極低利率）而言過高。ECB 無法針對希臘單獨降息。</p>
+                <p><strong>德國的批評</strong>：2012 年 Draghi 宣告 OMT（直接購買問題國債），德國聯邦銀行（Bundesbank）強烈反對，認為這等同財政赤字貨幣化——用貨幣政策手段補貼了財政失責國家，違反《馬斯垂克條約》精神，且製造道德風險（moral hazard）。</p>
+                <p><strong>OCA 核心問題</strong>：歐元區在設計時是政治先於經濟的決定（Frankel &amp; Rose 1997 的「內生性 OCA」理論預測共同貨幣會促進貿易整合，但危機顯示非對稱衝擊下整合不足）。解決方案有兩個方向：①解散歐元區（政治不可行）；②推進財政聯盟（德國長期抵制）。2020 年 Next Generation EU（疫後重建基金，共同舉債）是向②方向的重要一步，但規模有限，且為一次性而非永久機制。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能描述希臘危機基本事實，提及「一個利率多個國家」的矛盾，但未能連接 OCA 理論，且未分析德國批評背後的道德風險邏輯或OMT的威懾效果。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>停留在「歐洲國家借太多錢」的敘述，未能識別制度設計矛盾，或將歐元區與美元區混淆（美國有聯邦財政轉移機制，歐元區沒有）。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>識別「單一貨幣 + 分散財政」的制度矛盾</td><td>25%</td></tr>
+                <tr><td>分析希臘無法依賴貨幣政策調整的原因</td><td>25%</td></tr>
+                <tr><td>解釋德國批評的財政赤字貨幣化邏輯</td><td>25%</td></tr>
+                <tr><td>連接 Mundell OCA 理論與歐元區制度缺陷</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <nav class="lecture-nav">
+          <a href="m09-fiscal.html" class="nav-btn nav-btn-prev">← M09 財政政策與債務</a>
+          <a href="m11-exchange.html" class="nav-btn nav-btn-next">M11 匯率與三難困境 →</a>
+        </nav>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

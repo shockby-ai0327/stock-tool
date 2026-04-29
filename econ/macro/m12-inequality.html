@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M12 不平等與分配 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link active">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M12</span>
+          <span class="topbar-title">不平等、分配與總體回饋</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 12</div>
+          <h1 class="lecture-hero-title">不平等、分配與總體回饋</h1>
+          <p class="lecture-hero-subtitle">Inequality, Distribution, and Macroeconomic Feedback</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：分配政治經濟</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">不平等曾是「微觀話題」，被主流總體模型刻意排除在外。代表性消費者（representative agent）的假設讓模型整潔，卻抹去了分配——直到 Piketty（2013）用一個簡單公式「r > g」震動學界，Atkinson、Saez 等人的實證研究揭示美國頂層 1% 所得份額在 2019 年回到 1929 年水準，Heathcote、Storesletten、Violante（HSV 2017）等人開始將異質性消費者（heterogeneous agents, HA）引入 DSGE 模型。本講的核心論題是：不平等不只是道德問題，它通過消費函數、貨幣政策傳導、政治極化等管道，持續地、雙向地影響總體經濟運行。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、測量不平等：工具箱</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">不平等測量工具比較</div>
+            <pre>
+【基尼係數（Gini Coefficient）】
+
+G = A / (A + B)
+
+洛倫茲曲線（Lorenz Curve）下方，
+A = 完全平等線與洛倫茲曲線之間的面積
+B = 洛倫茲曲線下方面積
+
+G ∈ [0, 1]
+G = 0：完全平等（每人所得相同）
+G = 1：完全不平等（一人占全部）
+
+┌──────────────────────────────────────────┐
+│ 主要國家基尼係數（所得，稅前，約 2022）  │
+├─────────────────┬────────────────────────┤
+│ 美國            │ 0.49（高度不平等）      │
+│ 英國            │ 0.39                    │
+│ 德國            │ 0.31                    │
+│ 北歐（瑞典等）  │ 0.27–0.29               │
+│ 中國            │ 0.47（官方；非正式更高）│
+│ 巴西            │ 0.53（極度不平等）      │
+│ 日本            │ 0.33                    │
+└─────────────────┴────────────────────────┘
+
+【侷限】：基尼係數對中間分配敏感，
+         對頂端極端值（billionaires）不敏感
+
+【頂端份額（Top Income Shares）— 更敏感】
+
+Saez（2003）、Piketty-Saez（2003）：
+  美國頂層 1% 所得份額：
+  1979年 → 10%
+  2007年 → 23.5%（金融危機前高峰）
+  2019年 → 21%
+  ≈ 回到 1929 年大崩盤前水準
+
+頂層 0.1% 尤其顯著（「超級富豪效應」）
+
+【財富不平等 vs 所得不平等】
+
+財富基尼 > 所得基尼（通常）
+美國財富基尼 ≈ 0.85（比所得更集中）
+頂層 1% 擁有約 32% 的財富（2022 Fed 數據）
+底層 50% 擁有約 2.5% 的財富
+
+→ 所得流量的不平等已大，
+  財富存量的不平等更驚人</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、Piketty 的 r &gt; g：資本回報與成長的賽跑</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：Piketty 定律（r &gt; g）</div>
+            <p>Piketty（2013，《21 世紀資本論》）的核心論點：若資本報酬率（r）持續高於經濟成長率（g），財富佔比將長期上升，不平等趨於惡化。</p>
+            <p><strong>基本力學</strong>：富人的財富以 r 速率複利增長；GDP 以 g 速率增長。若 r = 5%、g = 2%，財富/GDP 比率每年淨增 3%，財富集中度持續上升。Piketty 稱這是資本主義的「根本矛盾」——非例外，而是常態。</p>
+            <p><strong>歷史脈絡</strong>：1914–1970 年 r ≈ g 甚至 r &lt; g，原因是兩次大戰摧毀資本、二戰後高稅率、快速的技術進步推高 g。Piketty 認為這一「平等黃金時代」是歷史例外，而非新常態。</p>
+            <p><strong>學界批評</strong>：Acemoglu &amp; Robinson（2015）批評 Piketty 忽視制度的核心作用；Krusell &amp; Smith（2015）指出如果資本替代彈性（elasticity of substitution）小於 1，r 會隨資本積累下降，限制財富集中趨勢；Milanovic（2016）補充「象形曲線（elephant curve）」顯示全球不平等與國內不平等的分離——全球中產（亞洲）受益，但已開發國家工人相對輸家。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">不平等上升的結構性驅動力</div>
+            <pre>
+┌──────────────────┬──────────────────────────────┐
+│ 驅動力           │ 機制                          │
+├──────────────────┼──────────────────────────────┤
+│ 技術偏向勞動力   │ SBTC（技能偏向技術進步）      │
+│ 分化             │ 高技能 vs 低技能工人需求分化  │
+│ (Goldin &        │ 大學溢價（college premium）↑  │
+│  Katz 2008)      │ 工資極化（job polarization）  │
+├──────────────────┼──────────────────────────────┤
+│ 全球化           │ Stolper-Samuelson 定理：       │
+│                  │ 富國勞工（稀缺要素）相對受損  │
+│                  │ 中國加入 WTO 的「中國衝擊」   │
+│                  │ (Autor, Dorn & Hanson 2013)   │
+│                  │ 製造業就業損失約 200-240 萬   │
+├──────────────────┼──────────────────────────────┤
+│ 市場力量上升     │ 企業利潤率↑（加成率 markup↑）│
+│ (De Loecker      │ 平均加成率 1980→2016：        │
+│  et al. 2020)    │ 1.21 → 1.61（美國上市公司）  │
+│                  │ → 勞動份額（labor share）↓   │
+├──────────────────┼──────────────────────────────┤
+│ 超級明星效應     │ 數位經濟的零邊際成本特性      │
+│ (Rosen 1981      │ 贏家通吃（winner-takes-most） │
+│  Gabaix et al.)  │ 頂端 CEO、藝術家、投資人      │
+│                  │ 報酬的超比例上升              │
+├──────────────────┼──────────────────────────────┤
+│ 資產價格膨脹     │ QE → 股票、房地產價格↑       │
+│                  │ 擁有資產者財富↑              │
+│                  │ 租房者、無資產者相對損失      │
+│                  │ → 代際不平等（年輕人 vs 老人）│
+└──────────────────┴──────────────────────────────┘</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、不平等的總體回饋：消費函數的異質性</h2>
+          <p>傳統凱因斯消費函數假設所有人的邊際消費傾向（MPC）相同。現代異質性消費者模型（Heterogeneous Agent Models, HA）揭示：MPC 隨收入/財富水準的不同而大幅差異，且這種異質性深刻影響財政/貨幣政策的乘數效果。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">邊際消費傾向（MPC）的異質性：政策含義</div>
+            <pre>
+【MPC 與財富/收入的關係】
+
+MPC（從額外 $1 消費的比例）：
+
+低收入 / 無資產 / 流動性受限家庭：MPC ≈ 0.7–1.0
+  → 幾乎將所有額外收入立即消費
+  → 借貸受限（hand-to-mouth consumers）
+
+中等收入 / 有資產家庭：MPC ≈ 0.3–0.5
+  → 部分儲蓄，部分消費
+
+高收入 / 富裕家庭：MPC ≈ 0.05–0.15
+  → 大部分儲蓄 / 投資，消費邊際需求低
+
+【政策含義：財政乘數的分配效應】
+
+若政府額外支出 $100：
+  → 轉移給低收入者：最終消費增加 ≈ $100 × 0.8 = $80
+     進一步乘數：GDP 增加 $80 / (1 − MPC) ≈ 更大
+
+  → 轉移給高收入者（或用於減稅）：
+     消費增加 ≈ $100 × 0.1 = $10（大部分儲蓄）
+
+→ 財政乘數取決於「錢給了誰」
+  針對低收入群體的轉移支付
+  財政乘數 > 針對富人的減稅
+  (Auclert et al. 2019)
+
+【QE 的分配效應（逆向乘數）】
+
+QE → 資產價格↑ → 財富增加集中於
+   → 高收入 / 高財富群體
+   → MPC 低 → 消費刺激效果弱
+
+Summers & Ball（批評 Fed）：
+QE 是效率低下的刺激工具，
+因為它將財富轉移給 MPC 最低的群體
+
+【「手到口（Hand-to-Mouth）」消費者】
+Kaplan, Violante & Weidner（2014）：
+美國約 1/3 家庭是「有錢的手到口者」
+  ——持有非流動性資產（房屋）
+  ——但流動性資產極少
+  → MPC 極高（借貸受限）
+  → 政策衝擊對他們的效果遠大於標準模型預測</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、不平等與總體需求：儲蓄過剩假說的延伸</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">不平等 → 總體需求不足 → 長期停滯（傳導鏈）</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">所得與財富集中化</div>
+                <div class="step-desc">頂層 1% 份額上升（MPC 低）<br>中產 / 低收入份額縮減（MPC 高）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">總體儲蓄率上升</div>
+                <div class="step-desc">加權平均 MPC 下降 → 整體消費傾向降低<br>儲蓄 → 金融資產（非生產性投資）</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">總需求結構性不足</div>
+                <div class="step-desc">消費 C 相對 GDP 增長緩慢<br>投資 I 受到需求不足抑制<br>「長期停滯（Secular Stagnation）」— Summers 2013</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">自然利率（r*）長期下滑</div>
+                <div class="step-desc">儲蓄過剩 → 資金充裕 → r* 被壓低<br>零下限（ZLB）頻率上升<br>貨幣政策空間收窄</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">政治極化加劇</div>
+                <div class="step-desc">相對損失者的憤怒 → 民粹主義↑<br>貿易保護主義、反移民、反精英<br>政策不確定性↑ → 投資↓（強化需求不足）</div>
+              </div>
+            </div>
+          </div>
+
+          <p>Mian、Straub &amp; Sufi（2021）提出「跨階級借貸（the saving glut of the rich）」機制：富人的過剩儲蓄借貸給中產和低收入家庭，維持了消費，但積累了私人債務。2008 年危機正是這一模式崩潰的結果——去槓桿引發總需求暴跌。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、貨幣政策的分配效應</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">利率變動的分配效應分析</div>
+            <pre>
+【升息的分配效應】
+
+受益者（升息獲益）：
+  ・擁有浮動利率儲蓄（貨幣市場基金）
+  ・老年人 / 退休者（依賴利息收入）
+  ・淨債權人（net savers）
+
+受損者（升息受損）：
+  ・浮動利率房貸借款人（ARM 持有者）
+  ・信用卡持有人（高利率循環信用）
+  ・小企業（依賴短期借款）
+  ・新興市場（美元計價外債）
+
+【降息 / QE 的分配效應】
+
+受益者（寬鬆獲益）：
+  ・資產持有者（股票、房地產）— 主要是富人
+  ・房貸固定利率借款人（再融資受益）
+  ・企業（降低資金成本，槓桿操作）
+
+受損者（寬鬆受損）：
+  ・退休者 / 儲蓄者（低利率侵蝕利息收入）
+  ・保險公司、養老金（長端利率壓低→負債貼現↓）
+  ・租房者（房價↑ → 負擔能力↓）
+
+【Coibion et al. (2017) 的 HANK 模型發現】
+
+HANK = Heterogeneous Agent New Keynesian
+貨幣政策的消費效果主要通過「收入分配」管道
+而非傳統「跨期替代（intertemporal substitution）」管道
+
+→ 誰的收入受貨幣政策影響，決定了政策乘數
+→ 推論：「直升機撒錢」給低收入者
+  比標準 QE 的刺激效率高得多</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、庫茲涅茲曲線：不平等與發展的倒 U 型假說</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">庫茲涅茲曲線（Kuznets Curve）</div>
+            <pre>
+不平等
+  │
+高 │         *
+  │       *   *
+  │     *       *
+  │   *           *
+低 │ *               *
+  └─────────────────────→ 人均 GDP（發展程度）
+    低                高
+
+【Kuznets（1955）假說】
+・經濟發展初期：農業人口移入工業部門
+  → 城鄉差距擴大 → 不平等上升
+・發展中後期：工業化廣泛普及、
+  教育提升、政治壓力 → 不平等下降
+・預測：先惡化後改善的倒 U 型路徑
+
+【實證爭議】
+支持：部分發展中國家初期趨勢
+批評：
+  ・Piketty 等人顯示已開發國家 1980 年後不平等再度上升
+  ・說明 Kuznets 描述的是特定歷史時期，而非普遍規律
+  ・沒有自動機制保證高發展水準後不平等下降
+  ・「環境庫茲涅茲曲線」（污染先升後降）有類似爭議
+
+【現代延伸：全球庫茲涅茲曲線（Milanovic）】
+
+國內不平等 vs 全球不平等的分離：
+2000-2015 年「象形曲線（Elephant Curve）」：
+
+  全球    │      *（新興市場中產，亞洲工人）
+  收入    │   *     *
+  增長    │  *        （已開發國家中產，停滯）
+  分位    │*
+        ──┴──────────────────────────
+          全球所得分位（最窮→最富）
+  最右端（全球最富 1%）也大幅獲益
+
+→ 全球貿易使窮國中產受益，
+  但已開發國家工人的競爭壓力加劇</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">七、不平等的政治回饋：從分配到政策</h2>
+
+          <div class="case-study">
+            <div class="case-study-title">案例分析：美國「中國衝擊」與民粹主義政治</div>
+            <p><strong>學術背景</strong>：Autor、Dorn &amp; Hanson（2013, 2016）的「中國衝擊（China Shock）」研究估計，1999–2011 年美國因中國進口競爭損失 200–240 萬製造業就業，且衝擊集中在特定地理社區（「通勤區」），本地勞工缺乏跨地流動的能力或意願。</p>
+            <p><strong>不均等的地理分佈</strong>：衝擊高度集中於鏽帶州（Rust Belt）——密西根、俄亥俄、賓夕法尼亞——的製造業重鎮。同一時期，知識型城市（紐約、舊金山、波士頓）的科技與金融業蓬勃發展，吸引高技能移民，形成「贏家城市 vs 輸家城市」的鮮明分化。</p>
+            <p><strong>政治後果</strong>：Autor et al.（2020）進一步研究顯示，受中國衝擊較重的選區，共和黨向右翼民粹（Trump 候選人）的轉向顯著更強，民主黨向左翼民粹（Sanders 式）的轉向也更強——兩端政治極化同步上升。2016 年 Trump 勝選的地理分析與中國衝擊受害地圖高度重疊。</p>
+            <p><strong>政策回應的悖論</strong>：貿易理論預測「效率收益大於損失，贏家補償輸家可使所有人更好」。但補償機制（貿易調整援助 TAA）在美國實踐中極為有限且官僚繁瑣。Rodrik（2011）稱之為「超級全球化的政治悖論」：全球化的收益廣泛分散，損失集中且可見，在政治上不可持續。</p>
+            <p><strong>總體含義</strong>：民粹主義政策（貿易保護、反移民）在政治上成功後，通過供應鏈重組、勞動力市場政策改變、財政政策取向，反過來影響下一個週期的宏觀環境——不平等 → 政治 → 政策 → 宏觀的回饋環路閉合。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">八、財富稅、資本課稅與再分配：效率與平等的取捨</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">再分配工具的效率成本比較</div>
+            <pre>
+┌────────────────┬──────────────────┬───────────────────┐
+│ 政策工具       │ 分配效果         │ 效率代價           │
+├────────────────┼──────────────────┼───────────────────┤
+│ 所得稅累進化   │ 直接壓縮稅後     │ 工作誘因↓（高端）  │
+│                │ 所得不平等       │ 稅率設計敏感       │
+│                │                  │ Diamond-Saez：最   │
+│                │                  │ 優邊際稅率 73%（爭議）│
+├────────────────┼──────────────────┼───────────────────┤
+│ 資本利得稅     │ 壓縮財富累積速度 │ 資本形成可能↓     │
+│                │ 影響 r > g 機制  │ 避稅行為激增       │
+│                │                  │ 「鎖定效果」       │
+├────────────────┼──────────────────┼───────────────────┤
+│ 財富稅         │ 直接攻擊財富存量 │ 資本外逃（瑞典、   │
+│ (Piketty 建議）│ 不平等           │ 法國已廢除）       │
+│                │                  │ 估值困難（非上市   │
+│                │                  │ 資產、房地產）     │
+├────────────────┼──────────────────┼───────────────────┤
+│ 遺產稅         │ 阻止財富跨代傳承 │ 低稅基（避稅工具   │
+│ (Inheritance)  │（「出生彩票」）  │ 多，信託、慈善）   │
+│                │                  │ 美國實際有效稅率   │
+│                │                  │ 遠低於名目稅率     │
+├────────────────┼──────────────────┼───────────────────┤
+│ 土地稅         │ 地租再分配，     │ 幾乎無效率代價     │
+│ (Henry George) │ 壓制地價投機     │ 政治阻力（房產所有 │
+│                │                  │ 者選票影響力大）   │
+└────────────────┴──────────────────┴───────────────────┘
+
+【Mirrlees 最優稅理論（1971）】
+最優稅制需要在資訊不對稱下（政府不知道個人
+能力）設計誘因相容的累進稅。Diamond & Saez（2011）
+利用最優稅理論估算，對頂層的最優邊際稅率在
+50–73% 之間，但這依賴於行為彈性假設（爭議較大）。</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">九、不平等的投資含義</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">不平等結構 → 資產市場與產業布局影響</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">財富集中 → 奢侈品與高端服務需求</div>
+                <div class="step-desc">高端零售（LVMH、愛馬仕）、豪華旅遊、私人醫療<br>「K 型復甦」：富人市場 vs 大眾市場的分化</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">中產消費力壓縮 → 折扣業態擴張</div>
+                <div class="step-desc">Dollar General、Costco、Amazon 的兩端受益<br>中端品牌（百貨公司）被「空洞化（hollowed out）」</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">住宅租賃需求長期化</div>
+                <div class="step-desc">首購困難（房價/收入比歷史新高）→ 租屋比率↑<br>REITs（尤其住宅類）的長期需求支撐</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">政治風險溢酬</div>
+                <div class="step-desc">民粹主義政策的尾部風險↑<br>財富稅 / 資本管制 / 反壟斷強化的概率定價<br>企業利潤率「加成率（markup）」面臨政治壓力</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">ESG 與社會許可（Social License）</div>
+                <div class="step-desc">不平等加劇 → 對企業的社會期待上升<br>忽視分配問題的企業面臨品牌風險<br>但 ESG「漂綠」批評同步增加（Tarrow 2021）</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">十、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解一：「不平等上升是技術進步不可避免的結果」</div>
+            <p><strong>問題所在</strong>：技術變化確實改變了要素需求，但「不可避免」忽視了制度的關鍵作用。Acemoglu &amp; Restrepo（2022）指出，技術進步的分配效果取決於誰擁有技術、技術如何被監管。1950–70 年代美國製造業工會力量強大時期，生產力提升被廣泛分享；1980 年後工會式微、資本議價力上升，同等生產力提升的工資溢出效應大幅縮減。同樣是技術進步，北歐國家（強工會、積極再培訓）與美國（弱工會、有限安全網）的分配結果截然不同，說明制度是中介變數，而非常數。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解二：「增長惠及所有人（a rising tide lifts all boats）」</div>
+            <p><strong>問題所在</strong>：Chetty 等人（2017）的「絕對流動性（Absolute Mobility）」研究顯示，1940 年代出生的美國人中，約 92% 在 30 歲時的收入高於父母同齡水準；1980 年代出生者這一比例降至約 50%。GDP 持續增長的同時，絕對向上流動性腰斬，說明增長的果實分配高度不均——並非所有人都隨潮水上升。Summers 稱此為「增長 vs 機會」的悖論。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解三：「Piketty 的 r &gt; g 是鐵律，財富集中無可避免」</div>
+            <p><strong>問題所在</strong>：r &gt; g 是一個會計恆等式的延伸，而非動態均衡結果。Krusell &amp; Smith（2015）指出，在標準新古典模型中，若資本替代彈性 σ &lt; 1（主流估計值），資本積累本身會壓低 r，趨近 g，形成穩態。此外，遺產動機、消費偏好、財富衝擊（戰爭、通膨）等因素都可打斷財富集中邏輯。Piketty 的貢獻在於<em>歷史描述</em>和對制度性力量的強調，而非一個普遍的動態定理。重要的是：歷史上打破 r &gt; g 邏輯的事件（世界大戰、高通膨、高遺產稅）都涉及重大制度干預，而非市場自發調整。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">教授示範答題</h2>
+          <div class="key-concept">
+            <div class="key-concept-title">考試題目：「為何 2008 年後的 QE 政策被批評為『加劇不平等的貨幣政策』？試從 MPC 異質性和資產價格管道兩個角度分析，並評估這一批評是否公平。」</div>
+            <p><strong>第一層——MPC 異質性論點</strong>：QE 通過資產購買壓低長端利率、推高資產價格。資產（股票、房地產）的持有高度集中於高收入/高財富群體，這些群體的邊際消費傾向（MPC）遠低於低收入群體。因此，QE 創造的「財富效果」消費刺激主要流向 MPC 最低的人群，總需求刺激效率相對低下——而如果同等規模的資金通過直接轉移支付到達低收入者，消費刺激會顯著更強。</p>
+            <p><strong>第二層——資產價格管道</strong>：2009–2021 年，美股（S&amp;P 500）累計上漲約 700%，美國城市房價（Case-Shiller）上漲 150% 以上。持有這些資產的主要是財富分位頂端的人群（頂層 10% 持有約 89% 的股票）。底層 50% 幾乎沒有金融資產，房地產持有也有限，因此 QE 創造的財富大部分積累於頂端——基尼係數（財富口徑）在 QE 時期顯著上升。</p>
+            <p><strong>第三層——評估這一批評是否「公平」</strong>：批評有道理，但需要設置反事實（counterfactual）。若 Fed 不做 QE，2009–2010 年的大蕭條風險是真實的；失業率飆升對低收入者的傷害（失業主要集中在低技能工人）可能遠大於 QE 的分配扭曲。Coibion et al.（2017）的實證研究顯示，貨幣寬鬆實際上降低了消費的不平等——就業增加對底層的直接收入效果超過了資產價格效果。</p>
+            <p><strong>結論</strong>：QE 的分配效應具有雙面性——財富口徑的不平等確實因此惡化，但所得和消費口徑的評估更複雜。更準確的批評不是「不應實施 QE」，而是「貨幣政策作為唯一工具不足夠，應與財政分配政策配合——比如對資本利得課稅，或直接進行基礎設施投資，以補救 QE 的分配缺陷」。</p>
+          </div>
+        </section>
+
+        <section class="section exercise-section">
+          <h2 class="section-title">課後練習</h2>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習一</span>
+              <span class="exercise-difficulty difficulty-basic">基礎</span>
+            </div>
+            <p class="exercise-question">政府考慮兩個財政刺激方案：A 方案向所有家庭減稅 1,000 美元（等額分配）；B 方案向最低收入 40% 家庭直接轉移支付 2,500 美元（成本相同）。若高收入家庭 MPC = 0.15，中等收入 MPC = 0.45，低收入 MPC = 0.85，試比較兩方案的總消費刺激效果，並說明最優財政政策設計的含義。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p>假設人口各三等分：低收入 33%、中等 33%、高收入 34%（簡化），總人口 N 人。</p>
+                <p><strong>A 方案</strong>（均等減稅 $1,000）：<br>消費刺激 = N×0.33×1000×0.85 + N×0.33×1000×0.45 + N×0.34×1000×0.15<br>= N×(280.5 + 148.5 + 51) = N×480 美元/人均消費增加</p>
+                <p><strong>B 方案</strong>（底層 40% 轉移 $2,500）：總成本 = N×0.4×2500 = N×1000（與 A 相同）<br>消費刺激 = N×0.4×2500×0.85 = N×850 美元/人均消費增加</p>
+                <p>B 方案消費刺激（850）約是 A 方案（480）的 <strong>1.77 倍</strong>，相同的財政成本帶來更大的總需求效果。</p>
+                <p><strong>含義</strong>：①財政政策的乘數效果不只取決於乘數公式，還取決於受益人的 MPC；②針對性轉移支付（targeted transfers）的效率高於普惠減稅；③這解釋為何 Keynes 式的「逆週期財政政策」在針對低收入群體時，對 GDP 的穩定效果更強；④Blanchard 等人的研究確認，失業救濟金（低收入 MPC 高）的財政乘數大於整體性減稅。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能算出兩方案數值並正確說明 B 方案效果更好，但計算過程有誤差，或未能連接至財政政策設計的一般含義。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>不知道如何應用 MPC 異質性，或僅說「B 方案給更多錢所以更好」，未理解相同財政成本下的效率差異。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確設定兩方案的計算框架（相同成本比較）</td><td>25%</td></tr>
+                <tr><td>正確應用 MPC 異質性計算消費刺激</td><td>35%</td></tr>
+                <tr><td>說明 B 方案效率更高的分配邏輯</td><td>25%</td></tr>
+                <tr><td>連結至一般最優財政政策設計原則</td><td>15%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習二</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">Piketty 的「r &gt; g」論點預測財富不平等將持續惡化。但批評者指出這並非鐵律。試從三個角度——（1）資本的邊際報酬遞減、（2）歷史上打破 r &gt; g 的機制、（3）制度設計的干預空間——評估 Piketty 論點的強度與侷限。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>（1）資本邊際報酬遞減</strong>：在新古典模型中，若生產函數滿足 Inada 條件（資本越多，邊際產出越低），資本的積累將自動壓低 r，趨近 g，形成穩定的資本/產出比（Solow 穩態）。Krusell &amp; Smith（2015）的關鍵問題是資本替代彈性（σ）：若 σ &lt; 1，資本積累確實會壓低 r；若 σ &gt; 1（Piketty 的假設），r 下降速度慢於資本積累速度，財富/GDP 比持續上升。實證上 σ 的估計值爭議巨大，使得 Piketty 的動態預測高度依賴一個不確定的參數。</p>
+                <p><strong>（2）歷史上打破 r &gt; g 的機制</strong>：① 兩次世界大戰：摧毀大量資本存量，大幅降低財富/GDP 比。② 高通膨（1970 年代）：侵蝕債券和現金財富的實際價值。③ 大蕭條：資產價格暴跌清除大量財富。④ 高累進稅率（1940–70 年代）：60–90% 的高邊際所得稅率和高遺產稅限制了財富再積累速度。這些機制說明，歷史上 r &lt; g 的「平等黃金時代」依賴特殊的外生衝擊（戰爭、政策）而非市場自發力量——這既支持又削弱了 Piketty：支持（市場本身無法自動均等化），削弱（歷史例外不代表未來必然重演）。</p>
+                <p><strong>（3）制度設計的干預空間</strong>：Piketty 本人的政策建議——全球財富稅——承認干預是可能且必要的。但干預的效果取決於：①國際協調程度（單一國家徵財富稅 → 資本外逃）；②技術可行性（非上市資產估值）；③政治可行性（財富持有者的選票和遊說力量）。北歐模式顯示，通過強勞動制度（工會、集體談判）和廣泛公共服務（教育、醫療）而非財富稅，也能在 r &gt; g 的環境下保持較低不平等——說明制度路徑的多樣性。</p>
+                <p><strong>綜合評估</strong>：Piketty 的 r &gt; g 是重要的歷史描述和警示，但作為動態預測存在重大理論不確定性（σ 的假設）和制度條件依賴性。其最持久的貢獻是將長期財富數據帶入主流討論，而非提供一個機械的鐵律。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能提出兩點有效批評，但論述不夠深入，例如未能說明 σ 的具體含義，或未能區分 Piketty 作為歷史描述 vs 動態預測的不同貢獻。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>僅說「世界大戰摧毀了財富所以不平等下降」，沒有理論聯繫；或完全接受 Piketty 而未批判性分析其假設。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>資本邊際報酬遞減（σ 假設）的批評</td><td>30%</td></tr>
+                <tr><td>歷史上打破 r &gt; g 機制的具體分析</td><td>30%</td></tr>
+                <tr><td>制度設計干預空間（可行性與侷限）</td><td>25%</td></tr>
+                <tr><td>綜合平衡評估 Piketty 的貢獻與局限</td><td>15%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習三</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">「長期停滯（Secular Stagnation）」假說（Summers 2013）認為，不平等加劇是導致總需求長期不足、自然利率趨勢性下滑的結構性原因之一。試評估這一論點的邏輯鏈，並討論 2021–22 年通膨爆發是否推翻了這一假說。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>長期停滯假說的邏輯鏈</strong>：不平等上升 → 高 MPC 的中低收入者所得份額縮減 → 整體消費傾向降低 → 私人儲蓄超過私人投資意願 → 均衡利率（r*）需要下降才能使 S = I → r* 趨勢性下滑 → 名目中性利率接近或低於零 → ZLB 更頻繁 → 貨幣政策空間收窄 → 長期增長率偏低、就業不足。</p>
+                <p><strong>支持論點的證據</strong>：① Laubach-Williams 估計顯示 r* 從 1990 年代的 3% 以上降至 2010 年代末接近 0%；② 日本是最先進入此狀態的案例（1990 年代以來通縮 + 低利率）；③ 歐元區在 2010 年代中期也進入負利率領域。</p>
+                <p><strong>2021–22 年通膨是否推翻假說？</strong>：不完全。通膨爆發的主要驅動力是：①財政政策（COVID 直接轉移支付）— 這是不平等-長期停滯框架中唯一能真正提升中低收入消費的工具；②供給衝擊（供應鏈、能源）— 外生因素，非需求面結構改變。2021 年 COVID 轉移支付在美國規模約佔 GDP 的 10–15%，是史無前例的直接現金轉移，臨時性地扭轉了儲蓄過剩。2023 年財政退潮後，r* 的長期水準估計仍遠低於疫情前的想象，只是「暫時性上升」。</p>
+                <p><strong>修正版長期停滯論點</strong>：疫情及其後的財政實驗提示，通過足夠大規模的財政擴張，確實可以突破長期停滯均衡——但這要求持續的財政赤字，引發與 M09 財政可持續性的衝突。長期停滯假說沒有被推翻，而是獲得了「財政干預可以克服，但有代價」的修正版本。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能說明長期停滯的基本邏輯，並提出「通膨爆發似乎反駁了需求不足的假說」，但無法區分結構性因素（不平等、r*）與臨時性衝擊（COVID 財政、供給鏈）的差異。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>認為「2022 年高通膨完全推翻了 Summers 的假說」，或未能連接不平等與長期停滯的邏輯鏈，停留在「通膨高了就是需求旺盛」的表面描述。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確闡述不平等→儲蓄過剩→r* 下滑的完整邏輯鏈</td><td>30%</td></tr>
+                <tr><td>分析 2021–22 年通膨的驅動力（財政 + 供給）</td><td>25%</td></tr>
+                <tr><td>論證通膨爆發為何不足以推翻結構性假說</td><td>25%</td></tr>
+                <tr><td>提出修正版長期停滯論點（財政干預能力與代價）</td><td>20%</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <nav class="lecture-nav">
+          <a href="m11-exchange.html" class="nav-btn nav-btn-prev">← M11 匯率與三難困境</a>
+          <a href="m13-financial-cycle.html" class="nav-btn nav-btn-next">M13 金融週期與危機 →</a>
+        </nav>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

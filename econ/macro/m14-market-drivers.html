@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M14 總體如何驅動市場 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link active">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M14</span>
+          <span class="topbar-title">總體如何驅動市場</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 14</div>
+          <h1 class="lecture-hero-title">總體如何驅動市場</h1>
+          <p class="lecture-hero-subtitle">How Macroeconomics Drives Asset Markets</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：宏觀投資框架</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：綜合應用</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">前十三講奠定了總體分析的理論基礎。這一講是從「理論」轉向「應用」的橋樑：宏觀經濟變數如何成為資產價格的驅動力？這個問題比表面複雜得多。股市並非「經濟的晴雨表」——2020 年美國 GDP 下滑 3.5%，S&amp;P 500 全年上漲 16%。債市也不只跟著利率走——市場對同一份就業數據有時正面解讀，有時負面解讀，取決於當下的「宏觀政權（macro regime）」。本講系統整理宏觀驅動資產的核心框架：增長-通膨四象限、利率的多重身份（折現率 vs 信號）、商品週期的地緣政治嵌入、匯率作為資產配置的第五因子，以及如何閱讀宏觀數據而不被市場情緒帶著走。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、股票的宏觀定價框架：DCF 的宏觀版</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">股票價值的宏觀分解</div>
+            <pre>
+【Gordon 成長模型（Gordon Growth Model）】
+
+P = D₁ / (r - g)
+
+P   = 股票現值
+D₁  = 下一期股息
+r   = 折現率（required return）
+g   = 股息長期成長率
+
+宏觀變數的映射：
+r = rf + ERP
+  rf  = 無風險利率（Fed 政策利率的長期反映）
+  ERP = 股權風險溢酬（Equity Risk Premium）
+g   ≈ 名目 GDP 成長率（長期）
+
+→ 股票估值 = f(央行政策, GDP成長, 風險偏好)
+
+【拆解估值的三個宏觀驅動力】
+
+P/E = 1 / (r - g) ≈ 1 / (rf + ERP - g_nom)
+
+當 rf ↓（Fed 降息）：P/E ↑（估值膨脹）
+當 g↑（增長加速）：P/E ↑
+當 ERP ↓（風險偏好改善）：P/E ↑
+
+反之：
+升息週期（rf ↑）→ P/E 收縮（估值壓縮）
+2022 年實例：
+  10 年期殖利率：0.5% → 4.0%（+350bps）
+  S&P 500 P/E：23x → 16x（估值壓縮 30%）
+  企業盈利（EPS）：全年基本持平
+  → 股市下跌主因是估值壓縮，非盈利惡化
+
+【EPS 的宏觀影響因素】
+
+EPS = 銷售額 × 利潤率 - 稅
+
+銷售額驅動：名目 GDP 增長（實質增長 + 通膨）
+           通膨期間「名目銷售額」往往超預期
+利潤率驅動：工資成長（成本）、利率（財務成本）
+           定價能力（市場力量）
+稅率：財政政策（企業稅率）
+
+→ 通膨對 EPS 的影響是雙面的：
+  需求拉動通膨 → 銷售額↑、利潤率可能改善
+  成本推動通膨 → 銷售額↑但成本更高、利潤率↓</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、增長-通膨四象限：宏觀政權框架</html>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：宏觀政權（Macro Regime）與資產輪動</div>
+            <p>橋水基金（Bridgewater Associates）的「全天候（All Weather）」框架和 BlackRock 的宏觀研究都以「增長 vs 通膨」的二維象限作為資產配置的核心框架。不同的宏觀政權對不同資產類別的含義截然不同——理解「現在處於哪個象限」比「預測下一個數據」更重要。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">增長-通膨四象限與資產表現</div>
+            <pre>
+              通膨上升
+                  │
+   象限②滯脹     │     象限①過熱
+   Stagflation   │     Overheating
+   ・增長↓ 通膨↑ │     ・增長↑ 通膨↑
+                  │
+   資產表現：     │     資產表現：
+   ・大宗商品 ✓  │     ・股票（初期）✓
+   ・TIPS ✓      │     ・大宗商品 ✓
+   ・股票 ✗      │     ・TIPS ✓
+   ・長債 ✗✗    │     ・長債 ✗
+   ・現金 ✓（相對│     ・現金 ✗（落後通膨）
+     名目收益）  │
+                  │
+──────────────────┼──────────────────────────→ 增長加速
+                  │
+   象限③衰退     │     象限④金髮（理想）
+   Recession     │     Goldilocks
+   ・增長↓ 通膨↓ │     ・增長↑ 通膨↓
+                  │
+   資產表現：     │     資產表現：
+   ・長期國債 ✓✓│     ・股票 ✓✓
+   ・黃金 ✓      │     ・信用債 ✓
+   ・股票 ✗✗    │     ・長債 ✓
+   ・大宗商品 ✗  │     ・大宗商品 ✗
+   ・信用利差擴大│     ・黃金（中性）
+                  │
+              通膨下降
+
+歷史時期對照：
+  象限①過熱：1960年代末、2021年
+  象限②滯脹：1973-79年石油危機、2022年
+  象限③衰退：1981-82年、2001年、2008-09年
+  象限④金髮：1995-99年、2012-19年部分時期</pre>
+          </div>
+
+          <p>象限的切換是投資組合再平衡的核心信號。關鍵技巧不是精確預測象限，而是<strong>識別當前象限的「邊界條件」</strong>——什麼數據會觸發向相鄰象限的移動？例如：2023 年初市場爭議「是否已進入象限④（通膨下降 + 成長維持）」，就業數據的走向是關鍵分水嶺。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、利率的雙重身份：折現率 vs 增長信號</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">「好的利率上升」vs「壞的利率上升」</div>
+            <pre>
+【利率上升對股市的兩種截然不同含義】
+
+情境 A：「好的利率上升（Good Rate Rise）」
+  觸發：增長預期改善（GDP 預測上調）
+  → 長端利率↑ 但原因是未來現金流預期↑
+  → 盈利修正上調 > 折現率上升的負面效果
+  → 股市可以上漲（2013 H2、2017年）
+  特徵：殖利率曲線陡峭化（bear steepening）
+        股票、大宗商品同步上漲
+
+情境 B：「壞的利率上升（Bad Rate Rise）」
+  觸發：通膨或財政恐慌
+  → 利率上升是因為通膨預期或風險溢酬↑
+  → 盈利預期不變甚至下修，折現率↑
+  → 股市下跌（2022年）
+  特徵：實質利率（TIPS yield）上升
+        股票、債券同步下跌（60/40失效）
+
+【如何區分？】
+
+指標：5年期 TIPS 殖利率（實質利率）
+  ・TIPS 殖利率↑ + 股票↓ = 壞的利率上升
+  ・名目殖利率↑ 但 TIPS 殖利率穩 = 通膨預期↑
+    → 通常伴隨增長改善（好的利率上升可能）
+
+指標：股債相關性（Stock-Bond Correlation）
+  ・正相關（股債同跌）= 通膨驅動的利率上升
+  ・負相關（股漲債跌或股跌債漲）= 增長驅動
+
+歷史分水嶺：
+  2000 年之前：股債正相關（通膨時代）
+  2000-2021：股債負相關（金髮時代，通縮環境）
+  2022 年：股債正相關回歸（通膨 > 增長擔憂）
+  → 60/40 組合在 2022 年創下歷史最差表現</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、殖利率曲線：最重要的宏觀儀表板</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">殖利率曲線形態的市場含義</div>
+            <pre>
+【殖利率曲線（Yield Curve）的四種形態】
+
+1. 正斜率（Normal / Upward Sloping）
+   短端 < 長端：通常環境
+   含義：市場預期未來增長和通膨
+   對銀行：淨利差（NIM）擴大，獲利能力強
+
+2. 平坦（Flat）
+   短端 ≈ 長端：過渡時期
+   含義：市場對增長前景不確定
+
+3. 倒掛（Inverted）
+   短端 > 長端（2-10 年利差為負）
+   含義：市場預期未來降息（即未來衰退）
+   歷史衰退預測：Estrella & Mishkin (1996)
+     每次二戰後美國衰退前，
+     2-10 年利差均先行倒掛
+     平均領先時間：6–18 個月
+   2022 年 7 月–2024 年：持續倒掛最長紀錄之一
+
+4. 熊式陡峭（Bear Steepening）
+   長端上升幅度 > 短端
+   含義：財政擔憂 / 期限溢酬上升
+   2023 年 8–10 月：長端大幅上升
+   → 源於財政赤字擴大 + 美債供給壓力
+
+【關鍵利差指標】
+
+10年-2年利差（最常用）：
+  > 0：正常；< 0：倒掛（衰退信號）
+
+10年-3月期利差（Estrella 更偏好）：
+  更強的衰退預測力（實證研究顯示）
+
+30年-10年利差（Long Bond Premium）：
+  期限溢酬的代理指標
+  財政可持續性擔憂時擴大
+
+ACM 期限溢酬（Adrian-Crump-Moench）：
+  Fed 紐約分行估算的 10 年期期限溢酬
+  QE 期間被壓縮至負值（約 -0.5%）
+  2023 年回升至正值（約 +0.3–0.5%）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、商品市場：通膨的體溫計與地緣政治指標</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">大宗商品週期的宏觀驅動鏈</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">全球增長週期（中國需求尤為關鍵）</div>
+                <div class="step-desc">中國佔全球銅需求 55%、鐵礦石 70%、煤炭 50%<br>中國 PMI 是工業金屬最重要的領先指標</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">美元指數（DXY）</div>
+                <div class="step-desc">大宗商品以美元計價：美元↑ → 商品（外幣計價）↓<br>歷史負相關性顯著（但非完美）<br>2022 年例外：能源供給衝擊 > 美元負效果</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">供給端結構（地緣政治嵌入）</div>
+                <div class="step-desc">OPEC+ 產量決定（石油政治）<br>俄羅斯戰爭風險（天然氣、小麥、鎳）<br>中國稀土出口管制（關鍵礦物）<br>刹車效應：供給衝擊在需求下降時抵消</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">庫存週期（Inventory Cycle）</div>
+                <div class="step-desc">製造商的庫存補充 vs 去庫存<br>短週期（Kitchin 週期，約 3–5 年）的核心<br>PMI 的新訂單-庫存差是敏感先行指標</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">能源轉型的結構性長週期</div>
+                <div class="step-desc">電動車 → 銅、鋰、鎳、鈷需求結構性上升<br>可再生能源 → 稀土金屬（風機、太陽能板）<br>化石燃料投資不足 → 能源安全溢價長期存在</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">黃金的宏觀定價框架</div>
+            <pre>
+【黃金的四重角色】
+
+1. 實質利率的「影子資產（Shadow Asset）」
+
+  黃金無利息 → 持有黃金的機會成本 = 實質利率
+  黃金價格 ↑ 當：實質利率 ↓（TIPS 殖利率↓）
+  黃金價格 ↓ 當：實質利率 ↑
+
+  2020：TIPS yield → -1% → 黃金漲至 2,075 美元
+  2022：TIPS yield → +1.5% → 黃金跌至 1,620 美元
+  2023-24：地緣政治溢價 → 黃金突破 TIPS 框架
+
+2. 美元信心指標
+
+  美元走弱 → 黃金上漲（替代儲備資產）
+  美元走強 → 黃金承壓
+  例外：2022 年美元 + 黃金同時上漲
+       → 地緣政治避險需求超越利差邏輯
+
+3. 尾部風險 / 避險需求
+
+  地緣政治危機、主權信用危機
+  央行購金：2022-24 年各國央行購金創紀錄
+  新興市場央行去美元化 → 儲備多元化
+
+4. 通膨對沖
+
+  長期：黃金對沖超高通膨有效
+  短期：通膨上升但實質利率也上升 → 黃金可能跌
+  → 黃金是「極端通膨」的對沖，非「溫和通膨」
+
+實務口訣：
+  「黃金 = f(−實質利率, −美元, +尾部風險)」</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、股票的宏觀因子：行業輪動地圖</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">宏觀政權 × 行業因子敏感性</div>
+            <pre>
+┌──────────────────┬────────────────────────────────────┐
+│ 行業             │ 宏觀敏感性                          │
+├──────────────────┼────────────────────────────────────┤
+│ 金融（銀行、保險）│ (+) 利率上升（NIM 擴大）           │
+│                  │ (+) 信用週期擴張                    │
+│                  │ (-) 倒掛（NIM 壓縮）                │
+│                  │ (-) 衰退（信用損失 NPL 上升）       │
+├──────────────────┼────────────────────────────────────┤
+│ 科技（成長股）   │ (-) 利率上升（高 duration 估值壓縮）│
+│                  │ (+) 利率下降（估值膨脹）            │
+│                  │ (+) 增長加速（盈利超預期）          │
+│                  │ 高 duration = 對利率最敏感的行業    │
+├──────────────────┼────────────────────────────────────┤
+│ 能源（石油、天然氣）│ (+) 通膨（商品價格上漲）         │
+│                  │ (+) 地緣政治風險                    │
+│                  │ (-) 全球衰退（需求崩潰）            │
+│                  │ (-) 能源轉型長期壓力                │
+├──────────────────┼────────────────────────────────────┤
+│ 必需消費品       │ 防禦性：衰退期相對穩健              │
+│ (Staples)        │ (+) 通膨（定價能力強的公司）        │
+│                  │ (-) 估值貴（殖利率替代物受利率影響）│
+├──────────────────┼────────────────────────────────────┤
+│ 公用事業         │ 殖利率替代物：利率上升 → 估值壓縮  │
+│ (Utilities)      │ (-) 升息周期最受傷                  │
+│                  │ (+) 降息期 / 避險需求               │
+│                  │ (+) 能源轉型的電網投資長期利好      │
+├──────────────────┼────────────────────────────────────┤
+│ 工業、材料       │ 高度循環（pro-cyclical）            │
+│ (Industrials)    │ (+) 全球製造業 PMI 擴張期          │
+│                  │ (-) 中國需求放緩                    │
+│                  │ (+) 「再工業化」（IRA、CHIPS Act）  │
+├──────────────────┼────────────────────────────────────┤
+│ 醫療健保         │ 防禦性 + 長期成長                   │
+│ (Healthcare)     │ 相對獨立於宏觀週期                  │
+│                  │ 政策風險：藥價監管                  │
+└──────────────────┴────────────────────────────────────┘
+
+【Duration（存續期間）的宏觀意義延伸至股票】
+
+高 Duration 股票（科技、生技）：
+  ・現金流集中在遠期未來
+  ・利率上升 → 遠期折現值大幅下降
+  ・對利率變動最敏感（類長債）
+
+低 Duration 股票（銀行、能源、煙草）：
+  ・現金流近在眼前（高股息、低成長）
+  ・利率上升時相對有韌性
+  ・類短債特性</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">七、信用市場：宏觀風險的敏感探測器</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">信用利差（Credit Spread）與宏觀週期</div>
+            <pre>
+信用利差 = 公司債殖利率 − 同期限無風險利率
+
+【信用利差的分解】
+
+Credit Spread = 違約風險溢酬 + 流動性溢酬 + 不確定性溢酬
+
+【週期性行為】
+
+擴張期（Expansion）：
+  信用利差收窄（風險偏好改善，違約預期低）
+  IG（投資等級）利差：60–80 bps
+  HY（高收益）利差：300–400 bps
+
+衰退前兆 / 信用壓力：
+  信用利差擴大（市場定價違約風險上升）
+  IG 利差：150–200 bps
+  HY 利差：700–1000 bps+
+
+系統性危機（2008, COVID 初期）：
+  HY 利差：1000–2000 bps（流動性凍結）
+
+【信用市場作為領先指標】
+
+信用利差領先股市：
+  HY 利差通常先於股市見頂（信用比股票更早感知壓力）
+  HY 利差見底通常先於股市見底（資本市場回暖信號）
+
+2022 年案例：
+  IG 利差從 90bps 擴至 170bps（升息期間）
+  HY 利差從 300bps 擴至 600bps
+  預告了股市的調整，但因 Fed 快速升息
+  信用事件（違約潮）被推遲而非消除
+
+【MOVE 指數 vs VIX】
+
+MOVE：債券市場的隱含波動率指數
+  衡量利率不確定性（類似債市的 VIX）
+  MOVE 大幅上升 → 利率不確定性高
+  → 信用利差傾向擴大
+  → 股市波動性通常隨後上升
+
+2022-23 年：MOVE 歷史高位，LIBOR-SOFR 過渡加劇</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">八、關鍵宏觀數據日曆：市場如何反應</h2>
+
+          <div class="case-study">
+            <div class="case-study-title">案例分析：「好消息即壞消息」——宏觀政權決定數據解讀方向</div>
+            <p><strong>核心悖論</strong>：同樣一份「就業強勁」的 NFP 數據，在不同宏觀背景下，市場可以截然相反地解讀。這是初學者最常犯的錯誤——以為「數據好 = 股市漲」。</p>
+            <p><strong>情境 A：Fed 升息週期、通膨為主要擔憂</strong>（例：2022 年）<br>就業數據超預期（非農就業大增）<br>→ 市場解讀：Fed 有空間繼續激進升息<br>→ 利率預期上調 → 折現率上升 → 股市下跌<br><strong>「好消息是壞消息（Good news is bad news）」</strong></p>
+            <p><strong>情境 B：Fed 降息週期、衰退為主要擔憂</strong>（例：2009 年末）<br>就業數據超預期<br>→ 市場解讀：衰退尾部風險下降，盈利復甦在望<br>→ 股市上漲<br><strong>「好消息是好消息（Good news is good news）」</strong></p>
+            <p><strong>情境 C：Fed 即將暫停升息、市場期待轉向</strong>（例：2023 年初）<br>就業數據超預期<br>→ 部分市場解讀：Fed 降息延遲<br>→ 部分解讀：就業好 = 軟著陸可能性高<br>→ 市場反應混亂，波動加大<br><strong>「解讀分歧（mixed signal）」——最難交易的環境</strong></p>
+            <p><strong>操作含義</strong>：在交易重要宏觀數據前，投資者需要先問：「在當前宏觀政權下，這份數據通過什麼路徑影響資產價格？折現率效果 vs 盈利效果，哪個更主導？」這比預測數據本身更重要。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">主要宏觀數據與市場敏感性速查表</div>
+            <pre>
+┌──────────────────┬──────────┬───────────────────────────┐
+│ 數據             │ 發布頻率 │ 市場含義                   │
+├──────────────────┼──────────┼───────────────────────────┤
+│ 非農就業（NFP）  │ 月（首週 │ 對貨幣政策預期影響最大     │
+│                  │ 週五）   │ 超預期 → 利率上升預期      │
+│                  │          │ 政權決定方向（見上）       │
+├──────────────────┼──────────┼───────────────────────────┤
+│ CPI / PCE        │ 月       │ 通膨數據：最影響 Fed 決策  │
+│                  │          │ 核心 PCE 是 Fed 首選指標   │
+│                  │          │ 超預期 → 利率預期↑→ 股↓  │
+├──────────────────┼──────────┼───────────────────────────┤
+│ GDP 初估 / 修正  │ 季（滯後）│ 事後指標，市場敏感性較低  │
+│                  │          │ 真正重要的是分類（消費/投資）│
+├──────────────────┼──────────┼───────────────────────────┤
+│ PMI（製造業/     │ 月       │ 最重要的領先指標           │
+│ 服務業）         │ （月底或 │ > 50 擴張；< 50 收縮      │
+│                  │ 月初）   │ 新訂單-庫存差最敏感        │
+├──────────────────┼──────────┼───────────────────────────┤
+│ FOMC 決議 +      │ 每 6–7   │ 市場最高度關注的單一事件   │
+│ 點狀圖 + 記者會  │ 週       │ 措辭的「鷹/鴿」信號       │
+├──────────────────┼──────────┼───────────────────────────┤
+│ Jackson Hole     │ 8 月年會 │ Fed 主席的政策框架演講     │
+│ 演講             │          │ 歷史上多次改變市場方向     │
+├──────────────────┼──────────┼───────────────────────────┤
+│ 企業財報季       │ 季（1/4/ │ EPS 超預期 vs 估值預期     │
+│                  │ 7/10 月）│ 盈利驅動 vs 估值驅動的轉換│
+└──────────────────┴──────────┴───────────────────────────┘</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">九、跨資產相關性：宏觀政權的「指紋」</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">跨資產相關性矩陣（宏觀政權依賴）</div>
+            <pre>
+【金髮政權（低通膨 + 穩定增長，2010-2021）】
+
+資產   股票  長債  黃金  商品  美元
+股票    1    -0.4   0    0.3  -0.3
+長債  -0.4    1    0.3  -0.2   0.4
+黃金    0    0.3    1   0.1  -0.5
+商品   0.3  -0.2   0.1   1   -0.4
+美元  -0.3   0.4  -0.5  -0.4   1
+
+→ 股債負相關：60/40 分散效果最佳
+→ 黃金與美元負相關：美元強則黃金弱
+
+【滯脹政權（高通膨 + 低增長，2022）】
+
+資產   股票  長債  黃金  商品  美元
+股票    1    0.7  -0.1  -0.1   0
+長債   0.7    1   -0.2  -0.3   0.2
+黃金  -0.1  -0.2    1   0.5  -0.6
+商品  -0.1  -0.3   0.5   1   -0.3
+美元    0    0.2  -0.6  -0.3   1
+
+→ 股債正相關：60/40 分散效果崩潰
+→ 商品和黃金分散效果上升（稀缺對沖）
+→ 現金的實際價值（高息貨幣市場）上升
+
+【衰退政權（低通膨 + 低增長，2009 年初）】
+
+→ 長債和黃金表現最佳（避險 + 降息受益）
+→ 現金（短端）在降息後回報下滑
+→ 商品大跌（需求崩潰）
+
+【核心啟示（Dalio 全天候框架的精髓）】
+
+沒有任何單一資產在所有宏觀政權下都表現好
+→ 真正的「全天候」需要跨政權的資產配置
+→ 比「預測政權」更重要的是「在不同政權下都有布局」
+→ 但需考量：不同資產配置本身有成本（volatility drag）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">十、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解一：「股市是經濟的晴雨表」</div>
+            <p><strong>問題所在</strong>：短期內股市與 GDP 的相關性甚低。Samuelson（1966）的名言：「股市預測了過去五次衰退中的九次（The stock market has predicted nine of the last five recessions）」。2020 年美國 GDP 下跌 3.5%，股市全年漲 16%；2022 年 GDP 輕微萎縮兩季（技術性衰退），股市跌 18%。更準確的說法：股市是對「折現後未來企業盈利」的預期定價，而非對當期 GDP 的映射。盈利預期、折現率（利率）、風險偏好（ERP）三者共同決定股價，GDP 只是盈利的眾多影響因素之一。此外，股指成分股的行業構成與一國整體 GDP 結構差異很大（科技在 S&amp;P 500 佔比逾 30%，在美國 GDP 中佔比不到 10%）。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解二：「通膨對股市總是負面的」</div>
+            <p><strong>問題所在</strong>：通膨對股市的影響高度依賴通膨的類型和幅度。需求拉動的溫和通膨（2–4%）通常伴隨盈利增長加速，名目 EPS 上升可以超過估值壓縮的負面效果，股市可以上漲（2021 年上半年）。問題出在高通膨（>5%）時：①折現率上升太快，估值壓縮超過盈利增長；②成本推動通膨（能源、原材料）侵蝕利潤率；③高通膨迫使 Fed 激進升息，引入衰退風險溢酬。Stocks vs Bonds 的歷史研究（Siegel 2014）顯示，股票在「超高通膨」（>6%）環境下的實質回報為負，但在「溫和通膨」（2–4%）環境下仍為正。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解三：「衰退信號出現，就應立即減倉」</div>
+            <p><strong>問題所在</strong>：殖利率曲線倒掛、PMI 跌破 50 等衰退信號是有效的，但時間滯後不確定（6–18 個月甚至更長），且市場「搶先反應」往往早於實際衰退。在信號出現後立即減倉，可能錯過最後一段「過熱行情」（比如 2000 年初互聯網泡沫在倒掛出現後仍漲了一年）。更嚴重的是，衰退結束後的復甦初期市場反彈最猛（往往在 GDP 數據仍為負時），過度保守的投資者錯過最重要的反彈時間窗口（2009 年 3 月、2020 年 4 月）。正確策略是<em>系統性地</em>隨信號調整暴露度，而非全進全出。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">教授示範答題</h2>
+          <div class="key-concept">
+            <div class="key-concept-title">考試題目：「2022 年美股和美債同時大跌（60/40 組合歷史最差表現），如何從宏觀框架解釋？投資者應如何設計能在此類政權下存活的投資組合？」</div>
+            <p><strong>第一層——增長-通膨政權的診斷</strong>：2022 年美國屬於典型「象限②滯脹」：CPI 峰值達 9.1%（40 年新高），同時 GDP 出現兩個季度負增長（技術性衰退）。主導市場的是通膨恐慌，而非增長恐慌——這是關鍵。</p>
+            <p><strong>第二層——股債同跌的機制</strong>：在通膨驅動的宏觀政權下，股債相關性由負轉正。①長債：聯邦基金利率從 0.25% 急升至 4.5%，10 年期殖利率從 1.5% 升至 4.2%；TLT（長債 ETF）全年下跌 31%，創有記錄以來最大年度跌幅。②股票：估值壓縮（P/E 從 23x 壓縮至 16x）是主要驅動，EPS 基本持平，但折現率上升導致整體股市跌 18%。③股債同向下跌的根本原因：Fed 大幅升息同時傷害了長債（票面利率跑輸）和股票（折現率上升），這正是 2000 年之前股債正相關時代的重演。</p>
+            <p><strong>第三層——能在此政權存活的組合設計</strong>：①大宗商品（石油、天然氣、農產品）：2022 年 GSCI 商品指數上漲 26%，是最大贏家；②TIPS（通膨保護債券）：比名目債更抗通膨，但若實質利率同步上升（2022 年確實如此），TIPS 也下跌；③黃金：2022 年表現中性（-0.3%），受實質利率上升拖累；④能源股（$XLE）：2022 年上漲 65%，資源稀缺 + 定價能力；⑤現金/短端（貨幣市場基金）：在利率上升過程中收益率逐步改善，2022 年末已達 4%+，是難得的「無痛港灣」。</p>
+            <p><strong>結論</strong>：2022 年打破了「股債分散就夠了」的長達 20 年的投資信仰。真正的全天候組合需要在四個宏觀政權下都有覆蓋——這意味著包含大宗商品、TIPS、現金等在金髮年代「拖累績效」的資產。代價是：在金髮政權中，全天候組合的表現通常不如純股票組合，這是多元化的必要成本。</p>
+          </div>
+        </section>
+
+        <section class="section exercise-section">
+          <h2 class="section-title">課後練習</h2>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習一</span>
+              <span class="exercise-difficulty difficulty-basic">基礎</span>
+            </div>
+            <p class="exercise-question">某股票目前 P/E = 20x，預期 EPS = $5（股價 $100）。假設：（1）Fed 升息，10 年期殖利率上升 150bps，在「利率壓縮估值」效果下，P/E 收縮至 16x，EPS 不變；（2）同時通膨推高名目銷售額，EPS 從 $5 上升至 $6。計算新股價，並說明哪個效果更主導了股票表現。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>計算</strong>：新股價 = 新 P/E × 新 EPS = 16 × $6 = <strong>$96</strong>（下跌 4%）。</p>
+                <p><strong>分解兩個效果</strong>：<br>・估值壓縮效果：若 EPS 不變，$5 × 16 = $80（下跌 20%）<br>・盈利改善效果：若 P/E 不變，$6 × 20 = $120（上漲 20%）<br>・兩者合計：$96（小幅下跌 4%）</p>
+                <p><strong>主導效果分析</strong>：在此情境中，估值壓縮（−20%）和盈利改善（+20%）幾乎相互抵消，最終股價小跌 4%。這在通膨初期（需求拉動通膨 + 利率溫和上升）時最常見——名目盈利因通膨改善，但估值因利率上升受壓，股市「原地踏步」。若利率上升幅度更大（P/E 壓縮至 14x），估值效果將壓倒盈利改善（$6 × 14 = $84，跌 16%）。這說明「通膨初期可能對股市中性，但若 Fed 強力升息，則變成熊市」——2022 年的美股正是後一種情境。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>計算新股價正確（$96），但未進行效果分解（估值壓縮 vs 盈利改善的各自貢獻），或無法說明為何兩者幾乎相抵。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>計算錯誤（例如用舊 P/E × 新 EPS，或舊 EPS × 新 P/E），或認為升息必然使股市大跌而忽視盈利改善的對沖效果。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確計算新股價</td><td>30%</td></tr>
+                <tr><td>分解估值壓縮 vs 盈利改善的各自貢獻</td><td>40%</td></tr>
+                <tr><td>說明兩者相互抵消的宏觀含義</td><td>30%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習二</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">殖利率曲線倒掛（2年-10年利差為負）被廣泛視為衰退的先行指標。2022年7月至2024年初，美國殖利率曲線持續倒掛超過18個月，但直到2024年美國仍未發生明確衰退。這是否代表殖利率曲線的預測效力已失效？還是有其他解釋？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>殖利率曲線的歷史預測效力</strong>：Estrella &amp; Mishkin（1996）的研究顯示，2-10 年利差倒掛在二戰後每次衰退前均出現，平均領先 12–18 個月，假陽性極少。這是學界接受度最高的衰退先行指標之一。</p>
+                <p><strong>2022–24 年倒掛長達 18 個月未發生衰退的可能解釋</strong>：</p>
+                <p>① <strong>「異常大的財政刺激」的緩衝效果</strong>：2021–22 年的 COVID 財政轉移支付（約 5 兆美元）在私人部門留下大量超額儲蓄（excess savings），消費者延遲消費了數年，抵消了升息的緊縮效果。超額儲蓄到 2024 年才基本耗盡。</p>
+                <p>② <strong>固定利率房貸的「鎖定效應（lock-in effect）」</strong>：多數美國家庭在低利率時期鎖定了 30 年固定利率房貸，升息對現有借款人的月供影響有限（只有新增借款人受衝擊），削弱了利率管道的力道。</p>
+                <p>③ <strong>勞動力市場結構性緊俏</strong>：嬰兒潮退休 + 移民限制 + 大辭職效應使勞動力市場比模型預測更有韌性，工資增長維持消費。</p>
+                <p>④ <strong>AI 投資熱潮</strong>：2023–24 年科技業的 AI 基礎設施投資潮（英偉達、微軟等）對 CAPEX 和就業提供了支撐，是傳統預測模型未捕捉的新需求來源。</p>
+                <p>⑤ <strong>「倒掛」的幅度 vs 持續時間的複雜性</strong>：此次倒掛幅度深（峰值約 -1.1%），但傳導的時滯可能更長，衰退可能是「推遲而非消除」。IMF 和大多數預測機構仍預期 2024–25 年增長放緩風險。</p>
+                <p><strong>結論</strong>：殖利率曲線的預測效力尚未失效，但此次有多個罕見的緩衝因素（財政超額儲蓄、固定利率鎖定效應）拉長了傳導時滯。更好的解讀：殖利率曲線預測的是「壓力積累」而非「精確的衰退時點」。對投資者而言，倒掛是提醒降低風險暴露、提高組合韌性的信號，而非「衝出市場」的緊急指令。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能說明倒掛是衰退先行指標並給出歷史依據，提出 1–2 個緩衝因素（超額儲蓄、固定利率），但分析不夠系統，無法整合多個因素說明「推遲而非消除」的邏輯。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>直接結論「指標失效了」，或完全接受「一定會衰退只是還沒到」而無任何論證，缺乏對本次特殊環境（財政緩衝、固定利率鎖定）的識別。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>說明殖利率曲線的歷史預測機制</td><td>20%</td></tr>
+                <tr><td>識別本次緩衝因素（超額儲蓄、固定利率等）</td><td>40%</td></tr>
+                <tr><td>論證「推遲而非消除」vs「指標失效」的區別</td><td>25%</td></tr>
+                <tr><td>提出對投資組合管理的含義</td><td>15%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習三</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">你是一位全球宏觀對沖基金的投資組合經理。現在是 2024 年初，美國殖利率曲線仍倒掛，通膨從峰值下降但仍高於 2%，就業市場仍然強勁，AI 投資熱潮拉動科技股。請用增長-通膨四象限框架診斷當前宏觀政權，說明你認為最可能的「下一個政權移動方向」，並設計一個反映此宏觀判斷的投資組合（至少五個資產類別，說明各自的邏輯）。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.touchdown('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案（示範框架，不唯一）</div>
+                <p><strong>宏觀政權診斷（2024 年初）</strong>：通膨從 9% 下降至 3–3.5%（仍高於目標，但下行趨勢明確）；GDP 增長 2.5–3%（高於趨勢，就業強勁）。位於象限①（過熱）和象限④（金髮）的邊界——「不完美的金髮（imperfect Goldilocks）」：增長偏強、通膨偏高，Fed 無法快速降息。</p>
+                <p><strong>最可能的政權移動</strong>（需說明理由）：基準情境（50% 概率）→ 緩慢向象限④移動：通膨繼續下降 + 增長維持 + Fed 開始降息（下半年）。風險情境 A（25%）→ 回到象限①（過熱）：AI 投資熱潮拉動需求，通膨反彈，Fed 推遲降息甚至再升息。風險情境 B（25%）→ 滑向象限③（衰退）：超額儲蓄耗盡，消費急降，信用市場壓力出現，衰退延遲到來。</p>
+                <p><strong>基準情境下的投資組合</strong>：</p>
+                <p>① <strong>美國股票（科技 + 金融，各 15%）</strong>：象限④中股票表現最佳。科技受益 AI 主題 + 降息提振估值；金融在曲線去倒掛（降息引發陡峭化）中 NIM 改善。</p>
+                <p>② <strong>中等期限美債 5–7 年（20%）</strong>：降息預期受益，避免長端（若通膨反彈或財政擴張，30 年期風險仍高）。</p>
+                <p>③ <strong>大宗商品 / 能源（10%）</strong>：對沖風險情境 A（通膨反彈）；地緣政治溢價維持；中國刺激政策邊際改善。</p>
+                <p>④ <strong>TIPS（10%）</strong>：通膨尾部風險對沖；若通膨反彈，實質利率 + 名目保護同時生效。</p>
+                <p>⑤ <strong>非美洲股票（歐洲 + 日本，15%）</strong>：美元在降息預期下可能走弱，提供貨幣正向效果；日本企業治理改革（ROE 提升）長期故事；歐洲估值較便宜。</p>
+                <p>⑥ <strong>現金 / 短端（15%）</strong>：當前仍有 4–5% 收益率，保留應對風險情境 B（衰退）的流動性子彈；若衰退到來，用現金逢低布局風險資產。</p>
+                <p>餘下 15% 留作衍生工具對沖（VIX calls、黃金 calls），應對兩個尾部情境。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能正確診斷宏觀政權（金髮邊界），說明基準情境，提出 3–4 個資產類別但邏輯連結不夠清晰（例如只說「應該買股票」但未說為什麼在此政權下股票有利），未考慮尾部風險情境的對沖配置。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>未使用四象限框架，直接列出「看好的股票」，或完全無法連結宏觀判斷與資產選擇的邏輯。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>用四象限框架診斷當前政權（含依據）</td><td>20%</td></tr>
+                <tr><td>說明政權移動的基準 + 尾部情境（含概率）</td><td>20%</td></tr>
+                <tr><td>至少五個資產類別且邏輯清晰（宏觀→資產）</td><td>40%</td></tr>
+                <tr><td>尾部風險對沖設計</td><td>20%</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <nav class="lecture-nav">
+          <a href="m13-financial-cycle.html" class="nav-btn nav-btn-prev">← M13 金融週期與危機</a>
+          <a href="m15-memo.html" class="nav-btn nav-btn-next">M15 總體投資備忘錄 →</a>
+        </nav>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

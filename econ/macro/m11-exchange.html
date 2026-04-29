@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M11 匯率與三難困境 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link active">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M11</span>
+          <span class="topbar-title">匯率、國際收支與三難困境</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 11</div>
+          <h1 class="lecture-hero-title">匯率、國際收支與三難困境</h1>
+          <p class="lecture-hero-subtitle">Exchange Rates, Balance of Payments, and the Impossible Trinity</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：國際總體</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">2022 年美元指數（DXY）飆升 15%，日圓對美元貶值超過 30%，英鎊因「迷你預算」崩跌至歷史新低。匯率波動幾乎同時衝擊進口通膨、企業利潤、主權債務負擔，以及國際資本流動——它是一國宏觀環境中最直接的「對外價格」。然而匯率也是總體學中預測最困難的變數：Meese &amp; Rogoff（1983）的著名研究顯示，隨機漫步（random walk）在短期匯率預測上優於所有結構性模型，這一結果四十年後仍大體成立。本講系統梳理匯率的決定理論、國際收支恆等式、資本帳戶自由化的三難困境（Trilemma），以及匯率如何成為貨幣政策的「第五條傳導管道」。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、匯率的基礎概念與報價慣例</h2>
+          <p>匯率（exchange rate）是兩國貨幣之間的相對價格。理解報價慣例與實質/名目的區分，是避免計算錯誤的前提。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">匯率基礎：名目、實質、有效匯率</div>
+            <pre>
+【名目匯率（Nominal Exchange Rate, e）】
+
+直接報價（Direct Quote）：
+  e = 本國貨幣 / 外國貨幣
+  例：USD/JPY = 150 → 1 美元 = 150 日圓
+  e↑ = 外幣升值（本幣貶值）
+
+間接報價（Indirect Quote）：
+  e = 外國貨幣 / 本國貨幣
+  例：EUR/USD = 1.10 → 1 歐元 = 1.10 美元
+
+【實質匯率（Real Exchange Rate, q）】
+
+q = e × (P* / P)
+
+e  = 名目匯率（本幣/外幣）
+P* = 外國物價水準
+P  = 本國物價水準
+
+q↑ = 實質升值（本國商品相對更貴）
+   → 出口競爭力↓，進口增加，CA 惡化
+
+q 決定貿易競爭力，而非 e 本身
+
+【有效匯率（Effective Exchange Rate, REER / NEER）】
+
+加權平均：以各主要貿易夥伴的貿易佔比為權重
+NEER = 名目有效匯率
+REER = 實質有效匯率（最常用的競爭力指標）
+
+BIS 每月公布 62 個國家的 REER 數據
+美元 DXY 指數：EUR(57.6%) + JPY(13.6%) +
+  GBP(11.9%) + CAD(9.1%) + SEK(4.2%) + CHF(3.6%)</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、購買力平價：長期均衡錨</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：購買力平價（Purchasing Power Parity, PPP）</div>
+            <p><strong>絕對 PPP（Absolute PPP）</strong>：同一商品在不同國家的價格，經匯率換算後應相等（一價法則）。e = P / P*。《經濟學人》的「大麥克指數（Big Mac Index）」是最著名的通俗化版本：若美國大麥克 5 美元，中國人民幣版 25 人民幣，則 PPP 匯率應為 5 USD/CNY，若市場匯率為 7，則人民幣被低估約 29%。</p>
+            <p><strong>相對 PPP（Relative PPP）</strong>：匯率變動率應等於兩國通膨差。若台灣通膨 3%、美國通膨 2%，台幣對美元每年應貶值約 1%。Cassel（1918）提出，是戰後匯率重建的重要參考框架。</p>
+            <p><strong>侷限</strong>：絕對 PPP 在短期內嚴重失效（巴拉薩-薩繆爾遜效應：高生產力國家服務業價格較高，使 PPP 高估其貨幣）。PPP 主要是<em>長期均值回歸</em>的錨，對 5–10 年以上的匯率走向有解釋力，短期無效。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">主要匯率決定理論比較</div>
+            <pre>
+┌──────────────────┬────────────────────┬──────────────────┐
+│ 理論             │ 核心機制           │ 適用時間框架     │
+├──────────────────┼────────────────────┼──────────────────┤
+│ 購買力平價 PPP   │ 商品套利消除價差   │ 長期（5–10 年+） │
+│ (Cassel 1918)    │ 通膨差決定匯率變化 │ 預測力弱，均值錨 │
+├──────────────────┼────────────────────┼──────────────────┤
+│ 利率平價 UIP/CIP │ 資本套利：         │ 短期（即時）     │
+│ (Keynes 1923)    │ 高利率貨幣應貶值   │ CIP 成立，UIP 不│
+│                  │ 以補償利差         │ 完全成立（謎題） │
+├──────────────────┼────────────────────┼──────────────────┤
+│ Dornbusch 超調   │ 貨幣政策衝擊後     │ 短至中期         │
+│ (1976)           │ 匯率先過度升/貶    │ 解釋短期波動性   │
+│                  │ 再緩慢回均衡       │                  │
+├──────────────────┼────────────────────┼──────────────────┤
+│ 資產組合平衡     │ 投資者風險偏好     │ 中期             │
+│ (Portfolio       │ 決定跨境資本流動   │ 解釋 EM 資本外流 │
+│  Balance)        │ → 匯率調整         │                  │
+├──────────────────┼────────────────────┼──────────────────┤
+│ 經常帳模型       │ 貿易餘額決定匯率   │ 長期             │
+│                  │ 出口強 → 本幣升    │ 工業時代更有效   │
+├──────────────────┼────────────────────┼──────────────────┤
+│ 隨機漫步         │ Meese & Rogoff     │ 短期（<1 年）    │
+│ (Random Walk)    │ 1983：所有模型都   │ 仍是最難超越的   │
+│                  │ 輸給隨機漫步       │ 基準             │
+└──────────────────┴────────────────────┴──────────────────┘</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、利率平價：資本流動的套利均衡</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">利率平價條件（Interest Rate Parity）</div>
+            <pre>
+【拋補利率平價 CIP（Covered Interest Parity）】
+
+i_d = i_f + (F - S) / S
+
+i_d = 本國利率
+i_f = 外國利率
+F   = 遠期匯率（Forward Rate）
+S   = 即期匯率（Spot Rate）
+
+CIP 通過遠期合約完全對沖匯率風險
+→ 無風險套利空間應為零
+→ 金融危機前 CIP 基本成立
+→ 2008 後 CIP 出現系統性偏差（美元溢價）
+  原因：美元融資成本上升（監管 + 避險需求）
+
+【無拋補利率平價 UIP（Uncovered Interest Parity）】
+
+i_d = i_f + E(ΔS) / S
+
+E(ΔS) = 預期匯率變化（未對沖風險）
+
+UIP 預測：高利率貨幣應等量貶值
+         → 使兩種資產預期回報相等
+
+【UIP 之謎（Forward Premium Puzzle）】
+
+實際觀察：高利率貨幣往往在短期內繼續升值
+（而非如 UIP 預測的貶值）
+
+解釋：
+1. 風險溢酬（Risk Premium）：外幣持有者要求補償
+2. 「攜帶交易（Carry Trade）」：借低利率貨幣，
+   投資高利率貨幣，短期獲利
+   → 日元 carry trade（借日圓投美元）
+   → 在「解倉（unwind）」時造成劇烈匯率波動
+3. 行為偏誤：過度外推趨勢（momentum）
+
+【Dornbusch 超調模型（1976）】
+
+貨幣供給突然擴張 M↑
+→ 長期：物價 P↑（PPP 均衡：本幣應貶 x%）
+→ 短期：物價黏性，資本立即流出
+→ 匯率貶值超過 PPP 均衡值（超調）
+→ 此後緩慢升值回均衡
+
+→ 解釋為何匯率波動遠大於「基本面」所需</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、國際收支：恆等式與失衡</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">國際收支帳（Balance of Payments, BoP）結構</div>
+            <pre>
+國際收支恆等式：CA + KA + FA = 0
+
+┌─────────────────────────────────────────────┐
+│ 經常帳（Current Account, CA）                │
+├────────────────────┬────────────────────────┤
+│ 商品貿易餘額        │ 出口 − 進口（最大項）  │
+│ (Trade Balance)     │ 美國長期赤字            │
+├────────────────────┼────────────────────────┤
+│ 服務貿易餘額        │ 旅遊、金融、智財        │
+│ (Services)          │ 美國服務貿易順差        │
+├────────────────────┼────────────────────────┤
+│ 初次所得            │ 薪資、投資回報          │
+│ (Primary Income)    │ 美國：投資所得龐大      │
+├────────────────────┼────────────────────────┤
+│ 二次所得            │ 匯款、外援              │
+│ (Secondary Income)  │ 墨西哥 GDP 4% 來自僑匯 │
+└────────────────────┴────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 金融帳（Financial Account, FA）              │
+├────────────────────┬────────────────────────┤
+│ 直接投資 FDI        │ 長期，穩定性高          │
+├────────────────────┼────────────────────────┤
+│ 證券投資            │ 股票、債券，流動性高    │
+│ (Portfolio)         │ 「熱錢（Hot Money）」   │
+├────────────────────┼────────────────────────┤
+│ 其他投資            │ 銀行跨境貸款            │
+├────────────────────┼────────────────────────┤
+│ 官方外匯儲備        │ 央行干預時使用          │
+└────────────────────┴────────────────────────┘
+
+關鍵恆等式：CA = S − I（見 M01）
+CA 赤字 = 國內投資 > 國內儲蓄
+         = 必須借外國資本填補
+         = 金融帳順差（資本流入）
+
+→ 美國 CA 赤字是「過度消費」還是「投資磁吸」？
+   雙赤字假說（Twin Deficits）：
+   財政赤字 → 公共儲蓄↓ → CA 赤字
+   實證：相關但非完全因果（Bernheim 1988）</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、三難困境：開放經濟的制度鐵律</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：蒙代爾-弗萊明三難困境（Mundell-Fleming Trilemma）</div>
+            <p>Mundell（1963）與 Fleming（1962）分別提出，開放小型經濟體面臨三個政策目標，但最多只能同時實現其中兩個：</p>
+            <p>① <strong>固定匯率（Fixed Exchange Rate）</strong>：穩定貿易與外資預期，降低匯率不確定性</p>
+            <p>② <strong>資本自由流動（Free Capital Mobility）</strong>：吸引外資，金融市場開放，融入全球資本市場</p>
+            <p>③ <strong>獨立的貨幣政策（Independent Monetary Policy）</strong>：自主設定利率以應對國內景氣週期</p>
+            <p>三者不可兼得：若①+②，則利率必須跟隨外國（否則套利資本流動破壞固定匯率）；若①+③，則必須限制資本流動；若②+③，則匯率必須自由浮動以吸收衝擊。</p>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">三難困境：各國的制度選擇</div>
+            <pre>
+          ┌──────────────────────────────────┐
+          │         三難困境三角形            │
+          │                                  │
+          │     固定匯率                      │
+          │       /\                          │
+          │      /  \                         │
+          │     /    \                        │
+          │    /      \                       │
+          │   /  只能   \                     │
+          │  /  選兩邊   \                    │
+          │ /____________\                    │
+          │資本自由流動  獨立貨幣政策          │
+          └──────────────────────────────────┘
+
+┌──────────────┬──────────────────────┬──────────┐
+│ 選擇         │ 代表國家/制度        │ 放棄     │
+├──────────────┼──────────────────────┼──────────┤
+│ 固定 + 資本  │ 香港聯繫匯率（1983–）│ 獨立貨幣 │
+│ 自由流動     │ 巴拿馬（美元化）     │ 政策     │
+│              │ 歐元區成員國         │          │
+├──────────────┼──────────────────────┼──────────┤
+│ 固定 + 獨立  │ 中國（2005 年前）    │ 資本     │
+│ 貨幣政策     │ 馬來西亞（1998 危機）│ 自由流動 │
+│              │ 印度（部分資本管制） │          │
+├──────────────┼──────────────────────┼──────────┤
+│ 資本自由 +   │ 美國、歐盟（區域外） │ 固定匯率 │
+│ 獨立貨幣政策 │ 日本、澳洲           │          │
+│              │ 多數已開發市場       │          │
+└──────────────┴──────────────────────┴──────────┘
+
+【香港案例詳解】
+聯繫匯率制度（Currency Board）：
+・1 USD = 7.8 HKD（±0.05 窄幅）
+・HKMA 被迫跟隨美聯儲利率
+・2022 年 Fed 升息 → HIBOR（港元利率）被迫升
+→ 香港房市受壓，但本身無通膨壓力時也無法降息
+・代價：完全喪失貨幣政策自主性
+
+【1997 年亞洲金融危機的三難困境教訓】
+泰國：固定匯率（釘住美元）+ 資本自由流動
+→ 喪失獨立貨幣政策
+→ 1997 年國際投機者攻擊固定匯率
+→ 外匯儲備耗盡，被迫放棄固定匯率
+→ 泰銖暴貶 50%，觸發亞洲危機連鎖反應</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、蒙代爾-弗萊明模型：開放版 IS-LM</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">Mundell-Fleming 模型：政策效果比較</div>
+            <pre>
+IS 曲線（開放）：Y = C + I + G + NX(e)
+LM 曲線：M/P = L(Y, i)
+BP 曲線：CA(Y, e) + KA(i − i*) = 0
+
+【浮動匯率 + 資本自由流動】
+
+財政政策擴張（G↑）：
+  IS 右移 → Y↑, i↑
+  → 利差 → 資本流入 → 本幣升值
+  → NX↓（出口減，進口增）
+  → IS 左移回原點
+  結果：財政政策完全被匯率升值抵消（無效）
+  ✦ Mundell-Fleming 結論：浮動匯率下，
+    財政政策對開放小型經濟體無效
+
+貨幣政策擴張（M↑）：
+  LM 右移 → Y↑, i↓
+  → 利差 → 資本外流 → 本幣貶值
+  → NX↑ → IS 右移
+  結果：產出進一步擴張（乘數效果更大）
+  ✦ 結論：浮動匯率下，貨幣政策高效
+
+【固定匯率 + 資本自由流動】
+
+財政政策擴張（G↑）：
+  IS 右移 → i↑
+  → 資本流入 → 本幣升值壓力
+  → 央行買外幣（維持固定匯率）→ M↑
+  → LM 右移，強化原始效果
+  結果：財政政策高效（貨幣被迫配合）
+  ✦ 結論：固定匯率下，財政政策有效
+
+貨幣政策擴張（M↑）：
+  LM 右移 → i↓
+  → 資本外流 → 本幣貶值壓力
+  → 央行賣外匯（維持固定匯率）→ M↓回原點
+  結果：貨幣政策完全被沖銷（無效）
+  ✦ 結論：固定匯率下，貨幣政策無效</pre>
+          </div>
+
+          <p>Mundell-Fleming 模型是理解開放宏觀最重要的框架。其核心洞見——浮動匯率下財政政策效果被匯率消化——解釋了為何許多小型開放經濟體（如台灣、南韓）依賴貨幣政策而非財政政策作為主要穩定工具。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">七、匯率制度的演進與外匯儲備積累</h2>
+
+          <div class="case-study">
+            <div class="case-study-title">案例分析：中國的匯率制度演進與「美元陷阱」</div>
+            <p><strong>1994 年</strong>：人民幣一次性貶值 33%，統一官方匯率與市場匯率，此後釘住美元（USD/CNY ≈ 8.27）。這一決策在 1997 年亞洲金融危機中成為「穩定錨」，中國因不貶值而獲國際讚譽。</p>
+            <p><strong>2001–2005 年</strong>：中國加入 WTO，出口激增，經常帳順差暴漲。美國施壓要求人民幣升值。2005 年改為「參考一籃子貨幣的管理浮動」，人民幣開始緩慢升值。</p>
+            <p><strong>外匯儲備積累的邏輯</strong>：央行維持人民幣低估的機制是：出口商賺取美元 → 央行買入美元（發行人民幣）→ 外匯儲備累積。高峰期（2014 年），中國外匯儲備達 4 兆美元。這些儲備大量投入美國國債，形成 Bernanke（2005）所稱的「全球儲蓄過剩（global saving glut）」，壓低了全球長期利率。</p>
+            <p><strong>「美元陷阱（Dollar Trap）」</strong>（Setser &amp; Gelpern 用語）：中國持有大量美元資產，一旦大規模拋售，美元貶值 → 中國美元儲備損失 → 中國自身利益受損。這一「相互確保脆弱（mutually assured financial vulnerability）」結構，是中美金融依存關係的核心。</p>
+            <p><strong>2015–16 年資本外流危機</strong>：人民幣貶值預期引發資本外流，中國在 18 個月內消耗約 1 兆美元外匯儲備以維持匯率。最終通過強化資本管制穩住局面，說明三難困境的約束在現實中依然有效。</p>
+            <p><strong>市場含義</strong>：人民幣國際化（SDR 籃子納入、跨境支付 CIPS）是中國逐步放鬆三難困境約束的長期戰略，但進展緩慢——資本帳管制是維持國內貨幣政策自主性的代價。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">八、匯率傳導：通膨與競爭力</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">匯率變動 → 宏觀經濟傳導路徑</div>
+            <div class="transmission-flow">
+              <div class="transmission-step">
+                <div class="step-label">本幣貶值（e↑，外幣升值）</div>
+                <div class="step-desc">觸發因素：央行降息 / 資本外流 / 政治風險 / 貿易赤字</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">① 進口成本傳導（Exchange Rate Pass-Through）</div>
+                <div class="step-desc">進口品價格上漲 → CPI 輸入性通膨<br>傳遞速度：商品 1–3 月，服務較慢<br>傳遞程度：大國（美國）較低，小國較高</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">② 出口競爭力效果</div>
+                <div class="step-desc">本幣貶值 → 出口以外幣計價更便宜<br>Marshall-Lerner 條件：若 |εx| + |εm| &gt; 1，CA 改善<br>J 曲線效應：短期 CA 先惡化，後改善</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">③ 資產負債表效果（Emerging Markets）</div>
+                <div class="step-desc">外幣計價債務（美元債）→ 本幣貶值 → 實際債務負擔↑<br>「原罪（Original Sin）」Eichengreen &amp; Hausmann 1999<br>新興市場主權危機的核心脆弱性</div>
+              </div>
+              <div class="transmission-arrow">↓</div>
+              <div class="transmission-step">
+                <div class="step-label">④ 信心效果</div>
+                <div class="step-desc">過快貶值 → 資本恐慌外流 → 進一步貶值<br>自我實現危機（self-fulfilling crisis）</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">Marshall-Lerner 條件與 J 曲線效應</div>
+            <pre>
+【Marshall-Lerner 條件】
+
+貨幣貶值改善貿易逆差的條件：
+|εx| + |εm| > 1
+
+εx = 出口需求價格彈性（絕對值）
+εm = 進口需求價格彈性（絕對值）
+
+若彈性之和 > 1：貶值 → CA 改善
+若彈性之和 < 1：貶值 → CA 惡化（「貶值無效」）
+
+實證：已開發國家彈性之和通常 > 1（長期）
+      短期彈性較低（合約鎖定、調整滯後）
+
+【J 曲線效應（J-Curve Effect）】
+
+CA
+│                         /
+│                        / （長期改善）
+│                       /
+│─────────────────────/─── 時間
+│            \         /
+│             \       /
+│              \_____/
+│ （短期惡化）
+│
+t0（貶值）
+
+貶值後短期：合約以舊匯率計，進口成本↑
+            → 貿易逆差「惡化」
+貶值後中長期：出口量增、進口量減
+             → 貿易逆差「改善」</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">九、美元的特殊地位與「過度特權」</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">美元霸權的四重特權</div>
+            <pre>
+【美元「過度特權（Exorbitant Privilege）」— Giscard d'Estaing 1965】
+
+① 鑄幣稅（Seigniorage）
+  全球美元鈔票（約 7,000 億美元在境外流通）
+  → 美國以無息票據換取實際商品
+  → 每年數十億美元的隱性收益
+
+② 計價貨幣地位（Invoicing Currency）
+  全球貿易約 40% 以美元計價（貿易佔比僅 15%）
+  → 匯率波動對美國出口商影響最小
+  → 美元貶值對 CA 的影響小於其他國家
+
+③ 儲備貨幣地位（Reserve Currency）
+  全球外匯儲備：美元 59%、歐元 20%
+  日圓 5%、英鎊 5%、人民幣 2.7%
+  → 外國央行持續需求美元資產
+  → 美國可以低成本融資（美債長期低殖利率）
+
+④ 金融危機的「避風港（Safe Haven）」
+  每逢全球危機，資本流入美元（而非外流）
+  2008 年：美元升值（即便危機源於美國）
+  2020 年 3 月：美元急漲，Fed 被迫
+               提供美元流動性（swap lines）
+  → 全球對美元流動性的依賴成為 Fed 的
+    「隱性責任（implicit responsibility）」
+
+【Triffin 兩難（Triffin Dilemma, 1960）】
+
+儲備貨幣國（美國）必須持續輸出美元
+ → 對外赤字（CA 或資本帳）
+ → 長期美元過剩 → 侵蝕信心
+
+Triffin 1960 年預言布列敦森林體系最終崩潰
+→ 1971 年尼克森衝擊印證了這一預言
+
+今日延伸：去美元化（de-dollarization）
+  即便 BRICS 國家聯合，替代儲備貨幣的條件
+  （深厚資本市場、法治、流動性）在短期難複製</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">十、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解一：「本幣升值對國家有利，貶值是失敗」</div>
+            <p><strong>問題所在</strong>：這混淆了「升值」作為結果與政策目標。日本在 1985 年《廣場協議》後日圓快速升值，出口競爭力下降是後續泡沫的成因之一。中國在 2005–2015 年人民幣緩升期間，反而面臨資本流入過多、通膨壓力上升的挑戰。匯率是「價格」，沒有本然的好壞——問題是匯率是否反映基本面，及調整速度是否導致資產負債表衝擊。過快升值傷害出口業和就業；過快貶值引發輸入性通膨和外債危機。出口導向的小型開放經濟體（如台灣、南韓）通常偏好相對弱勢貨幣，但「競爭性貶值（beggar-thy-neighbour）」會引發貿易夥伴報復。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解二：「外匯儲備越多越安全」</div>
+            <p><strong>問題所在</strong>：持有大量外匯儲備有機會成本（將資本投入實體投資可能回報更高），且儲備本身在極端壓力下可能迅速耗盡。1997 年泰國外匯儲備在幾個月內被攻破；2015–16 年中國一年內消耗 1 兆美元儲備仍未完全阻止人民幣貶值預期。Jeanne &amp; Rancière（2011）的模型顯示，最優儲備水平應覆蓋短期外債（Guidotti-Greenspan 法則），而非無限積累。IMF 的「外匯儲備充足度（RAM）」指標更全面：儲備 ÷（0.3×短期外債 + 0.15×其他組合負債 + 0.05×M2 + 0.05×出口），建議保持在 100–150% 之間。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-title">誤解三：「購買力平價可以預測短期匯率」</div>
+            <p><strong>問題所在</strong>：PPP 是長期均值回歸的錨，絕非短期預測工具。人民幣依照 PPP 早在 2010 年代就應升至接近市場匯率水準，歐元在 2022 年按 PPP 應強於美元，但市場匯率長期偏離。短期匯率由資本流動、投機、利差、風險情緒主導，而非物價差異。Rogoff（1996）計算 PPP 的均值回歸半衰期（half-life of deviations）約 3–5 年——這說明偏離 PPP 可以持續相當長的時間，對短期投資決策幾乎無用。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">教授示範答題</h2>
+          <div class="key-concept">
+            <div class="key-concept-title">考試題目：「以三難困境分析 1997 年亞洲金融危機的制度根源，並說明事後各國採用了不同的制度選擇。」</div>
+            <p><strong>第一層——三難困境的制度設定</strong>：危機前泰國、印尼、馬來西亞、南韓均採取「固定（或半固定）匯率 + 資本帳開放」的組合，即三難困境的角①+②。根據三難困境，這意味著它們必須放棄獨立貨幣政策——利率必須維持在能吸引外資的水準，以維繫固定匯率。</p>
+            <p><strong>第二層——脆弱性積累</strong>：資本帳開放允許大量短期外資（特別是銀行跨境貸款）流入，形成期限錯配和貨幣錯配（以美元短期借款，投入本幣長期資產）。一旦匯率固定被懷疑不可持續，投機者有單邊套利機會：借本幣拋售換美元，若貶值成功獲利，若不成功損失有限（Obstfeld 1986 的「第二代貨幣危機模型」）。</p>
+            <p><strong>第三層——危機爆發機制</strong>：1997 年 7 月泰銖在投機攻擊下耗盡外匯儲備，被迫浮動，即時貶值 20%，觸發區域信心危機。三難困境在危機中清晰呈現：維持固定匯率需要更高利率（吸引資本留守），但更高利率壓垮了已高槓桿的國內企業，兩難無解。</p>
+            <p><strong>第四層——事後制度分化</strong>：①馬來西亞（馬哈地）：關閉資本帳（選擇①+③，放棄②），實施資本管制，固定匯率；受 IMF 批評，但復甦快速，事後被部分學者（Stiglitz）評為有效。②泰國、印尼、南韓：接受 IMF 救助條件，資本帳繼續開放，轉向浮動匯率（選擇②+③）；短期痛苦，長期積累大量外匯儲備（「自我保險」）。③此後東亞各國普遍積累巨額外匯儲備，正是為了在下次危機中不再依賴 IMF——三難困境無法消除，但外匯緩衝提升了固定（或管理）匯率的防禦力。</p>
+          </div>
+        </section>
+
+        <section class="section exercise-section">
+          <h2 class="section-title">課後練習</h2>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習一</span>
+              <span class="exercise-difficulty difficulty-basic">基礎</span>
+            </div>
+            <p class="exercise-question">假設日本通膨率為 1%、美國通膨率為 3%，目前即期匯率為 USD/JPY = 150（1 美元 = 150 日圓）。依據相對購買力平價（Relative PPP），一年後美元對日圓的匯率應為多少？若實際市場匯率一年後仍為 150，日圓相對於 PPP 是高估還是低估？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>相對 PPP 計算</strong>：相對 PPP 預測匯率變化率 = 通膨差異 = 3% − 1% = 2%（美國通膨更高，美元應貶值 2%）。</p>
+                <p>一年後 PPP 匯率 = 150 × (1 + 0.03) / (1 + 0.01) ≈ 150 × 1.0198 ≈ <strong>152.97</strong>（1 美元換 152.97 日圓）。</p>
+                <p>注意方向：美國通膨較高 → 美元購買力相對下降 → 美元對日圓應貶值 → 每美元換得更多日圓（USD/JPY 上升）。</p>
+                <p><strong>若市場匯率仍為 150</strong>：PPP 預測應為 152.97，但實際為 150 → 美元比 PPP 便宜（美元低估），日圓比 PPP 貴（日圓高估）。從另一角度：日本通膨低，商品相對便宜，應以更強的日圓反映，但市場匯率沒有升值到應有水準。</p>
+                <p><strong>延伸討論（優秀答案應補充）</strong>：2022–23 年現實中日元大幅貶值（USD/JPY 飆至 155+），與 PPP 的短期偏離來自利差（美國大幅升息，日本維持 YCC 超低利率），說明短期匯率由利差主導，PPP 僅是長期均值錨。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能正確識別通膨差為 2%，但在計算方向上混淆（誤以為美元應升值），或計算出 147.06 而非 152.97（方向反轉）。能說明「PPP 是長期工具，短期失效」。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>計算錯誤，或不知道如何將通膨差代入匯率變動，混淆名目與實質匯率概念。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確計算 PPP 預測匯率（方向 + 數值）</td><td>40%</td></tr>
+                <tr><td>正確判斷高估/低估方向並說明邏輯</td><td>30%</td></tr>
+                <tr><td>說明 PPP 的短期失效原因</td><td>30%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習二</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">台灣是典型的小型開放出口導向經濟體，長期維持資本帳開放與管理浮動匯率。根據三難困境，台灣選擇了哪兩個角？放棄了什麼？這一選擇在 2022 年 Fed 大幅升息環境下帶來了哪些政策壓力？</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>台灣的三難困境選擇</strong>：台灣選擇②資本自由流動 + ③獨立（但有限）貨幣政策，採取「管理浮動匯率（managed float）」，並非完全固定。這意味著放棄了①完全固定匯率，但中央銀行通過干預外匯市場在一定程度上「軟性管理」台幣波動，試圖在三角中尋找中間地帶。</p>
+                <p><strong>2022 年 Fed 升息的壓力</strong>：Fed 大幅升息 → 美元強勢 → 台幣承受貶值壓力。具體壓力機制：</p>
+                <p>①輸入性通膨：台幣貶值 → 能源、原物料進口成本上升 → 輸入性通膨（台灣高度依賴能源進口）。2022 年台幣從約 28 貶至 32 兌美元，約貶 13%。</p>
+                <p>②利率政策兩難：若跟隨 Fed 大幅升息，可減緩台幣貶值，但抑制出口競爭力損失殊途——台積電等科技出口商因台幣貶值反而在台灣的成本下降，出口以美元計算利潤提升。央行面臨「升息保匯率 vs 保護科技業成本優勢」的兩難。</p>
+                <p>③央行干預：台灣央行 2022 年多次入市買入台幣（用外匯儲備），試圖減緩貶值速度，但承認「不抵抗市場大趨勢」。</p>
+                <p><strong>深層矛盾</strong>：台灣選擇②+③意味著台幣匯率成為吸收外部衝擊的緩衝器（浮動匯率的優點），但出口商和央行都不希望匯率過度波動。台灣的實務做法是「有彈性的管理浮動」——接受一定幅度波動，但防止過度失序，是三難困境「中間道路」的典型案例。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能識別台灣選擇②+③，說明「放棄固定匯率」，但對 2022 年升息壓力的分析過於籠統（「台幣貶值、通膨上升」），未分析央行的具體兩難或台積電的成本效應。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>混淆三難困境的三個角，或將台灣描述為「固定匯率國家」，忽略管理浮動的彈性特徵。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>正確識別台灣選擇的兩個角及其代價</td><td>25%</td></tr>
+                <tr><td>分析 2022 年 Fed 升息 → 台幣貶值的機制</td><td>25%</td></tr>
+                <tr><td>說明央行面臨的升息/干預兩難</td><td>25%</td></tr>
+                <tr><td>識別出口商（科技業）的匯率動態</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <span class="exercise-number">練習三</span>
+              <span class="exercise-difficulty difficulty-advanced">進階</span>
+            </div>
+            <p class="exercise-question">Dornbusch（1976）的「超調模型」如何解釋為何匯率在短期內的波動遠超基本面所需？試舉 2022 年英鎊危機（英格蘭銀行的角色）為例，說明貨幣政策與財政政策協調失敗如何放大匯率超調。</p>
+            <button class="toggle-answer" onclick="this.nextElementSibling.classList.toggle('visible')">顯示 / 隱藏答案</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-label">優秀答案</div>
+                <p><strong>Dornbusch 超調機制</strong>：模型核心假設是商品市場調整緩慢（價格黏性），但金融市場即時調整。當衝擊發生（如財政政策突變改變長期均衡匯率），資本市場立即重新定價，匯率過度移動（超調）以補償商品市場無法即時調整的部分。此後，商品市場緩慢調整（通膨/通縮），匯率逐步回到長期均衡。超調解釋了為何匯率日常波動遠超 PPP 基本面的預測幅度。</p>
+                <p><strong>2022 年英鎊危機的應用</strong>：2022 年 9 月 23 日，特拉斯政府（Truss）公布「迷你預算（mini-budget）」：450 億英鎊無資金來源的減稅計畫，包括取消最高所得稅率降低。市場即時反應：</p>
+                <p>①英鎊兌美元單日暴跌 3%，隨後數日跌至 1.03 的歷史低點（市場均衡匯率因財政可持續性疑慮大幅下移）。②英國 30 年期國債殖利率從 3.7% 飆升至 5%（市場要求更高的風險溢酬）。③英格蘭銀行面臨困境：本應升息對抗通膨（10% 以上），但英鎊急跌要求更強力干預，同時養老金基金（LDI 策略）因長債殖利率暴漲面臨追繳保證金危機，BoE 被迫緊急購買長期國債（與升息方向矛盾）。</p>
+                <p><strong>政策協調失敗如何放大超調</strong>：財政政策（擴張性減稅）與貨幣政策（收緊對抗通膨）方向相反，市場解讀為「政策組合不可持續」，觸發信心崩潰。Dornbusch 機制在此放大：長期均衡匯率因財政可持續性疑慮大幅下移，金融市場過度跌至更低點（超調），直至特拉斯辭職、預算撤回，才見底反彈。危機持續 45 天，英鎊最終回升至 1.20 以上，說明超調確實發生。</p>
+                <p><strong>教訓</strong>：財政政策可信度是匯率穩定的前提；「財政主導（fiscal dominance）」迫使貨幣政策被動應對，是已開發國家罕見的貨幣信任危機。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-label">中等答案</div>
+                <p>能解釋超調模型的「黏性價格 + 即時金融調整」機制，並說明英鎊暴跌的基本事實，但未能分析 BoE 面臨的政策兩難（升息 vs 緊急購債矛盾）或具體計算貶值幅度。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-label">薄弱答案</div>
+                <p>混淆超調模型與 PPP，或僅描述「英國政府減稅所以英鎊跌了」而無法聯繫匯率動態的機制。</p>
+              </div>
+              <table class="rubric-table">
+                <tr><th>評分項目</th><th>分數</th></tr>
+                <tr><td>準確解釋 Dornbusch 超調的黏性價格機制</td><td>25%</td></tr>
+                <tr><td>分析英鎊危機的財政衝擊觸發過程</td><td>25%</td></tr>
+                <tr><td>說明 BoE 的政策兩難（升息 vs 緊急購債）</td><td>25%</td></tr>
+                <tr><td>說明政策協調失敗如何放大超調幅度</td><td>25%</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <nav class="lecture-nav">
+          <a href="m10-monetary.html" class="nav-btn nav-btn-prev">← M10 貨幣政策與央行</a>
+          <a href="m12-inequality.html" class="nav-btn nav-btn-next">M12 不平等與分配 →</a>
+        </nav>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>
