@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M05 通膨的多重面貌 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link active">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M05</span>
+          <span class="topbar-title">通膨的多重面貌</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 05</div>
+          <h1 class="lecture-hero-title">通膨的多重面貌</h1>
+          <p class="lecture-hero-subtitle">The Many Faces of Inflation</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：物價動態</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：中階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">通膨（Inflation）是貨幣購買力的持續下降，表現為物價水準的普遍上升。但「物價上升」可以有截然不同的成因——需求拉動（demand-pull）、成本推升（cost-push）、結構性、預期自我實現，甚至是「利潤驅動」——每種成因的政策回應邏輯各不相同。本講系統梳理通膨的類型、測量工具（CPI vs. PCE vs. GDP 平減指數）、傳遞機制，以及通膨如何影響不同資產類別、借款人與貸款人的財富分配。理解通膨的「正確問診」是制定有效政策的前提。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、通膨的測量：CPI、PCE 與 GDP 平減指數的差異</h2>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>指標</th>
+                  <th>全名</th>
+                  <th>編製機構</th>
+                  <th>涵蓋範圍</th>
+                  <th>主要用途</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CPI</td>
+                  <td>消費者物價指數<br>Consumer Price Index</td>
+                  <td>勞工統計局（BLS）</td>
+                  <td>城市消費者購物籃<br>（固定籃）</td>
+                  <td>薪資調整、社會福利COLA、最廣泛引用</td>
+                </tr>
+                <tr>
+                  <td>核心 CPI</td>
+                  <td>Core CPI</td>
+                  <td>BLS</td>
+                  <td>CPI 排除食品與能源</td>
+                  <td>剔除波動性，觀察底層通膨趨勢</td>
+                </tr>
+                <tr>
+                  <td>PCE</td>
+                  <td>個人消費支出平減指數<br>PCE Deflator</td>
+                  <td>商務部（BEA）</td>
+                  <td>更廣（含醫保等）<br>鏈式加權（可替代效果）</td>
+                  <td>Fed 的官方通膨目標指標</td>
+                </tr>
+                <tr>
+                  <td>GDP 平減指數</td>
+                  <td>GDP Deflator</td>
+                  <td>BEA</td>
+                  <td>所有 GDP 組成（C+I+G+NX）</td>
+                  <td>名目→實質 GDP 轉換</td>
+                </tr>
+                <tr>
+                  <td>PPI</td>
+                  <td>生產者物價指數<br>Producer Price Index</td>
+                  <td>BLS</td>
+                  <td>製造業出廠價格</td>
+                  <td>通膨領先指標（成本傳遞）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="subsection-title">1.1 為何 PCE 低於 CPI？</h3>
+          <p>Fed 使用 PCE 而非 CPI 作為目標指標，主要因 PCE 更精確。兩者系統性差距（PCE 通常低 0.3–0.5 個百分點）的來源：</p>
+          <ul>
+            <li><strong>籃子構成差異</strong>：CPI 使用固定籃子（Laspeyres 指數），無法捕捉消費者在相對價格變化時的商品替代行為（替代偏差，substitution bias）。PCE 使用鏈式加權（chain-weighted），可反映消費者替代效應，因此通膨估計更低。</li>
+            <li><strong>醫療保健的處理</strong>：CPI 衡量消費者<em>自付</em>醫療費用；PCE 涵蓋保險公司、政府醫保代付的部分——後者佔比更大且價格上漲較慢，使 PCE 醫療分項低於 CPI。</li>
+            <li><strong>住房服務的計算</strong>：CPI 的住房分項（Owners' Equivalent Rent，OER）權重約 24%；PCE 對住房的權重較低，使 PCE 對房租價格衝擊的敏感度更低。</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、通膨的成因類型</h2>
+
+          <h3 class="subsection-title">2.1 需求拉動型通膨（Demand-Pull Inflation）</h3>
+          <div class="blackboard">
+            <div class="blackboard-title">■ 需求拉動 vs. 成本推升：AD-AS 框架</div>
+            <pre>
+需求拉動（Demand-Pull）：
+  AD（總需求）右移 → 物價上升 + 產出上升
+
+  原因：財政刺激、貨幣寬鬆、出口需求激增、財富效應
+
+  政策回應：緊縮需求（升息、減支）
+  → 代價：降低產出（但通膨是「好問題」的結果）
+
+     P ▲
+       │            AS
+       │      ╱
+  P₂  │─────╱─────── ← AD₂
+  P₁  │────╱──── ← AD₁
+       │   ╱
+       └──────────── Y ▶
+           Y₁ Y₂
+
+成本推升（Cost-Push）：
+  AS（總供給）左移 → 物價上升 + 產出下降
+
+  原因：石油價格衝擊、薪資急升、供應鏈中斷、進口品價格上漲
+
+  政策回應：兩難
+  → 緊縮需求：降通膨但惡化產出↓（失業更高）
+  → 擴張需求：支撐產出但加劇通膨↑
+  → 這是停滯性通膨（Stagflation）的政策困境
+
+     P ▲
+       │    AS₂ AS₁
+       │   ╱   ╱
+  P₂  │──╱─────── ← AD
+  P₁  │─╱──
+       └──────────── Y ▶
+          Y₂ Y₁
+</pre>
+          </div>
+
+          <h3 class="subsection-title">2.2 結構性通膨（Structural Inflation）</h3>
+          <p>結構性通膨源於經濟結構的長期失衡，而非短期供需波動。典型案例：發展中國家農業部門生產力提升緩慢（食品佔消費籃比重高），但工業部門薪資跟隨生產力提升——農業薪資也被拉高，但生產力未跟上，導致食品成本上升推動通膨。巴拉薩-薩繆爾森效應（Balassa-Samuelson Effect）也屬此類：快速增長的新興市場，其不可貿易服務部門（如理髮、餐廳）價格相對發達國家偏高，因勞動市場均衡薪資被可貿易工業部門拉高。</p>
+
+          <h3 class="subsection-title">2.3 通膨預期的自我實現（Expectations-Driven Inflation）</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>通膨預期的錨定（Anchoring Inflation Expectations）</strong>：若工人預期未來通膨 5%，他們會要求薪資上漲 5% 以維持實質購買力；企業預期通膨 5%，會提前漲價 5%。這種「通膨 → 薪資漲 → 成本漲 → 通膨」的螺旋，使通膨具有慣性（persistence）——即使初始衝擊消退，高通膨也可能因預期而自我延續。央行的核心任務之一是「錨定通膨預期（anchor inflation expectations）」——讓公眾相信未來通膨將回歸 2% 目標，從而預防通膨螺旋的形成。
+          </div>
+
+          <h3 class="subsection-title">2.4 利潤驅動通膨（Profit-Led Inflation / "Greedflation"）</h3>
+          <p>2021–2023 年的通膨辯論中，一個新興但有爭議的解釋是「利潤驅動通膨」：部分研究（Isabella Weber、BIS）發現，企業在供應鏈衝擊提供「掩護」下，趁機大幅擴大利潤率，超過了成本上升的幅度。美國企業利潤率在 2021–2022 年達到歷史高位，與此同時消費者抱怨企業「哄抬物價（price gouging）」。然而，批評者（Blanchard 等）指出，此論點的因果識別困難——利潤率上升可能反映市場集中度提升的長期趨勢，也可能是需求強勁的暫時結果，並非通膨的獨立成因。學界對此仍無定論。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、通膨的分配效應：誰輸誰贏</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 通膨的財富重分配效應</div>
+            <pre>
+1. 借款人 vs. 貸款人
+   意外通膨 → 實質債務縮水 → 借款人受益，貸款人受損
+
+   美國歷史：二戰後 1946–1951 年，通膨削減了政府
+   龐大戰爭債務的實質負擔（「通膨稅」的歷史先例）
+
+   2021–2022 年：房貸持有人（固定利率）受益明顯
+   → 名目房價上漲 + 實質債務縮水 = 雙重財富效應
+
+2. 固定所得者 vs. 可調整所得者
+   固定養老金、固定薪資合約持有者 → 實質收入下降
+   有工會談判能力的勞工、自雇者可調整 → 較佳保護
+   → 通膨是「向固定所得者徵稅」
+
+3. 資產持有者 vs. 無資產者
+   實物資產（房地產、股票、商品）通常跑贏通膨
+   現金、長期固定利率債券 → 實質購買力侵蝕最嚴重
+   → 通膨通常惡化財富不平等（窮人持現金多，富人持資產多）
+
+   例外：1970s 停滯性通膨期間，股票表現不佳
+   （因通膨伴隨利率飆升 + 盈利受壓）
+
+4. 進口商 vs. 出口商（在開放經濟）
+   通膨→匯率貶值（若他國通膨較低）→
+   進口商（成本上升）受損，出口商（價格競爭力上升）受益
+
+5. 政府 vs. 債券持有人
+   通膨侵蝕政府名目負債的實質價值 → 隱性「通膨稅」
+   → 這是政府在財政困難時「暗中違約」的方式之一
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、通縮與通縮陷阱（Deflation Trap）</h2>
+          <p>通縮（Deflation，物價水準持續下降）直覺上似乎有利（購買力上升），但在總體層面可能引發嚴重危機。</p>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 費雪債務-通縮螺旋（Fisher Debt-Deflation Spiral）</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">初始衝擊<br>物價下跌</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">實質債務<br>增加</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">借款人<br>削減支出</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">總需求<br>下降</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">物價<br>進一步跌</div>
+            </div>
+          </div>
+
+          <p>日本 1990 年代後的「失落十年」是通縮陷阱的現代最重要案例：資產泡沫破裂後，物價長期停滯甚至輕微下降，消費者將消費決策推遲（「等明天更便宜」），企業投資意願低落，名目利率降至零仍無法刺激借貸（因為預期通縮使實質利率仍為正）。這解釋了為何 2010 年代 Fed、ECB 的通膨目標定在 2% 而非 0%——保持適度正通膨率是對「跌入通縮陷阱」的緩衝。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>惡性通膨（Hyperinflation）的解剖：津巴布韋（2007–2009）</strong>
+            <p>津巴布韋在 2007–2009 年間經歷了人類歷史上最嚴重的惡性通膨之一：2008 年 11 月的月通膨率估計達到 796 億%，100 兆面值的鈔票幾乎在印出的當天就毫無價值。成因：①政治驅動的土地改革摧毀農業生產力（農業佔 GDP 大幅萎縮）；②政府為彌補收入缺口、支付軍隊薪資而大量印鈔；③財政-貨幣惡性循環（通膨侵蝕稅收實質價值 → 政府收入再減少 → 更多印鈔）——這被稱為「坦茲效應（Tanzi Effect）」或「奧利佛-坦茲效應（Olivera-Tanzi Effect）」。最終解決方案：2009 年放棄本國貨幣，改以美元、南非蘭德等外幣作為法定貨幣（美元化）——這消除了印鈔的能力，也消除了惡性通膨的根源。惡性通膨幾乎無例外地起源於財政危機（政府無法借款，被迫印鈔），而非單純的貨幣政策失誤。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、通膨與資產市場：投資人的通膨教科書</h2>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>資產類別</th>
+                  <th>溫和通膨（2–4%）</th>
+                  <th>高通膨（4–8%）</th>
+                  <th>惡性通膨（&gt;10%）</th>
+                  <th>通縮</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>股票（一般）</td>
+                  <td>正面（盈利名目成長）</td>
+                  <td>混合（估值壓縮 vs. 盈利）</td>
+                  <td>負面（成本失控）</td>
+                  <td>負面（需求萎縮）</td>
+                </tr>
+                <tr>
+                  <td>黃金</td>
+                  <td>中性</td>
+                  <td>正面（避險）</td>
+                  <td>正面（強烈）</td>
+                  <td>中性偏正（避險）</td>
+                </tr>
+                <tr>
+                  <td>房地產</td>
+                  <td>正面</td>
+                  <td>正面（實物資產）</td>
+                  <td>混合（若利率飆升 → 負面）</td>
+                  <td>強烈負面</td>
+                </tr>
+                <tr>
+                  <td>固定利率長債</td>
+                  <td>中性至負面</td>
+                  <td>強烈負面</td>
+                  <td>災難性（實質價值歸零）</td>
+                  <td>正面（實質收益上升）</td>
+                </tr>
+                <tr>
+                  <td>浮動利率債（TIPS）</td>
+                  <td>正面（跟上通膨）</td>
+                  <td>正面</td>
+                  <td>正面</td>
+                  <td>負面</td>
+                </tr>
+                <tr>
+                  <td>現金</td>
+                  <td>負面（購買力蝕損）</td>
+                  <td>強烈負面</td>
+                  <td>災難性</td>
+                  <td>正面（升值）</td>
+                </tr>
+                <tr>
+                  <td>大宗商品</td>
+                  <td>正面</td>
+                  <td>強烈正面</td>
+                  <td>正面</td>
+                  <td>負面（需求崩潰）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p><strong>通膨保護債券（TIPS, Treasury Inflation-Protected Securities）：</strong>TIPS 的本金依 CPI 調整——通膨上升時，本金增加，利息支付也相應增加。TIPS 與名目國債的殖利率差距稱為「盈虧平衡通膨率（Breakeven Inflation Rate）」，是市場對未來通膨預期的即時測量工具，被央行與分析師廣泛引用。</p>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">六、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「通膨越低越好，0% 通膨是最理想的。」</strong>
+            <p>現代央行將 2% 而非 0% 設定為通膨目標，有其理由：①測量偏差：CPI 因替代效應等因素傾向高估真實通膨 0.5–1%，因此 2% 的目標實際上接近真實的 0–1%；②貨幣政策空間：保持正通膨率使名目利率有「下降空間」，在景氣衰退時可以降息。若通膨率極低，名目利率也極低，遭遇衰退時降息空間受限（零利率下限問題）；③勞動市場彈性：實質薪資調整需要「名目薪資的彈性」；但名目薪資向下剛性（workers resist nominal wage cuts）——適度通膨允許實質薪資在名目薪資不下降的情況下調整。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「核心通膨（剔除食品能源）比整體通膨更不重要，因為食品能源才是一般人真正感受到的。」</strong>
+            <p>核心通膨的政策意義不在於否定食品能源的重要性，而在於識別<em>持續性（persistence）</em>通膨壓力。能源和食品價格波動性高（受颶風、地緣政治、季節因素影響），若央行每次能源漲價都緊縮政策，會造成不必要的景氣波動。核心通膨反映的是「去除雜訊後的底層物價趨勢」——更能代表未來 12–24 個月的通膨預測。這是政策工具的視野問題：貨幣政策有 12–18 個月的滯後效應，因此應盯住「未來的通膨」，而非「已發生的能源衝擊」。當然，若能源價格衝擊持續太久而影響通膨預期，核心通膨也會被拉高，此時政策確實需要回應。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「通膨是富人稅，因為通膨損害了有錢人的購買力。」</strong>
+            <p>通膨對財富分配的影響取決於財富的形式。持有大量現金或固定利率債券者（部分退休人士、低收入群體常以現金儲蓄）在通膨中購買力受損最大。而富裕群體通常持有實物資產（股票、不動產、商品）——這些資產通常跑贏通膨，甚至因通膨溢價而受益。因此，意外通膨更接近於「窮人稅（poor people's tax）」，而非「富人稅」。這也是低通膨管理在分配正義層面的重要性——維持價格穩定對社會中最脆弱的群體保護最大。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">七、教授標準答案</h2>
+          <p class="section-lead">試題：「1973 年石油危機引發的停滯性通膨（Stagflation），與 2021–2022 年的通膨有何相似之處與根本差異？從通膨成因的分類框架分析。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、相似之處：
+   ① 均包含供給衝擊成分
+      1973：OPEC 石油禁運 → 能源成本飆升（AS 左移）
+      2021–22：供應鏈中斷 + 俄烏能源衝擊（AS 左移）
+
+   ② 均出現「核心通膨向服務業擴散」
+      供給衝擊引發的能源/食品通膨，透過薪資機制
+      擴散至服務業（惡化通膨廣度）
+
+   ③ 均引發央行升息回應（代價：需求萎縮、失業上升）
+
+二、根本差異：
+
+   1973 停滯性通膨：
+   • 供給衝擊 + 通膨預期已長期偏高（1960s 財政擴張的遺留）
+   • 薪資-通膨螺旋更明顯（工會力量強大，薪資自動調整）
+   • 實質 GDP 顯著收縮（真正的 Stagflation）
+   • Volcker 最終以「衰退換通膨控制」解決
+
+   2021–22 通膨：
+   • 供給衝擊 + 需求超額刺激（財政轉移）雙側驅動
+   • 通膨預期相對仍錨定（不像 1973 年已長期失錨）
+   • 勞動市場緊俏但薪資-通膨螺旋不明顯（學界爭議）
+   • 2022–23 升息 → 通膨回落但未引發深度衰退
+     （「軟著陸？」——這是最重大的當代總體辯論之一）
+
+三、政策含義差異：
+   1973：通膨預期已失錨 → 需要「擊碎通膨預期」的激進升息
+   2021：通膨預期仍相對錨定 → 更快更急的升息
+       足以在不引發衰退的情況下達成目標
+       （但這仍是事後解讀，非事前必然）
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>計算與分析題：</strong>某國今年的 CPI 為 118（基期=100）。①計算今年的通膨率。②若某工人去年薪資為 50,000 元，今年名目薪資上漲 5%，計算其實質薪資變化。③若 10 年期政府公債的名目殖利率為 6%，且市場預期未來通膨為 4%，計算實質殖利率，並說明其對投資決策的含義。④10 年前以名目利率 3% 借出 100 萬元房貸（固定利率），但實際通膨率為 5%，誰是贏家，誰是輸家？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>通膨率</strong>：需要去年 CPI，假設去年 CPI = 112，則通膨率 = (118−112)/112 × 100% = <strong>5.36%</strong>（若題目假設上年 CPI = 110，則 (118−110)/110 = 7.27%）。②<strong>實質薪資變化</strong>：名目薪資 = 50,000 × 1.05 = 52,500 元；實質薪資 = 52,500 / 1.0536 ≈ 49,833 元 → 實質薪資<strong>下降約 0.33%</strong>（名目漲幅低於通膨）。③<strong>實質殖利率</strong> = 名目殖利率 − 通膨預期 = 6% − 4% = <strong>2%</strong>（費雪方程式）。含義：若企業投資的資本邊際效率高於 2%，投資值得；若低於 2%，借款投資不划算。對儲蓄者而言，2% 的實質回報是放棄當期消費的最低補償。④<strong>贏家/輸家</strong>：貸款人（銀行）出借時名目利率 3%，但實際通膨 5% → 實質利率 = 3% − 5% = −2%（負實質利率）→ 銀行的真實回報為負，<strong>借款人（房屋買家）是贏家</strong>：以低實質成本獲得資金，且房屋名目價值（通常）跟隨通膨上升。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>①③計算正確，②實質薪資計算有誤（直接相減而非調整購買力），④分析方向正確但未引用費雪方程式。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>混淆名目與實質的概念，無法正確計算實質薪資或實質利率。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>①通膨率計算</td><td>20 分</td></tr>
+                  <tr><td>②實質薪資計算與解釋</td><td>25 分</td></tr>
+                  <tr><td>③實質殖利率（費雪方程式）及投資含義</td><td>30 分</td></tr>
+                  <tr><td>④借貸雙方實質收益分析</td><td>25 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>政策診斷題：</strong>某國 CPI 為 7%，其中能源佔 3 個百分點，食品佔 2 個百分點，核心服務業（含房租）佔 2 個百分點。失業率為 3.5%（低於自然失業率的 4%）。你認為此國通膨的主要成因是什麼類型？作為央行行長，你會採取什麼政策回應，力度如何？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>成因診斷</strong>：複合成因——能源 3pp 可能是成本推升（供給衝擊）；食品 2pp 部分是成本推升（能源傳導）；但核心服務業 2pp 且失業率低於自然率（勞動市場過熱）顯示<em>需求拉動成分</em>也存在。「勞動市場過熱」（unemployment below NAIRU）是判斷需求側通膨的關鍵信號。<strong>政策回應</strong>：此時的政策難點在於供給衝擊（能源）與需求過熱並存：①純供給衝擊：升息會「殺需求以壓通膨」，代價是失業上升，且對能源供給端毫無影響；②但核心通膨（服務業 2pp）+ 勞動市場過熱顯示需求確實過強，適度升息有正當性。建議回應：<strong>適度升息（非激進）</strong>，目標是使勞動市場軟化至接近自然失業率，抑制薪資-通膨螺旋形成的風險，但避免過度緊縮引發不必要的衰退。同時應密切監控通膨預期指標——若盈虧平衡通膨率（TIPS breakeven）維持在目標附近，說明預期仍錨定，無需過激升息；若預期開始失錨，需加快升息步伐。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能識別複合成因，但在「升息力度」的判斷上缺乏供給衝擊 vs. 需求過熱的結構分析，且未討論通膨預期作為政策調整的信號。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>看到 7% 通膨就主張「大力升息」，未對通膨結構進行診斷，也未考慮不同成因下政策有效性的差異。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>正確診斷複合成因（供給+需求）</td><td>30 分</td></tr>
+                  <tr><td>勞動市場過熱作為需求側信號的識別</td><td>20 分</td></tr>
+                  <tr><td>政策回應力度有理論依據（非激進升息）</td><td>30 分</td></tr>
+                  <tr><td>通膨預期監控的政策含義</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>比較制度題：</strong>比較以下三個群體在「意外高通膨（通膨從 2% 突然升至 8%，持續三年）」中的受益/受損情形，並說明通膨的分配影響如何可能加劇社會不平等：①退休後持有大量固定收益養老金的長者；②三年前以 3% 固定利率按揭購屋的年輕家庭；③中小企業主（以短期銀行貸款（浮動利率）融資）。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>退休長者（固定收益養老金）：受損</strong>。固定名目養老金的實質購買力以每年 6%（8%−2%）的超額通膨速度侵蝕；三年後購買力約剩 83%（(1/1.06)³）。若養老金有 COLA（生活費用自動調整）機制且以 CPI 為基準，受損程度可部分緩解。重點：固定名目所得者是通膨的最大受害者。②<strong>年輕購屋家庭（3% 固定利率房貸）：受益</strong>。實質利率 = 3% − 8% = −5%（強烈負實質利率），相當於銀行每年給借款人 5% 的補貼；同時房屋名目價值通常隨通膨上升。雙重受益：實質債務縮水 + 資產名目增值。這說明通膨是「實物資產負債的財富轉移機制」，從貸款人（銀行、養老金持有者）向借款人（房屋買家）轉移。③<strong>中小企業主（浮動利率）：受損</strong>。浮動利率隨通膨上升而重設（銀行會調高利率以補償通膨和升息），借貸成本上升；若產品定價能力弱（競爭激烈），無法將成本轉嫁，利潤空間受壓。但若能快速提價且持有實物存貨（商品在通膨中升值），則有部分對沖。<strong>不平等加劇機制</strong>：通膨將財富從固定名目所得的退休者（較依賴固定收益的低中產）、現金持有者，向實物資產持有者（通常更富裕）轉移。自有住房的年輕家庭因固定利率房貸而受益，但租房者（通常更弱勢）面臨房租上漲，完全暴露在通膨衝擊中。結果：通膨加劇「有房 vs. 無房」的財富分化。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能正確判斷三個群體的受益/受損方向，但對每個群體的具體機制分析偏淺，對通膨→不平等的加劇機制未能系統性論述。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「通膨不好，大家都受損」，未能識別固定利率借款人（受益）vs. 固定所得者（受損）的方向差異。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>三個群體受益/受損方向各 15 分</td><td>45 分</td></tr>
+                  <tr><td>每個群體的具體機制解釋（各 10 分）</td><td>30 分</td></tr>
+                  <tr><td>通膨→不平等加劇的系統性分析</td><td>25 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m04-money.html" class="lecture-nav-btn">← M04 貨幣、銀行與信用</a>
+          <a href="m06-unemployment.html" class="lecture-nav-btn">M06 失業與勞動市場 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

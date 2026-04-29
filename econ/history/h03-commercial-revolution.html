@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H03 商業革命、殖民、奴隸制與公司制度 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H03 商業革命、殖民、奴隸制與公司制度</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <header class="article-header">
+          <div class="article-part">第一部：世界經濟史 · Part I: World Economic History</div>
+          <div class="article-num">H03</div>
+          <h1 class="article-title">商業革命、殖民、奴隸制與公司制度</h1>
+          <p class="article-subtitle">Commercial Revolution, Colonialism, Slavery &amp; the Joint-Stock Company — 全球第一次資本積累的真實代價</p>
+          <div class="article-meta">
+            <span class="article-meta-item">閱讀時間約 22 分鐘</span>
+            <span class="article-meta-item">·</span>
+            <span class="article-meta-item">練習題 3 題</span>
+            <span class="article-meta-item">·</span>
+            <span class="article-meta-item">涵蓋時期：1400 — 1800 CE</span>
+          </div>
+        </header>
+
+        <nav class="toc">
+          <div class="toc-label">本講內容</div>
+          <ol class="toc-list">
+            <li class="toc-item"><a href="#intro"><span class="toc-num">01</span>開場：第一次全球化的黑暗起點</a></li>
+            <li class="toc-item"><a href="#commercial-revolution"><span class="toc-num">02</span>商業革命的金融創新</a></li>
+            <li class="toc-item"><a href="#silver"><span class="toc-num">03</span>白銀、美洲與全球貨幣體系的誕生</a></li>
+            <li class="toc-item"><a href="#transmission"><span class="toc-num">04</span>傳導機制：白銀流動如何重塑全球經濟</a></li>
+            <li class="toc-item"><a href="#slavery"><span class="toc-num">05</span>奴隸制與三角貿易：資本積累的道德代價</a></li>
+            <li class="toc-item"><a href="#company"><span class="toc-num">06</span>股份公司制度：人類最重要的制度創新之一</a></li>
+            <li class="toc-item"><a href="#voc"><span class="toc-num">07</span>案例：荷蘭東印度公司（VOC）</a></li>
+            <li class="toc-item"><a href="#colonialism"><span class="toc-num">08</span>殖民主義的長期經濟後果</a></li>
+            <li class="toc-item"><a href="#markets"><span class="toc-num">09</span>市場含義：商業革命奠定的資產格局</a></li>
+            <li class="toc-item"><a href="#misconceptions"><span class="toc-num">10</span>常見誤解</a></li>
+            <li class="toc-item"><a href="#exercises"><span class="toc-num">11</span>練習題與評分標準</a></li>
+          </ol>
+        </nav>
+
+        <!-- 01 -->
+        <h2 id="intro" class="section-anchor">01 開場：第一次全球化的黑暗起點</h2>
+
+        <p>
+          1492 年，哥倫布抵達美洲。1498 年，達伽馬繞過好望角抵達印度。這兩個事件在短短六年內，從根本上改變了世界經濟的地理結構。從此，人類歷史上第一次出現了真正意義上的全球貿易網絡——但它的建立，以數百萬人的死亡和奴役為代價。
+        </p>
+        <p>
+          這一講聚焦於 1400–1800 年的「商業革命」（Commercial Revolution）時代：歐洲如何透過金融創新、殖民掠奪、奴隸貿易和公司制度的發明，完成了工業革命前的第一次大規模資本積累。理解這個過程，是理解今天全球經濟不平等的起點，也是理解現代金融和公司制度的歷史根源。
+        </p>
+
+        <!-- 02 -->
+        <h2 id="commercial-revolution" class="section-anchor">02 商業革命的金融創新</h2>
+
+        <p>
+          「商業革命」（Commercial Revolution，約 1000–1600 CE）指的是中世紀晚期至近代初期，歐洲商業活動的質的飛躍。這一飛躍的核心不是技術，而是<strong>金融制度的創新</strong>。
+        </p>
+
+        <h3>複式簿記（Double-Entry Bookkeeping）</h3>
+        <p>
+          1494 年，義大利數學家盧卡·帕喬利（Luca Pacioli）系統化記錄了複式簿記方法，但這套方法在義大利商業城市（熱那亞、威尼斯、佛羅倫斯）已使用了兩個世紀。複式簿記的核心是：每筆交易同時記錄借方和貸方，使得損益、資產和負債能夠被精確追蹤。這使得大規模商業組織的會計控制成為可能，是現代企業管理的基礎。
+        </p>
+
+        <h3>匯票（Bills of Exchange）與信用體系</h3>
+        <p>
+          中世紀商人面臨的一大問題是：跨城市運輸大量金幣極度危險（被搶）。匯票的發明解決了這個問題：A 城的商人向銀行家支付本地貨幣，獲得一張「匯票」，到 B 城後憑票兌換——等同於今天的匯款。這個系統進一步演化為信用創造：銀行家發現，同時持有的匯票可以互相抵消，不需要實物金銀的轉移，商業信用就此誕生。
+        </p>
+
+        <h3>保險（Marine Insurance）</h3>
+        <p>
+          遠洋貿易面臨巨大的沉船風險。14 世紀的熱那亞和威尼斯發展出海上保險：多個投資者共同分擔特定航程的風險，每人只承擔一小部分。這是風險分散（risk pooling）概念的早期實踐，也是現代保險和金融衍生品的遠祖。
+        </p>
+
+        <div class="blackboard">
+          <div class="blackboard-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
+            核心概念 · Core Concept
+          </div>
+          <h3>商業革命的制度遺產</h3>
+          <p>商業革命留給工業革命的，不是財富本身，而是<strong>處理財富所需的制度工具</strong>：</p>
+          <ul>
+            <li>複式簿記 → 現代會計與公司治理</li>
+            <li>匯票 → 現代銀行信用體系</li>
+            <li>海上保險 → 現代保險與風險管理</li>
+            <li>股份公司 → 現代資本市場</li>
+            <li>期貨合約（阿姆斯特丹穀物期貨，17 世紀）→ 現代衍生品市場</li>
+          </ul>
+          <p>這些制度創新在金融史上的重要性，不亞於蒸汽機在技術史上的地位。</p>
+        </div>
+
+        <!-- 03 -->
+        <h2 id="silver" class="section-anchor">03 白銀、美洲與全球貨幣體系的誕生</h2>
+
+        <p>
+          1545 年，西班牙在今日玻利維亞的波托西（Potosí）發現了人類歷史上最大的銀礦。隨後，墨西哥薩卡特卡斯（Zacatecas）也發現了大型銀礦。這兩個發現，加上汞齊法（amalgamation process）的技術突破，使白銀的生產成本大幅下降，產量爆炸性增長。
+        </p>
+        <p>
+          估計顯示，從 1500 年到 1800 年，美洲共向全球輸出了約 <strong>15 萬噸白銀</strong>，佔同期全球白銀產量的 80% 以上。這是一個前所未有的貨幣衝擊，其影響波及整個歐亞大陸。
+        </p>
+        <p>
+          白銀最終流向哪裡？當時全球需求最強的地方是中國。明清兩代的中國堅持「一條鞭法」，要求以白銀繳納稅款，使白銀成為中國的準法定貨幣。西班牙人從美洲獲得白銀，歐洲人用白銀購買中國的絲綢、瓷器、茶葉，白銀就這樣大規模流入中國——估計 16–18 世紀期間，全球約三分之一的美洲白銀最終沉澱在中國。
+        </p>
+
+        <!-- 04 Transmission -->
+        <h2 id="transmission" class="section-anchor">04 傳導機制：白銀流動如何重塑全球經濟</h2>
+
+        <div class="transmission">
+          <div class="transmission-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            傳導機制圖 · Transmission Mechanism
+          </div>
+          <div class="transmission-title">美洲白銀的全球傳導路徑（1550–1750）</div>
+          <div class="t-chain">
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>美洲白銀大規模開採（Supply Shock）</strong>
+                <span>波托西、薩卡特卡斯銀礦爆發性產出，全球白銀供給暴增</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>歐洲「價格革命」（Price Revolution）</strong>
+                <span>1520–1640 年，西班牙和歐洲物價上漲約 3–6 倍（貨幣數量論：貨幣↑ → 物價↑）</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>財富分配效應（Distributional Effects）</strong>
+                <span>擁有固定收入（地租、薪資）的貴族和農民實際購買力下降；商人和早期資本家受益</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>白銀東流至中國（Capital Flow）</strong>
+                <span>中國對白銀的強勁需求吸引白銀持續流入，換回絲綢、瓷器；中國貨幣供給擴大</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>17 世紀白銀流量萎縮的危機</strong>
+                <span>礦山枯竭、西班牙管制、中國稅收緊縮 → 白銀稀缺 → 中國通縮 → 社會動蕩（部分歷史學家認為這是明朝滅亡的經濟因素之一）</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-branch">
+            <div class="t-branch-label">歷史意義</div>
+            <p>這是人類歷史上第一個真正意義上的全球貨幣傳導機制：一個大陸的供給衝擊，透過貿易流，影響到半個地球外的貨幣條件和政治穩定性。</p>
+          </div>
+        </div>
+
+        <!-- 05 Slavery -->
+        <h2 id="slavery" class="section-anchor">05 奴隸制與三角貿易：資本積累的道德代價</h2>
+
+        <p>
+          任何關於商業革命的討論，如果迴避奴隸制，都是不完整的。跨大西洋奴隸貿易（Transatlantic Slave Trade）是近代早期全球經濟的核心組成部分，而不是一個邊緣現象。
+        </p>
+
+        <h3>三角貿易的結構</h3>
+        <p>
+          三角貿易的三個頂點是：歐洲、西非和美洲。歐洲商人攜帶紡織品、金屬製品和武器前往西非，換取奴隸；奴隸被運往美洲（中間航程，Middle Passage）作為種植園勞動力；種植園生產的糖、棉花、菸草被運回歐洲出售。這個循環的每一段都有利潤，整體是一個自我強化的體系。
+        </p>
+
+        <p>
+          從 15 世紀到 19 世紀，估計有 <strong>1,050 萬至 1,260 萬名非洲人被強制運往美洲</strong>（根據跨大西洋奴隸貿易資料庫 SlaveVoyages 的最新估計），其中約 180 萬人在中間航程中死亡。此外，還有大量非洲人在戰爭俘虜和運輸過程中喪生——考慮到這些，因奴隸貿易而直接死亡的人數，估計遠超過 200 萬。
+        </p>
+
+        <h3>奴隸制對資本積累的貢獻</h3>
+        <p>
+          奴隸制對英國工業革命前的資本積累有多大貢獻，是學術上有爭議的問題。歷史學家埃里克·威廉斯（Eric Williams）在 1944 年的著作《資本主義與奴隸制》（<em>Capitalism and Slavery</em>）中提出，英國廢除奴隸制不是人道主義的勝利，而是因為當時奴隸制度的利潤率已經下降，工業資本主義不再需要它。這個論點在學界引發了長達數十年的辯論，結論是複雜的：奴隸制的直接利潤對英國 GDP 的直接貢獻可能不是主要的，但它對糖、棉花等關鍵工業原料的供給，以及對大西洋市場的形成，有不可忽視的作用。
+        </p>
+
+        <div class="case-study">
+          <div class="cs-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+            歷史案例 · Case Study
+          </div>
+          <div class="cs-title">糖業經濟學：加勒比海種植園與英國工業化</div>
+          <p>
+            18 世紀，英屬加勒比海殖民地（特別是牙買加、巴貝多）的糖業是英帝國最有利可圖的產業。糖是當時的「奢侈品」，歐洲上層階級的需求旺盛，利潤率極高。
+          </p>
+          <p>
+            糖業的運作完全依賴奴隸勞動：甘蔗的種植、收割和加工極度體力密集，且在熱帶氣候下死亡率極高——每年需要從非洲「補充」大量奴隸才能維持生產規模。這使得奴隸貿易與糖業在資本上深度綁定。
+          </p>
+          <p>
+            更重要的是，糖業的利潤流回英國，成為金融資本的重要來源。部分歷史學家估計，英屬西印度群島的種植園財富，直接或間接支持了英國銀行業和早期製造業的資本形成。廢奴運動（1807 年英國廢除奴隸貿易，1833 年廢除奴隸制）通過後，英國政府向奴隸主（而非奴隸）支付了約 2,000 萬英鎊的賠償——相當於當時英國 GDP 的約 40%，且這筆債務直到 2015 年才還清。
+          </p>
+        </div>
+
+        <!-- 06 Joint-Stock Company -->
+        <h2 id="company" class="section-anchor">06 股份公司制度：人類最重要的制度創新之一</h2>
+
+        <p>
+          遠洋貿易面臨一個根本性的問題：風險極大，單一投資者無法承擔。一艘船的裝備費用巨大，沉沒的概率不低，且資金需要鎖定數年才能收回。傳統的合夥企業（partnership）解決不了這個問題——因為合夥人承擔無限連帶責任，一次失敗可能讓所有人破產。
+        </p>
+        <p>
+          <strong>股份公司（joint-stock company）</strong>的發明解決了這個問題，其核心在於兩個制度創新：
+        </p>
+        <ul>
+          <li><strong>有限責任（Limited Liability）</strong>：投資者損失的上限是其投入的股本，個人其餘財富不受波及。這大幅降低了投資的個人風險，使更多人願意參與高風險投資。</li>
+          <li><strong>股份可轉讓（Transferable Shares）</strong>：投資者可以在二級市場出售其持有的股份，不必等待公司清算。這解決了「流動性」問題，讓長期項目也能吸引需要保留流動性的投資者。</li>
+        </ul>
+        <p>
+          這兩個特性的結合，使得資本可以聚合到前所未有的規模，用於個人或傳統合夥企業完全無法承擔的大型長期項目。<strong>股份公司是現代資本主義的核心組織形式</strong>，理解它的歷史起源，是理解現代金融市場的前提。
+        </p>
+
+        <!-- 07 VOC -->
+        <h2 id="voc" class="section-anchor">07 案例：荷蘭東印度公司（VOC）</h2>
+
+        <div class="case-study">
+          <div class="cs-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+            歷史案例 · Case Study
+          </div>
+          <div class="cs-title">荷蘭東印度公司（VOC, 1602–1799）：第一家現代股份公司</div>
+          <p>
+            荷蘭東印度公司（Vereenigde Oost-Indische Compagnie, VOC）成立於 1602 年，是世界上第一家向公眾公開發行股票的股份公司，也是第一家在阿姆斯特丹證券交易所上市的公司。
+          </p>
+          <p>
+            VOC 的規模在當時是驚人的：它擁有自己的軍隊、艦隊、監獄甚至鑄幣權——這是由荷蘭政府授予的壟斷特許狀（charter monopoly）。在鼎盛時期（17 世紀中葉），VOC 控制了歐洲與亞洲香料貿易的大部分。以通貨膨脹調整後的現代幣值估算，VOC 在 1637 年達到的市值約為 7.9 萬億美元，遠超今天任何一家公司的市值。
+          </p>
+          <p>
+            VOC 的成功揭示了股份公司制度的強大：它能夠持續數十年地籌集資本、管理風險、協調複雜的全球供應鏈——這些都是個人商人或傳統合夥企業無法做到的。然而，VOC 也揭示了這個制度的黑暗面：在印尼群島（特別是班達群島的肉豆蔻壟斷），VOC 施行的是系統性的強制勞動和暴力統治，帶有濃厚的殖民掠奪性質。
+          </p>
+          <p>
+            VOC 最終在 1799 年解散，原因是管理腐敗、競爭加劇（英國東印度公司的崛起）和負債累累。但它所奠定的股份公司制度，此後成為全球資本主義的組織基礎。
+          </p>
+        </div>
+
+        <!-- 08 Colonialism -->
+        <h2 id="colonialism" class="section-anchor">08 殖民主義的長期經濟後果</h2>
+
+        <p>
+          殖民主義對今天全球經濟不平等的影響，是嚴肅的學術研究領域，結論比道德直覺更加複雜。
+        </p>
+
+        <h3>制度管道（Institutional Channel）</h3>
+        <p>
+          阿齊默魯、強森和羅賓森（Acemoglu, Johnson &amp; Robinson，2001）的著名研究《殖民地起源的比較發展》（"The Colonial Origins of Comparative Development"）發現：殖民者在「定居型殖民地」（settler colonies，如美國、澳洲、加拿大——殖民者大量定居的地方）建立了較好的財產保護制度；在「汲取型殖民地」（extractive colonies，如非洲、加勒比海——殖民者數量少、只為榨取資源的地方）建立的是汲取性制度。這些制度差異至今仍影響著這些地區的發展軌跡。
+        </p>
+
+        <h3>去工業化（Deindustrialisation）</h3>
+        <p>
+          英國對印度的殖民統治（特別是 1757–1947 年）的一個重要後果，是印度紡織業的系統性摧毀：英國強制印度保持對英國製品的開放市場，同時限制印度出口，使印度的手工業失去了競爭基礎。這是「比較優勢」被政治強制扭曲的歷史案例。
+        </p>
+
+        <h3>殖民地邊界的制度遺留</h3>
+        <p>
+          19 世紀末「瓜分非洲」（Scramble for Africa）時，歐洲強權在柏林會議（1884–1885）上劃定的非洲國家邊界，完全無視非洲既有的族群、語言和政治單位。研究顯示，跨越這些人為邊界的族群分割，至今仍與非洲的內部衝突和較差的發展表現有統計顯著的相關。
+        </p>
+
+        <!-- 09 Markets -->
+        <h2 id="markets" class="section-anchor">09 市場含義：商業革命奠定的資產格局</h2>
+
+        <div class="market-grid">
+          <div class="market-item">
+            <div class="market-type">香料 / 殖民商品</div>
+            <div class="market-impact up">壟斷利潤極高</div>
+            <div class="market-note">歐洲對香料的需求巨大，壟斷控制（VOC）帶來超額利潤。現代商品市場的前身。</div>
+          </div>
+          <div class="market-item">
+            <div class="market-type">股票（Equity）</div>
+            <div class="market-impact up">新資產類別誕生</div>
+            <div class="market-note">阿姆斯特丹交易所（1602年）是世界第一個股票交易所。股票作為資產類別從這裡開始。</div>
+          </div>
+          <div class="market-item">
+            <div class="market-type">主權債券</div>
+            <div class="market-impact up">荷蘭模式擴散</div>
+            <div class="market-note">荷蘭的低利率政府債券（約3-4%）是當時全球最安全的資產，確立了「主權信用」的概念。</div>
+          </div>
+          <div class="market-item">
+            <div class="market-type">土地（殖民地）</div>
+            <div class="market-impact mixed">強制取得，高回報</div>
+            <div class="market-note">殖民地土地通過強制（消滅原住民、圈地）取得，種植園資產是當時最重要的「海外投資」。</div>
+          </div>
+        </div>
+
+        <!-- 10 Misconceptions -->
+        <h2 id="misconceptions" class="section-anchor">10 常見誤解</h2>
+
+        <div class="misconception">
+          <div class="mc-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            常見誤解 · Common Misconceptions
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「殖民地財富是工業革命的主要資金來源」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>這個問題在學界有爭議。殖民地財富對英國資本積累有貢獻，但現代歷史研究（如 Mokyr, 2009）認為，工業革命的主要驅動力是<strong>技術創新和制度環境</strong>，而非殖民財富本身。殖民地更重要的貢獻是原料供給（棉花）和市場（出口需求），而非直接的資本注入。</p></div>
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「股份公司一開始就是以效率為導向的私人企業」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>早期的股份公司（VOC、英國東印度公司）都是由政府授予壟斷特許狀的「半國家」組織，可以行使外交、軍事乃至司法權力。它們更接近今天的「國家企業」（state-owned enterprise），而非私人競爭企業。「純粹私人競爭性股份公司」是工業革命後才普及的概念。</p></div>
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「美洲白銀使西班牙變得富有且強大」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>諷刺的是，白銀的湧入在長期削弱了西班牙的工業競爭力（荷蘭病的早期版本：資源財富推高實質匯率，使製造業喪失競爭力）。西班牙大量白銀流向歐洲其他地區購買商品，本土製造業未能發展。17 世紀西班牙的相對衰落，部分歸因於此。</p></div>
+          </div>
+        </div>
+
+        <!-- Exercises -->
+        <section id="exercises" class="exercise-section section-anchor">
+          <div class="exercise-section-label">練習題 · Exercises</div>
+          <h2 class="exercise-section-title">思考與應用</h2>
+          <p class="exercise-section-sub">以下三題請先獨立作答，展開後對照標準答案與評分標準。</p>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目一 · Question 1</div>
+              <div class="exercise-question">解釋股份公司制度（joint-stock company）的兩個核心創新（有限責任和股份可轉讓），並說明在沒有這兩個制度的情況下，為什麼遠洋貿易的規模會受到根本性的限制？</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p>優秀答案需：① 準確定義有限責任（損失上限 = 投入股本）並說明其如何降低個人風險、擴大投資人群；② 準確定義股份可轉讓並說明其如何解決長期項目的流動性問題（投資者不必等待航程結束才能退出）；③ 反向說明：在無限責任合夥制下，一次沉船可能使合夥人破產 → 高風險投資只限於極少數富人且規模極小；缺乏轉讓機制則長期鎖定讓大多數投資者望而卻步；④ 連結至現代：有限責任公司（LLC）和上市公司（publicly listed company）是同一邏輯的延伸。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能解釋有限責任和可轉讓性的概念，但未能清楚說明「沒有這些制度，限制在哪裡」（即未做反向分析）。答案停在正面描述，缺乏對「制度如何解決問題」的深度分析。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>混淆有限責任和保險，或認為可轉讓性只是「買賣股票」的方便，沒有理解其解決流動性問題的根本作用。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">準確定義並說明有限責任的作用機制</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">準確定義並說明股份可轉讓的流動性解決作用</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">反向說明缺乏這些制度的具體限制</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">連結至現代公司制度</span><span class="rubric-pts">10 分</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目二 · Question 2</div>
+              <div class="exercise-question">美洲白銀的大量湧入導致了 16–17 世紀歐洲的「價格革命」，但同時西班牙本身卻沒有從中持久獲益，反而在 17 世紀逐漸衰落。請用貨幣數量論和「荷蘭病」（Dutch Disease）的概念解釋這個悖論。</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p><strong>貨幣數量論的應用：</strong>MV = PQ。白銀大量流入 → M（貨幣供給）↑ → 若 V 和 Q 不變 → P（物價）↑。這是「價格革命」的機制。西班牙物價上漲速度快於貿易夥伴，使西班牙商品相對昂貴，出口競爭力下降。</p>
+                <p><strong>荷蘭病機制：</strong>大量外匯（白銀）流入 → 實質匯率升值（西班牙商品對外國人更貴）→ 傳統製造業（紡織、農業）競爭力下降 → 工業未能發展；同時白銀收入使政府能夠直接購買外國商品而非發展本國生產。長期結果：西班牙成為資源出口國，工業空洞化。</p>
+                <p><strong>政治因素：</strong>西班牙哈布斯堡王朝將大部分白銀用於戰爭（宗教戰爭、與荷蘭的獨立戰爭），而非生產性投資，加速了財政崩潰。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能說明白銀引發通膨，也知道西班牙衰落，但未能清楚連接「通膨 → 競爭力下降 → 工業化缺失」的邏輯，或未能正確應用荷蘭病概念（混淆為「白銀花完了就窮了」的簡單說法）。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>認為西班牙衰落是因為「花太多錢打仗」而忽略了結構性的匯率和競爭力效應，或無法應用貨幣數量論。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">正確應用貨幣數量論說明價格革命</span><span class="rubric-pts">35 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">正確說明荷蘭病的實質匯率和去工業化機制</span><span class="rubric-pts">40 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">補充政治因素的作用</span><span class="rubric-pts">25 分</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目三 · Question 3（進階）</div>
+              <div class="exercise-question">阿齊默魯等人的研究顯示，殖民地的制度遺留（汲取型 vs. 定居型）至今仍影響這些國家的發展水準。但也有批評者認為，用歷史的殖民制度解釋當代貧困，會成為政府推卸責任的藉口。請評估這個爭論：殖民地歷史對當代發展的影響有多真實，政策制定者應如何看待這個因果關係？</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p><strong>殖民遺留的真實性：</strong>計量經濟學證據（殖民者死亡率作為工具變數）表明，制度路徑依賴是真實的，且統計效果在控制地理、文化等因素後仍然顯著。這不是意識形態立場，而是有嚴謹因果識別的實證發現。</p>
+                <p><strong>批評者的有效點：</strong>① 結構決定論（structuralism）的危險：即便殖民遺留有影響，它不是決定性的——南韓、台灣、波蘭等同樣有殖民或威權歷史，但通過制度改革實現了發展；② 代理問題：把當代失敗歸因於殖民歷史，可能使當代政治精英免於問責；③ 時間衰減：殖民統治結束超過 70 年，「殖民遺留」到何時還有解釋力？</p>
+                <p><strong>政策含義的平衡：</strong>歷史因果不等於政策無能為力。正確的態度是：承認歷史制度路徑的影響（有助於診斷問題的根源），同時聚焦於今天可以改變的制度因素（法治、產權、代議制度）。因果理解不是藉口，是治療方案的基礎。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能說明殖民遺留有影響，也知道這不是藉口，但缺乏對實證研究方法的理解，也未能提出具體的政策平衡框架。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>完全接受一方立場：要嘛「殖民主義是一切問題的根源」，要嘛「歷史已過，當代政府應自己負責」——沒有條件分析。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">說明殖民遺留的實證基礎（不只是道德主張）</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">公平呈現批評者的有效論點</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">提出有建設性的政策立場（因果理解 ≠ 決定論）</span><span class="rubric-pts">40 分</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <nav class="post-nav">
+          <a href="h02-state-capacity.html" class="post-nav-link prev">
+            <div class="post-nav-direction">← 上一講</div>
+            <div class="post-nav-title">H02 國家能力、稅收、戰爭與市場形成</div>
+          </a>
+          <a href="h04-industrial-revolution.html" class="post-nav-link next">
+            <div class="post-nav-direction">下一講 →</div>
+            <div class="post-nav-title">H04 工業革命：能源、技術、金融與城市</div>
+          </a>
+        </nav>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

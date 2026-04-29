@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M08 IS-LM、AD-AS 與菲利浦曲線 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link active">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M08</span>
+          <span class="topbar-title">IS-LM、AD-AS 與菲利浦曲線</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 08</div>
+          <h1 class="lecture-hero-title">IS-LM、AD-AS 與菲利浦曲線</h1>
+          <p class="lecture-hero-subtitle">IS-LM, AD-AS, and the Phillips Curve Framework</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：核心模型</span>
+            <span>⏱ 建議研讀：100 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">IS-LM 模型（Hicks 1937）是整合「商品市場（IS）」與「貨幣市場（LM）」的短期均衡框架，是標準凱因斯主義總體分析的基石。AD-AS（總需求-總供給）框架則將 IS-LM 延伸至物價維度，呈現景氣循環的全貌。菲利浦曲線連接短期的產出缺口與物價動態。本講將這三個框架統一在一起，形成能夠分析財政政策、貨幣政策、供給衝擊與預期衝擊的完整工具箱——並誠實指出每個框架的侷限性。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、IS 曲線：商品市場均衡</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ IS 曲線的推導</div>
+            <pre>
+商品市場均衡條件：
+  Y = C + I + G + NX
+
+  其中 I = I(r)，為利率 r 的遞減函數
+  （r↑ → I↓，因為借貸成本上升抑制投資）
+
+IS 曲線：在所有 (Y, r) 組合中，使商品市場均衡的軌跡
+
+IS 曲線向下傾斜（negative slope）：
+  r↑ → I↓ → 總支出↓ → 均衡 Y↓
+  → 高利率對應低產出
+
+IS 曲線的移動（Shifts）：
+  右移（IS→右）：Y 在任意 r 下增加
+    原因：G↑（財政擴張）、C↑（信心改善/財富效應）、
+          NX↑（出口增加）、I↑（技術樂觀）
+  左移（IS→左）：Y 在任意 r 下減少
+    原因：G↓（財政緊縮）、稅收↑、出口↓
+
+斜率決定因素：
+  投資對利率越敏感（彈性越大）→ IS 越平坦
+  （利率小幅變化 → 投資/產出大幅改變）
+
+「流動性陷阱（Liquidity Trap）」區：
+  當 r→0，IS 進入幾乎垂直的區域
+  （利率無法再降，投資不再對利率敏感）
+  → 貨幣政策失效，財政政策成為主角
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、LM 曲線：貨幣市場均衡</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ LM 曲線的推導</div>
+            <pre>
+貨幣市場均衡條件：
+  M/P = L(Y, r)
+
+  M/P  = 實質貨幣供給（央行控制）
+  L    = 貨幣需求函數
+  L 隨 Y 增加（交易需求：所得高→需要更多貨幣交易）
+  L 隨 r 減少（機會成本：r高→持有債券而非現金）
+
+LM 曲線：在所有 (Y, r) 組合中，使貨幣市場均衡的軌跡
+
+LM 曲線向上傾斜（positive slope）：
+  Y↑ → 交易需求增加 → 貨幣需求↑ → r↑（貨幣供給固定）
+  → 高產出對應高利率
+
+LM 曲線的移動（Shifts）：
+  右移（LM→右）：r 在任意 Y 下下降
+    原因：M↑（貨幣擴張）、P↓（通縮使實質貨幣供給增加）
+  左移（LM→左）：r 在任意 Y 下上升
+    原因：M↓（貨幣緊縮）、P↑（通膨使實質貨幣供給減少）
+
+IS-LM 均衡：
+  兩條曲線的交點（Y*, r*）
+  同時滿足商品市場與貨幣市場均衡
+
+現代修正：
+  大多數現代央行不再控制貨幣供給（M），
+  而是直接設定利率（r）作為政策工具
+  → LM 曲線等價於一條水平線（r = 政策利率）
+  → IS-MP（Interest rate rule）框架取代傳統 IS-LM
+  但 IS-LM 的直覺框架仍為教學標準
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、IS-LM 的政策分析</h2>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>政策衝擊</th>
+                  <th>IS/LM 移動</th>
+                  <th>均衡 Y 變化</th>
+                  <th>均衡 r 變化</th>
+                  <th>關鍵限制</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>財政擴張（G↑）</td>
+                  <td>IS 右移</td>
+                  <td>↑</td>
+                  <td>↑</td>
+                  <td>利率上升排擠私人投資（crowding out）</td>
+                </tr>
+                <tr>
+                  <td>貨幣擴張（M↑）</td>
+                  <td>LM 右移</td>
+                  <td>↑</td>
+                  <td>↓</td>
+                  <td>流動性陷阱時無效</td>
+                </tr>
+                <tr>
+                  <td>財政緊縮（G↓）</td>
+                  <td>IS 左移</td>
+                  <td>↓</td>
+                  <td>↓</td>
+                  <td>若已在低利率，無法以貨幣補償</td>
+                </tr>
+                <tr>
+                  <td>貨幣緊縮（M↓）</td>
+                  <td>LM 左移</td>
+                  <td>↓</td>
+                  <td>↑</td>
+                  <td>對抗通膨但壓縮產出</td>
+                </tr>
+                <tr>
+                  <td>信心崩潰（動物本能↓）</td>
+                  <td>IS 大幅左移</td>
+                  <td>↓↓</td>
+                  <td>↓</td>
+                  <td>若 r 已在 0，降息無法補救 IS 萎縮</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>排擠效應（Crowding Out）</strong>：財政擴張（IS 右移）在 LM 曲線不動的條件下，使均衡利率上升。利率上升抑制私人投資，部分「抵消」了財政擴張的總需求效果。排擠效應的強弱取決於：①LM 曲線的斜率（LM 越陡 → 排擠效應越大）；②IS 曲線的斜率（IS 越平坦 → 投資對利率越敏感 → 排擠效應越大）。在流動性陷阱（LM 水平）中，財政擴張不引發利率上升，因此無排擠效應——財政政策效果最大。
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、AD-AS 框架：引入物價維度</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ AD-AS 模型結構</div>
+            <pre>
+AD 曲線（Aggregate Demand，總需求曲線）：
+  來源：IS-LM 模型的延伸（引入物價 P）
+
+  AD 向下傾斜：
+    P↑ → 實質貨幣供給（M/P）↓ → LM 左移 → r↑ → Y↓
+    （同一條 AD 曲線上：物價越高，均衡產出越低）
+
+  AD 曲線右移：IS 右移或 LM 右移的任何因素
+
+AS 曲線（Aggregate Supply，總供給曲線）：
+  短期 AS（SRAS）：向上傾斜
+    物價↑ → 企業願意生產更多（名目成本短期固定）
+    原因：名目工資黏性（薪資合約事先議定）
+    位置取決於：預期物價 Pᵉ 與供給衝擊
+
+  長期 AS（LRAS）：垂直線（Y = Y*，潛在產出）
+    長期：所有合約重新議定，實質工資彈性充分
+    物價不影響實質產出
+    位置由：技術（A）、資本存量（K）、勞動（L）決定
+
+短期均衡：AD 與 SRAS 交點（Y_eq, P_eq）
+長期均衡：AD 與 LRAS 交點（Y*, P*）
+
+衝擊類型與 AD-AS 分析：
+┌─────────────────┬──────────────┬──────────┬──────────┐
+│ 衝擊             │ 移動方向     │ Y 效果   │ P 效果   │
+├─────────────────┼──────────────┼──────────┼──────────┤
+│ 財政/貨幣擴張   │ AD 右移      │ ↑        │ ↑        │
+│ 需求衝擊（正）  │              │          │          │
+├─────────────────┼──────────────┼──────────┼──────────┤
+│ 財政/貨幣緊縮   │ AD 左移      │ ↓        │ ↓        │
+│ 需求衝擊（負）  │              │          │          │
+├─────────────────┼──────────────┼──────────┼──────────┤
+│ 技術進步/勞動   │ LRAS+SRAS    │ ↑        │ ↓        │
+│ 增加（正供給）  │ 右移         │          │          │
+├─────────────────┼──────────────┼──────────┼──────────┤
+│ 石油漲價/       │ SRAS 左移    │ ↓        │ ↑        │
+│ 負供給衝擊      │              │（停滯性通膨！）    │
+└─────────────────┴──────────────┴──────────┴──────────┘
+</pre>
+          </div>
+
+          <h3 class="subsection-title">4.1 短期到長期的調整機制</h3>
+          <p>當短期均衡 Y_eq ≠ 潛在產出 Y* 時，經濟會透過以下機制自我調整（若不加政策干預）：</p>
+          <p><strong>正缺口（Y_eq > Y*，過熱）：</strong>勞動市場緊俏 → 薪資上漲壓力 → SRAS 左移（生產成本上升）→ 物價上升、產出下降 → 逐漸回歸 Y*。這一「自動調整」的速度，在凱因斯主義者（慢，需要政策介入）與古典主義者（快，市場自我出清）之間存在根本分歧。</p>
+          <p><strong>負缺口（Y_eq &lt; Y*，衰退）：</strong>勞動市場疲軟 → 薪資下降壓力 → SRAS 右移（生產成本下降）→ 物價下降、產出回升 → 逐漸回歸 Y*。凱因斯的核心論點：名目工資的向下剛性使這一調整「太慢」，甚至可能陷入通縮螺旋，因此需要政府主動刺激需求。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、三個框架的整合：IS-LM + AD-AS + 菲利浦曲線</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 完整框架整合</div>
+            <pre>
+短期框架（Short Run）：
+  IS-LM 決定 (Y, r) → Y 與 Y* 比較決定產出缺口
+  AD-AS 決定 (Y, P) → 物價如何反應需求/供給衝擊
+
+動態聯結（Dynamic Link）：
+  產出缺口 (Y − Y*) → 菲利浦曲線 → 通膨動態
+  通膨 π → 影響 SRAS 位置（預期通膨上升 → SRAS 左移）
+           → 影響 LM 位置（通膨 → 實質貨幣供給↓ → LM 左移）
+
+長期框架（Long Run）：
+  LRAS 垂直（供給面決定 Y*）
+  菲利浦曲線垂直（LRPC at u = u*）
+  貨幣政策決定通膨，不影響長期產出
+
+完整故事：財政擴張的短期 + 長期效應
+  短期：IS→ 右移 → Y↑、r↑、通膨↑（沿 SRAS 上移）
+  中期：通膨預期上升 → SRAS 左移 → Y 回落、P 繼續↑
+  長期：Y 回到 Y*，但物價水準永久性更高
+        （政策只改變物價水準，不改變長期產出）
+
+現代 DSGE 模型的角色：
+  Dynamic Stochastic General Equilibrium（DSGE）
+  是上述框架的微觀基礎版本：
+  • 家庭最大化跨期效用
+  • 企業最大化利潤（含價格黏性，Calvo 定價）
+  • 央行遵循泰勒規則
+  → 可進行嚴格的計量估計與政策反事實分析
+  → 但 2008 年危機揭示 DSGE 缺乏金融摩擦的嚴重缺陷
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、泰勒規則（Taylor Rule）：IS-LM 的貨幣政策版</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>泰勒規則（Taylor Rule, 1993）</strong>：John Taylor 提出的貨幣政策規則，描述 Fed 應如何根據通膨缺口與產出缺口設定政策利率：i = r* + π + 0.5(π − π*) + 0.5(Y − Y*)/Y*。其中 r* 為自然實質利率（約 2%）；π 為當前通膨；π* 為通膨目標（2%）；(Y − Y*)/Y* 為產出缺口。含義：通膨高於目標 → 利率高於中性水準；產出高於潛在 → 利率進一步提高。泰勒規則的 1.5 倍系數（通膨缺口係數）確保實質利率隨通膨上升而上升（即「泰勒原則，Taylor Principle」），防止通膨失控。
+          </div>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>泰勒規則診斷 2008 年前的貨幣政策</strong>
+            <p>Taylor（2009）計算，若 Fed 在 2002–2005 年嚴格遵循泰勒規則，聯邦基金利率應維持在 5–6%。但實際利率在 2003–2004 年維持在 1%（低於規則建議約 2–3 個百分點）。Taylor 認為這種「政策過寬（too easy for too long）」是房市泡沫的重要推手——低利率大幅壓低抵押貸款成本，刺激了次貸市場的過度擴張。批評者（Bernanke）則反駁，2003–2004 年的低利率是對全球儲蓄過剩與通縮風險的理性回應，且泰勒規則本身對通膨的測量選擇（核心 CPI vs. PCE）會影響結論。這一辯論至今未有定論，但展示了泰勒規則作為政策診斷工具的威力——即使在事後評估的應用中也充滿爭議。</p>
+          </div>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">七、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「IS-LM 模型是完整的總體經濟模型，可以用來分析所有政策問題。」</strong>
+            <p>IS-LM 是一個有用的教學框架，但有幾個根本侷限：①短期模型（假設物價固定），無法分析通膨；②靜態模型（無時間維度），無法分析預期的形成與更新；③無微觀基礎（行為從何而來？），因此容易受盧卡斯批判攻擊；④金融摩擦缺失（不包含信用市場、槓桿、資產價格），2008 年危機完全超出其解釋範圍。現代央行使用的是 DSGE 模型（含微觀基礎、預期、名目黏性），但 IS-LM 仍是培養總體直覺的最佳起點——只要清楚其假設限制。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「AD 曲線向下傾斜是因為物價低、大家買得起更多東西。」</strong>
+            <p>這是將 AD 曲線與個別商品的需求曲線（price effect on quantity demanded）混淆。AD 曲線向下傾斜的機制是：物價水準（P）上升→實質貨幣供給（M/P）減少→貨幣市場緊縮→利率上升→投資與消費減少→均衡產出 Y 下降。這與個別商品的「便宜了所以多買」的邏輯完全不同——在 AD 框架中，所有商品的物價都同步變動，沒有相對價格效應，機制純粹是透過貨幣市場傳導。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「泰勒規則是央行實際遵循的法律義務。」</strong>
+            <p>泰勒規則是一個描述性/規範性的政策規則，不是法律義務。它的價值在於：①作為政策「基準（benchmark）」——若實際利率顯著偏離規則建議，需要解釋；②提高政策透明度與可預測性；③是外部評估央行政策是否適當的工具。但央行刻意保留裁量空間：面對新型衝擊（金融危機、供給衝擊）時，機械式遵循泰勒規則可能帶來嚴重錯誤。Fed 的正式決策框架是「靈活平均通膨目標（Flexible Average Inflation Targeting, FAIT）」，泰勒規則只是其中的一個參考工具。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">八、教授標準答案</h2>
+          <p class="section-lead">試題：「2020 年 COVID 衝擊的核心特徵是供需同步崩潰。請用 IS-LM 和 AD-AS 框架分析此衝擊的短期效果，並說明各國政府財政擴張 + 央行 QE 的政策組合，在框架中如何運作及其侷限性。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、COVID 衝擊的 IS-LM 分析：
+
+   需求衝擊：
+   隔離令 → 消費崩潰（C↓）、企業停止投資（I↓）
+   → IS 曲線大幅左移
+
+   供給衝擊（IS-LM 主要處理需求面，供給衝擊體現在 SRAS）：
+   工廠停工、供應鏈斷裂 → SRAS 左移（成本上升/產能損失）
+
+   短期均衡：IS 左移主導 → Y↓↓、r↓（若 LM 不動）
+
+二、政策回應的框架分析：
+
+   ① 財政擴張（CARES Act, ARP, PPP 貸款）：
+      政府支出（G↑）→ IS 右移 → 部分補償 IS 左移的衝擊
+      移轉支付（Transfer Payments）→ 補充家庭所得（C↑）
+        → 也是 IS 右移的形式
+
+   ② QE 與零利率（LM 右移）：
+      M↑、r→0 → LM 右移 → 進一步支撐均衡 Y
+      「信號效應」：Fed 承諾長期低利率（前瞻指引）
+        → 企業預期資金成本低 → 維持一定投資意願
+
+   政策組合的 IS-LM 效果：
+   IS 大幅左移 + G 使 IS 部分右移 + LM 右移
+   → Y 從自由落體式崩潰，恢復至部分水準（但仍低於潛在）
+
+三、IS-LM 的侷限性（以此次危機為鑒）：
+
+   ① 模型假設正常信用市場，但 2020 年信用市場一度凍結
+      → IS-LM 無法捕捉「信用崩潰」的放大效應
+
+   ② 供給衝擊在 IS-LM 中無法直接表達
+      → 需要 AD-AS 補充（SRAS 左移 → 同樣 AD，但 Y 更低、P 更高）
+      → 2021–22 年的通膨來自需求恢復 + SRAS 仍受壓
+
+   ③ 流動性陷阱警告：r→0 時，LM 擴張對 Y 的影響有限
+      → 財政政策（IS 移動）比貨幣政策（LM 移動）更有效
+      → 這正是 2020 年財政主導（4 兆美元）、而非僅靠 QE 的依據
+
+四、結論：
+   IS-LM/AD-AS 框架提供了理解政策效果的基本地圖
+   但 COVID 的「供需雙側」+ 「信用凍結」性質
+   超出了標準框架的完整解釋能力
+   → 需要引入金融加速器、不確定性衝擊等延伸模型
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>圖形分析題：</strong>某國原本處於充分就業均衡（Y = Y*）。政府宣布大規模增稅（稅率提高 5 個百分點），同時央行宣布維持貨幣供給不變。請用 IS-LM 框架分析：①短期均衡如何改變（IS/LM 如何移動）；②均衡利率與產出如何變化；③若央行希望維持原來的產出水準，需要採取什麼行動；④排擠效應在本題是否出現？方向為何？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①②<strong>IS-LM 分析</strong>：增稅 → 家庭可支配所得減少 → 消費（C）下降 → <strong>IS 左移</strong>（在任意 r 下，均衡 Y 降低）；貨幣供給不變 → LM 不動。結果：IS 左移 + LM 不變 → 新均衡利率<strong>下降</strong>（r↓）、均衡產出<strong>下降</strong>（Y↓）。③<strong>央行維持原產出</strong>：若央行希望 Y 維持在 Y*，需要抵消 IS 左移的效果 → 擴大貨幣供給（M↑）→ LM 右移，使 LM 新位置與左移後的 IS 交點仍對應 Y*（但在更低的利率 r 處）。這是「貨幣政策對沖財政緊縮」的標準操作（也稱為「貨幣寬鬆抵消財政緊縮」，2010 年代英國緊縮政策期間的分析框架）。④<strong>排擠效應</strong>：本題的財政是<em>緊縮</em>（而非擴張），IS 左移使利率<em>下降</em>，利率下降反而<em>刺激</em>私人投資增加——這是「反向排擠（crowding in）」效應：財政緊縮使利率下降，部分補償了財政緊縮的需求衝擊。效果大小取決於 IS 的斜率（投資對利率的彈性）。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>IS 左移分析正確，利率下降方向正確，但「排擠 vs. 反向排擠」的概念辨析不夠清晰，或③的央行對沖操作分析不完整。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>混淆增稅對 IS 的影響方向，或誤判利率變化方向（誤認為利率上升）。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>IS 左移的正確分析（原因 + 方向）</td><td>25 分</td></tr>
+                  <tr><td>均衡 r↓ 和 Y↓ 的正確判斷</td><td>25 分</td></tr>
+                  <tr><td>央行 LM 右移的對沖操作</td><td>25 分</td></tr>
+                  <tr><td>「反向排擠（crowding in）」的正確識別</td><td>25 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>AD-AS 情景分析題：</strong>某國出現嚴重的負供給衝擊（主要出口商品國際價格暴跌 40%，大量出口產業停工）。請用 AD-AS 框架分析：①短期對 Y 和 P 的影響；②政府面對此衝擊有哪些政策選項，各有何代價；③若此衝擊為「永久性」而非「暫時性」（即該國的比較優勢永久消失），長期均衡如何調整？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>短期（AD-AS 分析）</strong>：出口暴跌 → NX 下降 → AD 左移（外部需求減少）；若同時引發國內失業與企業停工 → 短期可能也有 SRAS 左移（成本上升、產能損失）。主要效果：<strong>AD 左移</strong> → 均衡 Y↓、P↓（通縮壓力）。若 SRAS 也左移（負供給衝擊）→ Y↓↓，P 方向不確定（AD 左移使 P↓，SRAS 左移使 P↑，取決於相對力道）。②<strong>政策選項</strong>：A. 財政擴張（G↑）→ AD 右移，補充需求缺口。代價：若衝擊是永久的，政府不斷擴張只是「延後調整」，累積財政赤字/債務，且可能阻礙必要的產業轉型。B. 貨幣寬鬆 → 降息/LM 右移 → AD 右移。代價：若通膨已有下行壓力，貨幣寬鬆空間較大；但若造成本幣大幅貶值，進口成本上升可能部分抵消。C. 任由調整（自動穩定機制）：失業 → 薪資下降 → SRAS 右移 → 長期回歸新的 Y*。代價：調整期痛苦（高失業），且若工資黏性強，調整可能需要很長時間。D. 結構性政策：協助出口產業轉型（補貼新興產業、職業再培訓）。代價：時間長，短期無法立即緩解衝擊。③<strong>永久性衝擊的長期調整</strong>：若比較優勢永久消失，潛在產出 Y* 下降（LRAS 左移），因為一部分生產資源（原先的出口產業工人、資本）變成長期低生產力。長期均衡：較低的 Y* 與可能較低的均衡物價水準。政策含義：財政與貨幣刺激無法恢復原本的 Y*（長期供給面已永久改變），必須透過結構調整提升新的比較優勢才能重建潛在產出。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能分析 AD 左移的短期效果，並列出政策選項，但對「永久性衝擊→LRAS 左移→財政貨幣無法恢復 Y*」的長期分析不夠深入。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「出口下降→GDP 下降，政府應該刺激」，未進行 AD-AS 框架的分析，也未區分暫時性與永久性衝擊的不同含義。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>短期 AD-AS 分析（AD 左移效果）</td><td>25 分</td></tr>
+                  <tr><td>政策選項的代價評估（至少三種）</td><td>35 分</td></tr>
+                  <tr><td>永久性衝擊的長期 LRAS 調整分析</td><td>40 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>整合分析題：</strong>「某些經濟學家認為，2022–2023 年的通膨可以在不引發衰退（'軟著陸'）的情況下被控制；另一些則認為必然需要衰退（'硬著陸'）。請用 AD-AS + 菲利浦曲線框架，解釋兩派的理論依據，並討論哪些條件決定了軟硬著陸的概率。」
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>硬著陸派（必然衰退論）的框架</strong>：通膨已高且預期有失錨跡象 → 需要大幅升息 → AD 大幅左移 → Y 大幅低於 Y* → 衰退。若菲利浦曲線相對陡峭（失業率每下降 1pp 對應顯著通膨上升），要壓制通膨需要顯著推高失業（奧肯定律反向：失業上升 2pp 對應 GDP 下降 3–4%）。歷史先例（Volcker 衝擊 1981–82）：通膨從 14% 壓制到 3%，代價是失業率升至 10.8%，是典型「硬著陸」。<strong>軟著陸派（無衰退論）的框架</strong>：若通膨預期仍錨定（TIPS breakeven 未大幅上升），通膨是部分暫時性的（供應鏈恢復、能源回落）→ 供給側改善（SRAS 右移）自動降低通膨 + 溫和升息抑制需求 → 不需要大幅 AD 左移即可恢復物價穩定。若菲利浦曲線平坦，失業率不需大幅上升即可壓制通膨。<strong>決定軟硬著陸概率的條件</strong>：①通膨預期是否錨定（最關鍵）：錨定 → 升息幅度可較小 → 軟著陸概率更高；②通膨的供給成分比例：供給因素恢復（SRAS 右移）可降通膨而不需壓需求；③菲利浦曲線的斜率：平坦 → 升息引發的失業小 → 軟著陸概率更高；④全球同步升息的溢出效應：各國同步緊縮 → 全球需求萎縮 → 硬著陸風險上升；⑤勞動市場「過剩職缺（JOLTS job openings）」消化：若緊縮主要消化過剩職缺而非實際就業，可能軟著陸。事後（2023–2024）：美國基本實現軟著陸（失業率維持低位，通膨回落），但這是否代表理論「軟著陸派正確」仍有爭議——可能受到特殊因素（移民供給增加、超額儲蓄消化等）影響。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能說明兩派的基本立場，但理論框架（AD-AS + 菲利浦曲線）應用不夠嚴謹，且對決定條件的分析（預期錨定、曲線斜率等）深度不足。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「有人認為會衰退，有人認為不會」，無法連接理論框架，也無法系統分析決定條件。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>硬著陸派的 AD-AS + 菲利浦曲線論據</td><td>30 分</td></tr>
+                  <tr><td>軟著陸派的理論框架（供給改善 + 預期錨定）</td><td>30 分</td></tr>
+                  <tr><td>決定軟硬著陸概率的條件分析（至少四點）</td><td>40 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m07-expectations.html" class="lecture-nav-btn">← M07 預期形成與行為</a>
+          <a href="m09-fiscal.html" class="lecture-nav-btn">M09 財政政策與債務 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

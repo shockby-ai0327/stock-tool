@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M04 貨幣、銀行與信用創造 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link active">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M04</span>
+          <span class="topbar-title">貨幣、銀行與信用創造</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 04</div>
+          <h1 class="lecture-hero-title">貨幣、銀行與信用創造</h1>
+          <p class="lecture-hero-subtitle">Money, Banking, and Credit Creation</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：貨幣體系</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：中階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">「貨幣是什麼？」這個問題的答案遠比直覺複雜。貨幣不是紙，而是信念系統；銀行不是存款的倉庫，而是信用創造的引擎。本講從貨幣的定義與功能出發，深入貨幣供給的測量體系（M0、M1、M2），詳解商業銀行的「信用創造（credit creation）」機制，介紹貨幣數量學說（Quantity Theory of Money），並討論影子銀行與央行數位貨幣（CBDC）等當代發展。理解這些機制，是理解貨幣政策傳導與通膨成因的前提。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、貨幣的三大功能與貨幣的演化</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 貨幣的三大功能</div>
+            <pre>
+1. 交換媒介（Medium of Exchange）
+   最根本功能：解決「雙重需要巧合（double coincidence of wants）」問題
+   沒有貨幣：獵人想要麵包，麵包師必須「剛好」想要肉
+   有貨幣：獵人賣肉換錢，麵包師賣麵包換錢，各自交易
+
+2. 計價單位（Unit of Account）
+   統一的價格標準，使價格比較成為可能
+   沒有計價單位：N 種商品需要 N×(N-1)/2 種交換比率
+   100 種商品 = 4,950 個交換比率 → 計算成本極高
+
+3. 價值儲藏（Store of Value）
+   跨時間保存購買力
+   ★ 貨幣並非最好的價值儲藏——通膨侵蝕其購買力
+   → 為何黃金、不動產、股票作為長期價值儲藏更受青睞
+
+貨幣演化的歷史邏輯：
+  商品貨幣（黃金/白銀）
+    → 兌換券（可兌換黃金的紙幣）
+    → 法幣（fiat money，政府信用擔保，不可兌換實物）
+    → 數位帳本貨幣（存款，約佔現代貨幣供給 90%+）
+    → （未來）中央銀行數位貨幣（CBDC）？
+
+法幣的本質：政府的信用承諾
+  「此券為法定貨幣，可用於清償一切公私債務」
+  其價值來源不是紙本身，而是：
+  ① 政府徵稅能力（使用貨幣繳稅的義務）
+  ② 對貨幣穩定的集體信念（自我實現的均衡）
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、貨幣供給的層次：M0、M1、M2</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>貨幣供給的流動性層次</strong>：貨幣並非全有或全無的概念，而是依流動性高低呈現層次結構。愈靠近 M0（基礎貨幣）流動性愈高，可直接用於交易；愈靠近廣義貨幣（M2 甚至 M3）流動性愈低，但規模更大，對總需求的影響也更複雜。
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 貨幣供給層次結構（以美國為例）</div>
+            <pre>
+M0（基礎貨幣 / Monetary Base / High-Powered Money）
+  = 流通中現金（Currency in Circulation）
+  + 商業銀行在央行的準備金（Reserve Deposits at Fed）
+  規模：約 5–6 兆美元（2023）
+  由央行直接控制
+
+M1（狹義貨幣）
+  = 流通中現金
+  + 活期存款（Demand Deposits）
+  + 其他可開立支票的存款
+  規模：約 18–20 兆美元
+  可直接用於交易支付
+
+M2（廣義貨幣）
+  = M1
+  + 儲蓄存款（Savings Deposits）
+  + 小額定期存款（Small Time Deposits）
+  + 貨幣市場基金（Retail Money Market Funds）
+  規模：約 20–21 兆美元
+  廣泛用於監控通膨壓力
+
+M3（更廣義，美國 Fed 2006 年後停止公布）
+  = M2 + 大額定期存款 + 機構貨幣市場基金 等
+
+關鍵比率：貨幣乘數（Money Multiplier）
+  m = M1 / M0
+  理論值：m = 1 / 法定準備率（Reserve Requirement Ratio）
+  若準備率 10% → 理論乘數 = 10
+  但實際乘數因「超額準備金（excess reserves）」而低於理論值
+  2008 後美國銀行體系積累鉅額超額準備金 → 乘數大幅下降
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、商業銀行的信用創造：存款不是「存進去的錢」</h2>
+          <p>最違反直覺、卻最重要的貨幣概念：<strong>商業銀行不是在「借出」既有存款，而是在「創造」新存款</strong>。理解這一點是理解現代貨幣體系的根本。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 信用創造機制：逐步展示</div>
+            <pre>
+假設：法定準備率（Reserve Requirement, RR）= 10%
+     所有現金收到後立即存入銀行
+
+初始：中央銀行印鈔 1,000 元，注入甲銀行
+
+甲銀行資產負債表：
+  資產：現金準備 1,000   負債：甲存款戶存款 1,000
+  ↓ 留存 10%（100元）作為法定準備，貸款 900元
+
+乙存款戶借走 900 元→存入乙銀行
+
+乙銀行資產負債表：
+  資產：現金準備 900    負債：乙存款戶存款 900
+  ↓ 留存 90 元，貸款 810 元
+
+依此類推，存款總創造：
+  1000 + 900 + 810 + 729 + ... = 1000 × (1/0.1) = 10,000 元
+
+最終結果：
+  央行基礎貨幣 1,000 元
+  → 銀行體系總存款（廣義貨幣）10,000 元
+  → 貨幣乘數 = 10
+
+【重要澄清】英格蘭銀行 2014 年季報明確指出：
+  現實中，銀行並非等待存款後才放貸
+  而是「貸款創造存款（Loans create deposits）」：
+  銀行決定放貸時，同時在借款人帳戶創造存款
+  借款人的存款是新創造的，不是從其他人轉移過來的
+  準備金的限制是「事後的」——央行在銀行有需求時供給準備金
+</pre>
+          </div>
+
+          <h3 class="subsection-title">3.1 貸款創造存款的資產負債表邏輯</h3>
+          <p>當某銀行批准一筆 100 萬元的房屋貸款，其資產負債表如下：</p>
+          <ul>
+            <li><strong>資產面</strong>：+100 萬元「貸款（Loan）」——對借款人的應收款項</li>
+            <li><strong>負債面</strong>：+100 萬元「存款（Deposit）」——在借款人帳戶創造的新存款</li>
+          </ul>
+          <p>兩邊同時增加，資產負債表仍平衡。這 100 萬元存款是全新創造的購買力，不是從其他帳戶轉移的。這意味著：<strong>貨幣供給（M1/M2）的增減，主要取決於銀行的放貸意願與借款人的借貸需求</strong>，而非央行直接決定。央行通過利率（影響借貸成本）和準備金要求來「間接」影響信用創造，但無法直接精確控制廣義貨幣供給。</p>
+
+          <h3 class="subsection-title">3.2 銀行的脆弱性：期限錯配與擠兌</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>期限錯配（Maturity Mismatch）</strong>：商業銀行以短期負債（隨時可取款的活期存款）為長期資產（30 年房貸、10 年企業貸款）融資。這一「借短貸長」的結構在正常時期可行，但在存款人恐慌時會引發銀行擠兌（bank run）——每個人都想取款，但銀行的資產是非流動的長期貸款，無法立即變現。Diamond-Dybvig 模型（1983）說明，銀行擠兌是一種「自我實現的預言（self-fulfilling prophecy）」——即使銀行資產品質良好，只要存款人預期他人會擠兌，每個人都有理由搶先取款，從而真的引發擠兌。這是存款保險（deposit insurance）制度的理論基礎：政府保證存款安全，消除恐慌性擠兌的誘因。
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、貨幣數量學說（Quantity Theory of Money）</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 費雪方程式與貨幣數量學說</div>
+            <pre>
+費雪交換方程式（Fisher Equation of Exchange）：
+  M × V = P × Y
+
+  M = 貨幣供給量（Money Supply）
+  V = 貨幣流通速度（Velocity of Money）
+      每單位貨幣在一段時間內的平均交易次數
+  P = 物價水準（Price Level）
+  Y = 實質產出（Real Output）
+  P × Y = 名目 GDP
+
+此為帳恆等式，在定義上必然成立。
+
+貨幣數量學說（Quantity Theory）的假設：
+  1. V 穩定（短期內流通速度不變）
+  2. Y 由供給面決定（長期充分就業）
+
+在這兩個假設下：
+  M↑ → 僅影響 P（物價）
+  → 貨幣是「面紗（money is a veil）」
+  → 通膨純粹是貨幣現象
+
+Friedman 的表述（1963）：
+  「通膨永遠在任何地方都是貨幣現象
+  （Inflation is always and everywhere a monetary phenomenon）」
+
+貨幣數量學說的限制：
+  V 並不穩定！
+  2008 後：M 大增（QE）但 P 未大漲
+  → 因為 V 大幅下降（超額準備金沉積，不進入流通）
+  → 簡單版貨幣數量學說失靈，但長期關係仍存在
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、影子銀行與現代信用體系的擴張</h2>
+          <p>2008 年金融危機前，全球發展出一套與傳統銀行體系平行、卻缺乏安全網的「影子銀行（Shadow Banking）」體系。其規模在危機前甚至超過傳統商業銀行。</p>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 影子銀行的信用創造鏈</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">房貸借款人<br>原始貸款</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">MBS 打包<br>出售</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">CDO<br>再打包</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">貨幣市場<br>基金持有</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">再回購<br>（Repo）融資</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">槓桿<br>信用創造</div>
+            </div>
+          </div>
+
+          <p>影子銀行體系的本質，是在不受存款保險、資本要求、法定準備金等監管約束的情況下，執行類似商業銀行的「借短貸長、期限錯配」操作——因此在危機時刻的脆弱性更高，且缺乏央行最終貸款人的保護。2008 年的雷曼兄弟破產，本質上就是影子銀行「擠兌」的現代版：貨幣市場基金（相當於影子銀行的「存款」）大規模贖回，「回購協議（Repo）」市場崩潰，類似 1930 年代的銀行擠兌，只是主角換成了機構投資者。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>2023 年矽谷銀行（SVB）倒閉：數位時代的擠兌</strong>
+            <p>矽谷銀行在 2020–2021 年科技業繁榮期大量吸收存款（主要是科技新創公司），並將其投入長期政府公債與 MBS（利率風險極高的長存續期資產）。2022 年 Fed 急速升息使這些債券大幅貶值（債券殖利率上升 → 債券價格下跌）。當 2023 年 3 月存款人得知 SVB 的虧損後，社群媒體（Twitter/Slack）使恐慌信息以歷史上前所未有的速度擴散——在 24 小時內，存款人透過手機 App 提走了約 420 億美元，約佔總存款的 25%。這是史上第一次「推特驅動的銀行擠兌（Twitter-driven bank run）」，也揭示了數位時代對金融穩定的新挑戰：信息傳播速度已遠超監管機構的反應速度。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、央行數位貨幣（CBDC）：貨幣體系的下一次演化</h2>
+          <p>全球主要央行均在研究或試驗央行數位貨幣（Central Bank Digital Currency, CBDC）。CBDC 是由央行直接發行的數位法幣——不同於現有的電子存款（商業銀行負債），CBDC 是央行直接的數位負債，在信用安全性上等同於現金。</p>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>面向</th>
+                  <th>現有電子存款</th>
+                  <th>CBDC</th>
+                  <th>現金</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>發行者</td>
+                  <td>商業銀行</td>
+                  <td>央行</td>
+                  <td>央行</td>
+                </tr>
+                <tr>
+                  <td>信用風險</td>
+                  <td>銀行倒閉風險（有保險上限）</td>
+                  <td>零（主權信用）</td>
+                  <td>零（主權信用）</td>
+                </tr>
+                <tr>
+                  <td>匿名性</td>
+                  <td>低（銀行有記錄）</td>
+                  <td>可設計（取決於架構）</td>
+                  <td>高</td>
+                </tr>
+                <tr>
+                  <td>負利率適用性</td>
+                  <td>困難（存款人可領現金規避）</td>
+                  <td>可能（若現金被取代）</td>
+                  <td>不適用</td>
+                </tr>
+                <tr>
+                  <td>金融包容性</td>
+                  <td>需銀行帳戶</td>
+                  <td>可無帳戶使用</td>
+                  <td>高</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>CBDC 的最大爭議在於<strong>「脫媒（disintermediation）」風險</strong>：若公眾將存款從商業銀行轉移到 CBDC，商業銀行的存款基礎萎縮 → 放貸能力下降 → 信用創造萎縮 → 可能抑制正常的金融中介功能。中國的數位人民幣（e-CNY）是目前規模最大的 CBDC 試驗，但其普及率仍遠低於微信支付與支付寶，主要因為後兩者的用戶體驗更優越。</p>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">七、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「央行印鈔，所以銀行才有錢放貸。」</strong>
+            <p>這是「貨幣乘數模型」的傳統教科書版本，但現代中央銀行（包括英格蘭銀行、Fed）已明確否認這一因果順序。現實中，商業銀行先根據信用需求決定放貸（同時創造存款），事後再透過銀行間市場或向央行借入所需準備金。央行的角色是設定利率（準備金的「租金」），而非限量供給準備金。換言之，是「放貸→創造存款→（事後）取得準備金」，而非「央行供給準備金→銀行才能放貸」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「QE（量化寬鬆）就是政府印鈔，必然導致惡性通膨。」</strong>
+            <p>QE 是央行購買資產（政府公債、MBS），將基礎貨幣（M0）注入銀行體系——但這些準備金主要沉積在銀行準備金帳戶，未必進入廣義貨幣（M2）流通。2009–2014 年 Fed 執行三輪 QE，M0 大幅擴張，但 M2 成長溫和，通膨長期低於 2% 目標。關鍵在於：銀行是否有意願、借款人是否有需求將這些準備金轉化為放貸與消費——即 V（流通速度）的變化。QE 與通膨的關係取決於財政-貨幣政策的配合程度與實體需求狀況，並非簡單的「印鈔 → 通膨」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「比特幣是更好的貨幣，因為其供給有上限（2,100 萬顆）。」</strong>
+            <p>固定供給是雙面刃。從「價值儲藏」角度，稀缺性確實有吸引力。但從「貨幣的交換媒介」功能看，固定供給在面對實體經濟擴張時會導致<em>通縮</em>（商品增加，貨幣不變→每單位貨幣購買力上升→物價下降）。適度通縮看似有利，但嚴重通縮會引發「費雪債務-通縮螺旋」（見 H07），抑制支出與投資。法幣的設計允許貨幣供給隨經濟需求調整——這是靈活性，不是缺陷。比特幣極高的價格波動性也使其目前難以勝任穩定的計價單位功能，更接近「投機資產」而非功能完整的貨幣。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">八、教授標準答案</h2>
+          <p class="section-lead">試題：「2020–2021 年各國央行大規模擴張基礎貨幣（QE）但通膨遲至 2021–2022 年才爆發。請從貨幣數量學說的框架解釋這一'時間落差'，並討論 QE 與後來通膨的因果關係是否成立。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、費雪方程式框架：M × V = P × Y
+
+   2020–2021 年：
+   M↑↑（QE 使 M0 大幅擴張，M2 溫和成長）
+   V↓↓（疫情期間，貨幣流通速度急劇下降：
+          消費受限、企業停工、超額準備金積累）
+   Y↓  （產出萎縮）
+   結果：P 未大漲 → 通膨延遲出現
+
+   2021–2022 年：
+   V 開始回升（經濟重開，消費需求噴發）
+   財政轉移（ARP）直接進入消費者手中 → 有效需求上升
+   供應鏈中斷 → Y 供給受限
+   M × V上升 vs. Y受限 → P↑↑ → 通膨爆發
+
+二、QE 與通膨的因果關係評估：
+
+   QE 的直接責任：有限
+   • QE 主要擴張 M0（銀行準備金），M2 成長相對溫和
+   • 沒有 ARP 等財政注入，QE 本身不足以引發通膨
+
+   財政刺激的責任：更大
+   • ARP 1.9兆美元直接轉移給消費者 → 有效需求激增
+   • Blanchard 的估計：刺激規模超過產出缺口 3 倍
+   • 這才是通膨的主要需求側驅動力
+
+   供應側的責任：同樣重要
+   • 供應鏈中斷（相當於負供給衝擊）使通膨更嚴重
+
+三、結論：
+   「QE → 通膨」的簡化因果鏈不成立
+   準確的因果鏈是：
+   「過度財政刺激 + 供給衝擊 + V 恢復 → 通膨」
+   QE 是背景條件，而非直接原因
+   Friedman 的格言需要修正：
+   「通膨是財政-貨幣政策混合的現象」
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>計算題：</strong>假設某國央行向銀行體系注入 500 億基礎貨幣，法定準備率為 8%。①理論上最多能創造多少廣義貨幣（M1）？②若銀行實際保留 12% 作為準備金（超額準備金 4%），實際創造的 M1 是多少？③若消費者選擇保留 20% 的新增存款以現金持有，如何修正計算？請解釋「超額準備金」與「現金漏損」如何降低實際貨幣乘數。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>理論最大值</strong>：乘數 = 1/準備率 = 1/0.08 = 12.5；最大 M1 = 500億 × 12.5 = <strong>6,250億</strong>。②<strong>考慮超額準備金</strong>：實際準備率 = 12%；實際乘數 = 1/0.12 ≈ 8.33；實際 M1 = 500億 × 8.33 = <strong>4,167億</strong>（超額準備金使乘數從 12.5 降至 8.33，M1 創造量減少 2,083億）。③<strong>考慮現金漏損</strong>：設現金持有比 c = 0.2（每 1 元新存款，存款人保留 0.2 元現金），修正乘數 = (1+c)/(c+rr) = (1+0.2)/(0.2+0.12) = 1.2/0.32 = <strong>3.75</strong>；含現金漏損的廣義貨幣（現金+存款）= 500億 × 3.75 = <strong>1,875億</strong>。解釋：超額準備金使銀行「漏接」了部分基礎貨幣，不將其轉化為放貸；現金漏損使每一輪信用創造循環中，有一部分存款「脫離」銀行體系、以現金形式沉積，無法繼續乘數擴張。兩者共同使實際貨幣乘數遠低於理論值（3.75 vs. 12.5）。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>①②計算正確，但③的修正乘數公式推導錯誤，或只定性說明而未計算。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>無法正確運用乘數公式，或混淆準備金（存量）與準備率（比率）的概念。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>①理論乘數與 M1 計算</td><td>20 分</td></tr>
+                  <tr><td>②超額準備金修正計算</td><td>30 分</td></tr>
+                  <tr><td>③現金漏損修正乘數計算</td><td>30 分</td></tr>
+                  <tr><td>定性解釋兩種漏損機制</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>概念應用題：</strong>某小國採用美元作為法定貨幣（美元化，dollarization），無法發行本國貨幣。①此舉對該國的貨幣政策自主性有何影響？②若該國面臨外部衝擊（如出口商品價格暴跌），可用哪些非貨幣手段調整？③巴拿馬長期採用美元化，卻保持相對穩定的經濟表現；阿根廷曾採用比索-美元固定匯率（1991–2001 Convertibility Plan），最終崩潰。兩者有何關鍵差異？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>貨幣政策喪失</strong>：美元化國家無法獨立設定利率（必須跟隨 Fed）、無法進行匯率調整、無法成為「最終貸款人（Lender of Last Resort）」——銀行危機時央行無法印鈔救市（只能動用外匯儲備，但很快耗盡）。這是 Mundell 最優貨幣區理論中「放棄貨幣政策」的代價面。②<strong>非貨幣調整手段</strong>：財政政策（但受限於稅收能力）；名目工資/價格調整（痛苦的「內部貶值（internal devaluation）」）；勞動力移民（若劳工能自由移出至其他美元區域）；引入外資（靠更低成本吸引）。③<strong>巴拿馬 vs. 阿根廷的關鍵差異</strong>：巴拿馬是「真正美元化」——境內流通的就是美元鈔票，不存在本國貨幣兌換美元的承諾（無可打破的固定匯率幻覺）；且巴拿馬作為金融中心，服務業高度靈活，勞動市場彈性高。阿根廷的「可兌換計劃」是「固定匯率承諾」——政府承諾 1 比索兌 1 美元，但仍保有比索，形成「可打破的承諾」。2001 年當阿根廷財政惡化、外資逃離時，外匯儲備耗盡，固定匯率承諾崩潰，引發貨幣危機和銀行危機同步爆發。兩者的本質差異：真正美元化排除了「貨幣危機」的可能性（沒有本幣可貶值），而固定匯率制度則在壓力下容易崩潰。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能說明美元化喪失貨幣政策，及固定匯率崩潰機制，但對巴拿馬與阿根廷差異的分析未能觸及「真正美元化 vs. 固定匯率承諾」的核心制度差異。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只泛論「失去貨幣政策不好」，未能系統分析三個問題的各自具體含義，也無法有效比較兩個案例。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>①貨幣政策喪失的三個面向</td><td>30 分</td></tr>
+                  <tr><td>②非貨幣調整手段（至少三種）</td><td>25 分</td></tr>
+                  <tr><td>③巴拿馬 vs. 阿根廷的制度差異分析</td><td>45 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>政策設計題：</strong>假設你是某國央行行長，發現銀行體系的信用創造過度活躍，廣義貨幣（M2）正以每年 15% 的速度成長，遠超名目 GDP 成長率（7%）。你認為這種信用擴張是否一定有問題？若要收緊，有哪些政策工具可以使用，各有何利弊？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>是否一定有問題？</strong>：M2 成長 15% vs. 名目 GDP 7%，意味著貨幣流通速度（V）在下降——可能是金融深化（更多信用流入未充分金融化的部門）而非純粹的通膨壓力，需進一步分析信用流向（生產性投資 vs. 資產炒作）。若信用大量流入房地產投機，則有資產泡沫風險；若流入生產性企業貸款，則可能是正常的金融發展。<strong>政策工具評估</strong>：①<strong>提高政策利率</strong>：提升借貸成本，直接抑制信用需求。優點：市場化、廣泛影響；缺點：同時影響生產性與投機性借貸，可能過度抑制正常投資，外溢效應大（匯率升值、資本流入）。②<strong>提高法定準備率</strong>：直接限制銀行放貸上限。優點：效果直接；缺點：中國曾大量使用，但效果被繞過（影子銀行規避）；準備率過高影響銀行盈利能力。③<strong>宏觀審慎政策（Macroprudential Tools）</strong>：如貸款成數限制（LTV cap）、負債所得比（DSR）限制、特定部門資本要求（如房貸風險權重上調）。優點：精準針對特定部門（如房地產），不影響整體利率；缺點：繞過的激勵（影子銀行）、難以動態調整。④<strong>視窗指導（Window Guidance）/信用額度管制</strong>：直接告知銀行放貸上限。優點：直接；缺點：行政干預扭曲市場，降低資源配置效率。最優建議：組合使用宏觀審慎工具（針對問題部門）+ 適度升息（發送收緊信號），避免過度依賴單一工具。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能列出主要政策工具，但對「M2 高增長是否必然有問題」缺乏分析（未考慮 V 下降、金融深化等原因），工具評估偏於平面。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只提出「升息」作為單一工具，無法評估其利弊，也未討論宏觀審慎政策。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>M2 高增長是否有問題的分析（流向判斷）</td><td>25 分</td></tr>
+                  <tr><td>列出至少三種政策工具</td><td>25 分</td></tr>
+                  <tr><td>每種工具的利弊評估</td><td>30 分</td></tr>
+                  <tr><td>組合工具的政策建議</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m03-consumption.html" class="lecture-nav-btn">← M03 消費、投資與儲蓄</a>
+          <a href="m05-inflation.html" class="lecture-nav-btn">M05 通膨的多重面貌 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

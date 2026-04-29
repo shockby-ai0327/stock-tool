@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H10 蘇聯解體、轉型經濟與華盛頓共識 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H10 蘇聯解體、轉型經濟與華盛頓共識</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H10</span>
+            <span class="lecture-period">1989 — 2000</span>
+          </div>
+          <h1 class="article-title">蘇聯解體、轉型經濟與華盛頓共識</h1>
+          <p class="article-subtitle">Soviet Collapse, Transition Economies &amp; the Washington Consensus</p>
+          <p class="article-lead">1989–1991 年，蘇聯陣營的政治崩潰速度之快讓全世界目瞪口呆——柏林圍牆倒塌、東歐「絲絨革命（Velvet Revolution/絲絨革命）」、蘇聯正式解體（1991 年 12 月），開啟了歷史上規模最大、速度最快的計畫經濟轉型市場（planned-to-market transition）實驗。「如何轉型」成為 1990 年代最重要的政策辯論：是「休克療法（shock therapy/休克療法）」的急劇轉變，還是「漸進主義（gradualism/漸進主義）」的穩步推進？轉型的結果因國而異，分歧背後的制度邏輯成為現代發展經濟學最重要的自然實驗。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#soviet-failure">蘇聯計畫經濟的結構性失敗</a></li>
+            <li><a href="#collapse">解體的政治經濟學：為什麼是 1989–1991 年？</a></li>
+            <li><a href="#washington-consensus">華盛頓共識：轉型的政策藍圖</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#shock-therapy">休克療法 vs. 漸進主義：波蘭與中國的對比</a></li>
+            <li><a href="#russia">俄羅斯轉型的災難：「野蠻資本主義」的形成</a></li>
+            <li><a href="#institutions">制度是關鍵：為什麼相同的政策產生截然不同的結果？</a></li>
+            <li><a href="#market-implications">市場含意：新興市場的機遇與陷阱</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="soviet-failure">
+          <h2>一、蘇聯計畫經濟的結構性失敗</h2>
+
+          <h3>計畫經濟的理論挑戰</h3>
+          <p>蘇聯式計畫經濟（Soviet-style command economy/指令性計畫經濟）面臨的最根本的知識論問題，海耶克（Hayek）早在 1945 年的〈知識在社會中的運用〉（"The Use of Knowledge in Society"）中已明確指出：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">計畫經濟的知識問題（Hayek's Knowledge Problem）</div>
+            <p>市場經濟中，價格（prices/價格）是分散信息的聚合機制——每個市場參與者通過價格信號協調決策，無需任何中央機構知道所有資訊。蘇聯的計畫機構（Gosplan/國家計畫委員會）在 1980 年代需要為約 <strong>1,200 萬種商品</strong>制定生產計畫，這在計算上已接近不可能；更重要的是，許多決策所需的知識（消費者偏好、地方條件、技術可行性）是分散的、隱性的（tacit knowledge/隱性知識），根本無法集中傳遞給中央計畫者。</p>
+            <p>「計算問題（The Calculation Problem）」由路德維希·馮·米塞斯（Ludwig von Mises）在 1920 年首次提出：在沒有市場價格的情況下，資源無法實現理性配置，因為沒有客觀的方法比較不同生產路徑的相對成本與效益。</p>
+          </div>
+
+          <h3>蘇聯的階段性成就與長期衰竭</h3>
+          <p>公平地說，蘇聯計畫經濟在特定歷史階段取得了顯著成就：1930–1950 年代的快速工業化（重工業、軍工）；1957 年的人造衛星（Sputnik）顯示了科技動員能力；1950–1965 年蘇聯的年均 GDP 成長率約為 5–6%，接近同期西方發達國家。</p>
+
+          <p>然而，計畫經濟的長期問題在 1970–1980 年代愈發明顯：</p>
+
+          <ul>
+            <li><strong>創新缺位：</strong>計畫體制缺乏市場競爭帶來的創新激勵，技術落後差距不斷擴大。</li>
+            <li><strong>軟預算約束（soft budget constraint/軟預算約束）：</strong>Janos Kornai（1980）提出的概念——國有企業即使虧損也能獲得國家補貼，缺乏效率改善的壓力。</li>
+            <li><strong>消費品長期短缺：</strong>計畫優先重工業和軍工，消費品供給嚴重不足，排隊購物是日常現象。</li>
+            <li><strong>能源詛咒：</strong>1970–1980 年代蘇聯依賴石油出口換取外匯，1986 年油價崩潰使財政和外匯雙雙陷入危機。</li>
+            <li><strong>阿富汗戰爭（1979–1989）的財政消耗：</strong>長期戰爭耗盡了財政資源，加速了軍事—工業複合體的危機。</li>
+          </ul>
+
+          <h3>戈巴契夫的改革嘗試（1985–1991）</h3>
+          <p>米哈伊爾·戈巴契夫（Mikhail Gorbachev）上台後推行的兩項改革直接加速了蘇聯的瓦解：</p>
+          <ul>
+            <li><strong>公開化（Glasnost/公開化）：</strong>放開媒體和言論管制 → 壓抑已久的不滿開始公開表達 → 民族主義情緒在各加盟共和國點燃。</li>
+            <li><strong>重建（Perestroika/重建）：</strong>試圖在保留計畫框架的同時引入有限市場機制 → 結果是計畫體系受到破壞但市場體系未能建立，出現了兩者皆失的真空期，導致嚴重的商品短缺和通膨。</li>
+          </ul>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="collapse">
+          <h2>二、解體的政治經濟學：為什麼是 1989–1991 年？</h2>
+
+          <h3>臨界點理論</h3>
+          <p>蘇聯陣營的崩潰速度之快，令許多預測者驚訝。政治學家蒂莫西·加頓·艾什（Timothy Garton Ash）觀察到一個規律：東歐各國的政治轉型時間長短，與其反對派運動的積累程度相關——波蘭用了十年，匈牙利用了十個月，東德用了十週，捷克斯洛伐克用了十天，羅馬尼亞用了十個小時……</p>
+
+          <p>經濟學家羅伯特·盧卡斯的學生 Timur Kuran（1991）提出了「偏好偽裝（preference falsification/偏好偽裝）」理論：在威權統治下，人們公開表達與私下信念不同的支持，使統治者高估了實際的社會認同度。一旦某個「臨界事件（critical event）」使人們開始公開表達真實想法，自我強化的「真相洪流（truth cascade）」便不可逆轉——蘇聯陣營的崩潰是壓抑已久的真實偏好在特定制度條件下的突然揭露。</p>
+
+          <h3>經濟因素的角色</h3>
+          <p>蘇聯解體的最直接經濟觸發因素：</p>
+          <ul>
+            <li><strong>1986 年油價崩潰：</strong>沙烏地阿拉伯增產，油價從 30 美元/桶跌至約 10 美元/桶，蘇聯的外匯收入腰斬，財政赤字急劇擴大。</li>
+            <li><strong>軍備競賽的消耗：</strong>雷根政府的「星球大戰」防禦計畫（SDI）迫使蘇聯跟進，但蘇聯在更小的 GDP 基礎上承受了更高比例的軍費開支。</li>
+            <li><strong>技術差距加大：</strong>1980 年代個人電腦革命和微電子技術的爆發，蘇聯的計畫體制完全無法跟上民間技術創新的速度。</li>
+          </ul>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="washington-consensus">
+          <h2>三、華盛頓共識：轉型的政策藍圖</h2>
+
+          <h3>「華盛頓共識」的原始定義</h3>
+          <p>1989 年，經濟學家約翰·威廉森（John Williamson）提出「華盛頓共識（Washington Consensus/華盛頓共識）」一詞，最初用來描述 IMF、世界銀行和美國財政部對拉丁美洲改革的政策建議，後來被廣泛應用於後共產主義轉型。其十項核心內容包括：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>政策建議</th>
+                <th>邏輯基礎</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>財政紀律（Fiscal discipline）</td><td>消除赤字，防止通膨</td></tr>
+              <tr><td>2</td><td>公共支出優先順序重整</td><td>從補貼轉向基礎設施和教育</td></tr>
+              <tr><td>3</td><td>稅制改革（廣稅基、低稅率）</td><td>提升效率、減少逃稅</td></tr>
+              <tr><td>4</td><td>利率自由化</td><td>反映資金的真實稀缺性</td></tr>
+              <tr><td>5</td><td>競爭性（非高估）匯率</td><td>支持出口競爭力</td></tr>
+              <tr><td>6</td><td>貿易自由化</td><td>提升效率，加入全球分工</td></tr>
+              <tr><td>7</td><td>外商直接投資（FDI）自由化</td><td>引進技術和資本</td></tr>
+              <tr><td>8</td><td>私有化（Privatization）</td><td>提升效率，消除軟預算約束</td></tr>
+              <tr><td>9</td><td>去管制（Deregulation）</td><td>減少市場進入障礙</td></tr>
+              <tr><td>10</td><td>財產權保障（Property rights）</td><td>投資激勵的基礎</td></tr>
+            </tbody>
+          </table>
+
+          <h3>威廉森事後的澄清</h3>
+          <p>威廉森本人後來強調，「華盛頓共識」被嚴重誤用——它原本描述的是一個有限的政策清單，針對拉丁美洲的特定問題，並非一個萬能的全球化市場改革處方。「新自由主義的過度推廣（over-generalization of neoliberalism）」把他的描述性清單變成了規範性意識形態，忽略了制度、順序和國情差異。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">計畫經濟轉型市場的兩條路徑</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">起始條件：計畫經濟崩潰</div>
+                <div class="t-node-desc">指令性計畫失效 → 商品短缺、通膨、財政危機；國有企業軟預算約束、低效率；缺乏市場機制的基礎制度（財產法、商業法、金融體系）</div>
+              </div>
+              <div class="t-arrow">↓ 路徑分歧</div>
+              <div class="t-node">
+                <div class="t-node-title">路徑 A：休克療法（波蘭、波羅的海諸國）</div>
+                <div class="t-node-desc">同時推進價格自由化、貿易開放、私有化、財政緊縮 → 短期衝擊劇烈（GDP 急降、通膨高企）→ 但市場機制快速確立 → 中期復甦較快</div>
+              </div>
+              <div class="t-arrow">↕ vs.</div>
+              <div class="t-node">
+                <div class="t-node-title">路徑 B：漸進改革（中國、越南）</div>
+                <div class="t-node-desc">保持政治控制的同時逐步引入市場機制（「雙軌制/dual-track system」）→ 短期穩定，農業和鄉鎮企業率先市場化 → 維持就業的同時積累效率改善</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">路徑 C：失敗的轉型（俄羅斯、部分 CIS 國家）</div>
+                <div class="t-node-desc">名義上推行休克療法但缺乏制度基礎 → 快速私有化轉化為資產剝奪 → 寡頭資本主義（oligarchic capitalism）→ 長期 GDP 崩潰、不平等急劇上升</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">關鍵變數：制度品質</div>
+                <div class="t-node-desc">法治（rule of law）、財產權保護、腐敗程度、國家能力——這些制度條件決定了市場改革能否帶來真實效率提升，還是淪為資產剝奪的工具</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="shock-therapy">
+          <h2>五、休克療法 vs. 漸進主義：波蘭與中國的對比</h2>
+
+          <h3>波蘭的「巴策羅維茨計畫」</h3>
+          <p>1990 年 1 月，波蘭財政部長萊謝克·巴策羅維茨（Leszek Balcerowicz）推行了歷史上最著名的休克療法方案：</p>
+          <ul>
+            <li>一夜之間開放 90% 以上商品的價格自由化（price liberalization/價格自由化）；</li>
+            <li>匯率固定於可兌換水準，開放外貿；</li>
+            <li>大幅削減財政補貼，實現財政平衡；</li>
+            <li>啟動大規模私有化計畫。</li>
+          </ul>
+
+          <p>短期代價：1990 年波蘭實質 GDP 下降約 11%，通膨從 1989 年底的超 250% 降至 1990 年的 585%（轉型性通膨），失業率從近乎零上升至約 12%（1991 年）。長期效果：1992 年後波蘭開始復甦，是前共產主義國家中經濟表現最佳之一，被稱為「波蘭奇蹟（Polish economic miracle）」，2008 年金融危機中是歐盟唯一未陷入衰退的國家。</p>
+
+          <h3>中國的漸進式改革（1978–1992）</h3>
+          <p>中國在鄧小平（Deng Xiaoping）領導下選擇了截然不同的路徑：</p>
+          <ul>
+            <li><strong>農業去集體化（Decollectivization）：</strong>1978 年後的「家庭聯產承包責任制」將土地使用權還給農民，農業生產率迅速提升；</li>
+            <li><strong>鄉鎮企業（Township and Village Enterprises, TVEs）：</strong>在國有計畫體系旁邊，允許集體性的非國有企業在市場上自由運作，形成「體制外（extra-plan）」市場；</li>
+            <li><strong>經濟特區（Special Economic Zones, SEZs）：</strong>深圳等地作為市場化實驗的地理隔離帶，允許外資和市場機制在有限範圍內先行；</li>
+            <li><strong>雙軌制（Dual-track system）：</strong>計畫配額內按計畫價格，超出部分按市場價格——這個「兩全其美」的安排（Lau, Qian &amp; Roland, 2000）使生產者保持計畫義務的同時獲得了市場激勵，逐步擴大市場份額。</li>
+          </ul>
+
+          <div class="case-study">
+            <div class="case-study-label">「漸進主義 vs. 休克療法」辯論的核心分歧</div>
+            <p><strong>支持休克療法者（薩克斯 Jeffrey Sachs 等）：</strong>市場改革必須快速全面推進，否則「部分改革」的利益集團（national incumbents，既得利益者）會阻止後續改革；半市場半計畫的「雙軌制」只會固化腐敗和尋租（rent-seeking/尋租）。「你不能半步跨越鴻溝。」</p>
+            <p><strong>支持漸進主義者（羅蘭 Gérard Roland、黛安·林 Dani Rodrik 等）：</strong>市場機制的有效運作依賴大量配套制度（財產法、合同法、金融監管、會計標準），這些制度需要時間建立。在制度缺位的情況下快速市場化，只是把資源從計畫錯配轉向市場掠奪，並不一定改善效率。中國和越南的漸進成功說明，改革路徑設計比速度更重要。</p>
+            <p><strong>後見之明的評估：</strong>1990 年代的結果顯示，轉型成效最不重要的決定因素是速度本身，最重要的是改革的「制度品質（institutional quality）」——法治、產權保護、腐敗控制。波蘭成功是因為它具備了良好的前共產主義時代的法律基礎、與歐盟整合的制度錨（institutional anchor），而非單純因為「快」。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="russia">
+          <h2>六、俄羅斯轉型的災難：「野蠻資本主義」的形成</h2>
+
+          <h3>「閃電私有化（Voucher Privatization）」的扭曲</h3>
+          <p>俄羅斯在 1992–1994 年推行的「憑單私有化（voucher privatization/憑單私有化）」，理論上向每個公民發放可用於購買國有企業股份的憑單，實現「人民資本主義」。現實是：絕大多數公民不了解如何使用憑單，在通膨和貧困中以極低價格出售給了投機者；而「內部人私有化（insider privatization/內部人私有化）」使大量國有資產落入前蘇聯體制內的管理者手中。</p>
+
+          <h3>貸款換股份醜聞（Loans-for-Shares, 1995–1996）</h3>
+          <p>1995–1996 年，葉利欽政府推行「貸款換股份」計畫：政府急需現金（選舉前），允許私人銀行家以低廉貸款換取大型國有能源和礦業企業的股份抵押；當政府「無力償還」時，這些企業的控制權正式移交給銀行家。這個計畫將俄羅斯的最核心資源（石油、天然氣、金屬）以極低價格轉讓給了少數幾個有政治關係的人物，創造了後來的「寡頭（oligarchs/寡頭）」階層。</p>
+
+          <h3>轉型代價的數字</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>指標</th>
+                <th>1991 年</th>
+                <th>1998 年（谷底）</th>
+                <th>變化</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>俄羅斯實質 GDP</td><td>基準 100</td><td>約 57</td><td>-43%（超過大蕭條！）</td></tr>
+              <tr><td>通膨率（1992 年）</td><td>—</td><td>2,509%</td><td>惡性通膨</td></tr>
+              <tr><td>人均壽命（男性）</td><td>63.5 歲</td><td>約 59 歲</td><td>-4.5 歲</td></tr>
+              <tr><td>貧困率（$4/天以下）</td><td>約 2%</td><td>約 40–50%</td><td>+38–48 個百分點</td></tr>
+              <tr><td>基尼係數</td><td>約 0.26</td><td>約 0.41</td><td>不平等急劇上升</td></tr>
+            </tbody>
+          </table>
+
+          <p>Joseph Stiglitz（2002）在《全球化及其不滿》（<em>Globalization and Its Discontents</em>）中以俄羅斯轉型為主要案例，批評 IMF 和華盛頓共識忽視制度前提，盲目推行快速市場化的意識形態錯誤。他認為，在沒有法治、財產保護和競爭政策的情況下推行私有化，結果是「以市場失敗取代政府失敗」，而非真正的效率改善。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="institutions">
+          <h2>七、制度是關鍵：為什麼相同的政策產生截然不同的結果？</h2>
+
+          <h3>「轉型衰退（Transitional Recession）」的橫截面比較</h3>
+          <p>1990 年代，幾乎所有轉型經濟體都經歷了 GDP 的初始下降（轉型衰退），但深度和持續時間差異巨大：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>國家/地區</th>
+                <th>轉型衰退深度（GDP 最大跌幅）</th>
+                <th>恢復時間（回到 1989 年 GDP 水平）</th>
+                <th>2000 年代評估</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>波蘭</td><td>-13%（1990–1991）</td><td>1995–1996 年</td><td>成功轉型</td></tr>
+              <tr><td>捷克</td><td>-15%</td><td>1997–1998 年</td><td>較成功</td></tr>
+              <tr><td>匈牙利</td><td>-20%</td><td>1999–2000 年</td><td>中等</td></tr>
+              <tr><td>俄羅斯</td><td>-43%</td><td>2006–2007 年（石油價格驅動）</td><td>部分復甦，寡頭體制固化</td></tr>
+              <tr><td>烏克蘭</td><td>-60%</td><td>至今未完全恢復</td><td>長期困境</td></tr>
+              <tr><td>中國</td><td>無衰退（持續成長）</td><td>不適用</td><td>最成功的漸進轉型</td></tr>
+            </tbody>
+          </table>
+
+          <h3>「制度先行（Institutions First）」的後見之明</h3>
+          <p>Daron Acemoglu、Simon Johnson 和 James Robinson（2001）的研究（H02 和 H03 中提到的 AJR 框架）提供了制度對長期發展影響的系統性證據。Dani Rodrik（2006）等人的研究則從轉型比較中總結：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">轉型成功的制度前提</div>
+            <p><strong>財產權保護（Property Rights Protection）：</strong>私有化後的資產必須受到法律保護，否則私有化只是從政府計畫掠奪轉向寡頭市場掠奪。俄羅斯的私有化在財產保護缺失的情況下推行，結果是資本外逃而非投資。</p>
+            <p><strong>法治（Rule of Law）：</strong>合同必須可執行、法院必須獨立、腐敗必須受到約束——這些是市場交易的基礎設施。1990 年代俄羅斯的「有組織犯罪擔保代替法律合同」說明，在法治缺失的情況下，「市場」是扭曲的市場。</p>
+            <p><strong>競爭政策（Competition Policy）：</strong>私有化如果製造私人壟斷（而非國有壟斷），效率改善有限。有效的競爭政策需要時間建立，不能假設市場化自動帶來競爭。</p>
+            <p><strong>金融監管（Financial Regulation）：</strong>銀行體系的重建和監管是信用分配的基礎，在脆弱的金融監管下推行資本帳戶開放，是引發金融危機的高風險組合。</p>
+          </div>
+
+          <h3>「增強型華盛頓共識（Augmented Washington Consensus）」</h3>
+          <p>Dani Rodrik（2006）和 Joseph Stiglitz 等人後來提出了「後華盛頓共識（post-Washington Consensus）」，在原有十項基礎上強調：制度建設、公司治理、反腐敗、勞動市場靈活化（但保留社會保護）、WTO 規則之外的貿易管制選項。核心訊息：沒有「普適的最佳政策（one-size-fits-all policy）」，有效的改革必須根植於具體的制度和歷史條件。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：新興市場的機遇與陷阱</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">轉型時代的資產配置教訓</div>
+            <p><strong>新興市場股票（Emerging Market Equities）：</strong>1990 年代初的「新興市場熱」吸引了大量西方資本流入前共產主義國家和亞洲市場。然而，俄羅斯 1998 年債務違約、亞洲金融危機（1997–1998，H11 詳述）提醒投資者：高成長潛力必須與制度品質、法治水準、資本帳戶開放度匹配評估。只看 GDP 成長率而忽視制度風險，是新興市場投資的經典陷阱。</p>
+            <p><strong>商品（Commodities）：</strong>前共產主義國家的礦業和能源資產大規模私有化，吸引了部分資源公司投資。但「資源詛咒（resource curse/資源詛咒）」和產權不穩定（俄羅斯 2003 年尤科斯石油案是警示）使許多投資蒙受損失。</p>
+            <p><strong>外匯（Foreign Exchange）：</strong>轉型初期的高通膨環境（俄羅斯 1992 年 2,509%）使持有本幣資產幾乎等於財富損失；持有美元或德國馬克資產的轉型國家人民，在通膨中得以保全財富。這解釋了轉型國家「美元化（dollarization/美元化）」現象——人民自發以外幣代替本幣作為價值儲存手段。</p>
+            <p><strong>「政治風險溢價（Political Risk Premium）」的真實含義：</strong>轉型國家的高收益率資產（高利率債券、廉價股票）反映了真實的政治和制度風險溢價。許多 1990 年代初進入俄羅斯市場的外國投資者，發現「高收益」對應的是「無法退出」的真實風險——資本管制、腐敗的法院、寡頭的政治介入。</p>
+          </div>
+
+          <h3>「轉型勝利者」的投資邏輯</h3>
+          <p>1990 年代後期，真正在新興市場獲利的投資策略特徵：選擇制度基礎較好的轉型國家（波蘭、捷克相比俄羅斯）；等待初始衰退觸底後才進入；關注歐盟整合進程作為「制度錨」（EU accession as institutional anchor）的評估指標——因為歐盟入盟要求（acquis communautaire/歐盟法規體系）提供了制度改革的外部紀律，大幅降低了政治和制度風險。這個邏輯在後來的中東歐資產定價中提供了有效的投資框架。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「蘇聯解體純粹是政治—意識形態失敗，與經濟無關」</h3>
+            <p><strong>更準確的理解</strong>：蘇聯解體是政治、意識形態和經濟危機的三重疊加，其中經濟因素在 1980 年代後半段發揮了日益重要的作用。1986 年的油價崩潰直接打擊了蘇聯的外匯收入；Gorbachev 的 Perestroika 改革破壞了計畫體系而未能建立市場體系，導致 1988–1991 年的商品嚴重短缺和通膨；軍備競賽的財政消耗已使蘇聯經濟接近崩潰邊緣。政治決斷（蘇聯領導層不願使用武力鎮壓）是最後的觸發因素，但經濟的長期衰弱提供了解體的物質基礎。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「休克療法是失敗的政策，漸進主義才是正確答案」</h3>
+            <p><strong>更準確的理解</strong>：這個簡單化的結論忽略了條件依賴性。波蘭的休克療法（結合歐盟整合目標和較強的制度基礎）是成功的；俄羅斯名義上的休克療法（在制度缺失的情況下推行）是災難性的。中國的漸進主義在強大的國家能力和漸進的政治控制下成功；很難想象這個模式在缺乏相應制度條件的非中國情境中複製。關鍵不是速度，而是改革與制度建設的配合。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「中國的成功說明威權政治優於民主政治的經濟效率」</h3>
+            <p><strong>更準確的理解</strong>：中國的成功有其特定的解釋——技術追趕潛力（從極低基數出發）、巨大的勞動力規模、地方政府的競爭性實驗（各省競爭外資和成長指標）、以及特定的歷史窗口（全球化擴張期）。Acemoglu &amp; Robinson（2012）的跨國研究顯示，從長期看（50 年以上時間尺度），法治和民主制度是持續增長的更可靠基礎。中國的模式是否可以在缺乏類似條件的其他威權國家複製，實證上並無強有力的支持。此外，比較「威權成長」時需要排除倖存者偏差——許多威權體制的經濟失敗被忽略，只有少數成功案例被記住。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「華盛頓共識是美國帝國主義強加給發展中國家的」</h3>
+            <p><strong>更準確的理解</strong>：這個批評包含部分真實性（權力不對稱確實影響了 IMF 和世銀的政策建議），但過度簡化了知識辯論的複雜性。華盛頓共識的許多元素（財政紀律、財產權保護、競爭政策）是市場經濟的普遍前提，並非意識形態武器；問題在於這些元素的實施順序和配套制度的忽視，而非全部元素的否定。Rodrik（2006）的精確批評是：「一刀切的政策建議（one-size-fits-all）」忽視了國情差異，而非所有這些建議都是錯的。改革的政治和制度前提，需要比華盛頓共識更細緻的分析框架。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「為什麼波蘭的休克療法成功，而俄羅斯名義上相似的快速改革卻導致了'野蠻資本主義'？用制度經濟學框架解釋兩者的關鍵差異。」</div>
+
+            <p>這個問題要求運用制度經濟學（institutional economics/制度經濟學）框架，超越「速度快慢」這個表面變量，深入到改革成功的制度前提。</p>
+
+            <p><strong>表面相似性的識別：</strong>1990 年代初，波蘭和俄羅斯都採納了世界銀行和 IMF 的「快速改革」建議；兩者都快速推行了價格自由化、貿易開放和私有化。但結果截然不同，說明速度本身不是決定性變量。</p>
+
+            <p><strong>制度差異的三個維度：</strong></p>
+            <p>首先，<strong>前期制度積累（Pre-existing institutional endowment）</strong>：波蘭在共產主義時期保留了較多的公民社會和非國有經濟（天主教教會的獨立性、農業從未完全集體化、Solidarity 工會運動）；俄羅斯則是更為全面的計畫體制，法律傳統、財產概念、商業文化幾乎被徹底清除。改革前的制度存量直接影響了市場機制建立的速度和質量。</p>
+            <p>其次，<strong>外部制度錨（External Institutional Anchor）</strong>：波蘭有明確的歐盟入盟目標，這提供了一個不可更改的外部制度基準（歐盟法規體系需要逐步採納），迫使波蘭政府在選舉壓力下仍必須維持改革方向；俄羅斯沒有類似的外部約束，政策可以在政治壓力下隨意轉向。</p>
+            <p>第三，<strong>私有化設計與財產保護（Privatization Design and Property Protection）</strong>：波蘭的私有化相對有序，外資參與帶來了競爭和公司治理壓力；俄羅斯的「內部人私有化」和「貸款換股份」是在財產保護制度缺失的情況下進行的，結果是資產被轉移給政治關係網路，而非真正的市場競爭者。私有化後的財產沒有法律保護，自然導致掠奪性行為和資本外逃，而非投資和效率提升。</p>
+
+            <p><strong>結論：</strong>波蘭和俄羅斯的對比提供了一個近乎自然實驗的制度經濟學案例——相似的改革政策在不同的制度條件下產生了截然不同的結果，說明「制度是決定性的（Institutions are fundamental）」不只是一個理論命題，而是有強烈歷史支持的實證結論。這個案例的政策啟示是：改革的「順序設計（sequencing）」——先建立制度基礎（法治、財產保護、競爭機制），再推行市場化——比「速度」本身更重要。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">解釋 Janos Kornai 的「軟預算約束（soft budget constraint）」概念，並說明它如何導致計畫經濟的系統性低效率。如果你是 1990 年試圖改革一個後共產主義國家的政策顧問，你如何設計「硬化預算約束（hardening of budget constraints）」的改革？</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>軟預算約束的精確定義：</strong>軟預算約束是指企業（特別是國有企業）知道即使虧損也能獲得政府救助（補貼、低息貸款、債務豁免）的預期，因此缺乏在硬預算約束（hard budget constraint）下才有的成本控制和創新激勵。Kornai（1980）強調，這不只是一個財務問題，而是一個行為激勵問題——企業在軟預算約束下的決策與在硬約束下根本不同。</p>
+                  <p><strong>系統性低效率的機制：</strong>① 過度投資——反正虧損有政府兜底，擴張比節約更「安全」；② 成本控制缺位——沒有破產壓力；③ 創新動力不足——失敗後果由全社會承擔；④ 資源配置失當——銀行貸款流向政治關係好的企業而非有效率的企業（「政治性信貸/political lending」）。</p>
+                  <p><strong>政策設計：</strong>優秀答案能說明「硬化預算約束」必須是整套制度的同時推進：① 建立可信的破產程序（bankruptcy law/破產法）；② 使銀行真正商業化（停止政策性貸款）；③ 同步建立社會安全網（以應對工人失業的衝擊，否則政治上無法堅持）；④ 引入競爭（壟斷國企在沒有競爭的情況下，即使預算硬化也缺乏效率改善壓力）。孤立地「停止補貼」而不配套社會保護和競爭機制，可能製造嚴重的社會動盪。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明軟預算約束的基本含義，理解其與低效率的連結，提出停止補貼和私有化的政策建議，但對配套機制（社會保護、競爭政策、破產程序）的考慮不足。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「政府不應補貼虧損企業」，未能掌握軟預算約束的行為激勵機制，政策設計缺乏制度配套思考。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>軟預算約束概念的精確理解</td><td>30 分</td></tr>
+                    <tr><td>系統性低效率機制的分析</td><td>25 分</td></tr>
+                    <tr><td>政策設計的完整性（含配套機制）</td><td>35 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">「歐盟入盟承諾（EU accession prospect）」如何充當波蘭等中東歐國家制度改革的外部錨（external anchor）？如果這些國家沒有歐盟入盟前景，休克療法的成功概率是否仍然一樣高？請設計一個論證框架。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>外部錨的機制分析：</strong>歐盟入盟承諾提供了幾個獨特的約束機制：① <strong>條件性承諾（conditionality）</strong>：入盟要求採納整套「歐盟法規體系（acquis communautaire）」，包括競爭法、財產法、金融監管標準，這為改革提供了明確的制度目標和路徑；② <strong>克服改革阻力（overcoming reform resistance）</strong>：政府可以以「這是入盟必要條件」作為推行困難改革的政治理由，分散既得利益的阻力；③ <strong>信號作用（signaling）</strong>：入盟前景作為一個可信的外部信號，降低了外資和貿易夥伴的風險溢價，推動了資本流入和貿易擴張；④ <strong>民主鞏固（democratic consolidation）</strong>：入盟要求民主政治制度，防止了向威權回退的風險，維護了改革的長期穩定性。</p>
+                  <p><strong>反事實論證：</strong>沒有歐盟入盟前景的情境下，波蘭的休克療法可能面臨：改革後期因政治反彈而政策逆轉的風險更高（無外部錨約束）；外資進入更謹慎（缺乏制度品質的外部認證）；改革標準的選擇更隨意（無歐盟法規體系作為基準）。可以比較具有類似初始條件但無歐盟前景的國家（如烏克蘭、白俄羅斯），它們的轉型結果明顯更差。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明歐盟入盟提供了制度標準和外部壓力，提出沒有入盟前景可能影響改革成效，但對機制的分析不夠深入，反事實論證較為薄弱。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「歐盟是好的，所以波蘭成功了」，未能分析外部錨的具體機制，反事實論證幾乎缺失。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>外部錨多個機制的分析深度</td><td>40 分</td></tr>
+                    <tr><td>反事實論證的嚴格性</td><td>35 分</td></tr>
+                    <tr><td>比較案例的引用（烏克蘭等）</td><td>15 分</td></tr>
+                    <tr><td>論述結構</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">什麼是「資源詛咒（resource curse）」？為什麼擁有豐富自然資源的國家（如俄羅斯、奈及利亞）往往比資源匱乏但制度良好的國家（如新加坡、韓國）發展更差？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>資源詛咒的多重機制：</strong></p>
+                  <p>① <strong>荷蘭病（Dutch Disease/荷蘭病）</strong>：資源出口帶動匯率升值，使製造業出口競爭力下降，產業結構單一化；</p>
+                  <p>② <strong>尋租政治（Rentier State/尋租政治）</strong>：政府靠資源租金（resource rents）維持，無需對公民徵稅，降低了政府的問責壓力——「無稅收，無代表（No taxation, no representation）」的邏輯逆轉；</p>
+                  <p>③ <strong>制度弱化（Institutional Weakening）</strong>：資源財富使統治精英得以在不建立有效制度的情況下維持政治控制，弱化了制度建設的激勵；</p>
+                  <p>④ <strong>波動風險（Commodity Price Volatility）</strong>：資源出口收入的大幅波動使財政規劃困難，「豐收期的揮霍（boom spending）+ 蕭條期的急縮（bust cutting）」加劇了經濟不穩定。</p>
+                  <p><strong>新加坡和韓國的反例邏輯：</strong>資源匱乏迫使這些社會投資人力資本（human capital/人力資本）、建立制度、鼓勵出口導向製造業，從而在全球價值鏈中累積技術能力。「必要性是制度建設之母。」</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能提到荷蘭病和腐敗，理解資源豐富可能帶來問題，但對多重機制的分析不夠全面，新加坡/韓國的反例邏輯較為薄弱。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「有資源就容易腐敗」，無法說明具體的經濟和制度機制，反例邏輯缺失。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>資源詛咒多重機制的覆蓋</td><td>40 分</td></tr>
+                    <tr><td>尋租政治/制度弱化的深度分析</td><td>25 分</td></tr>
+                    <tr><td>新加坡/韓國反例的邏輯解釋</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h09-stagflation.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H09 停滯性通膨與新自由主義轉向</span>
+          </a>
+          <a href="h11-japan-asia-euro.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H11 日本泡沫、亞洲危機與歐元</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

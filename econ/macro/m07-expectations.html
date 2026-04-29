@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M07 預期形成：理性、適應與行為 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link active">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M07</span>
+          <span class="topbar-title">預期形成：理性、適應與行為</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 07</div>
+          <h1 class="lecture-hero-title">預期形成：理性、適應與行為</h1>
+          <p class="lecture-hero-subtitle">Expectation Formation: Rational, Adaptive, and Behavioral</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：預期動態</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">「預期（expectations）」是現代總體經濟學中最核心也最爭議的概念。凱因斯的「動物本能」認為投資者的信心無法被理論化；盧卡斯的「理性預期」革命則主張，經濟行為者能高效利用所有可得信息，使系統性政策無效；而行為經濟學則展示了人類預期形成的系統性偏誤。三個框架對貨幣政策的有效性有根本不同的含義。本講也涵蓋「盧卡斯批判（Lucas Critique）」——理解為何歷史上有效的政策規律，在政策改變後往往失靈。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、適應性預期（Adaptive Expectations）</h2>
+          <p>最簡單的預期形成假說：人們根據<em>過去的實際值</em>修正預期，加權最近的數據更多。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 適應性預期方程式</div>
+            <pre>
+πᵉₜ = πᵉₜ₋₁ + λ(πₜ₋₁ − πᵉₜ₋₁)
+
+  πᵉₜ   = 今期對通膨的預期
+  πᵉₜ₋₁ = 上期對通膨的預期
+  πₜ₋₁  = 上期實際通膨
+  λ     = 調整速度（0 &lt; λ &lt; 1）
+
+直覺解釋：
+  若上期實際通膨 > 預期 → 上調今期預期
+  若上期實際通膨 &lt; 預期 → 下調今期預期
+  調整幅度 = λ × 預測誤差
+
+特殊情況：
+  λ = 1：完全更新，預期 = 上期實際值（naive expectations）
+  λ = 0：完全不更新，預期永遠不變
+
+適應性預期的優點：
+  • 符合直覺：人們確實根據過去經驗學習
+  • 數學處理簡單
+
+適應性預期的關鍵缺陷：
+  • 系統性向後看（backward-looking）
+  • 在政策轉向時，會長期持續犯同方向的錯誤
+  • 1970s 通膨：適應性預期使工人不斷低估通膨
+    → 實際薪資持續被侵蝕，直到預期「追上」才穩定
+  • 政策制定者可以利用「預期落後」系統性操縱實體經濟
+    → 這激發了理性預期革命的批判
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、理性預期（Rational Expectations）</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>理性預期假說（Rational Expectations Hypothesis, REH）</strong>：John Muth（1961）提出，Robert Lucas（1972）將其發揚光大。核心主張：理性行為者不會系統性地犯預測錯誤——他們利用所有可得的信息（包括對政策規則的了解）形成預期，使預期值等於「基於所有信息的條件期望值（conditional mathematical expectation）」。預期誤差是隨機的、不可預測的，平均為零。理性預期不要求每個人都是天才，只要求集體上沒有持續的、可預測的系統性偏誤。
+          </div>
+
+          <h3 class="subsection-title">2.1 理性預期的革命性含義</h3>
+          <div class="blackboard">
+            <div class="blackboard-title">■ 理性預期對政策有效性的衝擊</div>
+            <pre>
+政策無效命題（Policy Ineffectiveness Proposition）：
+Sargent & Wallace（1975）
+
+若：
+  ① 理性預期成立
+  ② 工資/價格完全彈性（市場即時出清）
+
+則：
+  「可預期的」貨幣政策對實質產出無效！
+
+推導邏輯：
+  央行宣布擴張貨幣供給（刺激需求）
+  → 理性行為者立即預期通膨上升
+  → 工人立即要求更高名目薪資
+  → 企業立即提高價格
+  → 通膨上升但實質工資/產出不變
+  → 政策效果被「預期到抵銷」
+
+只有「出乎意料的（unanticipated）」政策才能影響實質產出
+
+含義：
+  政府無法系統性地「愚弄」理性公眾
+  試圖「超出預期」刺激經濟 → 只會引發預期通膨螺旋
+
+反論（反對完全理性預期的陣營）：
+  • 信息是不完整且獲取成本高的
+  • 認知能力有限（bounded rationality）
+  • 協調問題：即使個人理性，集體結果未必理性
+  • 2008 年金融危機：幾乎所有主流模型（含 DSGE）
+    均未預測到——挑戰「市場集體預期理性」的假設
+</pre>
+          </div>
+
+          <h3 class="subsection-title">2.2 盧卡斯批判（Lucas Critique, 1976）</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>盧卡斯批判（Lucas Critique）</strong>：Robert Lucas（1976）指出，傳統的計量經濟學政策模型存在根本缺陷：歷史上估計的行為關係（如菲利浦曲線的係數），是在特定政策環境下的行為產物。一旦政策規則改變，理性行為者會相應調整行為，歷史估計的係數就不再成立。換言之，「政策改變本身就會改變模型的結構參數」。這意味著：基於歷史數據建立的政策模型，一旦用於制定改變政策規則的建議，其預測就會失效。盧卡斯批判要求政策模型必須以「深層結構參數（deep structural parameters）」（如偏好、技術）為基礎，而非基於歷史行為關係的縮減式方程。
+          </div>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>盧卡斯批判的歷史案例：菲利浦曲線的崩潰</strong>
+            <p>1960 年代，美國政策制定者依靠歷史估計的菲利浦曲線，相信可以「購買」永久性的低失業率，代價是略高的通膨。政策轉向後，工人和企業開始預期政府會持續擴張以維持低失業——於是薪資談判加入了更高的通膨預期，菲利浦曲線的位置上移。到 1970 年代，歷史估計的菲利浦曲線完全失效：在同樣的政策刺激下，通膨飆升而失業未如預期下降。這正是盧卡斯批判的現實演示：政策規則的改變導致行為者調整預期，使歷史關係失效。Friedman-Phelps（1968）提前預測了這一結果，成為總體經濟學史上最成功的理論預測之一。</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、行為總體經濟學：人類預期的系統性偏誤</h2>
+          <p>理性預期假說雖在理論上嚴謹，但大量實驗與現實數據顯示，人類預期存在系統性、可預測的偏誤——行為經濟學（Behavioral Economics）記錄了這些偏誤。</p>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>行為偏誤</th>
+                  <th>描述</th>
+                  <th>總體經濟含義</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>錨定效應（Anchoring）</td>
+                  <td>預期過度受到最近或顯著數字的影響</td>
+                  <td>通膨預期「錨定」於上一次的通膨率；央行目標即「錨」</td>
+                </tr>
+                <tr>
+                  <td>過度自信（Overconfidence）</td>
+                  <td>高估自身預測精度</td>
+                  <td>投資者對未來收益過度自信 → 資產泡沫</td>
+                </tr>
+                <tr>
+                  <td>近因偏誤（Recency Bias）</td>
+                  <td>過度加權最近事件</td>
+                  <td>景氣高峰時高估未來成長；衰退後低估復甦速度</td>
+                </tr>
+                <tr>
+                  <td>確認偏誤（Confirmation Bias）</td>
+                  <td>傾向尋找支持既有觀點的信息</td>
+                  <td>投資者忽略與持倉相反的信號</td>
+                </tr>
+                <tr>
+                  <td>損失厭惡（Loss Aversion）</td>
+                  <td>損失的心理痛苦 &gt; 等量獲益的快樂</td>
+                  <td>衰退恐懼壓制投資意願；不對稱的政策壓力</td>
+                </tr>
+                <tr>
+                  <td>群眾心理（Herding）</td>
+                  <td>跟隨多數人行動</td>
+                  <td>資產泡沫形成與崩潰的自我強化機制</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="subsection-title">3.1 Shiller 的「敘事經濟學（Narrative Economics）」</h3>
+          <p>Robert Shiller（2019，諾貝爾獎 2013 年）提出，廣泛流行的「經濟敘事（economic narratives）」——即在社會上病毒式傳播的故事與信念——是驅動宏觀經濟波動的獨立力量，而非單純的理性預期更新。例：</p>
+          <ul>
+            <li>1920 年代的「股市永遠上漲」敘事 → 推升泡沫</li>
+            <li>2006–2007 年的「房價不會全國性下跌」敘事 → 房市泡沫</li>
+            <li>2021 年的「TINA（股票別無選擇）」敘事 → 成長股估值泡沫</li>
+          </ul>
+          <p>敘事不需要理性，只需要足夠吸引人以被廣泛傳播——這正是行為總體經濟學對「理性預期集體有效」假設的最根本挑戰。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、央行溝通政策：管理預期的藝術</h2>
+          <p>理解預期形成機制，直接引出現代央行最重要的政策工具之一：<strong>前瞻性指引（Forward Guidance）</strong>——透過溝通未來政策意圖來影響市場預期，而非僅依靠實際利率行動。</p>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 前瞻性指引的傳導機制</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">央行發布<br>前瞻指引</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">市場更新<br>政策預期</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">長期利率<br>調整</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">企業/家庭<br>借貸決策</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">總需求<br>與通膨</div>
+            </div>
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 前瞻性指引的三種形式</div>
+            <pre>
+1. 德爾菲式指引（Delphic Guidance）：
+   「我們預期利率將維持低位一段時間」
+   純粹提供預測，不構成承諾
+   → 市場根據央行判斷更新預期
+   → 但若央行事後改變，無公信力損失
+
+2. 奧德賽式指引（Odyssean Guidance）：
+   「我們承諾在失業率降至 6.5% 前不升息」
+   （Fed 2012 年的「門檻式指引（threshold guidance）」）
+   → 構成可驗證的承諾，約束未來政策
+   → 若央行提前升息，公信力受損
+   → 比德爾菲式更有力（預期錨定效果更強）
+   → 但「時間不一致性（time inconsistency）」問題：
+     最優的事前承諾，事後可能不再最優
+
+3. 依賴數據的指引（Data-Dependent Guidance）：
+   「我們的政策決定取決於通膨與就業數據」
+   → 現代央行最普遍的形式
+   → 增加政策的可預測性，同時保留彈性
+   → 代價：若數據解讀不清，可能引發市場誤解
+     （「Fed put」敘事的形成）
+
+「縮減恐慌（Taper Tantrum, 2013）」的教訓：
+  Bernanke 在聽證會中隨口提及「可能開始縮減 QE」
+  → 市場對前瞻指引的解讀發生突變
+  → 新興市場利率飆升、資本外流
+  → 展示了前瞻指引「解讀不一致」的風險
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、時間不一致性（Time Inconsistency）：為何承諾困難</h2>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>時間不一致性（Time Inconsistency）</strong>：Kydland & Prescott（1977，諾貝爾獎 2004 年）證明，在通膨-失業取捨中，政府存在系統性的「事後背棄承諾」的激勵。流程：①政府宣布低通膨承諾 → 工人相信，簽訂低薪資合約；②經濟體確立低薪資後，政府發現可以用「意外通膨」降低實質工資、刺激就業；③政府違背承諾，實際執行高通膨政策。工人意識到這一激勵 → 不相信低通膨承諾 → 要求更高薪資 → 「通膨偏誤（inflationary bias）」均衡。解決方案：央行獨立（委託給不在乎選票的技術官僚執行貨幣政策）；規則式貨幣政策（泰勒規則）；信譽建立（沃克衝擊的痛苦代價，確立了 Fed 的反通膨公信力）。
+          </div>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">六、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「理性預期意味著每個人都是完美的預測機器。」</strong>
+            <p>理性預期是一個集體/統計概念，不要求每個個人都完美預測。它只要求預測誤差（actual − expected）在已知信息的條件下是隨機的、平均為零——沒有系統性的方向性偏差。個別人可能嚴重犯錯，但市場的集體行為（套利機制）消除了系統性誤差。這與「個人都是計算機」截然不同。批評理性預期的有力論點，不是「人會犯錯」，而是「錯誤可能是系統性的且持久的」（行為經濟學的核心主張）。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「盧卡斯批判意味著計量經濟學和政策模型都沒有用。」</strong>
+            <p>盧卡斯批判批評的是特定形式的政策模型（縮減式方程），而非所有實證研究。其正面貢獻是推動了「深層結構參數」的模型建立（Dynamic Stochastic General Equilibrium, DSGE 模型），試圖以穩定的偏好與技術參數建立政策分析框架。此外，即使存在盧卡斯批判的問題，縮減式計量模型在「政策規則未改變的環境下」的預測仍然有價值。關鍵是在解讀時誠實面對其侷限性——尤其在討論大幅政策轉向時。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「股市是理性的，因此能完美預測未來。」</strong>
+            <p>有效市場假說（EMH，Fama 1970）認為股價反映所有可得信息。但「反映信息」不等於「完美預測未來」——未來有不可知的隨機性，股價只是條件期望值，不是確定性預測。更重要的是，Shiller 等人的研究顯示，股市波動性（Volatility）遠超基本面（股息折現值）所能解釋的範圍——這被稱為「超額波動性（excess volatility）謎題」，是對 EMH 嚴格形式的有力挑戰。EMH 的弱式（技術分析無效）可能成立；半強式（基本面已反映）部分成立；強式（內線信息也已反映）幾乎肯定不成立。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">七、教授標準答案</h2>
+          <p class="section-lead">試題：「2021 年 Fed 主席 Powell 多次在公開場合表示通膨是『暫時性』的，但後來通膨持續並升高。請從預期形成理論的角度，分析這一溝通策略的邏輯、為何最終失敗，以及對央行溝通政策有何啟示。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、「暫時性」敘事的策略邏輯：
+   目的：錨定通膨預期（不讓公眾預期通膨持續）
+   假設：若公眾相信通膨是暫時的 → 薪資談判不納入高通膨
+         → 不形成薪資-通膨螺旋 → 通膨確實更快消退
+
+   在「理性預期」框架下，這是有效的德爾菲式指引：
+   若央行預測可信 → 預期自我實現 → 通膨確實暫時
+
+二、失敗的原因：
+   ① 預測本身錯誤：
+      Fed 的分析框架低估了財政刺激規模（ARP 過大）
+      + 供應鏈恢復慢（中國 Zero-COVID 延續）
+      導致供給衝擊持續時間遠超預期
+
+   ② 盧卡斯批判的反向效應：
+      Powell 反覆重申「暫時性」，但通膨數據持續超過預期
+      → 市場開始懷疑央行的分析能力（信號與現實背離）
+      → 長期通膨預期開始緩慢上移（TIPS breakeven 上升）
+      → 「暫時性」敘事的公信力侵蝕
+
+   ③ 前瞻指引的「過度承諾」副作用：
+      「暫時性」成為隱含的政策路徑承諾
+      → 當通膨持續高企，Fed 不得不突然轉向
+      → 2021 年 11 月 Powell 宣布「retire the word transitory」
+      → 市場解讀為政策急轉彎 → 強烈調整預期
+
+三、對央行溝通的啟示：
+   ① 預測應保留不確定性空間
+      誠實的「我們預計通膨是暫時性的，但存在風險」
+      優於過度確定的「通膨是暫時性的」
+   ② 信號一致性比「正確預測」更重要
+      央行的溝通必須與行動保持一致
+      「說到做到」比「預測準確」更影響公信力
+   ③ 預期錨定是一個脆弱的均衡
+      一旦公信力受損（連續預測失準），重建成本極高
+      （類比：Volcker 衝擊的痛苦代價）
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>理論比較題：</strong>假設政府宣布實施一個「每年固定增加 5% 貨幣供給」的規則。根據①適應性預期；②理性預期，分析這一政策公告分別會在短期和長期對通膨與產出有何影響。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>適應性預期框架</strong>：<em>短期</em>——若原本通膨率低於 5%，行為者的預期形成仍基於過去的低通膨，薪資合約按低通膨簽訂 → 貨幣擴張超出預期 → 實質餘額增加 → 需求上升 → 短期有刺激產出效果，但通膨開始上升。<em>長期</em>——隨著通膨持續超過預期，工人逐漸調高薪資要求（適應性調整），薪資-通膨螺旋形成，最終通膨穩定在接近 5%（由貨幣數量學說決定），產出回到自然率，政策只留下更高的通膨水準。<strong>理性預期框架</strong>：<em>短期</em>——若規則可信（政府確實會執行），理性行為者<em>立即</em>更新通膨預期至 5%，薪資合約立即反映 5% 通膨 → 實質貨幣供給不增加 → 產出不變，通膨直接跳升至 5%。<em>長期</em>——維持在 5% 通膨、自然率就業的新均衡，無過渡期的產出效果（「政策無效命題」）。<strong>關鍵差異</strong>：適應性預期下，政策有短期實質效果（透過「預期落後」）；理性預期下，<em>可預測的規則</em>無實質效果，只有意外衝擊才能影響產出。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能說明兩種框架的基本差異，但對「短期 vs. 長期」的分析不夠完整，或未能清楚說明理性預期下的「立即跳升」機制。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>混淆兩種框架，或無法解釋為何理性預期下固定規則無短期產出效果。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>適應性預期：短期 + 長期分析</td><td>35 分</td></tr>
+                  <tr><td>理性預期：短期 + 長期分析</td><td>35 分</td></tr>
+                  <tr><td>兩框架差異的核心對比</td><td>30 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>盧卡斯批判應用題：</strong>某國政府注意到歷史數據顯示，當消費者信心指數上升 10 點時，GDP 在隨後兩季增長 0.5%。政府計劃透過「大規模政府廣告宣傳活動」來人工提升消費者信心。請解釋盧卡斯批判為何使這一計劃的預期效果存疑，並說明在什麼條件下此政策可能仍然有效。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>盧卡斯批判的應用</strong>：歷史上「消費者信心 → GDP」的關係，是在特定環境下自然形成的——消費者信心反映的是經濟基本面（就業、收入、資產價格）的真實改善，因此對未來消費有預測力。然而，若政府用廣告<em>人工</em>推高信心指數，這改變了「信心 → 消費」關係的底層機制。理性消費者若了解這一政策，會意識到廣告誘發的信心不反映真實基本面改善 → 不會據此增加消費 → 歷史係數（+0.5% GDP）不再成立。這正是盧卡斯批判的核心：政策改變了關係的性質，歷史估計失效。<strong>政策仍可能有效的條件</strong>：①若消費者信心本身確實是「自我實現的預言」（Keynes 式動物本能）——廣告提升信心 → 消費者真的增加消費 → 企業投資增加 → 信心有實質基礎 → 可能有效（但需要初始啟動效果大於後來識破的反效果）；②若資訊不完全且廣告真的提供了新的正面信息（如政府透露即將有政策支持），則可能有真實信息更新效果；③若目標是「打破通縮預期陷阱」（全社會陷入悲觀導致消費萎縮），廣告可能是打破惡性均衡的協調工具。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能說明盧卡斯批判的基本邏輯（「政策改變關係」），但未能深入解釋「自然信心 vs. 人工信心」的機制差異，也缺乏對有效條件的具體分析。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「廣告效果有限」，未能引用盧卡斯批判的理論框架。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>盧卡斯批判的正確引用（政策改變結構參數）</td><td>35 分</td></tr>
+                  <tr><td>「自然 vs. 人工」信心差異的具體機制</td><td>30 分</td></tr>
+                  <tr><td>政策仍有效的條件（至少兩個）</td><td>35 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>央行溝通設計題：</strong>你剛剛被任命為某新興市場國家的央行行長。這個國家過去五年通膨平均 12%，你的使命是將通膨降至 3% 目標。根據本講所學的預期形成理論，設計一個可信的「通膨目標制（Inflation Targeting）」溝通策略。你的策略需要解決：①如何讓市場相信你的承諾（可信度問題）；②如何設計前瞻指引以避免時間不一致性；③如何處理通膨降低過程中不可避免的「痛苦（高失業）」期。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>①可信度建立</strong>：在公信力為零的起點，「言語承諾」不足夠——需要「制度性錨定（institutional anchoring）」。建議：立法確立央行獨立性（目標不受政府干預）；公開承諾通膨目標（如 3%±1%）並附帶問責機制（若偏離需公開解釋）；初期可提前交付——若第一季通膨下降超過承諾，市場將「更新」對你的信任。Volcker 教訓的正面版本：痛苦的緊縮如期實現，公信力才會積累。<strong>②前瞻指引設計</strong>：使用「基於數據的奧德賽式指引」——承諾：「在核心通膨連續 3 個月低於 X% 之前，不降低政策利率」，提供可驗證的條件式承諾，避免純時間性承諾（「12 個月後降息」）的時間不一致問題。公布「通膨預測路徑」與「利率預測點陣圖（dot plot）」，讓市場形成對政策路徑的清晰預期。<strong>③痛苦期溝通</strong>：在緊縮初期，誠實說明「降低通膨的短期代價是失業率可能上升 X%」——避免事後市場震驚。引入「瘢痕效應」論述：高通膨的長期代價（不平等、貨幣信用崩潰）遠大於短期緊縮的就業代價。定期舉行通膨報告新聞發布會，即使壞消息也要主動溝通——「沉默」在公信力脆弱時往往比壞消息更傷害預期錨定。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能提出基本的通膨目標制框架，但對「公信力建立的制度機制」與「可信指引設計（奧德賽式 vs. 德爾菲式）」的分析偏淺。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「宣布 3% 目標然後升息」，未考慮公信力問題、指引設計的時間不一致性，也未有痛苦期溝通策略。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>可信度建立（制度性錨定）</td><td>35 分</td></tr>
+                  <tr><td>前瞻指引設計（避免時間不一致性）</td><td>35 分</td></tr>
+                  <tr><td>痛苦期溝通策略（誠實 + 長期效益論述）</td><td>30 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m06-unemployment.html" class="lecture-nav-btn">← M06 失業與勞動市場</a>
+          <a href="m08-islm.html" class="lecture-nav-btn">M08 IS-LM 與 AD-AS →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

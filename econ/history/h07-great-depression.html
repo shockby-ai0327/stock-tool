@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H07 大蕭條、銀行危機與凱因斯革命 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H07 大蕭條、銀行危機與凱因斯革命</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H07</span>
+            <span class="lecture-period">1929 — 1939</span>
+          </div>
+          <h1 class="article-title">大蕭條、銀行危機與凱因斯革命</h1>
+          <p class="article-subtitle">The Great Depression, Banking Crises &amp; the Keynesian Revolution</p>
+          <p class="article-lead">大蕭條（Great Depression/大蕭條）是現代資本主義歷史上最深重的一次失敗：美國 GDP 在四年內萎縮近 30%，失業率飆至 25%，全球貿易崩潰過半，數千家銀行倒閉，通縮（deflation/通貨緊縮）使債務重量不斷加劇。這場災難不只是一次景氣循環的底部，而是對古典經濟學「市場自我調節」信念的致命打擊，催生了凱因斯（John Maynard Keynes）的總體經濟學革命，並奠定了戰後財政—貨幣政策框架的思想基礎。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#crash-1929">1929 年崩盤：成因與觸發</a></li>
+            <li><a href="#banking-crisis">銀行危機與費雪的債務通縮螺旋</a></li>
+            <li><a href="#gold-standard">金本位的枷鎖：政策失敗的制度根源</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#global">全球蔓延：貿易保護主義與國際協調失敗</a></li>
+            <li><a href="#keynes">凱因斯革命：《就業、利息與貨幣的一般理論》</a></li>
+            <li><a href="#policy-response">政策回應：新政（New Deal）的評價</a></li>
+            <li><a href="#market-implications">市場含意：大蕭條的資產配置教訓</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="crash-1929">
+          <h2>一、1929 年崩盤：成因與觸發</h2>
+
+          <h3>繁榮中的脆弱</h3>
+          <p>1920 年代的美國，汽車、收音機、電力普及帶來了真實的生產力提升，但同期也積累了幾個結構性失衡：股票市場以融資買進（buying on margin/融資買股）的方式創造槓桿泡沫；農業部門自 1920 年代初就持續蕭條（農產品價格下跌）；消費信貸（consumer credit/消費信貸）擴張推動耐久財購買，但透支了未來的需求；收入分配高度不均——1920 年代末美國最富有的 1% 家庭佔有全國收入的約 23%（Piketty &amp; Saez 估算）。</p>
+
+          <h3>1929 年的股市崩潰</h3>
+          <p>1929 年 10 月，道瓊工業指數（Dow Jones Industrial Average）在「黑色星期四」（10 月 24 日）和「黑色星期二」（10 月 29 日）連續重挫。從 1929 年 9 月的高峰到 1932 年 7 月的低谷，道瓊指數下跌了 <strong>89%</strong>——這是迄今為止美國股市最大的歷史性跌幅。</p>
+
+          <p>然而，股市崩盤本身並不等於大蕭條。1921 年的股市下跌同樣劇烈，但未引發類似的長期衰退。大蕭條的真正嚴峻性來自隨後的<strong>銀行危機（banking crisis/銀行危機）</strong>和<strong>政策失敗（policy failure/政策失敗）</strong>。</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>指標</th>
+                <th>1929 年峰值</th>
+                <th>1933 年谷底</th>
+                <th>跌幅</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>美國實質 GDP</td><td>基準 100</td><td>約 72</td><td>-28%</td></tr>
+              <tr><td>失業率</td><td>約 3%</td><td>約 25%</td><td>+22 個百分點</td></tr>
+              <tr><td>道瓊工業指數</td><td>381（1929/9）</td><td>41（1932/7）</td><td>-89%</td></tr>
+              <tr><td>銀行數量</td><td>約 25,000 家</td><td>約 15,000 家</td><td>-40%</td></tr>
+              <tr><td>物價水準（GDP 平減指數）</td><td>基準 100</td><td>約 73</td><td>-27%（通縮）</td></tr>
+              <tr><td>世界貿易量</td><td>基準 100</td><td>約 50</td><td>-50%</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="banking-crisis">
+          <h2>二、銀行危機與費雪的債務通縮螺旋</h2>
+
+          <h3>銀行擠兌的傳染性</h3>
+          <p>1930–1933 年間，美國共發生四輪銀行恐慌（banking panics/銀行恐慌），超過 9,000 家銀行倒閉（約佔總數的 40%），存款損失超過 25 億美元。這不是因為每家銀行都破產——大多數倒閉的銀行在流動性危機前是有償付能力的，問題在於銀行擠兌（bank run/銀行擠兌）的自我實現性質：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">銀行擠兌的賽局理論邏輯</div>
+            <p>銀行的本質是「借短貸長」（borrow short, lend long）：吸收可隨時提取的活期存款，放出期限較長的貸款。只要存款人同時提款，任何健全的銀行都會因資產不能立即變現而倒閉——這是銀行業的內在脆弱性。</p>
+            <p>一旦謠言或消息散播，存款人的理性選擇是「趕在別人之前提款」，即使自己相信銀行是健全的。這是一個協調失靈（coordination failure/協調失靈）問題：在缺乏存款保險（deposit insurance/存款保險）和最後貸款人（lender of last resort/最後貸款人）的環境下，自我實現的擠兌是均衡結果。Diamond &amp; Dybvig（1983）以博弈論模型嚴格化了這個邏輯，並因此獲得 2022 年諾貝爾經濟學獎。</p>
+          </div>
+
+          <h3>費雪的債務通縮螺旋</h3>
+          <p>美國經濟學家歐文·費雪（Irving Fisher）在 1933 年發表了影響深遠的論文〈大蕭條的債務通縮理論〉（"The Debt-Deflation Theory of Great Depressions"），提出了解釋大蕭條深度的核心機制：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">費雪債務通縮螺旋（Fisher Debt-Deflation Spiral）</div>
+            <pre>
+過度負債（over-indebtedness）
+         │
+         ▼
+債務人被迫拋售資產（distress selling）
+         │
+         ▼
+資產價格下跌（asset price deflation）
+         │
+         ▼
+貨幣流通速度下降 + 信用萎縮（credit contraction）
+         │
+         ▼
+一般物價通縮（general price deflation）
+         │
+         ▼
+實際債務負擔上升（real debt burden rises）
+         ───── 因為名目債務不變，物價下跌 ─────
+         │
+         ▼
+企業淨值下降 → 更多違約 → 更多銀行倒閉
+         │
+         ▼
+         ↑ （回到頂端，螺旋加速）</pre>
+            <p style="margin-top:1rem;font-size:.9rem;opacity:.8;">費雪的洞察：通縮環境下，債務人的集體去槓桿（deleveraging/去槓桿）是個合成謬誤（fallacy of composition/合成謬誤）——每個個體理性減債，整體效果是使所有人的實際負擔更重。</p>
+          </div>
+
+          <h3>聯準會的政策失誤</h3>
+          <p>Milton Friedman 與 Anna Schwartz 在《美國貨幣史》（<em>A Monetary History of the United States</em>, 1963）中，以大量實證數據論證：大蕭條的深度在很大程度上是聯準會（Federal Reserve/聯準會）政策失誤的結果。1929–1933 年間，美國貨幣供給（M2）萎縮了約 <strong>33%</strong>，而聯準會不僅未加以阻止，在部分時期甚至採取了緊縮措施（以維護金本位的黃金儲備）。</p>
+
+          <p>2002 年，時任聯準會理事的伯南克（Ben Bernanke）在 Friedman 90 歲生日宴上說了一句著名的話：「你們說聯準會造成了大蕭條。你們是對的。我們很抱歉，但我們保證不會再犯。」這句話後來在 2008–2009 年金融危機中被付諸實踐——伯南克主導的聯準會採取了截然相反的超寬鬆政策（詳見 H13）。</p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="gold-standard">
+          <h2>三、金本位的枷鎖：政策失敗的制度根源</h2>
+
+          <h3>為何各國不能刺激經濟？</h3>
+          <p>面對大蕭條的衝擊，為何各國政府不能立即採取擴張性財政政策（expansionary fiscal policy/擴張性財政政策）和貨幣政策來提振需求？答案在於<strong>金本位制度（gold standard/金本位）</strong>的制度枷鎖。</p>
+
+          <p>如 H05 所述，在金本位下，貨幣供給受黃金儲備約束。如果一國採取寬鬆貨幣政策，貨幣貶值壓力會導致黃金外流；為阻止黃金外流，央行必須升息，而升息正好加劇了衰退——這是金本位的「緊縮偏向（deflationary bias/緊縮偏向）」。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">Eichengreen 的「黃金束縛」論題</div>
+            <p>Barry Eichengreen（1992）在《黃金束縛》（<em>Golden Fetters</em>）中提出了大蕭條史學的最重要論題之一：各國放棄金本位的時間，幾乎精確地預測了各國開始復甦的時間。</p>
+            <ul>
+              <li><strong>英國：</strong>1931 年 9 月放棄金本位 → 1932 年開始溫和復甦</li>
+              <li><strong>美國：</strong>1933 年 4 月（羅斯福宣布禁止黃金出口）→ 1933 年下半年 GDP 開始回升</li>
+              <li><strong>法國（黃金集團 Gold Bloc 成員）：</strong>堅守金本位至 1936 年 → 復甦最晚，大蕭條持續最久</li>
+            </ul>
+            <p>這個跨國比較提供了近乎自然實驗的證據，說明金本位的枷鎖是大蕭條深度的關鍵制度原因，而非政府無能或道德失敗。</p>
+          </div>
+
+          <h3>黃金集團（Gold Bloc）的悲劇</h3>
+          <p>法國、比利時、荷蘭、瑞士、義大利和波蘭在 1933 年組成「黃金集團」，堅持維持金本位兌換率，理由是「貨幣穩定是信用的基礎」。結果是這些國家的通縮最為嚴重、復甦最為遲緩。法國直到 1936 年法郎危機才被迫放棄，此時大蕭條已持續七年，政治上已催生了強大的極右翼和極左翼力量。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">大蕭條的多重傳導鏈</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">初始衝擊（1929）</div>
+                <div class="t-node-desc">股市崩盤 → 財富效應消失 → 消費信心崩潰；融資買股者強制平倉 → 連鎖下跌</div>
+              </div>
+              <div class="t-arrow">↓ 渠道 A：金融渠道</div>
+              <div class="t-node">
+                <div class="t-node-title">銀行危機（1930–1933）</div>
+                <div class="t-node-desc">銀行擠兌 → 9,000 家銀行倒閉 → 信用供給急縮 → 企業無法融資 → 裁員 → 需求進一步萎縮</div>
+              </div>
+              <div class="t-arrow">↓ 渠道 B：債務通縮渠道</div>
+              <div class="t-node">
+                <div class="t-node-title">費雪螺旋啟動</div>
+                <div class="t-node-desc">資產拋售 → 物價下跌 → 實際債務負擔上升 → 更多違約 → 更多銀行倒閉 → 循環自我強化</div>
+              </div>
+              <div class="t-arrow">↓ 渠道 C：金本位枷鎖</div>
+              <div class="t-node">
+                <div class="t-node-title">政策癱瘓</div>
+                <div class="t-node-desc">金本位約束阻止貨幣擴張；財政正統觀念要求平衡預算；政策工具失靈，衰退無法被打斷</div>
+              </div>
+              <div class="t-arrow">↓ 渠道 D：國際傳染渠道</div>
+              <div class="t-node">
+                <div class="t-node-title">全球蔓延</div>
+                <div class="t-node-desc">美國進口需求崩潰 → 出口導向型國家受衝擊；斯穆特—霍利關稅 → 貿易戰 → 全球貿易量減半</div>
+              </div>
+              <div class="t-arrow">↓ 最終結果</div>
+              <div class="t-node">
+                <div class="t-node-title">1933 年谷底</div>
+                <div class="t-node-desc">美國 GDP 萎縮 28%，失業 25%，全球貿易減半，政治極端化，凱因斯革命醞釀中</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="global">
+          <h2>五、全球蔓延：貿易保護主義與國際協調失敗</h2>
+
+          <h3>斯穆特—霍利關稅法（Smoot-Hawley Tariff Act, 1930）</h3>
+          <p>1930 年，美國國會通過了斯穆特—霍利關稅法，對超過 20,000 種進口商品加徵關稅，平均稅率提高至約 45–50%。這是現代史上最大規模的貿易保護主義行動之一，觸發了廣泛的報復性關稅——加拿大、英國、法國、德國相繼反制。</p>
+
+          <p>1929–1933 年間，世界貿易量萎縮了約 <strong>50%</strong>，部分因需求崩潰，部分因貿易壁壘。Charles Kindleberger（1986）在《世界大蕭條》（<em>The World in Depression</em>）中論證：大蕭條的全球深度源於國際公共財（international public goods/國際公共財）的供給失敗——1930 年代的美國擁有足夠的經濟體量充當「霸權穩定者（hegemonic stabilizer）」，但選擇了保護主義和孤立主義，英國則因實力衰退而無法繼續扮演 19 世紀的穩定者角色，結果陷入群龍無首的協調困境。</p>
+
+          <h3>1933 年倫敦世界經濟會議的失敗</h3>
+          <p>1933 年 6 月，66 個國家齊聚倫敦，試圖協調貨幣穩定和貿易自由化。會議在羅斯福宣布美國拒絕任何匯率穩定協議後迅速瓦解。這次失敗具有深遠影響：它確認了 1930 年代的國際經濟秩序是「以鄰為壑（beggar-thy-neighbour/以鄰為壑）」的零和博弈，而非合作共贏。這個教訓直接催生了 1944 年布列敦森林協議（H08）建立正式多邊機構的決心。</p>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="keynes">
+          <h2>六、凱因斯革命：《就業、利息與貨幣的一般理論》</h2>
+
+          <h3>古典學派的困境</h3>
+          <p>在凱因斯之前，主流經濟學（古典學派/Classical School）有一個核心信念：市場具有自我調節能力，任何失業都是暫時的——工資和物價的下降最終會恢復均衡，政府干預不必要甚至有害。這個信念在大蕭條的現實面前顯得蒼白：工資和物價確實在下降，但就業並未恢復，衰退反而加深。</p>
+
+          <p>古典學派的另一個支柱是「薩伊法則（Say's Law/薩伊法則）」：「供給創造其本身的需求」（supply creates its own demand）——生產過程中支付的工資和利潤，構成購買所生產商品的購買力，因此不可能出現持續的總需求不足。大蕭條的現實是對薩伊法則最直接的反駁。</p>
+
+          <h3>《一般理論》的核心論點（1936）</h3>
+          <p>凱因斯在 1936 年出版的《就業、利息與貨幣的一般理論》（<em>The General Theory of Employment, Interest and Money</em>）是 20 世紀最重要的經濟學著作之一。其核心論點可以歸結為幾個關鍵概念：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">凱因斯革命的五個核心命題</div>
+            <p><strong>1. 有效需求原理（Principle of Effective Demand）：</strong>經濟的產出水準由有效需求（effective demand/有效需求）決定，而非生產能力決定。總需求不足可以使經濟在低於充分就業的水準上長期「均衡」——這是對薩伊法則的直接否定。</p>
+            <p><strong>2. 乘數效應（Multiplier Effect）：</strong>凱因斯的同事卡恩（Richard Kahn）發展了乘數概念——政府每增加 1 單位支出，最終使 GDP 增加超過 1 單位（因為受益者再消費，受益者的受益者再消費……）。乘數的大小取決於邊際消費傾向（marginal propensity to consume, MPC）：乘數 = 1 / (1 - MPC)。</p>
+            <p><strong>3. 流動性偏好（Liquidity Preference）：</strong>利率並非由儲蓄和投資的實物市場決定，而是由貨幣的供需決定。在不確定性極高時，人們傾向持有現金（liquidity preference/流動性偏好），壓低貨幣流通速度，使貨幣政策失效——即「流動性陷阱（liquidity trap/流動性陷阱）」。</p>
+            <p><strong>4. 投資的不穩定性（Investment Instability）：</strong>投資由企業家的「動物精神（animal spirits/動物精神）」——對未來的信心或悲觀——所驅動，而非單純由利率決定。恐慌性的投資崩潰無法僅靠降息逆轉。</p>
+            <p><strong>5. 財政政策的必要性（Case for Fiscal Policy）：</strong>當私人需求不足且貨幣政策失效時，政府支出是打破需求不足均衡的必要手段——「挖坑填坑」（挖坑的工人有工資，去消費，形成需求）也比什麼都不做好。</p>
+          </div>
+
+          <h3>凱因斯模型的歷史語境</h3>
+          <p>理解《一般理論》，必須把它放在 1930 年代的政治語境中：凱因斯不只是在解釋大蕭條，也是在為民主資本主義（democratic capitalism）提供一條「第三路線」——既非蘇聯式中央計畫（Soviet central planning），也非無為而治的古典自由主義，而是有管理的資本主義（managed capitalism/有管理的資本主義）。這個政治意涵使他的理論在戰後成為西方政策主流，直到 1970 年代的停滯性通膨（H09）才受到嚴重挑戰。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="policy-response">
+          <h2>七、政策回應：新政（New Deal）的評價</h2>
+
+          <h3>羅斯福新政（Roosevelt's New Deal, 1933–1939）</h3>
+          <p>1933 年 3 月，富蘭克林·羅斯福（Franklin D. Roosevelt）就任美國總統，立即推出一系列緊急措施，史稱「新政（New Deal/新政）」。新政的核心組成包括：</p>
+
+          <ul>
+            <li><strong>銀行緊急法案（Emergency Banking Act）：</strong>宣布銀行假期（bank holiday/銀行假期），暫停所有銀行業務，重開後對健全銀行給予聯邦背書 → 恢復存款人信心，終止銀行擠兌。</li>
+            <li><strong>廢除金本位（Executive Order 6102）：</strong>禁止私人持有黃金，切斷美元的黃金兌換約束，使聯準會得以擴大貨幣供給。</li>
+            <li><strong>聯邦存款保險公司（FDIC）：</strong>建立存款保險制度，解決銀行擠兌的協調問題 → 這是大蕭條留給現代金融體系最重要的制度遺產之一。</li>
+            <li><strong>公共工程計畫（PWA/WPA）：</strong>大規模政府雇用，建設公路、水壩（胡佛水壩大部分在新政期間完成）、公共建築，提供就業和需求。</li>
+            <li><strong>農業調整法（AAA）：</strong>限制農業產出以支撐農產品價格——這是政府直接干預市場定價的重要先例。</li>
+            <li><strong>格拉斯—斯蒂格爾法（Glass-Steagall Act）：</strong>嚴格分離商業銀行（commercial banking/商業銀行）和投資銀行（investment banking/投資銀行）業務，防止銀行將存款用於高風險投機。</li>
+          </ul>
+
+          <h3>新政是否終結了大蕭條？</h3>
+          <p>這是歷史上爭議最大的政策評估問題之一。學術共識大致如下：</p>
+
+          <div class="case-study">
+            <div class="case-study-label">新政效果的學術評估</div>
+            <p><strong>新政做對了什麼：</strong>1933 年的緊急措施（銀行改革、廢金本位）確實終止了金融恐慌的自由落體，美國 GDP 在 1933 年後開始回升。FDIC 從根本上解決了銀行擠兌問題。總體而言，新政的財政刺激力度比凱因斯建議的更為保守——1936–1937 年，羅斯福因擔心財政赤字而主動縮減支出，觸發了「1937–1938 年衰退（1937–38 Recession within Depression）」，再次印證財政刺激的必要性。</p>
+            <p><strong>新政的局限：</strong>新政並未真正終結大蕭條——1939 年失業率仍高達約 17%。Robert Higgs（1997）等學者指出，新政的政策不確定性（policy uncertainty/政策不確定性）可能阻礙了私人投資的復甦。Christina Romer（1992）的研究則顯示，貨幣政策的放寬（廢除金本位後的貨幣擴張）對 1933–1936 年的復甦貢獻可能大於財政政策。</p>
+            <p><strong>歷史的最終裁決：</strong>大蕭條真正終結，是 1940–1941 年美國為二戰進行的大規模軍備支出——政府支出佔 GDP 的比例在幾年內從不足 10% 飆升至超過 40%，失業率降至 1%。這提供了凱因斯財政政策最有力的現實驗證，儘管是在戰爭背景下。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：大蕭條的資產配置教訓</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">大蕭條期間各資產類別表現</div>
+            <p><strong>股票（Equities）：</strong>道瓊從 1929 年高峰下跌 89%，直到 1954 年才完全回到 1929 年的名目高點（25 年！）。大蕭條提醒投資者：股市可以長達數十年處於虧損狀態，「長期持有必然獲利」的信念依賴於特定的歷史起點假設。</p>
+            <p><strong>美國政府公債（U.S. Treasuries）：</strong>大蕭條期間表現最佳的資產。通縮環境使名目債券的實際報酬率上升；聯邦政府維持償還能力；1933 年廢除金本位後，長期公債收益率下降（債券價格上升），早期買入者大幅獲益。</p>
+            <p><strong>黃金（Gold）：</strong>1933 年前持有黃金是最佳策略之一，1933 年後美國政府以固定價格強制收購黃金（$20.67/盎司），此後提高至 $35/盎司（約 70% 升值），持有黃金者獲得法定升值收益。但美國公民持有黃金在 1933–1974 年間是違法的。</p>
+            <p><strong>房地產（Real Estate）：</strong>城市房地產在大蕭條期間大幅下跌（部分城市超過 50%），斷供和止贖（foreclosure/止贖）風潮橫掃全美；農地因農產品價格崩潰同樣貶值嚴重。</p>
+            <p><strong>現金（Cash）：</strong>通縮環境使現金的實際購買力上升，持有現金是短期保值策略——但前提是持有現金的銀行必須倖存。許多在 1929–1933 年倒閉銀行中的儲戶損失了大量存款。</p>
+          </div>
+
+          <h3>給現代投資者的啟示</h3>
+          <ol>
+            <li><strong>通縮環境與通膨環境，資產配置邏輯完全相反：</strong>大蕭條（通縮）中債券最佳；戰後通膨期（H08–H09）中股票和實物資產最佳。判斷宏觀環境類型，是資產配置的前提。</li>
+            <li><strong>銀行系統風險是尾部風險，但可能成為主風險：</strong>大蕭條提醒我們，存款保險出現之前的金融體系中，「安全」的銀行存款其實不安全。現代 FDIC 保險（美國 25 萬美元上限）是一個制度性防線，但超過保險上限的存款在極端情境中仍有風險（2023 年矽谷銀行事件的短暫警示）。</li>
+            <li><strong>政策反應的速度和力度決定危機的深度：</strong>2008–2009 年危機（H13）中，伯南克聯準會明確以「避免重蹈 1930 年代覆轍」為指導原則，迅速注入流動性，避免了費雪螺旋的全面啟動。歷史學習確實改變了政策，也改變了危機的結果。</li>
+          </ol>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「1929 年股市崩盤直接導致大蕭條」</h3>
+            <p><strong>更準確的理解</strong>：股市崩盤是觸發器，但不是主因。1920–1921 年的股市和經濟衰退同樣劇烈，但在兩年內自行復甦。大蕭條之所以如此深重，是因為股市崩盤後隨之而來的銀行危機（信用渠道傳導）、政策失誤（聯準會縮表、金本位枷鎖）、以及國際傳染（貿易保護主義）的三重打擊。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「凱因斯說政府應該無限制地借錢花費」</h3>
+            <p><strong>更準確的理解</strong>：凱因斯的主張是有條件的反週期政策（countercyclical policy/反週期政策）：在私人需求嚴重不足、貨幣政策失效的衰退期，政府應擴張支出以填補需求缺口；在繁榮期應縮減赤字、償還債務。凱因斯本人對長期財政赤字的後果十分警惕，他的「一般理論」針對的是特定的「流動性陷阱」情境，而非永久性赤字財政。「凱因斯主義（Keynesianism）」在後來的政策實踐中被扭曲為永久性擴張，這是凱因斯本人不會認同的。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「羅斯福新政把美國從大蕭條中救了出來」</h3>
+            <p><strong>更準確的理解</strong>：新政的 1933 年緊急措施（銀行改革、廢金本位）確實終止了金融恐慌的崩潰，但大蕭條並未在新政期間完全結束——1939 年失業率仍接近 17%。Christina Romer 等學者認為，廢除金本位後的貨幣擴張對復甦的貢獻可能比新政的財政支出更大；二戰軍備支出才是真正終結大蕭條的「超級新政」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「斯穆特—霍利關稅是大蕭條的主要原因」</h3>
+            <p><strong>更準確的理解</strong>：斯穆特—霍利關稅加劇了大蕭條的全球蔓延，但並非主因。關稅於 1930 年 6 月簽署為法律，此時美國經濟已下滑近一年。其主要危害是在全球層面觸發報復性貿易戰，使各國貿易夥伴的損失轉嫁回美國。但銀行危機和金本位枷鎖是大蕭條的更基本原因。此外，貿易佔 1920 年代美國 GDP 的比重相對較低（約 8–10%），純貿易渠道的衝擊有限。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「為什麼大蕭條如此深重且持久？用三個相互強化的機制解釋。」</div>
+
+            <p>大蕭條的深度和持久性，無法用任何單一原因解釋，必須理解三個相互強化（mutually reinforcing）的機制如何同時運作：</p>
+
+            <p><strong>機制一：費雪債務通縮螺旋（Fisher Debt-Deflation）</strong></p>
+            <p>初始的資產價格下跌觸發了費雪所描述的自我強化螺旋：拋售 → 通縮 → 實際債務負擔上升 → 更多拋售。這個機制的關鍵在於「合成謬誤」：每個個體的去槓桿決策是理性的，但集體效果是使所有人的處境更糟。在沒有最後貸款人介入的情況下，這個螺旋沒有內在的停止機制。</p>
+
+            <p><strong>機制二：銀行危機的信用渠道（Credit Channel of Banking Crisis）</strong></p>
+            <p>Bernanke（1983）在其博士後的研究（"Nonmonetary Effects of the Financial Crisis in the Propagation of the Great Depression"）中補充了 Friedman-Schwartz 的貨幣解釋：銀行危機不只是減少了貨幣供給，更破壞了金融體系的「信用媒介功能（credit intermediation）」——銀行積累的是對地方企業的軟知識（soft information），這種知識在銀行倒閉時消失，無法快速重建，使信貸管道在數年內無法正常運轉。</p>
+
+            <p><strong>機制三：金本位的政策癱瘓（Gold Standard Policy Paralysis）</strong></p>
+            <p>即使政策制定者想要干預，金本位制度使他們雙手被綁：擴張貨幣意味著黃金外流，黃金外流要求升息，升息加劇衰退。這個制度約束解釋了為什麼各國政府眼睜睜看著衰退加深卻幾乎無所作為——直到他們放棄金本位，才獲得政策自主權。</p>
+
+            <p><strong>三個機制的相互強化：</strong>費雪螺旋破壞資產負債表 → 加劇銀行危機；銀行危機縮減信用供給 → 加速去槓桿與通縮；金本位癱瘓政策 → 阻止任何一個機制被打斷。這是一個三角鎖定（triangular lock-in）：沒有外部干預，系統沒有自我平衡的能力。這也解釋了為什麼大蕭條需要廢除金本位（解除制度枷鎖）+ 緊急銀行改革（打斷信用崩潰）+ 貨幣擴張（逆轉通縮螺旋）三管齊下，才能開始逆轉。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">解釋費雪的「債務通縮螺旋」，並說明它為什麼是一個「合成謬誤」問題。如果你是 1931 年的美聯準主席，你應該採取什麼措施來打破這個螺旋？</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>費雪螺旋的精確描述：</strong>能正確描述螺旋各環節（過度負債 → 拋售 → 通縮 → 實際債務上升 → 更多違約 → 更多拋售），並強調每個環節的因果邏輯。</p>
+                  <p><strong>合成謬誤的掌握：</strong>理解「合成謬誤（fallacy of composition）」在此的含義：個體層面理性的去槓桿，在集體層面造成通縮壓力，使所有人的實際債務更重。這不是「市場失靈（market failure）」的標準形式，而是個體理性與集體理性的根本衝突。</p>
+                  <p><strong>政策設計：</strong>作為 1931 年聯準會主席，應考慮：① 以公開市場操作（open market operations/公開市場操作）大規模購買國債，擴大貨幣供給，逆轉通縮；② 作為最後貸款人，向有流動性問題（非償付問題）的銀行提供緊急貸款；③ 暫停金本位兌換（雖然這在政治上極困難）；④ 聯繫財政部建議緊急存款保險立法。優秀答案能清晰識別金本位的制度約束，並討論在此約束下的可行空間。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能描述費雪螺旋的主要環節，理解合成謬誤的基本意思，提出降息或擴大貨幣供給的政策建議，但未能深入討論金本位的制度約束及其與政策選擇的互動。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只能描述「通縮很糟糕」或「銀行倒閉了」，無法說明螺旋的自我強化邏輯，政策建議缺乏制度背景考量。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>費雪螺旋各環節的準確因果描述</td><td>30 分</td></tr>
+                    <tr><td>合成謬誤概念的正確運用</td><td>25 分</td></tr>
+                    <tr><td>政策建議的可行性與制度意識</td><td>35 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">Barry Eichengreen 認為各國放棄金本位的時間幾乎精確預測了各國開始復甦的時間。請評估這個論點的因果邏輯，並討論可能的替代解釋。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>Eichengreen 論點的因果機制：</strong>放棄金本位 → 央行獲得貨幣政策自主權 → 可以擴大貨幣供給 → 逆轉通縮 → 實際利率下降 → 投資和消費回升；同時切斷了「黃金外流 → 被迫升息 → 加深衰退」的傳導鏈。</p>
+                  <p><strong>相關性 vs. 因果性的討論：</strong>優秀答案能識別潛在的反向因果（reverse causality）問題——是否是「已經開始復甦的國家才有底氣放棄金本位」？Eichengreen 使用工具變數（instrument variable/工具變數）和事件研究（event study/事件研究）方法回應了這個質疑，發現放棄金本位後復甦幾乎立即發生，而且先放棄的國家先復甦，時間順序支持因果方向。</p>
+                  <p><strong>替代解釋：</strong>① Christina Romer 強調貨幣擴張本身（而非金本位的框架問題）是關鍵；② Barry Eichengreen 和 Jeffrey Sachs（1985）承認放棄金本位通常伴隨匯率貶值，部分復甦可能來自出口競爭力提升，但也注意到各國幾乎同時貶值時，純貿易效應有限；③ 財政政策（新政）的角色仍有爭議。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明放棄金本位讓央行可以擴張貨幣，提出相關性可能非因果性的質疑，但未能深入討論 Eichengreen 如何回應該質疑，替代解釋論述較薄弱。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只是複述「放棄金本位讓國家可以自由印鈔」，未能進行因果邏輯的嚴格評估，對替代解釋幾乎沒有討論。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>Eichengreen 論點的因果機制闡釋</td><td>30 分</td></tr>
+                    <tr><td>相關性 vs. 因果性的方法論討論</td><td>30 分</td></tr>
+                    <tr><td>替代解釋的廣度與深度</td><td>30 分</td></tr>
+                    <tr><td>整體論述結構</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">凱因斯的「動物精神（animal spirits）」概念如何解釋投資行為？相比純粹依賴利率的新古典模型，這個概念有何優勢與局限？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>動物精神的正確理解：</strong>凱因斯認為長期投資決策的基礎是企業家對未來的信心（confidence/信心），而未來在根本上是不確定的（uncertainty/不確定性，非 risk/可量化風險）。無法以利率計算出精確的投資報酬率，因此投資行為依賴非理性的衝動（spontaneous urge to action）——即「動物精神」。</p>
+                  <p><strong>優勢：</strong>能解釋大蕭條中即使利率接近零投資仍不復甦的現象；能解釋繁榮期的過度樂觀投資和恐慌期的急遽撤退；與行為經濟學的研究相容；為財政政策（恢復信心）提供理論依據。</p>
+                  <p><strong>局限：</strong>「動物精神」難以精確量化，預測力有限；可能被用來為任何投資異常行為提供事後解釋（ad hoc）；較難納入形式化（formal）的數學模型，這也是後來新凱因斯主義（New Keynesian）發展中的挑戰。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明動物精神是指企業信心影響投資，理解其解釋力優於純利率模型，但對局限性的討論較淺薄。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「動物精神」是某種非理性因素，無法準確說明其在凱因斯理論中的具體機制，優劣比較缺失或極為表淺。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>動物精神概念的準確理解</td><td>35 分</td></tr>
+                    <tr><td>相比純利率模型的優勢論述</td><td>30 分</td></tr>
+                    <tr><td>局限性的識別</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h06-ww1.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H06 一戰、戰債與國際金融失衡</span>
+          </a>
+          <a href="h08-bretton-woods.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H08 布列敦森林、美元與福利國家</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H13 2008 金融危機與 QE 時代 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H13 2008 金融危機與 QE 時代</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H13</span>
+            <span class="lecture-period">2007 — 2019</span>
+          </div>
+          <h1 class="article-title">2008 金融危機與 QE 時代</h1>
+          <p class="article-subtitle">The 2008 Financial Crisis &amp; the Era of Quantitative Easing</p>
+          <p class="article-lead">2008 年的全球金融危機（Global Financial Crisis, GFC）是自大蕭條以來最嚴重的金融崩潰。它的核心不是景氣循環的正常低谷，而是金融體系本身的系統性失靈——影子銀行（shadow banking/影子銀行）、過度槓桿（excessive leverage/過度槓桿）、資產證券化（securitization/資產證券化）的扭曲激勵、以及「大到不能倒（too big to fail/大到不能倒）」的道德風險，共同釀造了一場幾乎摧毀全球金融體系的完美風暴。危機的應對催生了量化寬鬆（Quantitative Easing, QE）——央行史上前所未有的政策實驗，其遺緒至今仍深刻塑造著全球金融格局。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#buildup">危機的積累：住宅泡沫與影子銀行</a></li>
+            <li><a href="#securitization">資產證券化的扭曲：從 MBS 到 CDO</a></li>
+            <li><a href="#collapse">崩潰的時間線：2007–2009</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#policy-response">政策回應：聯準會、財政部與 TARP</a></li>
+            <li><a href="#qe">量化寬鬆（QE）：非傳統貨幣政策的邏輯</a></li>
+            <li><a href="#eurozone-crisis">歐元區主權債務危機（2010–2012）</a></li>
+            <li><a href="#market-implications">市場含意：後危機時代的資產配置</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="buildup">
+          <h2>一、危機的積累：住宅泡沫與影子銀行</h2>
+
+          <h3>住宅市場泡沫的形成</h3>
+          <p>2001–2006 年，美國住宅市場進入了前所未有的泡沫期。凱斯—席勒全國房屋價格指數（Case-Shiller National Home Price Index）在 2000–2006 年間上漲了約 <strong>85%</strong>，遠超歷史趨勢。幾個相互強化的因素推動了泡沫：</p>
+
+          <ul>
+            <li><strong>低利率環境：</strong>2001–2004 年，聯準會維持聯邦基金利率在歷史低位（最低 1%），降低了抵押貸款成本；中國等外部資金（H12 的「儲蓄過剩」）壓低了長期利率；</li>
+            <li><strong>次貸（Subprime Mortgage）的擴張：</strong>面向信用品質差的借款人的次級抵押貸款（subprime mortgage/次貸）從 2000 年約佔市場 8% 增至 2006 年約 20%；NINJA 貸款（No Income, No Job, No Assets）的出現是監管和激勵扭曲的極端表現；</li>
+            <li><strong>「不需要自有資本（No-money-down）」的文化：</strong>借款人相信「房價只會漲」，貸款者因為可以「出售轉讓」而失去審慎放貸的動機。</li>
+          </ul>
+
+          <h3>影子銀行體系（Shadow Banking System）</h3>
+          <p>2008 年危機的核心在於一個不受傳統監管的「影子銀行體系（shadow banking system/影子銀行）」——它執行了銀行的功能（借短貸長、信用中介），卻不受銀行監管的約束（最低資本要求、存款保險、央行流動性支援）。</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">影子銀行的主要組成</div>
+            <p><strong>貨幣市場基金（Money Market Funds）：</strong>吸收機構和個人的短期「存款」（維持 $1/份的固定淨值），投資於短期商業票據和資產支持票據，提供類似活期存款的流動性，但不受 FDIC 保險保護。</p>
+            <p><strong>資產支持商業票據（ABCP）管道：</strong>銀行設立的表外載具（Special Purpose Vehicles, SPVs），以短期商業票據融資，購買長期抵押貸款支持證券，實現表外的期限錯配——銀行享受了利差收益，但規避了資本要求。</p>
+            <p><strong>證券借貸（Securities Lending）：</strong>機構投資者（退休基金、保險公司）將持有的證券借出換取現金，再將現金投資於更高收益（但更高風險）的資產——製造了另一層期限錯配。</p>
+            <p><strong>回購協議（Repo）市場：</strong>金融機構以抵押品借入隔夜或短期資金（以資產作擔保「出售」後承諾「回購」），構成整個金融體系的短期融資支柱。Repo 市場的規模在 2008 年危機前超過 10 兆美元，遠超傳統銀行存款的規模。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="securitization">
+          <h2>二、資產證券化的扭曲：從 MBS 到 CDO</h2>
+
+          <h3>資產證券化的邏輯</h3>
+          <p>資產證券化（securitization/資產證券化）本身是一個有效的金融創新——將流動性差的資產（如抵押貸款）打包成可交易的證券，使風險可以分散給願意承擔的投資者，同時釋放銀行資本以進行新的放貸。問題在於這個邏輯在 2000 年代被系統性地扭曲：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">資產證券化的「食物鏈」</div>
+            <pre>
+借款人（次貸借款者）
+    → 貸款發起機構（Originator）
+         發放次貸，賺取手續費後出售
+         動機：量大、不持有風險
+    → 投資銀行（Investment Bank）
+         打包成「抵押貸款支持證券（MBS）」
+         按風險分層切割：優先（AAA）、中間（Mezzanine）、股權（Equity）
+         再打包成「債務抵押憑證（CDO/Collateralized Debt Obligation）」
+         動機：手續費，出售後不持有風險
+    → 信用評級機構（Credit Rating Agencies）
+         為 CDO 的高層切片評定 AAA 等級
+         動機：付費客戶是發行方（利益衝突）
+         模型假設：地區性房價不會同時下跌（錯誤）
+    → 全球投資者（機構投資者、歐洲銀行、退休基金）
+         購買「高收益、高評級」的 CDO
+         相信評級機構的評估
+    → 保險公司（AIG 的信用違約交換 CDS）
+         出售信用違約交換（Credit Default Swap, CDS）
+         承諾在 CDO 違約時賠付，但未準備足夠資本
+
+關鍵問題：每個環節的激勵結構（賺手續費、不持有風險）
+導致了整個系統的道德風險（moral hazard/道德風險）
+——沒有人有足夠的動機謹慎評估最終的信用風險。</pre>
+          </div>
+
+          <h3>系統性風險的誤算</h3>
+          <p>信用評級機構（穆迪、標普、惠譽）在為 CDO 評級時，使用的模型假設美國各地區的房價相關性（correlation）很低——即使某些地區房價下跌，其他地區仍會上漲，多地區多貸款的組合因此風險很低。這個假設在 2006–2008 年全美房價同步下跌的現實面前徹底崩潰。當相關性事實上接近 1 時（所有市場同時下跌），分散化效果消失，AAA 評級的 CDO 頃刻間成為廢紙。</p>
+
+          <p>Robert Shiller（2005）在《非理性繁榮》（<em>Irrational Exuberance</em>）和 Nouriel Roubini（「末日博士」）等人早在危機前已發出警告，但在「大緩和」的樂觀氛圍中被普遍忽視——「這次不一樣（this time is different）」成了最昂貴的一句話。</p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="collapse">
+          <h2>三、崩潰的時間線：2007–2009</h2>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>時間</th>
+                <th>事件</th>
+                <th>意義</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2006 年下半年</td><td>美國房價開始下跌（凱斯—席勒指數峰值）</td><td>泡沫開始縮小，次貸違約率上升</td></tr>
+              <tr><td>2007 年 2 月</td><td>匯豐銀行宣布次貸損失</td><td>第一個主要機構承認次貸問題</td></tr>
+              <tr><td>2007 年 8 月</td><td>法國巴黎銀行凍結三個 MBS 基金；歐洲央行緊急注資 950 億歐元；BNP 事件標誌信貸市場凍結</td><td>第一次全球流動性危機信號</td></tr>
+              <tr><td>2008 年 3 月</td><td>貝爾斯登（Bear Stearns）倒閉；聯準會協助摩根大通以 2 美元/股收購（後調至 10 美元）</td><td>第一個主要投資銀行倒閉；聯準會首次援救非商業銀行</td></tr>
+              <tr><td>2008 年 9 月 7 日</td><td>聯邦政府接管房利美（Fannie Mae）和房地美（Freddie Mac）</td><td>兩大房貸機構國有化，穩定住宅市場</td></tr>
+              <tr><td>2008 年 9 月 15 日</td><td>雷曼兄弟（Lehman Brothers）破產（負債 6,000 億美元）</td><td>史上最大破產案；全球信貸市場全面凍結</td></tr>
+              <tr><td>2008 年 9 月 16 日</td><td>AIG 獲得聯邦政府 850 億美元緊急援助</td><td>系統性風險的核心節點；AIG 的 CDS 承諾涉及全球金融機構</td></tr>
+              <tr><td>2008 年 9 月 19 日</td><td>財政部長鮑爾森提出 7,000 億美元「問題資產救助計畫（TARP）」</td><td>美國史上最大規模的金融救援計畫</td></tr>
+              <tr><td>2008 年 10 月</td><td>冰島銀行體系崩潰；全球股市同步暴跌（道瓊指數單月下跌 14%）</td><td>危機全球化蔓延</td></tr>
+              <tr><td>2009 年 2 月</td><td>美國政府通過 7,870 億美元「美國復甦與再投資法案（ARRA）」</td><td>最大規模的凱因斯式財政刺激</td></tr>
+              <tr><td>2009 年 3 月 9 日</td><td>美股谷底（道瓊 6,547 點）</td><td>市場開始反彈，但實體經濟復甦緩慢</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">2008 金融危機的多層傳導鏈</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">根源：制度與激勵扭曲</div>
+                <div class="t-node-desc">發起—分銷模式（Originate-to-Distribute）消除了謹慎放貸的激勵；評級機構利益衝突；去監管化使影子銀行在監管真空中過度擴張；「大緩和」時代的過度自信</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">槓桿積累</div>
+                <div class="t-node-desc">金融機構槓桿比率在危機前達 30–40 倍（每 1 美元資本支撐 30–40 美元資產）；Repo 市場每日滾動的大量短期借款；表外 SPV 規避資本要求</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">觸發：房價下跌（2006）</div>
+                <div class="t-node-desc">房價下跌 → 次貸違約率上升 → MBS/CDO 價格下跌 → 以這些資產為抵押的 Repo 融資遭到追加保證金（margin call）或拒絕展期 → 影子銀行體系流動性危機</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">信貸凍結（Credit Freeze）</div>
+                <div class="t-node-desc">雷曼破產後，貨幣市場基金遭擠兌（「跌破面值/breaking the buck」）；銀行間借貸市場（interbank market）凍結；企業無法滾動商業票據 → 生產和就業衝擊</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">實體經濟衝擊</div>
+                <div class="t-node-desc">信用供給崩潰 → 企業減少投資和雇用 → 失業率從 4.7%（2007）升至 10%（2009）；財富效應（房價下跌 + 股市下跌）壓縮消費 → GDP 2009 年 Q1 年化跌幅 -8.9%</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">政策回應</div>
+                <div class="t-node-desc">聯準會：利率降至零 + QE；財政部：TARP 救援金融機構；國會：ARRA 財政刺激；G20 協調各國同步行動 → 避免了大蕭條的重演，但復甦緩慢</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="policy-response">
+          <h2>五、政策回應：聯準會、財政部與 TARP</h2>
+
+          <h3>聯準會的「大砲應對（Bazooka Response）」</h3>
+          <p>伯南克主導的聯準會，以「不重蹈 1930 年代覆轍」為首要原則，採取了一系列前所未有的應對措施：</p>
+          <ul>
+            <li><strong>緊急流動性設施：</strong>創設多個新型貸款設施（TAF、PDCF、TSLF、CPFF），向包括投資銀行、外國央行在內的非傳統對手方提供美元流動性，阻止影子銀行體系的流動性危機蔓延；</li>
+            <li><strong>貨幣互換協議（Currency Swap Lines）：</strong>向歐洲、日本、韓國等主要央行提供美元互換額度，緩解全球美元流動性短缺；</li>
+            <li><strong>聯邦基金利率降至零：</strong>2008 年 12 月，利率目標降至 0–0.25%（零利率下限，Zero Lower Bound/ZLB）；</li>
+            <li><strong>量化寬鬆（QE1, 2008–2010）：</strong>在利率已在零時，透過購買長期資產（抵押貸款支持證券 MBS 和長期國債）直接壓低長期利率，繞過傳統貨幣政策的利率渠道。</li>
+          </ul>
+
+          <h3>TARP（問題資產救助計畫）的政治爭議</h3>
+          <p>2008 年 10 月，國會通過 7,000 億美元的「問題資產救助計畫（Troubled Asset Relief Program, TARP）」，用於購買金融機構的不良資產和注資（實際使用約 4,310 億美元，後來大部分收回，政府最終從 TARP 中小幅獲益）。</p>
+
+          <p>TARP 引發了巨大的政治爭議：「用納稅人的錢救助了製造危機的銀行家」——而銀行高管在接受救援後仍發放巨額獎金，成為公眾怒火的焦點。這個怒火催生了左翼的「佔領華爾街（Occupy Wall Street）」運動和右翼的「茶黨（Tea Party）」運動，共同推動了後來的政治極化（H14 詳述）。</p>
+
+          <h3>雷曼讓其破產是否是錯誤決策？</h3>
+          <div class="case-study">
+            <div class="case-study-label">學術爭議：讓雷曼破產的判斷</div>
+            <p>2008 年 9 月，聯準會和財政部決定不救助雷曼兄弟（不同於此前的貝爾斯登和後來的 AIG）。官方理由：聯準會沒有法律授權向資不抵債（insolvent）而非僅流動性不足（illiquid）的機構提供貸款；且救援會製造道德風險（「每次都救，就是在鼓勵冒險」）。</p>
+            <p>批評者（Blinder, Zingales 等）的反駁：雷曼的倒閉觸發了前所未有的金融市場恐慌——貨幣市場基金「跌破面值」、商業票據市場凍結、全球信貸市場停擺——這些後果遠超任何道德風險的長期成本。即使聯準會在法律上有困難，財政部（TARP 在兩週後才通過）本應更早獲得授權。讓雷曼破產可能是危機深化的關鍵節點，儘管根本原因（槓桿、影子銀行、次貸）早已存在。</p>
+            <p>這場辯論至今無定論，成為政策決策在極端不確定性下的永久性案例研究。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="qe">
+          <h2>六、量化寬鬆（QE）：非傳統貨幣政策的邏輯</h2>
+
+          <h3>QE 的機制</h3>
+          <p>量化寬鬆（Quantitative Easing, QE/量化寬鬆）是一種央行在傳統利率政策空間耗盡（利率在零附近）後使用的非傳統工具。其基本操作：央行在公開市場購買長期資產（長期國債、MBS），向金融體系注入準備金，同時壓低長期利率。</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">QE 的傳導渠道</div>
+            <p><strong>1. 投資組合再平衡效應（Portfolio Rebalancing Effect）：</strong>央行購買長期國債，使持有國債的投資者轉持其他風險資產（股票、公司債、新興市場債），壓低整個收益率曲線，降低企業和政府的借貸成本。</p>
+            <p><strong>2. 信號效應（Signaling Effect）：</strong>QE 向市場傳遞「低利率將維持更長時間（lower for longer）」的信號，影響長期預期，支撐資產價格和投資決策。</p>
+            <p><strong>3. 財富效應（Wealth Effect）：</strong>資產價格上升（股票、房產）使持有這些資產的家庭感覺更富裕，增加消費支出；但批評者指出，這個效應對財富集中在頂層的分配模式下，對總需求的提振有限。</p>
+            <p><strong>4. 匯率渠道（Exchange Rate Channel）：</strong>QE 可能壓低本國貨幣，提升出口競爭力（儘管各國同時 QE 時，這個效應相互抵消）。</p>
+          </div>
+
+          <h3>美國 QE 的三個輪次</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>輪次</th>
+                <th>時間</th>
+                <th>規模</th>
+                <th>目標資產</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>QE1</td><td>2008 年 11 月 – 2010 年 3 月</td><td>1.75 兆美元</td><td>MBS（1.25 兆）+ 機構債（0.2 兆）+ 長期國債（0.3 兆）</td></tr>
+              <tr><td>QE2</td><td>2010 年 11 月 – 2011 年 6 月</td><td>6,000 億美元</td><td>長期國債</td></tr>
+              <tr><td>QE3（「無限 QE」）</td><td>2012 年 9 月 – 2014 年 10 月</td><td>月購 850 億（後縮減），合計約 1.6 兆</td><td>MBS + 長期國債</td></tr>
+            </tbody>
+          </table>
+
+          <h3>QE 的爭議與後遺症</h3>
+          <p>QE 對遏制金融危機惡化和阻止通縮螺旋有顯著效果，但其長期副作用至今仍是激烈辯論的焦點：</p>
+          <ul>
+            <li><strong>資產價格通膨（Asset Price Inflation）：</strong>QE 推高了股票和房地產價格，主要受益者是持有大量金融資產的富裕階層，進一步加劇了財富不平等（一個反諷：為對抗大蕭條風險的政策，卻在分配層面強化了 Piketty 的 r &gt; g）；</li>
+            <li><strong>「資產泡沫風險（Bubble Risk）」：</strong>長期超低利率推動了「收益率追逐（reaching for yield/收益率追逐）」行為，投資者為獲得正向報酬而承擔超出合理範圍的信用風險；</li>
+            <li><strong>「退出困難（Exit Problem）」：</strong>央行資產負債表大幅擴張（聯準會從危機前的約 9,000 億美元擴至峰值超過 9 兆美元），縮表過程需要極謹慎，否則可能觸發市場動盪（2013 年的「縮減恐慌/Taper Tantrum」提前展示了這個風險）；</li>
+            <li><strong>貨幣政策效果的邊際遞減：</strong>QE2、QE3 的邊際效果明顯不如 QE1，說明非傳統貨幣工具存在邊際報酬遞減。</li>
+          </ul>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="eurozone-crisis">
+          <h2>七、歐元區主權債務危機（2010–2012）</h2>
+
+          <h3>從銀行危機到主權危機</h3>
+          <p>2008 年危機首先是銀行危機，但很快在歐元區演變為主權債務危機（sovereign debt crisis/主權債務危機）：各國政府救援銀行和推行財政刺激，導致財政赤字急劇擴大；市場對邊緣國（periphery countries）主權債務可持續性的擔憂上升；希臘在 2009 年底揭露其財政赤字遠超此前報告的數字，成為危機引爆點。</p>
+
+          <h3>「PIIGS」的困境</h3>
+          <p>葡萄牙、義大利、愛爾蘭、希臘、西班牙（PIIGS）面臨共同的困境：沒有匯率工具（歐元不能單獨貶值）；必須在國際債券市場借款（利率受市場決定）；財政緊縮進一步壓縮了本已萎縮的 GDP，使債務對 GDP 比率繼續惡化——「緊縮陷阱（austerity trap）」。</p>
+
+          <p>希臘的數字最為震撼：2010–2013 年 GDP 下降超過 25%，失業率峰值超過 27%，青年失業率超過 60%——在民主和平時期幾乎前所未見的衰退深度。</p>
+
+          <h3>德拉吉的「任何代價（Whatever It Takes）」</h3>
+          <p>2012 年 7 月 26 日，歐洲央行（ECB）行長馬里奧·德拉吉（Mario Draghi）在倫敦一場演講中說出了歷史上最有效的六個字：<strong>「在授權範圍內，歐洲央行已準備好做任何事情來捍衛歐元。相信我，這已經足夠了。（Within our mandate, the ECB is ready to do whatever it takes to preserve the euro. And believe me, it will be enough.）」</strong></p>
+
+          <p>這句話幾乎在一夜間使歐元區主權利差（sovereign spreads）開始收窄，儘管 ECB 並未立即採取任何實際購債行動——「可信承諾」的力量本身就是最強的工具。此後推出的「直接貨幣交易（OMT, Outright Monetary Transactions）」計畫，作為備用手段，進一步鞏固了市場信心。歐元危機的急性期宣告結束，但其制度問題（缺乏財政聯盟，H11 所述）並未根本解決。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：後危機時代的資產配置</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">後危機時代（2009–2021）的資產配置環境</div>
+            <p><strong>股票（Equities）：</strong>QE 時代是美國股票的黃金時代——從 2009 年 3 月的谷底（道瓊 6,547 點）到 2021 年末（道瓊超過 36,000 點），涨幅超過 450%（12 年）。低無風險利率降低了資產折現率，推高估值；企業通過股票回購（buybacks）持續支撐 EPS；科技行業的結構性成長提供了實際盈利支撐。</p>
+            <p><strong>長期公債（Long-duration Treasuries）：</strong>在「低利率更長時間（lower for longer）」的預期下，長期公債價格持續上漲（TLT 等長期債券 ETF 在 2009–2020 年間表現亮眼），直到 2022 年通膨回升、聯準會急劇升息後崩潰（-40% 以上）。這是 2022 年之前「60/40 投資組合（60% 股票 + 40% 債券）」能夠有效運作的宏觀背景。</p>
+            <p><strong>信用資產（Credit）：</strong>QE 壓縮了信用利差，使高收益債（HY）和投資級債（IG）在 2009–2021 年間提供了顯著超額報酬；但利差壓縮也意味著未來的「收益率緩衝（yield cushion）」減少，使資產負債表質量成為更重要的選股/選債因素。</p>
+            <p><strong>黃金（Gold）：</strong>QE 初期（2009–2011），黃金大幅上漲（從 900 美元/盎司漲至 1,900 美元/盎司），反映了對通膨和美元購買力的擔憂。後來通膨並未如預期般大幅上升，黃金在 2013–2018 年間進入盤整期；2020–2021 年疫情引發新一輪 QE 和財政擴張後再度走強。</p>
+          </div>
+
+          <h3>「TINA（There Is No Alternative）」的資產配置邏輯</h3>
+          <p>後危機時代的資產配置環境被「TINA」原則主導——「沒有替代選擇（There Is No Alternative to equities）」。在短期利率為零、長期利率被 QE 壓低的環境中，傳統的「安全」資產（儲蓄存款、政府短期債券）幾乎零收益，投資者被迫進入更高風險的資產類別（股票、高收益債、私募股權、新興市場），形成了 QE 的「財富效應」傳導。這個「TINA」邏輯在 2022 年通膨急升、利率正常化後被打破——短期美債重新提供 4–5% 的無風險收益，資產配置邏輯進入了全新的相位。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「2008 年危機完全是因為貪婪的銀行家」</h3>
+            <p><strong>更準確的理解</strong>：個人的貪婪在金融體系中是常數，而非變數——幾乎在所有時代和市場都存在。2008 年危機之所以爆發，在於<strong>激勵結構和監管框架</strong>允許並鼓勵了系統性的風險積累：「發起—分銷（originate-to-distribute）」模式消除了謹慎放貸的激勵；評級機構由發行方付費的利益衝突導致評級虛高；「太大不能倒」的隱性擔保使大型金融機構在承擔過度風險時沒有充分的市場紀律。「制度和激勵的失敗」是更完整的解釋，而非簡單的道德指責。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「QE 等於無限制的印鈔，必然引發惡性通膨」</h3>
+            <p><strong>更準確的理解</strong>：QE 是央行以新創造的準備金（reserves）購買資產的操作，增加的是銀行持有的準備金，而非直接進入流通的貨幣。準備金只有在銀行以其為基礎大量放貸時，才會轉化為更廣泛的貨幣供給（M2）。2009–2021 年的 QE 之所以未引發預期中的通膨，正是因為銀行選擇持有過剩準備金（受零息準備金政策和資產負債表修復需求影響），信貸擴張有限。2022 年的通膨回升有其特定的供應鏈（COVID）和財政政策（大規模直接現金轉移）因素，並非 2009–2021 年 QE 的延遲效果。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「政府救援大銀行是不必要的，應該讓它們倒閉」</h3>
+            <p><strong>更準確的理解</strong>：這個「正義的直覺」在政治上有強大吸引力，但在系統性風險的語境中需要慎重評估。金融系統的相互連結性（interconnectedness）意味著大型金融機構的無序倒閉（disorderly failure）可能通過多個渠道引發連鎖反應：Repo 市場凍結、貨幣市場基金擠兌、信用卡和企業貸款停滯、全球清算和支付系統癱瘓。讓雷曼兄弟破產後的 48 小時就展示了這個連鎖反應的速度和廣度。正確的政策取向應是「有條件救援（conditional rescue）」——救援系統重要性金融機構（SIFIs）以防止系統性崩潰，同時對管理層問責、強制股東吸收損失，事後加強監管以消除未來的道德風險。美國的 TARP 和多德—弗蘭克法案（Dodd-Frank Act）的組合，試圖在這幾個目標之間取得平衡，儘管實際效果仍有爭議。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「2008 年後的緩慢復甦說明 QE 和財政刺激都沒有用」</h3>
+            <p><strong>更準確的理解</strong>：關鍵的反事實是：如果沒有 QE 和財政刺激，2009 年的衰退是否可能演變成 1930 年代式的大蕭條？幾乎所有嚴肅的宏觀經濟學模型（CBO、IMF、學術研究）都顯示，政策干預確實防止了更深的衰退。復甦緩慢有其他結構性原因：「資產負債表衰退（balance sheet recession）」使私人部門長期去槓桿；財政刺激規模不足（Summers、Romer 等人事後認為 2009 年刺激規模低估了）；歐元區的財政緊縮拖累了全球需求。「復甦慢」和「政策無效」是兩個不同的命題，不能相互推論。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「2008 年金融危機是否代表了市場失靈（market failure），還是政府失靈（government failure）？或者兩者都有？」</div>
+
+            <p>這個問題要求學生超越簡單的意識形態立場，進行制度層面的多維分析。</p>
+
+            <p><strong>市場失靈的面向：</strong></p>
+            <p>① <strong>系統性風險（systemic risk）的外部性（externality）：</strong>個別金融機構在追求利潤時，未將其行為對整個系統穩定性的潛在損害納入定價——這是一個典型的負外部性問題，市場機制本身無法內部化這個成本。</p>
+            <p>② <strong>信息不對稱（information asymmetry）：</strong>複雜的 CDO 和 CDO-squared 產品創造了嚴重的信息不對稱，連購買方（甚至評級機構使用的模型）都無法準確評估其實際風險。</p>
+            <p>③ <strong>協調失靈（coordination failure）：</strong>每個機構都相信在危機爆發時可以比其他人更快撤出——但集體的「搶先撤出」行為製造了市場流動性危機，這是一個典型的「公地悲劇（tragedy of the commons）」。</p>
+
+            <p><strong>政府失靈的面向：</strong></p>
+            <p>① <strong>監管俘獲（regulatory capture）：</strong>金融監管機構在「大緩和」時代的樂觀氛圍和金融業的政治影響力下，主動放鬆了監管——1999 年廢除格拉斯—斯蒂格爾是典型案例。</p>
+            <p>② <strong>影子銀行的監管真空：</strong>傳統銀行受到資本充足率、存款保險、聯準會監管的約束，但影子銀行體系在完全不同的規則集（或無規則）下運作，而在系統性重要性上已不亞於傳統銀行。這是監管未能跟上金融創新的「監管套利（regulatory arbitrage）」。</p>
+            <p>③ <strong>「太大不能倒」的隱性擔保（implicit guarantee）：</strong>市場普遍相信系統重要性機構會被救援，這是一種政府隱性提供的道德風險激勵——鼓勵了過度風險承擔。</p>
+
+            <p><strong>整合結論：</strong>2008 年危機是市場失靈和政府失靈的雙重疊加，且兩者相互強化——政府的隱性擔保加劇了市場的道德風險；市場的複雜創新超過了監管理解和應對能力。這個案例說明，金融監管的有效性需要監管者始終比市場「快半步」——既不過度窒息創新，也不落後於風險的演化。這在民主政治和金融業的遊說壓力下是一個結構性困難，而非個別政策制定者的失職。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">解釋「發起—分銷（Originate-to-Distribute）」模式如何在 2000 年代的抵押貸款市場製造了系統性的道德風險，並說明這個問題是否可以通過「留置部分風險（skin in the game）」的監管要求加以緩解。</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>道德風險的精確機制：</strong>在傳統的「發起—持有（originate-to-hold）」模式下，貸款機構持有貸款到期，有強烈的動機謹慎評估借款人資質；在「發起—分銷」模式下，貸款發起後立即出售打包，發起機構只賺取手續費而不持有信用風險——失去了謹慎放貸的財務激勵，形成了「信用風險的外部化（externalization of credit risk）」。</p>
+                  <p><strong>「Skin in the Game」的緩解邏輯：</strong>2010 年的《多德—弗蘭克法案》要求證券化發起機構保留至少 5% 的信用風險（「Risk Retention Rule/風險留置規則」），使其在資產品質上保有部分「切膚之痛」。理論上，這重建了發起機構和投資者之間的激勵對齊。批評：5% 的保留比率在高槓桿環境中仍然很低；保留規則可能通過復雜結構規避；真正的問題是整個評級和激勵體系的扭曲，而非單一的保留比率。</p>
+                  <p><strong>制度設計的更廣泛討論：</strong>優秀答案能識別問題的系統性——評級機構的付費方是發行人（而非投資者）、監管機構對金融創新的理解滯後、「大緩和」時代的過度自信壓制了風險意識。「留置部分風險」是必要但不充分的改革，需要與透明度要求、評級機構的商業模式改革、以及反週期資本緩衝（counter-cyclical capital buffers）等配套措施結合。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明發起—分銷模式使發起機構不承擔風險，理解 skin in the game 的基本邏輯，但對制度設計的系統性問題和緩解措施局限的分析不夠深入。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「銀行賣出貸款所以不在乎」，無法精確說明道德風險的機制，對政策緩解措施幾乎沒有分析。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>道德風險機制的精確描述</td><td>35 分</td></tr>
+                    <tr><td>「Skin in the Game」的效果評估</td><td>30 分</td></tr>
+                    <tr><td>制度設計更廣泛討論</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">評估量化寬鬆（QE）的有效性和副作用。QE 是否成功避免了大蕭條的重演？它的長期副作用（財富不平等、資產泡沫、退出困難）是否值得其短期收益？</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>QE 的有效性評估（正面）：</strong>QE1（2008–2010）的緊急效果最為顯著——在金融市場流動性幾近枯竭時，央行作為「最後做市商（market maker of last resort）」購買 MBS，防止了金融恐慌的自我強化；聯準會與其他央行的貨幣互換阻止了全球美元流動性危機；歷史比較（與 1930 年代聯準會縮表的對比）支持了積極干預是正確選擇的判斷。</p>
+                  <p><strong>副作用的評估（負面）：</strong>① 財富不平等：投資組合再平衡效應使持有金融資產者受益，而持有較少金融資產的中低收入家庭受益有限；② 資產泡沫：超低利率推動了信貸週期的延長和「僵屍企業」的存活（因為借款成本極低，缺乏效率的企業可以滾動融資而不被淘汰）；③ 退出困難：資產負債表大幅擴張後的縮表是一個複雜的政策過程（2013 年 Taper Tantrum、2022 年的通膨挑戰）。</p>
+                  <p><strong>成本—效益的整體評估：</strong>優秀答案能識別這個問題沒有唯一正確答案——QE 的替代選擇（不干預或更早退出）的成本是「反事實的（counterfactual）」且難以量化。從實際結果看，QE 避免了即時崩潰，代價是副作用的長期積累，且部分副作用（財富不平等）本可以通過更積極的財政分配政策加以緩解，但財政政策的使用在 2010–2019 年間受到政治限制。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能列舉 QE 的正面效果和主要副作用，但整體評估的深度和「反事實」意識不足，成本—效益的比較較為表面。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「QE 是印鈔，對窮人不好」，無法說明 QE 的傳導機制，對其有效性和副作用的分析缺乏均衡視角。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>QE 有效性的論據評估</td><td>30 分</td></tr>
+                    <tr><td>副作用的識別與深度分析</td><td>30 分</td></tr>
+                    <tr><td>整體成本—效益的均衡評估</td><td>30 分</td></tr>
+                    <tr><td>論述結構</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">德拉吉「Whatever It Takes」宣言（2012 年 7 月）在沒有任何實際購債操作的情況下，幾乎獨自終結了歐元區主權危機的急性期。這如何說明「貨幣政策的信號效應（signaling effect）」的重要性？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>信號效應的機制：</strong>德拉吉的宣言之所以有效，在於它解決了一個「多重均衡（multiple equilibria）」問題。歐元區主權危機有兩個潛在均衡：① 「壞均衡」——市場預期希臘等國將違約 → 利率飆升 → 更難償債 → 自我實現的違約；② 「好均衡」——市場相信 ECB 將介入阻止違約 → 利率下降 → 更易償債 → 危機消解。德拉吉的宣言通過「可信承諾」使市場從壞均衡跳轉至好均衡——在好均衡中，ECB 甚至不需要實際購債，因為威脅本身已足夠（類似核威懾的邏輯）。</p>
+                  <p><strong>「可信承諾」的條件：</strong>宣言之所以有效，需要市場相信 ECB 具有技術能力（可以無限購債）和政治意願（德國等核心國默許）。德拉吉宣言的措辭精心選擇了「在授權範圍內（within our mandate）」，既給德國提供了法律解讀的空間，又向市場傳遞了行動意願。</p>
+                  <p><strong>限制：</strong>信號效應只在危機尚屬「流動性危機（liquidity crisis）」而非「償付危機（solvency crisis）」時有效——如果希臘的債務在任何合理的成長假設下都不可持續，即使 ECB 承諾購債，也只是延後而非解決問題。德拉吉宣言對希臘（後來仍需要多輪重組）和義大利（未來仍存在可持續性質疑）的效果差異，說明了這個限制。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明德拉吉宣言通過承諾介入降低了市場恐慌，理解信號效應的基本邏輯，但對多重均衡機制和可信承諾的條件討論不夠深入。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「德拉吉說要保衛歐元，所以市場放心了」，無法解釋多重均衡的機制，對可信承諾的條件幾乎沒有討論。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>多重均衡機制的準確理解</td><td>40 分</td></tr>
+                    <tr><td>可信承諾的條件分析</td><td>30 分</td></tr>
+                    <tr><td>信號效應的限制識別</td><td>20 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h12-china-wto.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H12 中國改革開放與全球供應鏈</span>
+          </a>
+          <a href="h14-post-covid.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H14 疫情衝擊、通膨回歸與去全球化</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

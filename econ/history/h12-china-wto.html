@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H12 中國改革開放、WTO 與全球供應鏈 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H12 中國改革開放、WTO 與全球供應鏈</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H12</span>
+            <span class="lecture-period">1978 — 2020</span>
+          </div>
+          <h1 class="article-title">中國改革開放、WTO 與全球供應鏈</h1>
+          <p class="article-subtitle">China's Reform and Opening Up, WTO &amp; Global Supply Chains</p>
+          <p class="article-lead">中國的經濟崛起是 20 世紀末至 21 世紀初最重要的經濟事件，沒有之一。從 1978 年的人均 GDP 不足 200 美元，到 2021 年超過 12,000 美元；從封閉的計畫經濟，到全球最大的製造業和貿易國；從全球化最大受益者，到被視為既有秩序的最大挑戰者。中國的崛起重塑了全球供應鏈（global supply chains/全球供應鏈）、通膨動態（inflation dynamics）、收入分配格局，以及地緣政治版圖。理解中國是理解當代全球經濟的前提。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#reform-phases">改革開放的階段：從農村到工廠到科技</a></li>
+            <li><a href="#wto">2001 年加入 WTO：全球化的最大加速器</a></li>
+            <li><a href="#supply-chains">全球供應鏈的重組：「中國製造」的政治經濟學</a></li>
+            <li><a href="#transmission">傳導機制圖解：中國如何改變全球宏觀環境</a></li>
+            <li><a href="#china-shock">「中國衝擊」：對已開發國家的分配後果</a></li>
+            <li><a href="#global-imbalances">全球失衡：儲蓄、投資與「布列敦森林 II」</a></li>
+            <li><a href="#inequality">全球化與不平等：大象曲線</a></li>
+            <li><a href="#market-implications">市場含意：「中國周期」對資產配置的影響</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="reform-phases">
+          <h2>一、改革開放的階段：從農村到工廠到科技</h2>
+
+          <h3>第一階段：農業改革與鄉村起飛（1978–1984）</h3>
+          <p>1978 年，鄧小平在三中全會確立了「改革開放」的政策方向。改革從農村開始，而非城市或國有企業——這是一個有深刻政治智慧的序列選擇：農村改革的受益者（農民）人數眾多，能創造廣泛的政治支持；農業市場化即使失敗，對城市和國家財政的衝擊也相對有限。</p>
+
+          <ul>
+            <li><strong>家庭聯產承包責任制（Household Responsibility System）：</strong>土地使用權（非所有權）歸農戶，農民完成國家配額後可自由出售剩餘產品。1978–1984 年，農業生產力大幅提升，農村收入快速增長。</li>
+            <li><strong>鄉鎮企業（TVEs）的興起：</strong>以集體所有但市場化運作的企業形式，吸收農村剩餘勞動力，開始工業化進程，1985 年鄉鎮企業產值已超過農業產值。</li>
+          </ul>
+
+          <h3>第二階段：沿海開放與出口導向工業化（1984–2001）</h3>
+          <ul>
+            <li><strong>經濟特區（Special Economic Zones, SEZs）：</strong>深圳、珠海、廈門、汕頭四個特區率先試點市場機制、吸引外資；1984 年開放 14 個沿海城市；1990 年代浦東新區的開發。</li>
+            <li><strong>雙軌制（Dual-Track System）：</strong>H10 提到的制度設計——計畫配額內按計畫價格，超出部分按市場價格，使市場機制在計畫框架旁邊逐步擴大。</li>
+            <li><strong>國有企業（SOE）改革：</strong>1990 年代中期，「抓大放小」政策：保留和強化關鍵戰略行業的大型國有企業，同時讓中小型國有企業私有化或破產退出。這一過程伴隨了大規模下崗（layoffs）——估計 2,000–4,500 萬工人在 1990 年代末失業。</li>
+          </ul>
+
+          <h3>第三階段：WTO 後的全面整合（2001–2012）</h3>
+          <p>2001 年加入 WTO 後，中國製造業出口進入爆炸式增長期，外資直接投資（FDI）大量湧入，成為「世界工廠（Factory of the World）」。</p>
+
+          <h3>第四階段：升級與轉型的嘗試（2012–今）</h3>
+          <p>習近平上任後，政策重心從「量」的增長轉向「質」的升級：「中國製造 2025」推動高科技產業；「一帶一路（Belt and Road Initiative）」擴大全球基礎設施影響力；供給側改革、去槓桿；以及日益突出的中美科技競爭。</p>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="wto">
+          <h2>二、2001 年加入 WTO：全球化的最大加速器</h2>
+
+          <h3>加入的政治經濟學</h3>
+          <p>中國從 1986 年開始申請加入 GATT/WTO，歷經 15 年談判，最終於 2001 年 12 月正式加入。這是一個高度政治化的決策：中方接受了大量的市場開放承諾（降低關稅、開放服務業、知識產權保護等），換取了永久正常貿易關係（Permanent Normal Trade Relations, PNTR）地位——即美國對中國商品的最惠國關稅待遇從需要年度授權變為永久。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">WTO 加入的「結合效應（Combined Effect）」</div>
+            <p>Acemoglu、Autor、Dorn、Hanson 和 Price（2016）等學者的研究顯示，中國加入 WTO 對全球貿易格局的影響，遠超過單純的關稅削減效果：</p>
+            <p><strong>中國方面：</strong>WTO 入盟提供了「可信承諾（credible commitment）」——外國廠商相信中國的對外開放政策是不可逆的，因此大規模投資中國製造業。FDI 從 2000 年的 408 億美元，在 2002–2007 年間快速增至年均超過 700 億美元。</p>
+            <p><strong>全球供應鏈方面：</strong>跨國公司開始大規模「外包（outsourcing/外包）」和「離岸化（offshoring/離岸化）」製造流程到中國，形成了以中國為樞紐的亞洲供應鏈網絡。蘋果（設計在美國）、鴻海（製造在中國）、三星（零件供應）的三角模式成為全球供應鏈的典型範式。</p>
+          </div>
+
+          <h3>量化影響</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>指標</th>
+                <th>2000 年</th>
+                <th>2010 年</th>
+                <th>2020 年</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>中國出口佔全球出口比重</td><td>約 4%</td><td>約 10.4%</td><td>約 14.7%</td></tr>
+              <tr><td>中國製造業增加值佔全球比重</td><td>約 7%</td><td>約 19%</td><td>約 29%</td></tr>
+              <tr><td>中國 GDP（購買力平價，PPP）佔全球比重</td><td>約 7%</td><td>約 14%</td><td>約 18%</td></tr>
+              <tr><td>全球從極端貧困（$1.9/天）中脫貧的人口（1990–2015）</td><td colspan="3">約 10 億，其中中國貢獻超過 70%</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="supply-chains">
+          <h2>三、全球供應鏈的重組：「中國製造」的政治經濟學</h2>
+
+          <h3>比較優勢的極致發揮</h3>
+          <p>中國成為「世界工廠」的基礎，是對李嘉圖（Ricardo）比較優勢理論的現實驗證：在特定的歷史條件下，中國同時擁有幾乎所有製造業成功所需的要素組合：</p>
+          <ul>
+            <li><strong>廉價且充裕的勞動力：</strong>1980–2000 年代，農村轉移勞動力的「路易斯轉折點（Lewis Turning Point）」尚未到來，工資遠低於已開發國家；</li>
+            <li><strong>強大的國家能力：</strong>中央和地方政府大規模投資基礎設施（高速公路、港口、電力、工業園區），降低了製造業的基礎設施成本；</li>
+            <li><strong>政治穩定性：</strong>對外資而言，政治穩定性是長期投資的前提；中國的政治連續性降低了投資不確定性；</li>
+            <li><strong>集聚效應（Agglomeration Effects）：</strong>製造業集群形成後，供應商、物流、技術工人形成自我強化的生態系統——深圳的電子製造、東莞的紡織、溫州的輕工業，都是集聚效應的典型。</li>
+          </ul>
+
+          <h3>全球供應鏈的「微笑曲線（Smiling Curve）」</h3>
+          <p>台灣宏碁創辦人施振榮（Stan Shih）提出的「微笑曲線（Smiling Curve/微笑曲線）」描述了全球供應鏈的價值分布：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">微笑曲線（Smiling Curve）</div>
+            <pre>
+附加價值
+   ^
+   |  研發、設計  品牌、行銷、售後
+   | （R&D, Design）（Branding, After-sales）
+   |  ●              ●
+   |    ●          ●
+   |      ●      ●
+   |        ●  ●
+   |          ●   ← 製造、組裝（Manufacturing）
+   |
+   └─────────────────────────────────→
+  上游                中游               下游
+  (Upstream)        (Midstream)        (Downstream)
+
+中國的位置：長期集中在曲線最底端的製造和組裝環節
+  → 高出口量但相對低的每單位附加價值
+
+中國升級的方向：
+  向上游（研發、設計：半導體、AI、材料）
+  向下游（品牌、平台：華為、阿里巴巴、字節跳動）</pre>
+          </div>
+
+          <h3>「中國加一（China Plus One）」戰略</h3>
+          <p>2010 年代後，隨著中國工資上升、地緣政治風險增加、2018 年中美貿易戰，跨國公司開始推行「中國加一（China Plus One/China +1）」策略——保留在中國的生產，同時在越南、印尼、墨西哥、印度建立第二生產基地以分散風險。這是供應鏈「去中心化（de-centering）」但非「去全球化（de-globalization）」的開始。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解：中國如何改變全球宏觀環境</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">中國崛起對全球宏觀環境的三條傳導渠道</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">渠道 A：通膨壓制效應（Disinflationary Effect）</div>
+                <div class="t-node-desc">中國廉價製造品大量出口 → 全球消費品價格下降 → 抑制已開發國家通膨 → 支持低利率環境（「中國通縮出口/Exporting Deflation」）→ 支撐全球資產估值；本·柏南克將「大緩和」部分歸因於此</div>
+              </div>
+              <div class="t-arrow">↕</div>
+              <div class="t-node">
+                <div class="t-node-title">渠道 B：商品需求效應（Commodity Demand Effect）</div>
+                <div class="t-node-desc">中國快速工業化 → 對鐵礦石、銅、石油、大豆的龐大需求 → 全球大宗商品超級週期（Super Cycle, 2003–2011）→ 資源出口國（澳洲、巴西、中東）受益；中國放緩時逆向衝擊</div>
+              </div>
+              <div class="t-arrow">↕</div>
+              <div class="t-node">
+                <div class="t-node-title">渠道 C：儲蓄回流效應（Savings Recycling Effect）</div>
+                <div class="t-node-desc">中國高儲蓄 + 大量出口盈餘 → 外匯儲備積累（主要是美元資產/美國國債）→ 壓低美國長期利率 → 支撐美國消費和房市泡沫 → 2008 年危機的宏觀背景（詳見 H13）</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="china-shock">
+          <h2>五、「中國衝擊」：對已開發國家的分配後果</h2>
+
+          <h3>Autor、Dorn、Hanson 的「中國衝擊」研究</h3>
+          <p>David Autor、David Dorn 和 Gordon Hanson 於 2013 年發表的論文〈中國貿易衝擊的中國症候群（The China Syndrome）〉，是過去十年影響最大的國際貿易研究之一。他們利用美國各地區的行業暴露度差異，估算了中國進口競爭對美國製造業就業的影響：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">「中國衝擊」的主要發現</div>
+            <p><strong>就業損失：</strong>1999–2011 年，中國進口增加導致美國製造業約流失 <strong>200–240 萬個工作崗位</strong>，佔同期美國製造業就業下降的相當大比例（學界估計約佔製造業下降的 1/4 至 2/3，存在爭議）。</p>
+            <p><strong>地理集中性：</strong>衝擊高度集中在特定製造業地區（「鏽帶/Rust Belt」），如俄亥俄州、密歇根州、北卡羅來納州的紡織和傢具產業集中地。這些地區的工人面臨的不只是失業，而是整個地方經濟生態的崩潰——相關服務業、零售業連鎖受損。</p>
+            <p><strong>勞動力流動的局限：</strong>與標準貿易理論預測不同，受衝擊地區的工人並未迅速流動至其他地區或其他產業——技能特定性（skill specificity）、地方網絡、房屋負資產、家庭約束使勞動力流動代價高昂。這解釋了為何局部化的製造業衝擊能造成長達十年的地區性停滯。</p>
+            <p><strong>政治後果：</strong>Autor 等人後來的研究（2020）顯示，受中國衝擊最嚴重的美國地區，在後來的選舉中更傾向於投票給政治立場極端的候選人（無論左翼還是右翼）——2016 年特朗普的選舉成功，部分根植於「鏽帶」地區對全球化的怨恨。</p>
+          </div>
+
+          <h3>貿易的分配效應：赫克歇爾—俄林理論的政治含意</h3>
+          <p>赫克歇爾—俄林（Heckscher-Ohlin）貿易理論預測：一個要素豐富的國家在密集使用該要素的商品上有比較優勢。中美貿易中：中國勞動力豐富 → 中國出口勞動密集型商品 → 美國進口這些商品 → 美國勞動密集型行業的工人（相對低技能工人）的工資受到壓力；美國知識密集型行業（高技能工人）則從出口擴張中受益。</p>
+
+          <p>「斯托爾珀—薩繆爾森定理（Stolper-Samuelson Theorem）」進一步說明：貿易開放在長期必然使相對稀缺要素的報酬下降——對美國而言，低技能勞動力是相對稀缺要素（相比中國），因此貿易開放長期壓低了美國低技能工人的實際工資。這是全球化「效率收益（efficiency gains）」和「分配損失（distributional losses）」的根本張力。</p>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="global-imbalances">
+          <h2>六、全球失衡：儲蓄、投資與「布列敦森林 II」</h2>
+
+          <h3>「中國—美國失衡（Chimerica）」</h3>
+          <p>歷史學家 Niall Ferguson 和 Moritz Schularick（2007）創造了「Chimerica（中美共同體）」這個詞，描述中美兩國之間的共生經濟關係：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">Chimerica 的循環邏輯</div>
+            <pre>
+中國（儲蓄方）                    美國（消費方）
+高儲蓄率（約 40–50% GDP）         低儲蓄率（約 2–5% GDP）
+大量出口，貿易順差                 大量進口，貿易逆差
+積累外匯儲備（主要是美元）         財政赤字 + 消費赤字
+
+         ↕ 資本回流                   ↕
+中國購買美國國債                    美國獲得廉價融資
+  → 壓低美國長期利率                  → 消費者借貸成本低
+  → 美國資產價格上漲                  → 住宅市場泡沫
+  → 美國消費者財富效應增加             → 進口中國商品的能力增加
+
+        這個循環在 2008 年金融危機中戛然而止</pre>
+          </div>
+
+          <h3>「布列敦森林 II（Bretton Woods II）」論題</h3>
+          <p>Dooley、Folkerts-Landau 和 Garber（2003）提出：後危機的國際貨幣體系實際上形成了一個非正式的「布列敦森林 II」——亞洲（主要是中國）出口導向型國家通過管理匯率（保持人民幣低估）以維持出口競爭力，換取積累美元儲備，而美國享受廉價融資和廉價進口品。這個體系對雙方都有短期好處：中國獲得就業和成長，美國獲得廉價消費品和低利率。其代價是積累了 2008 年危機爆發所需的全球失衡。</p>
+
+          <h3>「中國儲蓄過剩（China Savings Glut）」與美國長期利率</h3>
+          <p>本·柏南克（2005）提出「全球儲蓄過剩（Global Savings Glut）」假說：亞洲危機後亞洲各國大量積累儲蓄和外匯儲備，加上中國的高儲蓄率，將全球儲蓄供給推高，壓低了全球長期實際利率。這解釋了為何 2000 年代初美聯準即使開始升息，長期利率仍保持低位（格林斯潘稱之為「謎（conundrum）」）。低長期利率是美國住宅市場泡沫的重要推手，因此中國的高儲蓄可以被視為 2008 年危機的宏觀背景因素之一（雖然批評者指出這不是主要原因）。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="inequality">
+          <h2>七、全球化與不平等：大象曲線</h2>
+
+          <h3>Milanovic 的「大象曲線（Elephant Curve）」</h3>
+          <p>布蘭科·米拉諾維奇（Branko Milanovic）在 2016 年出版的《全球不平等》（<em>Global Inequality</em>）中，以「大象曲線（Elephant Curve/大象曲線）」可視化了 1988–2008 年全球各收入群體的實際收入變化：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">大象曲線（Elephant Curve）</div>
+            <pre>
+實際收入增長（%）
+   ^
+   |                    ●（尾部：全球頂端 1%，主要是已開發國家富人）
+70 |  ●（背部高點：全球中產，主要是中國、亞洲中低收入者）
+   |    ●
+50 |      ●●
+   |          ●●
+30 |              ●●
+   |                  ●
+10 |                      ●（腹部低點：已開發國家中低收入工人）
+   |
+   └──────────────────────────────────────────→
+  全球收入百分位（0 → 100）
+
+解讀：
+• 全球中段（約 20–60 百分位）：中國和亞洲中低收入者，收入大幅提升
+• 全球頂端 1%：已開發國家的超高收入者，收入大幅提升
+• 已開發國家中低收入工人（約 75–90 百分位）：收入幾乎停滯
+
+全球化的受益者：中國工人 + 全球超富裕階層
+全球化的相對失敗者：已開發國家的中低收入工人</pre>
+          </div>
+
+          <h3>全球不平等 vs. 國內不平等的分歧</h3>
+          <p>大象曲線揭示了一個重要的政治緊張：從<strong>全球</strong>視角看，全球化顯著降低了全球不平等（因為中國等國家的數億人從極端貧困進入中產）；但從<strong>國內</strong>視角看（對已開發國家而言），全球化加劇了國內的收入不平等——低技能工人工資停滯，而資本所有者和高技能工人從全球化中受益。</p>
+
+          <p>這個分歧解釋了「全球化輸家（globalization losers）」的政治反彈：已開發國家的中低收入工人並不關心中國工人的收入提升，他們感受到的是自己的相對位置下降。這是民粹主義（populism）、反全球化情緒、和保護主義政策在 2010 年代在美歐重新興起的社會基礎。</p>
+
+          <h3>皮凱提（Piketty）的「21 世紀資本論」</h3>
+          <p>托馬斯·皮凱提（Thomas Piketty）在 2013 年出版的《21 世紀資本論》（<em>Capital in the Twenty-First Century</em>）提出了更宏觀的不平等理論：當資本報酬率（r）持續超過經濟成長率（g）時，財富將日益集中於已有資本的人手中。他以大量歷史數據說明，r &gt; g 是資本主義的長期常態（除了二戰前後幾十年的特殊例外），預測財富集中度將繼續上升。</p>
+
+          <p>皮凱提的研究與 Milanovic 的大象曲線形成對話：全球化使資本報酬率更高（全球勞動套利降低生產成本），而全球中低技能勞動者面臨更激烈的競爭，兩者共同推動了「r &gt; g」格局的強化。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：「中國周期」對資產配置的影響</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">中國宏觀周期對全球資產的傳導</div>
+            <p><strong>大宗商品（Commodities）：</strong>中國是全球最大的鋼鐵、鋁、銅、鐵礦石、大豆消費國。「中國周期（China Cycle）」對大宗商品的影響是現代最重要的宏觀主題之一：中國加速 → 大宗商品需求上升 → 澳洲（鐵礦）、巴西（大豆、鐵礦）、智利（銅）等資源出口國受益；中國放緩 → 反向衝擊。2003–2011 年的大宗商品「超級週期（Super Cycle）」幾乎完全由中國工業化驅動。</p>
+            <p><strong>新興市場股票（EM Equities）：</strong>中國在 MSCI 新興市場指數中佔比最大（峰值超過 30%），且因「中國題材」影響其他新興市場的整體情緒。中國政策轉向（降準、財政刺激）是全球風險偏好的重要驅動力之一——2015–2016 年中國股市崩潰和匯率貶值，引發了全球市場的大幅動盪。</p>
+            <p><strong>美國長期利率（U.S. Long-Term Rates）：</strong>中國大量購買美國國債（高峰時持有超過 1.3 兆美元）對美國 10 年期國債收益率有壓低效應。若中國因地緣政治或儲蓄率下降而減少美債持有，將對美國長期利率構成上行壓力——這是「去美元化（de-dollarization）」討論的核心金融含意。</p>
+            <p><strong>人民幣匯率（RMB/CNY）：</strong>人民幣匯率是全球宏觀投資者的重要觀測指標：升值往往伴隨中國成長前景改善和資本流入；貶值往往預示資本外流壓力或政策性貶值以刺激出口，並對區域貨幣形成下行壓力（「亞洲傳染」）。2015–2016 年的意外貶值是一個重要案例。</p>
+          </div>
+
+          <h3>「中美脫鉤」的市場含意</h3>
+          <p>2018 年後，中美貿易戰和科技競爭引入了「脫鉤（decoupling/脫鉤）」這一概念。對投資者而言，脫鉤的潛在影響包括：供應鏈去中心化增加企業成本（通膨壓力）；中概股（中國在美上市公司）的地緣政治折價；台灣（半導體供應鏈的核心）的地緣政治溢價；以及製造業回流（reshoring/回流）對勞動力市場和工資的長期影響。這些主題將在 H14 和 H15 中進一步展開。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「中國的成功完全源於廉價勞動力和貨幣操縱」</h3>
+            <p><strong>更準確的理解</strong>：廉價勞動力和人民幣低估確實是重要因素，但不是完整解釋。同樣「廉價勞動力」的國家（非洲許多國家）並未成為製造業中心，說明勞動成本只是必要條件而非充分條件。中國的成功還需要：① 強大的基礎設施建設能力；② 快速積累的工程師和技術工人隊伍；③ 地方政府的招商引資競爭（形成有效的「市場測試」機制）；④ 集聚效應形成的供應鏈生態系統；⑤ 在特定階段有效的產業政策。人民幣低估確實在某些時期存在，但 2005–2015 年人民幣對美元升值約 35%，且許多研究顯示低估程度在 2000 年代後期已大幅縮小。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「全球化（特別是中國加入 WTO）使美國工人整體受益」</h3>
+            <p><strong>更準確的理解</strong>：從整體（aggregate）層面，貿易理論預測全球化使貿易參與國的整體福利提升——消費者因廉價進口品受益，企業效率提升。但「整體收益」掩蓋了嚴重的分配後果：Autor 等人的研究清楚顯示，製造業集中地區的低技能工人承受了巨大且持久的就業和工資損失。如果贏家不對輸家進行補償（政治上美國幾乎沒有系統性補償機制），從受衝擊工人的角度看，自由貿易政策等同於「效率與公平的交換」——效率是整體的，代價是局部的且高度集中的。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「中國的經濟模式是可持續的，並將超越美國成為全球最大經濟體」</h3>
+            <p><strong>更準確的理解</strong>：中國面臨幾個結構性的長期挑戰：① 人口老化——中國將面臨比任何已開發國家更快的老齡化進程，勞動力規模在 2010 年代後開始縮減；② 劉易斯轉折點（Lewis Turning Point）——低成本農村勞動力的無限供給已基本耗盡，工資上升壓力持續；③ 「中等收入陷阱（middle income trap）」的風險——從低技術製造業升級到高技術創新的轉型面臨政治和制度挑戰；④ 高債務率——企業債務和地方政府債務比率在 GDP 中佔比極高。中國是否能跨越這些挑戰，是當代最重要的發展經濟學問題，學術界存在廣泛爭議，不宜簡單斷言「必然超越」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「Piketty 的 r &gt; g 命題預測了資本主義必然走向崩潰」</h3>
+            <p><strong>更準確的理解</strong>：Piketty 的命題是描述性的而非宿命論的——他描述了在沒有特定政策干預（如進步資本稅）的情況下，財富不平等的長期趨勢。他明確指出，20 世紀中葉的相對平等（r &gt; g 暫時不成立）是兩次世界大戰和大蕭條摧毀了大量資本的「例外」，而非長期常態。批評者（如Acemoglu, Krusell, Smith）指出，Piketty 對 r 和 g 的預測過於機械，忽視了技術進步對資本報酬率的影響（若未來自動化降低資本回報，r 未必持續 &gt; g）。Piketty 的貢獻在於歷史數據的整理和不平等的長期視角，不宜將其解讀為「資本主義終結的預言」。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「中國加入全球供應鏈，從整體看是使全球更富裕，還是更不平等？如何平衡這兩個命題？」</div>
+
+            <p>這是一個典型的「效率 vs. 分配（efficiency vs. distribution）」問題，要求學生識別不同分析層次的正確性，並進行整合性評估。</p>
+
+            <p><strong>命題一（整體更富裕）是正確的：</strong></p>
+            <p>世界銀行數據顯示，1990–2015 年全球極端貧困人口從約 18 億降至 7 億，中國貢獻了其中約 7–8 億（佔全球脫貧的 70% 以上）。從全球整體效用（global aggregate welfare）看，中國的工業化和融入全球貿易體系使人類整體更富裕——這是無可爭議的事實。此外，廉價的中國製造品使全球消費者（特別是中低收入消費者，他們花費收入比例更高於製造品）享受了更高的實際購買力。</p>
+
+            <p><strong>命題二（更不平等）也是正確的（在特定層次上）：</strong></p>
+            <p>在已開發國家的<strong>國內分配</strong>層次，Autor 等人的研究清楚顯示，低技能製造業工人（特別是美國和歐洲）的實際工資和就業機會受到了持久損害。皮凱提的數據也支持，全球化時代已開發國家的頂層收入佔比顯著上升，資本所有者比工人更多地享受了全球化的效率紅利。</p>
+
+            <p><strong>整合框架：</strong></p>
+            <p>最準確的表述是：中國的全球化整合<strong>降低了國家間不平等（between-country inequality）</strong>（中國從窮變富），同時<strong>加劇了已開發國家的國內不平等（within-country inequality in advanced economies）</strong>。這兩個命題在不同分析層次上都是正確的，不構成矛盾。</p>
+
+            <p>政策啟示：如果全球化的效率收益真的使整體餅變大，理論上贏家可以補償輸家，且兩者都能過得更好（Kaldor-Hicks 效率）。但補償機制的政治可行性在現實中高度困難——全球化帶來的貿易稅收（關稅收入）在自由貿易協議中消失了，企業的利潤留在了股東手中，而受衝擊工人缺乏再培訓（retraining）和轉移的支持。全球化政策的真正失敗，不在於它帶來了輸家，而在於它未能將贏家的利得有效轉移給輸家——這是政治設計的失敗，而非市場理論的失敗。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">用 Milanovic 的「大象曲線」解釋為什麼全球化時代既有「全球貧困大幅減少」，又有「已開發國家民粹主義興起」這兩個看似矛盾的現象同時發生？</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>大象曲線的精確解讀：</strong>能說明曲線的三個關鍵區段——全球中段（中國、亞洲中低收入，收入大幅提升）、已開發國家中低收入（收入幾乎停滯）、全球頂端 1%（收入大幅提升）。</p>
+                  <p><strong>兩個命題的相容性：</strong>從<strong>全球層面</strong>，確實有數億人脫離極端貧困（全球貧困減少是真實的）；從<strong>已開發國家國內層面</strong>，中低收入工人的相對位置下降，絕對收入停滯——這是真實的「輸家」體驗，驅動了對「精英（elites）」和全球化的怨恨。兩個命題不矛盾，因為它們的參照系（reference frame）不同：前者是全球視角，後者是國內視角。</p>
+                  <p><strong>民粹主義的政治連結：</strong>已開發國家的中低收入工人看不到「全球貧困減少」帶給自己什麼好處，他們感受到的是：製造業工作消失、工資停滯、社區衰退。這種怨恨被民粹主義政治人物動員，指向「全球化精英」和「外國（中國）」作為責任對象。優秀答案能識別政治動員（political mobilization）在「客觀困境」到「民粹投票」之間的中介作用。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明曲線基本形狀，理解中國工人受益而已開發國家低收入工人停滯，提出這解釋了民粹主義，但對兩個命題的層次分析不夠清晰。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「有人受益有人受損」，無法說明大象曲線的具體形狀，無法清晰連結到政治後果。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>大象曲線三個區段的準確解讀</td><td>30 分</td></tr>
+                    <tr><td>兩個命題相容性的層次分析</td><td>35 分</td></tr>
+                    <tr><td>民粹主義的政治連結機制</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">「全球失衡（global imbalances）」——即中國高儲蓄/順差與美國低儲蓄/逆差的長期共存——是 2008 年金融危機的根本原因嗎？請評估「全球儲蓄過剩（global savings glut）」假說的論點與局限。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>全球儲蓄過剩假說的邏輯：</strong>柏南克（2005）的論點：亞洲（中國）的高儲蓄率 + 出口盈餘 → 外匯儲備積累 → 大量購買美國國債 → 壓低美國長期利率 → 驅使投資者尋求更高收益 → 推動了抵押貸款支持證券（MBS）等高風險資產的需求 → 間接助推了美國住宅泡沫。</p>
+                  <p><strong>假說的論點支持：</strong>確實，2000 年代初美聯準升息而長期利率未同步上升（格林斯潘的「謎」），部分可以用外部需求（中國購債）解釋；中國的外匯儲備積累與美國房地產泡沫的時間線相符。</p>
+                  <p><strong>假說的局限（批評）：</strong>① 美國金融系統的內生缺陷（監管失敗、信用評級機構失效、金融創新失控）更直接地解釋了危機的產生——即使沒有外部儲蓄過剩，這些內生問題也可能引發危機；② 歐洲銀行也大量購買 MBS（歐洲的儲蓄過剩也是因素），說明問題不僅是「中國—美國」雙邊失衡；③ 全球儲蓄過剩是必要條件而非充分條件——低利率環境下，金融監管和激勵結構決定了是否形成危機。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明儲蓄過剩壓低了美國利率，理解這助推了住宅泡沫，提出一兩個批評，但對批評的深度和論點的平衡性不足。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「中國買美債壓低利率」，無法說明從低利率到住宅泡沫的完整傳導鏈，批評幾乎缺失。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>全球儲蓄過剩假說的完整邏輯</td><td>30 分</td></tr>
+                    <tr><td>論點支持的準確性</td><td>20 分</td></tr>
+                    <tr><td>局限與批評的深度</td><td>35 分</td></tr>
+                    <tr><td>整體評估的均衡性</td><td>15 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">施振榮的「微笑曲線（Smiling Curve）」如何解釋中國在全球供應鏈中的定位，以及中國升級（upgrading）的方向和挑戰？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>微笑曲線的準確解讀：</strong>曲線兩端（研發設計 + 品牌行銷）附加價值高，中間的製造組裝附加價值低。中國長期處於曲線底端——高出口量但低單位附加價值（「跑量不賺錢」的極端形式）。</p>
+                  <p><strong>升級的方向：</strong>向上游升級（研發、半導體、精密製造、材料科學）——「中國製造 2025」的核心目標；向下游升級（品牌建立、平台經濟、全球分銷）——華為、DJI、小米、TikTok（字節跳動）代表這個方向。</p>
+                  <p><strong>升級的挑戰：</strong>① 技術獲取的政治障礙——中美科技戰使高端半導體和 AI 晶片的進口受限（ASML EUV 光刻機的出口管制）；② 創新生態系統的建立需要時間和制度——智識財產保護、學術自由、人才流動；③ 品牌信任的建立——消費者對中國品牌的全球接受度仍有差距（除了特定領域如手機、電動車）；④ 「中等收入陷阱」的結構性挑戰。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明微笑曲線的基本形狀，理解中國在底端的製造定位，提出升級方向，但對挑戰的分析不夠深入。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「中國要從製造業升級到科技」，無法說明微笑曲線的附加價值邏輯，挑戰分析缺失或極為表面。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>微笑曲線的準確解讀</td><td>30 分</td></tr>
+                    <tr><td>中國當前定位的分析</td><td>20 分</td></tr>
+                    <tr><td>升級方向的具體說明</td><td>25 分</td></tr>
+                    <tr><td>升級挑戰的深度分析</td><td>25 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h11-japan-asia-euro.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H11 日本泡沫、亞洲危機與歐元</span>
+          </a>
+          <a href="h13-2008.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H13 2008 金融危機與 QE 時代</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

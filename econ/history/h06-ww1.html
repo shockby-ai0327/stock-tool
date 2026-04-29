@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H06 一戰、戰債與國際金融失衡 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H06 一戰、戰債與國際金融失衡</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H06</span>
+            <span class="lecture-period">1914 — 1932</span>
+          </div>
+          <h1 class="article-title">一戰、戰債與國際金融失衡</h1>
+          <p class="article-subtitle">WWI, War Debts, Reparations &amp; International Financial Imbalances</p>
+          <p class="article-lead">第一次世界大戰不只摧毀了四個帝國，也摧毀了 H05 所描述的第一次全球化秩序。戰後留下的不是和平，而是一張錯綜複雜的債務網絡——德國欠協約國賠款（reparations/賠款），英法欠美國戰爭貸款（war debts/戰債），而美國向全球輸出資本維持這個循環運轉。本講解析這張三角債務（triangular debt）如何在缺乏制度支撐的情況下，將世界經濟推向1929年的崩潰邊緣。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#war-economics">戰爭經濟學：如何融資一場世界大戰</a></li>
+            <li><a href="#versailles">凡爾賽條約與賠款爭議</a></li>
+            <li><a href="#triangle">道威斯循環：三角債務的拓撲結構</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#weimar">威瑪德國的惡性通膨（1921–1923）</a></li>
+            <li><a href="#stabilization">短暫穩定（1924–1929）與脆弱性積累</a></li>
+            <li><a href="#market-implications">市場含意：資產配置的歷史教訓</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="war-economics">
+          <h2>一、戰爭經濟學：如何融資一場世界大戰</h2>
+
+          <h3>規模的衝擊</h3>
+          <p>1914 年 8 月，沒有任何一個政府真正計算過一場現代工業戰爭的成本。普法戰爭（1870–1871）歷時不到一年，代價尚可承受；參謀部普遍相信「戰爭在聖誕前結束」。現實是：四年戰爭耗費的資源相當於英國一整年 GDP 的兩倍以上，德國則是三倍以上。</p>
+
+          <p>根據歷史學家 Niall Ferguson（2001）的估算，主要交戰國的戰爭總支出如下：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>國家</th>
+                <th>戰爭總支出（十億 1913 年美元）</th>
+                <th>佔戰前 GDP 倍數</th>
+                <th>主要融資方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>英國 Britain</td>
+                <td>35.3</td>
+                <td>約 2.2 倍</td>
+                <td>公債 + 美國借款</td>
+              </tr>
+              <tr>
+                <td>法國 France</td>
+                <td>24.3</td>
+                <td>約 2.8 倍</td>
+                <td>公債 + 通貨膨脹 + 美國借款</td>
+              </tr>
+              <tr>
+                <td>德國 Germany</td>
+                <td>37.8</td>
+                <td>約 3.1 倍</td>
+                <td>公債（幾乎無稅收融資）</td>
+              </tr>
+              <tr>
+                <td>俄國 Russia</td>
+                <td>17.4</td>
+                <td>約 2.5 倍</td>
+                <td>通貨膨脹（導致革命）</td>
+              </tr>
+              <tr>
+                <td>美國 USA</td>
+                <td>22.6</td>
+                <td>約 0.6 倍（1917–18 參戰）</td>
+                <td>戰爭公債（Liberty Bonds）+ 稅</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>三種融資路徑的政治經濟學</h3>
+          <p>面對龐大的戰爭支出，每個政府都面臨同樣的三角選擇：<strong>徵稅（taxation/稅收）、舉債（borrowing/借貸）、印鈔（monetary finance/貨幣融資）</strong>。選擇比例直接決定戰後的通膨路徑與債務負擔。</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">核心概念：政府預算約束的跨期形式</div>
+            <p>政府支出 G = 稅收 T + 公債發行 ΔB + 央行購債（貨幣融資）ΔM</p>
+            <p>任何一方面的選擇都只是把成本轉移到不同的持有者身上：稅收是當代納稅人負擔；公債是未來納稅人負擔；印鈔是所有持有貨幣者（通膨稅/inflation tax）的負擔。德國在戰時幾乎全靠公債融資，理由是政府相信德國必勝，戰後可向法國索取賠款以清償債務——這個邏輯在凡爾賽徹底瓦解。</p>
+          </div>
+
+          <h3>英國的美元融資策略</h3>
+          <p>英國在戰爭初期仍維持金本位，但英鎊的黃金儲備迅速枯竭。從1915年起，英國開始大規模向美國借款，以購買彈藥、糧食和原料。英美之間的主要協調人是 J.P. Morgan 集團——摩根銀行成為協約國在美國的財政代理人，承銷了大量協約國公債。到 1917 年美國參戰時，英法已積累高達 43 億美元的對美債務（以 1917 年幣值計），而美國也因此從世界最大債務國搖身一變成為世界最大債權國（creditor nation/債權國）。</p>
+
+          <p>這個金融結構的轉變意義深遠：英國在 19 世紀長期扮演全球資本出口者（H05 提到英國海外投資佔 GDP 的 7–9%），但戰後英國成為美國的淨債務人，倫敦的國際金融中心地位開始動搖，紐約悄悄崛起。</p>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="versailles">
+          <h2>二、凡爾賽條約與賠款爭議</h2>
+
+          <h3>和平的後果</h3>
+          <p>1919 年的巴黎和會（Paris Peace Conference）面對的是一個幾乎無解的難題：如何懲罰德國、安撫各國國內政治，同時維持歐洲的經濟重建？凡爾賽條約（Treaty of Versailles）最終的賠款數字在 1921 年的倫敦賠款最後議定書（London Schedule of Payments）中確立：<strong>1,320 億金馬克（gold marks/金馬克）</strong>，分 A、B、C 三種債券。</p>
+
+          <p>這個數字引發了歷史上最重要的經濟辯論之一。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">凱因斯 vs. 奧林：賠款的「轉移問題」</div>
+            <p>凱因斯（John Maynard Keynes）在 1919 年出版《和平的經濟後果》（<em>The Economic Consequences of the Peace</em>），猛烈批評凡爾賽的賠款要求，認為賠款數額遠超德國的實際支付能力，且在機制上存在根本缺陷：</p>
+            <p>德國要支付賠款，必須先賺取外匯（透過出口），但如果德國大量出口，勢必壓低英法市場的商品價格，損害這兩國自身的工業復甦——<strong>轉移問題（transfer problem）</strong>：賠款的「預算負擔」與「轉移負擔」是兩回事，後者才是真正的瓶頸。</p>
+            <p>瑞典經濟學家貝蒂爾·奧林（Bertil Ohlin，1929）反駁說：德國支付賠款 → 協約國收入增加 → 協約國需求增加 → 德國出口增加，透過需求效應自動調整。兩人的爭論從未有決定性結論，但此後的歷史演變更支持凱因斯的判斷。</p>
+            <p>現代學者（Eichengreen, 1992；Schuker, 1988）注意到實際上德國賠款的實際支付額遠低於名目數字，且 1924–1929 年間的「支付」幾乎全靠美國貸款支撐，並非真正的資源轉移。</p>
+          </div>
+
+          <h3>第 231 條「戰爭罪責條款」的政治後果</h3>
+          <p>除了賠款，凡爾賽條約第 231 條（War Guilt Clause/戰爭罪責條款）宣稱德國對戰爭的發生負有唯一責任，作為賠款的法律依據。這一條款在德國激起了強烈的民族主義反彈，成為威瑪共和國（Weimar Republic/威瑪共和）政治不穩定的長期根源，也為希特勒的崛起提供了政治燃料。</p>
+
+          <p>從政治經濟學的角度，凡爾賽的失敗在於它試圖同時達到幾個相互矛盾的目標：懲罰德國（法國要求）、促進歐洲重建（英國傾向）、維護威爾遜式民族自決原則（美國要求）、以及確保債務償還（所有協約國的財政需求）。這些目標的內在矛盾，使任何協議都難以為繼。</p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="triangle">
+          <h2>三、道威斯循環：三角債務的拓撲結構</h2>
+
+          <h3>問題的本質</h3>
+          <p>1923 年魯爾危機（Ruhr Crisis/魯爾危機）後，德國賠款問題已到了必須重組的臨界點。法國和比利時因德國賠款違約而出兵佔領魯爾工業區（Ruhr Valley），德國政府宣布「消極抵抗」（passive resistance），並以印鈔支付工人薪資——惡性通膨的最後推手。</p>
+
+          <p>1924 年，美國銀行家查爾斯·道威斯（Charles Dawes）主導談判，提出「道威斯計畫」（Dawes Plan/道威斯計畫）：重組德國賠款、建立新的賠款時間表、並由美國私人銀行向德國提供大規模貸款。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">道威斯循環（Dawes Cycle）— 三角債務結構</div>
+            <pre>
+  美國私人資本市場
+  (U.S. Private Capital Markets)
+         │
+         │ ① 貸款給德國
+         │   (Loans to Germany)
+         ▼
+    威瑪德國
+    (Weimar Germany)
+         │
+         │ ② 支付賠款給英法
+         │   (Reparations to UK/France)
+         ▼
+    英國 + 法國
+    (UK + France)
+         │
+         │ ③ 償還戰債給美國
+         │   (War Debt Repayment to USA)
+         ▼
+  美國政府財政
+  (U.S. Treasury)
+         │
+         │ → 轉化為稅收減免 → 美國消費者
+         │   (recycled via tax cuts → consumers)
+         └──────────────────────────────────┐
+                                            │
+                                     美國私人資本市場
+                                     （循環閉合）</pre>
+            <p style="margin-top:1rem;font-size:.9rem;opacity:.8;">關鍵洞察：這個循環只要美國繼續放款給德國就能運轉。一旦美國資本回流（1928年後因美國股市繁榮），整個系統立即斷裂。</p>
+          </div>
+
+          <h3>數字規模</h3>
+          <p>1924–1929 年間，德國從美國及其他外國來源借入約 <strong>250–300 億賴希馬克</strong>（Reichsmark/賴希馬克，當時幣值），相當於德國 GDP 的約 30–40%。而同期德國支付的賠款約為 100 億賴希馬克。換言之，德國的「支付」幾乎完全由外國借款支撐，並未透過生產性出口真正轉移資源。美國學者 Stephen Schuker（1988）因此稱這段歷史為「美國賠款給德國」（American Reparations to Germany）——因為 1932 年洛桑會議後賠款基本取消，而美國放貸的本金大多未收回。</p>
+
+          <h3>楊格計畫（Young Plan, 1929）：最後的調整嘗試</h3>
+          <p>1929 年，美國銀行家歐文·楊格（Owen Young）主導第二次賠款重組，進一步降低年度賠款額，並將還款期限延長至 1988 年（！）。楊格計畫僅運作了三年，隨著大蕭條爆發、胡佛暫停令（Hoover Moratorium, 1931）宣布暫停所有政府間債務償還，整個賠款與戰債架構在1932年洛桑會議（Lausanne Conference）中名義上終止，實際上德國從未再支付任何實質賠款（直到 1990 年德國統一後才就部分殘餘問題進行最後清算）。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">戰後國際金融失衡的傳導鏈</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">戰爭融資（1914–1918）</div>
+                <div class="t-node-desc">德國以公債融資；英法以公債＋美國借款融資；各國暫停金本位；通貨膨脹加速</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">戰後的不對稱結構</div>
+                <div class="t-node-desc">美國從淨債務國轉為最大債權國；德國背負賠款；英法背負戰債；歐洲產業基礎受損</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">道威斯循環（1924–1929）</div>
+                <div class="t-node-desc">美國私人貸款 → 德國賠款 → 英法戰債還美國 → 美國消費者受益；表面穩定，實為短期資本堆砌的紙牌屋</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">美國股市繁榮（1927–1929）</div>
+                <div class="t-node-desc">資金從歐洲回流美國；聯準會升息（1928）；對德放款急劇萎縮；道威斯循環斷裂</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">1929 年後的崩潰連鎖</div>
+                <div class="t-node-desc">德國外匯耗盡 → 賠款違約 → 德奧銀行倒閉（1931）→ 英國放棄金本位（1931） → 全球金融危機（詳見 H07）</div>
+              </div>
+            </div>
+          </div>
+
+          <h3>關鍵結構性問題：為什麼循環終將崩潰？</h3>
+          <p>道威斯循環的根本問題在於其依賴<strong>短期資本（short-term capital/短期資本）</strong>支撐<strong>長期政治性義務（long-term political obligations）</strong>。美國私人銀行的放款大多是短期信貸（3–12 個月）或可以隨時撤回的證券投資；而德國的賠款義務是幾十年的政治性契約。兩者的時間結構（maturity mismatch/期限錯配）意味著任何一次信心動搖，都可能觸發資本突然停止（sudden stop/突然停止），使整個系統雪崩。</p>
+
+          <p>Barry Eichengreen（1992）在其經典著作《黃金束縛》（<em>Golden Fetters</em>）中論證，戰間期（interwar period/戰間期）金融失穩的根源正是各國試圖在民主政治壓力升高、勞工組織力量增強的新環境中，強行恢復舊金本位的緊縮規則，而政治條件已然改變。</p>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="weimar">
+          <h2>五、威瑪德國的惡性通膨（1921–1923）</h2>
+
+          <h3>通膨的路徑</h3>
+          <p>威瑪德國的惡性通膨（hyperinflation/惡性通膨）是現代經濟史上最戲劇性的貨幣崩潰之一。1921 年一月，一美元兌 64 德國馬克；1923 年十一月通膨高峰時，一美元兌 <strong>4.2 兆馬克</strong>（4.2 × 10¹²）。物價在某些時期每小時都在上漲，工廠工人要求每天領兩次薪水以便在午休時就去買食物。</p>
+
+          <h3>惡性通膨的三層原因</h3>
+          <p>歷史學家對威瑪惡性通膨的成因有細緻的討論，主要可分為三個互相強化的層次：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">成因層次分析</div>
+            <p><strong>第一層（直接原因）：貨幣融資。</strong>德國政府以大量印鈔支付公共支出，包括支付消極抵抗期間魯爾工人的薪資（1923年初）。貨幣供給急速擴張 → 物價同比上漲。</p>
+            <p><strong>第二層（結構原因）：賠款壓力與財政赤字。</strong>德國政府無法向本國人民徵收足夠稅收以支應賠款（政治抵制），也無法在國際市場以合理利率借款（信用缺失），印鈔成為唯一出路。</p>
+            <p><strong>第三層（匯率—物價螺旋）：自我強化的預期。</strong>一旦通膨預期形成，馬克匯率下跌 → 進口商品更貴 → 物價上漲 → 更多印鈔 → 馬克進一步下跌。此即「購買力平價（Purchasing Power Parity/購買力平價，PPP）自我實現的惡性循環」。</p>
+          </div>
+
+          <h3>通膨的政治分配後果</h3>
+          <p>惡性通膨不只是貨幣現象，更是財富的激進重新分配：</p>
+          <ul>
+            <li><strong>債務人受益（debtors gain）</strong>：持有固定利率負債的企業主、抵押貸款者，其實際債務被通膨侵蝕至近乎為零——工業資本家如 Hugo Stinnes 趁機用貶值的馬克大規模收購資產。</li>
+            <li><strong>固定收入者受災（creditors and pensioners lose）</strong>：持有債券、儲蓄帳戶、退休金的中產階級（小市民階層/Mittelstand）幾乎一夜財富歸零——這一群體的怨恨成為 1930 年代納粹黨最重要的票倉之一。</li>
+            <li><strong>社會契約破裂</strong>：人們對法幣（fiat money/法定貨幣）的信任、對政府的信任、對未來的確定性預期，全面瓦解。</li>
+          </ul>
+
+          <h3>穩定化：1923 年的貨幣奇蹟</h3>
+          <p>1923 年 11 月，新任德國央行行長亞爾馬·沙赫特（Hjalmar Schacht）引入<strong>地產馬克（Rentenmark/地產馬克）</strong>，以德國土地和工業資產為擔保，以 1:1 兆的比率取代舊馬克，並嚴格限制新貨幣發行量。通膨在數週內停止，說明惡性通膨本質上是一個預期問題——一旦政府以可信的承諾（credible commitment/可信承諾）穩定預期，通膨可以幾乎瞬間終止。</p>
+
+          <p>這個案例後來成為貨幣經濟學的重要教材。Thomas Sargent（1982）在〈四次大通膨的終結〉（"The Ends of Four Big Inflations"）中論證，超通膨的終結往往比人們預想的更突然，關鍵在於建立可信的財政與貨幣制度，而非緩慢的貨幣緊縮。</p>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="stabilization">
+          <h2>六、短暫穩定（1924–1929）與脆弱性積累</h2>
+
+          <h3>繁榮的假象</h3>
+          <p>道威斯計畫實施後，1924–1929 年的德國經歷了表面的繁榮期，稱為「黃金二十年代」（Golden Twenties/黃金二十年代）。工業生產恢復、失業率下降、威瑪文化（Weimar culture）璀璨盛放——柏林成為歐洲最具活力的文化中心。</p>
+
+          <p>然而在繁榮表面之下，脆弱性正在積累：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">1924–1929 年的隱性失衡</div>
+            <p><strong>1. 資本流入期限錯配（Maturity Mismatch）</strong>：德國借入大量短期美國貸款，用於長期基礎建設投資（市政債券、工廠設備）。一旦美國收緊信貸，德國立即面臨流動性危機。</p>
+            <p><strong>2. 雙重赤字壓力（Twin Deficits）</strong>：德國同時維持貿易逆差和資本帳順差——出口競爭力仍不足以支撐賠款，依賴資本流入彌補缺口。</p>
+            <p><strong>3. 美國 1928 年的貨幣緊縮</strong>：聯準會為抑制股市投機而升息，導致美元短期利率上升，資金從歐洲回流美國，道威斯循環開始失血。</p>
+            <p><strong>4. 協約國戰債爭議</strong>：英法始終希望以賠款收入作為償還美國戰債的資金來源，但美國國會拒絕連結兩者，堅持戰債獨立償還——這種政治割裂使任何理性的整體重組都不可能。</p>
+          </div>
+
+          <h3>胡佛暫停令（Hoover Moratorium, 1931）：太遲的救援</h3>
+          <p>1931 年 6 月，美國總統赫伯特·胡佛（Herbert Hoover）宣布暫停所有政府間戰債和賠款的支付一年。這本是挽救危機的正確方向，但來得太遲——奧地利最大銀行信貸金融機構（Creditanstalt）已於 1931 年 5 月宣布破產，引發全歐洲銀行恐慌。英國在 1931 年 9 月放棄金本位，全球金融體系進入自由落體。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="market-implications">
+          <h2>七、市場含意：資產配置的歷史教訓</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">資產類別表現：戰時與戰後（1914–1932）</div>
+            <p><strong>股票（Equities/股票）</strong>：戰時各主要市場股票以名目計或持平或小幅下跌，但以實際購買力計大幅縮水（通膨侵蝕）。德國股市在惡性通膨期間名目上飆升（只是在測量貨幣貶值），1923 年後以實際價值計接近歸零。長期持有多元化股票組合（不包括德國）的投資者，經歷了漫長的復甦路。</p>
+            <p><strong>黃金與實物資產（Gold &amp; Real Assets）</strong>：持有黃金的投資者是最大贏家——在任何貨幣崩潰中，黃金保持了對外購買力。不動產持有者在惡性通膨中出現分化：以外幣計值的地產保值，純本幣負債的地產則承受了事實上的資本利得（債務消失）。</p>
+            <p><strong>政府公債（Sovereign Bonds/主權債券）</strong>：協約國公債持有者名義上得到償還，但受到多年低利率壓制；德國政府公債在通膨中全面清零；賠款相關公債（道威斯、楊格計畫債券）的持有者在 1932–1933 年後幾乎血本無歸。</p>
+            <p><strong>外匯（Foreign Exchange/外匯）</strong>：美元是戰間期最強勢貨幣，持有美元資產者相對受益。英鎊在 1931 年貶值後下跌約 30%，法郎在 1924 年危機中貶值更劇。</p>
+          </div>
+
+          <h3>對現代投資者的啟示</h3>
+          <p>戰間期的歷史提供了幾個經久不衰的投資原則：</p>
+
+          <ol>
+            <li><strong>主權信用並不等於無風險（Sovereign credit ≠ risk-free）</strong>：德國、俄國公債的清零提醒投資者，「政府公債」只是相對安全，而非絕對安全。國家信用評估必須包含政治風險、匯率風險和通膨風險。</li>
+            <li><strong>期限錯配是系統性風險的核心</strong>：道威斯循環的崩潰說明，用短期借款支撐長期政治義務是極度脆弱的結構。現代金融危機（2007–2009，詳見 H13）同樣根植於類似的期限錯配。</li>
+            <li><strong>地緣政治重組期，多元分散是生存法則</strong>：戰爭改變了資產的相對價值體系——英鎊資產的持有者損失了「全球儲備貨幣溢價」，美元資產持有者則獲得了這個溢價的增值。</li>
+            <li><strong>通膨的分配效應不對稱</strong>：高通膨/惡性通膨是隱性的財富再分配機器，系統性利空債權人（creditors/債權人）、利多有形資產和外幣資產的持有者。</li>
+          </ol>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="misconceptions">
+          <h2>八、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「凡爾賽條約的賠款直接導致希特勒上台」</h3>
+            <p><strong>更準確的理解</strong>：這是一個過度簡化的因果鏈。凡爾賽的確製造了德國的政治怨恨，但 1920 年代希特勒的納粹黨始終是邊緣力量（1928 年國會選舉僅得 2.6% 選票）。真正使希特勒上台的直接原因是 <strong>1929–1933 年的大蕭條</strong>——失業率超過 30%、中產階級破產、威瑪共和的主流政黨無力應對，才是納粹黨席次從 2.6% 暴增至 37.4%（1932 年）的結構性推力。凡爾賽是背景條件，大蕭條是直接觸發。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「德國真的支付了大量賠款，被逼得家破人亡」</h3>
+            <p><strong>更準確的理解</strong>：Stephen Schuker（1988）的研究顯示，1924–1931 年間，德國通過道威斯計畫借入的外資（約 250–300 億賴希馬克）遠超過其支付的賠款（約 100 億賴希馬克）。換言之，在此期間德國是資本的淨接受者，而非淨支付者。實際上是美國的私人貸款（以及最終未能收回的本金）補貼了德國的賠款支付。德國最終支付的實際賠款，估計只佔原始要求的 20–25%。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「威瑪惡性通膨是因為德國人喜歡印鈔」</h3>
+            <p><strong>更準確的理解</strong>：惡性通膨是政策選擇的結果，而政策選擇的背後是政治經濟約束——無法徵稅（政治抵制）、無法外部借款（信用缺失）、同時還要支付賠款、維持政府運作和消極抵抗期間工人薪資。印鈔是在這些約束下的殘餘選擇，而非原發性的貨幣失控。更深層的問題是財政制度的缺陷：威瑪共和建立之初缺乏強有力的稅收基礎和央行獨立性制度。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「美國是戰後的旁觀者，只是被動借錢」</h3>
+            <p><strong>更準確的理解</strong>：美國在整個戰後金融體系中扮演核心但不負責任的角色。美國堅持英法償還戰債（儘管這些資金本是用於共同的戰爭），同時允許並鼓勵私人銀行大量放款給德國（從中獲利），卻拒絕在制度層面（如加入國際聯盟）提供系統性保障。美國同時是道威斯循環的受益者（戰債收入、出口市場）和最終破壞者（1928 年貨幣緊縮）。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="professor-answer">
+          <h2>九、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「道威斯計畫為什麼在 1924–1929 年有效，而在 1930 年後完全失敗？」</div>
+            <p>要理解道威斯計畫的成敗，必須從兩個維度同時分析：<strong>流量（flows）</strong>和<strong>存量（stocks）</strong>，以及<strong>內生條件（endogenous conditions）</strong>和<strong>外生衝擊（exogenous shocks）</strong>。</p>
+
+            <p><strong>為何 1924–1929 年有效？</strong></p>
+            <p>道威斯計畫的核心機制是資本流動替代真實資源轉移：美國私人資本湧入德國，使德國在不需要大規模出口盈餘的情況下維持賠款支付，同時德國自身也享受了投資和消費的繁榮。這個系統在以下條件同時成立時能夠運轉：① 美國資本市場流動性充裕且利率較低；② 德國被視為信用良好的借款人；③ 全球貿易環境尚可，德國工業出口緩慢恢復；④ 主要國家維持金本位，提供匯率穩定預期。</p>
+
+            <p><strong>為何 1930 年後崩潰？</strong></p>
+            <p>從流量面看：1928 年聯準會升息 → 美國短期利率上升 → 資金從德國回流美國 → 對德新增放款急劇萎縮。從存量面看：過去幾年積累的短期外債到期需要展期，但新資金不來，舊債無法展期，德國外匯儲備迅速耗盡。外生衝擊（1929 年股市崩盤）只是引爆了早已形成的結構性炸彈。</p>
+
+            <p><strong>制度層面的根本缺失：</strong>道威斯計畫沒有任何正式的多邊擔保機制——沒有最後貸款人（lender of last resort/最後貸款人）、沒有強制性的協調機制、沒有在危機時期凍結資本流動的工具。它是一個完全依賴持續市場信心的系統，而市場信心恰恰是最不可靠的基礎。</p>
+
+            <p><strong>對今天的啟示：</strong>今日的主權債務危機（sovereign debt crisis/主權債務危機）結構與 1920 年代有驚人相似之處：大量短期資本流入、依賴外部融資維持政治性支出承諾、缺乏有效的多邊危機解決機制。歐元區 2010–2012 年的主權債務危機（H11 詳述）幾乎是道威斯故事的現代版本。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="exercises">
+          <h2>十、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">凱因斯在《和平的經濟後果》中提出的「轉移問題」，其核心邏輯是什麼？你認為他的論證在今天是否仍然有效？請用一個現代案例進行比較。</h3>
+              <p><em>建議作答時間：25 分鐘。請先作答，再點擊查看評分標準。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>轉移問題的清晰闡釋：</strong>能區分「預算負擔（budget burden）」——德國政府需要從本國納稅人手中籌措資金；與「轉移負擔（transfer burden）」——德國需要把真實資源（出口品）轉移給協約國。凱因斯認為後者才是真正困難：大規模出口必然壓低出口商品的世界市場價格，帶來「貿易條件惡化（terms of trade deterioration/貿易條件惡化）」效應，使德國需要出口更多才能賺到同等外匯，同時損害協約國的進口競爭行業。</p>
+                  <p><strong>奧林反駁的評估：</strong>奧林的「需求效應」論點有其道理，但假設協約國會立即將賠款所得全部花在德國出口品上，而現實中協約國的主要用途是償還美國戰債，資金並未直接形成對德需求。</p>
+                  <p><strong>現代案例：</strong>可引用歐元區希臘（2010–2015）案例——希臘在喪失匯率工具的情況下需要「內部貶值（internal devaluation/內部貶值）」（壓低工資和價格）以恢復競爭力，結果造成失業率超過 25%、GDP 萎縮超過 25%，與凱因斯的擔憂高度一致。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明凱因斯批評賠款數額太大，理解轉移問題是出口競爭力問題，並提出一個勉強相關的現代案例（但分析較淺薄，未能清楚區分預算負擔和轉移負擔）。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只停留在「凱因斯認為賠款太多」的表面，未能掌握轉移問題的機制，現代案例牽強或缺失，無法進行有深度的比較分析。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>清晰區分預算負擔與轉移負擔</td><td>25 分</td></tr>
+                    <tr><td>正確評估奧林的反駁及其局限</td><td>20 分</td></tr>
+                    <tr><td>現代案例的準確性與比較深度</td><td>30 分</td></tr>
+                    <tr><td>整體論述的邏輯一致性</td><td>25 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">以「期限錯配（maturity mismatch）」為核心概念，解釋道威斯循環為何在 1928–1931 年崩潰，並討論這個崩潰是否可以通過不同的政策設計加以避免。</h3>
+              <p><em>建議作答時間：30 分鐘。請先作答，再點擊查看評分標準。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>期限錯配的精確分析：</strong>道威斯系統的核心矛盾是：負債方（德國對外國銀行的短期借款，通常 3–12 個月）與資產用途（長期基礎設施投資、市政工程，10–30 年回收）之間的嚴重錯配，以及政治性賠款義務（名義上數十年）與商業信貸的期限不匹配。一旦短期信貸無法展期，資產不能迅速變現，流動性危機即刻轉化為償付危機。</p>
+                  <p><strong>1928 年聯準會角色：</strong>聯準會升息（partly to address stock market speculation, partly structural）改變了美歐之間的利差，觸發資本回流。這是道威斯循環的外生衝擊，但系統的脆弱性（期限錯配）早已存在，衝擊只是引爆點。</p>
+                  <p><strong>政策反事實（counterfactual）：</strong>可以討論的替代設計包括：① 將美國放款轉為長期公債而非短期商業信貸（降低期限錯配）；② 由國際聯盟或某個多邊機構提供緊急流動性支援（類似 IMF 功能）；③ 協調各國的賠款—戰債—信貸三角，以統一的長期重組取代零碎的臨時安排。每個替代方案都有政治可行性的制約需要討論。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能解釋期限錯配的基本概念，說明美國資金撤退如何觸發危機，提出一兩個替代政策但分析深度不足，未能充分評估政治可行性約束。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>對期限錯配的理解停留在定義層次，無法解釋它如何在道威斯系統中具體運作，政策反事實討論缺失或極為空泛。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>期限錯配概念的精確運用</td><td>30 分</td></tr>
+                    <tr><td>1928 年外生衝擊與內在脆弱性的區分</td><td>25 分</td></tr>
+                    <tr><td>反事實政策分析的深度與可行性評估</td><td>30 分</td></tr>
+                    <tr><td>論述結構與清晰度</td><td>15 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">威瑪德國的惡性通膨（1921–1923）對不同社會階層產生了什麼不同的分配後果？這些後果如何影響後來的政治發展？</h3>
+              <p><em>建議作答時間：20 分鐘。請先作答，再點擊查看評分標準。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>分配後果的精確分層：</strong></p>
+                  <ul>
+                    <li>工業資本家：以貶值馬克清償舊債，趁機低價收購資產，出口競爭力提升，短期受益。</li>
+                    <li>中產階級（Mittelstand）：持有儲蓄、債券、人壽保險的市民，名義財富被通膨徹底清零，是最大受害者。心理衝擊遠超物質損失：對「辛苦積累的儲蓄」的信任瓦解，形成對共和制度的深層不信任。</li>
+                    <li>工人階級：名義工資雖不斷上調，但往往落後於物價，實際工資下降，但保有工作（直到穩定化後失業上升）。</li>
+                    <li>農民：持有實物資產，通膨期間相對保值，但農產品債務隨通膨消失，部分農民實際受益。</li>
+                  </ul>
+                  <p><strong>政治連結：</strong>1930 年代納粹黨的核心支持者正是在 1923 年財富損失最慘重的中產階級——小商人、退休公務員、中等農場主。他們在大蕭條第二次打擊中徹底絕望，將選票投給了承諾「重建秩序」的納粹黨。通膨記憶也解釋了德國（及後來歐洲央行）對通膨的極度厭惡——這是歷史傷痕在制度設計中的烙印。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明通膨使儲蓄者受損、債務人受益，提到中產階級是主要受害者，並與希特勒崛起建立連結，但分析較為籠統，未能精確區分各社會階層的差異化後果。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「通膨讓人們變窮」或「德國人都受苦了」，未能理解分配後果的不均等性，政治連結模糊或缺失。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>各社會階層後果的準確區分</td><td>35 分</td></tr>
+                    <tr><td>中產階級心理創傷的深度理解</td><td>25 分</td></tr>
+                    <tr><td>通膨後果與後續政治發展的因果連結</td><td>30 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h05-gold-standard.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H05 金本位、帝國與第一次全球化</span>
+          </a>
+          <a href="h07-great-depression.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H07 大蕭條、銀行危機與凱因斯革命</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

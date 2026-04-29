@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M02 經濟成長：資本、勞動與制度 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link active">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M02</span>
+          <span class="topbar-title">經濟成長：資本、勞動與制度</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 02</div>
+          <h1 class="lecture-hero-title">經濟成長：資本、勞動與制度</h1>
+          <p class="lecture-hero-subtitle">Economic Growth: Capital, Labor, and Institutions</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：長期增長</span>
+            <span>⏱ 建議研讀：100 分鐘</span>
+            <span>🎯 難度：中階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">為什麼有些國家富裕、有些國家貧窮？為什麼美國在 1870–2023 年之間人均 GDP 成長超過 20 倍，而部分非洲國家數十年幾乎原地踏步？這是經濟學中最重要、最困難也最具政策意涵的問題之一。本講從新古典成長理論（Solow-Swan 模型）出發，進入內生成長理論（Romer 模型），最終抵達制度經濟學（Acemoglu-Robinson 論點）——三個層次共同構成現代經濟學對「長期增長」的理解。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、Solow-Swan 模型：新古典成長的基礎</h2>
+          <p>Robert Solow（1956）與 T.W. Swan（1956）分別獨立提出的新古典成長模型，是現代成長理論的起點。Solow 因此獲得 1987 年諾貝爾經濟學獎。</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ Solow 模型的核心方程</div>
+            <pre>
+生產函數（Production Function）：
+  Y = F(K, L) = A · K^α · L^(1-α)
+
+  Y = 產出（Output）
+  K = 資本存量（Capital Stock）
+  L = 勞動力（Labor）
+  A = 全要素生產率（Total Factor Productivity, TFP）
+      也稱「技術（Technology）」或「索洛殘差（Solow Residual）」
+  α = 資本的產出彈性，通常估計約 1/3
+
+人均形式（per capita）：令 k = K/L，y = Y/L
+  y = A · k^α
+
+資本積累方程（Capital Accumulation）：
+  Δk = s·y − (δ + n)·k
+
+  s = 儲蓄率（Savings Rate）
+  δ = 折舊率（Depreciation Rate）
+  n = 人口成長率（Population Growth Rate）
+
+穩態（Steady State）：當 Δk = 0
+  s·y* = (δ + n)·k*
+  即：儲蓄形成的新資本 = 折舊+人口成長消耗的資本
+</pre>
+          </div>
+
+          <h3 class="subsection-title">1.1 Solow 模型的三大預測</h3>
+          <p><strong>①資本邊際報酬遞減（Diminishing Marginal Returns to Capital）：</strong>隨著資本累積，每增加一單位資本帶來的產出增量遞減。這意味著窮國投資回報率高於富國——相同投資在低資本存量的國家可帶來更大產出增量。</p>
+          <p><strong>②條件收斂（Conditional Convergence）：</strong>若各國具有相同的儲蓄率、人口成長率與技術水準，貧窮國家應以比富裕國家更快的速度增長，最終趨向相同的「穩態（steady state）」。實證上，這一預測在「相似條件的國家群」（如 OECD 國家、美國各州）中得到支持，但在全球整體樣本中則因「條件不同」而失效。</p>
+          <p><strong>③長期增長只由 TFP 決定：</strong>在穩態，人均 GDP 的成長率等於 TFP（技術）的成長率。提高儲蓄率只能<em>暫時</em>加速增長（過渡至新的更高穩態），但不能永久改變長期增長率。這是 Solow 模型最重要也最具政策衝擊的結論：資本積累無法解釋長期增長，技術才是關鍵。</p>
+
+          <h3 class="subsection-title">1.2 成長會計（Growth Accounting）</h3>
+          <p>Solow 的另一貢獻是「成長會計」方法，將 GDP 成長率分解為三部分：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 成長會計分解</div>
+            <pre>
+GDP 成長率 = α × 資本成長率 + (1-α) × 勞動成長率 + TFP 成長率
+
+以美國歷史數據（Solow 估計）：
+  戰後 1950s–1970s 的美國年均 GDP 成長 ≈ 3–4%
+  其中：資本貢獻 ≈ 1%
+        勞動貢獻 ≈ 1%
+        TFP（殘差）≈ 1–2%
+
+Solow 殘差（TFP）= 實際成長 − 資本貢獻 − 勞動貢獻
+這個「殘差」衡量了我們對增長的「無知程度」——
+即無法被投入量化解釋的那部分
+
+東亞奇蹟（1965–1990）的爭議：
+  Alwyn Young（1994）發現，東亞四小龍（台灣、韓國、香港、新加坡）
+  的高速增長主要來自投入要素的大量增加（勞動力城鎮化、教育、投資率）
+  TFP 貢獻相對有限
+  → 暗示東亞奇蹟可能難以持續（Krugman 的「紙老虎」批評）
+  → 但後來數據修正顯示 TFP 貢獻被低估，此爭議至今仍在延續
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、內生成長理論：技術從哪裡來</h2>
+          <p>Solow 模型將 TFP（技術）視為「外生（exogenous）」給定——技術進步就像天上掉下來的好東西，不解釋其來源。Paul Romer（2018 年諾貝爾獎）與 Robert Lucas 在 1980 年代末開創了「內生成長理論（Endogenous Growth Theory）」，試圖將技術進步「內生化（endogenize）」。</p>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>AK 模型與知識外溢（Knowledge Spillovers）</strong>：若將「人力資本（human capital）」或「知識（knowledge）」視為一種不受邊際報酬遞減約束的資本（因為知識可以無限複製、不會磨損），則總生產函數形式為 Y = AK（A 常數），資本回報不遞減，長期增長率可以持續為正，不需要外生技術假設。Romer 的「R&D 成長模型」進一步說明：企業投入 R&D 產生創新，創新有部分知識外溢（spillovers）——其他企業免費受益——這解釋了為何私人 R&D 投入會不足（負外部性的反面：正外部性導致供給不足），也為政府補貼 R&D 的政策提供了理論依據。
+          </div>
+
+          <h3 class="subsection-title">2.1 內生成長理論的政策含義</h3>
+          <p>若 Romer 是對的，以下政策比 Solow 框架更有長期效益：</p>
+          <ul>
+            <li><strong>教育投資：</strong>提升人力資本存量，加速知識積累，影響長期增長率（而非只是 Solow 式的暫時加速）。</li>
+            <li><strong>R&D 補貼：</strong>修正私人 R&D 投入不足的市場失靈，提升 TFP 長期成長率。</li>
+            <li><strong>智慧財產權（IPR）制度：</strong>保護創新的財產權，提供私人 R&D 的激勵；但過強的 IPR 也會限制知識外溢的正效益——這是政策設計的兩難。</li>
+            <li><strong>開放貿易：</strong>擴大市場規模、增加「創新的規模回報」、加速知識在國際間擴散。</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、制度與增長：為什麼制度最終說了算</h2>
+          <p>即使我們接受了 Solow + Romer 的框架，仍然有一個根本問題未解：為什麼不同國家的儲蓄率、人力資本投資、R&D 支出天差地別？技術最終是由人創造的——什麼決定了人是否有激勵去創新？這把我們帶向制度經濟學（Institutional Economics）。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>南北韓比較實驗（The Korean Natural Experiment）</strong>
+            <p>1945 年以前，朝鮮半島在文化、語言、人種、地理上高度同質。日本殖民結束後，1948 年南北分治，兩個政治實體採用了截然相反的制度安排：南韓建立（不完美的）私有產權與市場經濟；北韓建立中央計劃的黨國體制。到 2023 年，南韓人均 GDP 約 33,000 美元，北韓估計約 1,800 美元——差距約 18 倍。Acemoglu & Robinson 在《國家為何失敗（Why Nations Fail）》（2012）中將此視為「制度決定命運」的最有力自然實驗。相同的人種、文化、地理，不同的制度，產生了根本不同的結果。</p>
+          </div>
+
+          <h3 class="subsection-title">3.1 Acemoglu-Robinson 的制度框架</h3>
+          <p>Daron Acemoglu 與 James Robinson（2024 年諾貝爾經濟學獎）提出了一個影響深遠的二元制度分類：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 包容性 vs. 榨取性制度</div>
+            <pre>
+包容性經濟制度（Inclusive Economic Institutions）
+  • 安全的私有財產權（Secure Property Rights）
+  • 公正的法律體系（Impartial Rule of Law）
+  • 自由進入市場的機會（Free Entry）
+  • 技術創新的激勵（Innovation Incentives）
+  → 產生持續的創新與成長
+
+榨取性經濟制度（Extractive Economic Institutions）
+  • 財產權集中於精英階層
+  • 掠奪性稅收與制度
+  • 進入壁壘保護既得利益
+  → 短期可有成長（靠資源開採或強制積累），長期停滯
+
+關鍵洞察：政治制度決定經濟制度
+包容性政治制度 → 包容性經濟制度 → 持續成長
+榨取性政治制度 → 榨取性經濟制度 → 停滯或崩潰
+
+「反事實」挑戰：
+中國案例：榨取性政治制度 + 部分包容性經濟制度
+→ 高速成長數十年
+→ Acemoglu 認為此模式無法持續（政治精英最終會榨取經濟利益）
+→ 爭議持續，此為當代最重要的發展經濟學辯論之一
+</pre>
+          </div>
+
+          <h3 class="subsection-title">3.2 「地理決定論」與「文化決定論」的批判</h3>
+          <p>成長的制度解釋需要對抗兩個競爭假說：</p>
+          <p><strong>地理決定論（Geographic Determinism）：Jared Diamond 的《槍炮、病菌與鋼鐵》</strong> 認為，地理條件（農業適合性、疾病環境、大陸方向）決定了哪些社會能率先發展農業，進而積累技術優勢。Acemoglu、Johnson 與 Robinson（2001）的「殖民地自然實驗」反駁了地理決定論：歐洲人在不同殖民地建立了不同的制度（定居殖民地建立包容制度；熱帶榨取殖民地建立榨取制度），而這些制度的差異（不是地理的差異）解釋了今天的收入差距。</p>
+          <p><strong>文化決定論（Cultural Determinism）：韋伯的《新教倫理與資本主義精神》</strong> 認為，新教文化的節儉、勤勞、理性主義催生了資本主義精神。Acemoglu 等的回應：文化影響存在，但制度框架決定了文化特質能否轉化為生產力，且文化本身也受制度影響（制度改變後，文化規範也會改變）。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、成長理論的實證：什麼因素真的重要</h2>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>成長決定因素</th>
+                  <th>理論依據</th>
+                  <th>實證強度</th>
+                  <th>政策可操作性</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>實物資本積累</td>
+                  <td>Solow 模型</td>
+                  <td>強（但短期效果為主）</td>
+                  <td>高（儲蓄/投資政策）</td>
+                </tr>
+                <tr>
+                  <td>人力資本（教育）</td>
+                  <td>Lucas (1988)、Romer</td>
+                  <td>強（長期效果）</td>
+                  <td>高（教育支出）</td>
+                </tr>
+                <tr>
+                  <td>TFP / 技術</td>
+                  <td>Solow 殘差</td>
+                  <td>最強（佔增長解釋力最大）</td>
+                  <td>中（R&D 補貼、開放貿易）</td>
+                </tr>
+                <tr>
+                  <td>制度品質</td>
+                  <td>Acemoglu-Robinson</td>
+                  <td>強（長期；跨國差異最大解釋力）</td>
+                  <td>低（制度改革困難、緩慢）</td>
+                </tr>
+                <tr>
+                  <td>地理/資源</td>
+                  <td>Diamond；「資源詛咒」</td>
+                  <td>弱（在控制制度後幾乎消失）</td>
+                  <td>不可操作</td>
+                </tr>
+                <tr>
+                  <td>貿易開放</td>
+                  <td>比較優勢；規模效應</td>
+                  <td>中（因果方向爭議）</td>
+                  <td>高（貿易政策）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="subsection-title">4.1 「資源詛咒（Resource Curse）」：豐饒的陷阱</h3>
+          <p>反直覺的歷史發現：擁有豐富天然資源的國家，長期增長往往<em>遜於</em>資源匱乏的國家。這一「資源詛咒（Dutch Disease + 政治效應）」有兩個機制：</p>
+          <p><strong>荷蘭病（Dutch Disease）：</strong>資源出口使匯率升值，壓縮了製造業等可貿易部門的競爭力，損害工業化過程（以 1970 年代荷蘭發現北海天然氣後製造業萎縮命名）。</p>
+          <p><strong>政治機制：</strong>資源財富使政府不需要向公民徵稅，削弱了公民對政府問責的動機；資源財富也創造了巨大的「尋租（rent-seeking）」利益，誘發精英爭奪資源控制權，導致制度惡化、衝突增加。石油富國（尼日利亞、委內瑞拉）與無資源但制度良好的國家（新加坡、瑞士）的對比，是資源詛咒理論的標準例證。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、市場應用：成長前景如何影響資產定價</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 長期成長預期 → 資產價格傳導</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">TFP 成長<br>預期上升</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">未來盈利<br>預期提升</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">股票估值<br>（P/E 擴張）</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">外資流入<br>匯率升值</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">長期利率<br>（r* 上升）</div>
+            </div>
+          </div>
+
+          <p>「自然利率（r*，Natural Rate of Interest）」在成長理論中是長期均衡利率——它與經濟的長期增長潛力密切相關。若 AI 真的帶來生產力加速（如 1990 年代末的互聯網繁榮），r* 可能上升，支持更高的均衡利率水準。反之，若長期停滯（secular stagnation）假說成立（Summers，2014）——人口老齡化、不平等加劇、投資機會萎縮使儲蓄過剩、r* 長期趨近於零——則零利率環境可能是長期常態，而非 2010 年代的特殊現象。</p>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">六、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「只要大量投資就能讓窮國富起來。」</strong>
+            <p>1950–1960 年代的發展援助計劃（如 Rostow 的「起飛（take-off）」理論）預測，只要給予足夠的資本注入，窮國會自動啟動增長。數十年後，龐大的援助資金並未帶來相應的增長——Dambisa Moyo 的《援助無用（Dead Aid）》（2009）統計，撒哈拉以南非洲在 1970–2000 年間接受了約 5,000 億美元援助，但同期人均收入幾乎原地踏步。Solow 模型的啟示：資本積累只有在 TFP 增長的配合下才能持續帶動增長；制度框架決定了資本是否被有效使用。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「高儲蓄率是所有東亞奇蹟的秘密。」</strong>
+            <p>高儲蓄率（台灣、韓國 1970–1990 年代達 30–40%）確實支撐了高投資率，符合 Solow 模型的預測。但成長會計研究顯示，TFP 提升（從農業轉向製造業、技術學習、出口擴張帶來的規模效益）同樣是關鍵貢獻者。更重要的是：儲蓄率高的背後，是制度（保障財產權、法治）與政策（出口導向工業化、教育投資）共同作用的結果。單純「鼓勵儲蓄」而缺乏配套制度，無法複製東亞奇蹟——蘇聯的高儲蓄率+高投資率仍以崩潰告終，就是反例。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「民主制度一定帶來更好的經濟增長。」</strong>
+            <p>制度與增長的關係比「民主 = 增長」更複雜。Acemoglu 等人（2019）的研究確實找到民主化對長期 GDP 有正面效果（民主化後 25 年 GDP 比對照組高約 20–25%），但因果識別困難。更重要的是，「包容性」制度不等同於選舉民主——法治、財產權、司法獨立才是核心要素。威權體制下若能維持包容性經濟制度（如新加坡），也能達到高增長；而劣質民主若財產權不穩定、腐敗盛行，增長同樣受阻。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Model Answer -->
+        <section class="section">
+          <h2 class="section-title">七、教授標準答案</h2>
+          <p class="section-lead">試題：「Solow 模型預測，窮國應比富國增長更快（收斂假說）。但現實中，許多最貧窮的國家並未出現這種收斂。請解釋為何 Solow 的收斂預測失靈，並評估制度因素作為替代解釋的強度。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、Solow 收斂預測的條件限制：
+   Solow 預測的是「條件收斂（Conditional Convergence）」，
+   而非「無條件收斂（Absolute Convergence）」
+
+   條件收斂成立的前提：
+   • 相同的儲蓄率 s
+   • 相同的人口成長率 n
+   • 相同的 TFP 水準 A
+   • 相同的制度品質（隱含假設）
+
+   現實中，最貧窮國家的儲蓄率、人力資本、制度
+   與富裕國家差距巨大 → 不滿足「條件相同」前提
+   → 不同的穩態（steady states），而非趨向同一個
+
+二、「收斂俱樂部（Convergence Clubs）」：
+   Baumol (1986)：OECD 國家之間確有收斂，
+   但窮國集體另形成一個「低均衡陷阱（poverty trap）」
+   → 兩個俱樂部各自內部收斂，但兩者之間不收斂
+
+三、制度解釋的強度評估：
+   強項：
+   • 南北韓自然實驗：相同地理，不同制度，不同結果
+   • AJR (2001) 殖民地工具變數：定居率→制度→收入
+     （定居率高的地方建立包容制度，工具變數識別有力）
+
+   弱項/限制：
+   • 制度是內生的：富裕可能引發好制度（反向因果）
+   • 「制度」難以精確測量（複雜、多維度）
+   • 改善制度的政策路徑不清晰（「好制度是關鍵」
+     ≠「政策如何建立好制度」）
+
+結論：Solow 失靈的原因是其「條件相同」假設在現實中
+不成立；制度解釋是目前最有說服力的替代框架，
+但其內生性與可操作性問題限制了直接政策應用。
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>模型應用題：</strong>在 Solow 模型中，假設某國儲蓄率從 20% 提升至 30%，其他條件（δ=5%, n=2%, A 固定）不變。請定性分析：①這對人均資本和人均產出的短期與長期影響；②人均 GDP 長期成長率是否改變；③若一個國家同時提高儲蓄率並加大 R&D 投入，按照 Solow 和 Romer 模型分別有何不同含義。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>短期</strong>：儲蓄率上升→投資增加→資本積累加速→人均資本（k）上升→人均產出（y）上升。此過程為「過渡動態（transitional dynamics）」，從舊穩態向新穩態移動，期間增長速度快於穩態。<strong>長期</strong>：人均資本與人均產出達到新的更高穩態（k* 和 y* 都更高），但增長率回歸穩態成長率。②<strong>長期成長率不變</strong>：在 Solow 模型中，穩態的人均 GDP 成長率 = TFP 成長率（外生），儲蓄率只影響穩態水準，不影響長期成長率。③<strong>Solow vs. Romer 的差異</strong>：在 Solow 模型中，R&D 投入若提升 TFP（A），屬於外生衝擊，永久提高穩態水準，但機制未解釋。在 Romer 的內生成長模型中，R&D 投入→創新→TFP 持續成長→長期成長率提高（不只是水準效果，而是增長率效果）。這是兩個模型的根本差異：Solow 只有「水準效果（level effect）」，Romer 可以有「成長率效果（growth rate effect）」。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能正確說明儲蓄率上升→k 和 y 上升，但混淆了「水準效果」與「成長率效果」——誤以為儲蓄率上升也能永久提高 GDP 成長率。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「儲蓄率上升→投資多→GDP 高」，未討論穩態概念與長期成長率的區別。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>短期過渡動態分析</td><td>25 分</td></tr>
+                  <tr><td>長期穩態水準上升但成長率不變</td><td>30 分</td></tr>
+                  <tr><td>水準效果 vs. 成長率效果的 Solow/Romer 比較</td><td>35 分</td></tr>
+                  <tr><td>表述清晰，邏輯連貫</td><td>10 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>比較分析題：</strong>請比較台灣（1965–2000 年）與委內瑞拉（1970–2020 年）的長期增長軌跡。台灣幾乎沒有天然資源，委內瑞拉擁有全球最大的已探明石油儲量。從成長理論的角度，你如何解釋兩者的截然不同命運？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>優秀答案應整合成長理論的三個層次：<strong>Solow 層次</strong>：台灣高儲蓄率（30–40%）+ 高投資率 + 快速工業化帶來的 TFP 提升（從農業轉製造業，技術學習曲線）；委內瑞拉石油收入雖高，但荷蘭病使製造業萎縮，TFP 增長疲弱。<strong>Romer 層次</strong>：台灣積極投資教育（1960–70 年代技職體系）+ 後來的 R&D 升級；委內瑞拉石油財富降低了教育與技術升級的壓力，人力資本累積不足。<strong>制度層次（最關鍵）</strong>：台灣在威權發展主義下建立了相對包容的經濟制度（私有財產、出口競爭、儒家技術官僚文化）；委內瑞拉在石油財富的腐蝕下，政治精英逐步構建榨取性制度（Chávez→Maduro 式的資源民粹主義），財產權惡化→企業外逃→資本逃走→惡性循環。資源詛咒的政治機制是核心：石油財富使政府不需徵稅，削弱公民問責；且產生巨大尋租利益，誘發政治衝突與制度惡化。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能提到台灣的出口導向與教育投資，以及委內瑞拉的資源詛咒，但未能系統性地從 Solow-Romer-制度三層次整合分析，論述缺乏理論錨定。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只描述事實（台灣成功，委內瑞拉失敗），未提供有解釋力的理論框架。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>從 Solow 框架分析兩國資本/TFP 差異</td><td>25 分</td></tr>
+                  <tr><td>從人力資本/Romer 角度分析</td><td>20 分</td></tr>
+                  <tr><td>從制度角度（含資源詛咒政治機制）分析</td><td>35 分</td></tr>
+                  <tr><td>有具體歷史數據或事實支撐論點</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>政策評估題：</strong>「長期停滯（Secular Stagnation）」假說認為，發達國家已進入結構性低增長時代，自然利率（r*）長期趨近於零。請評估：①支持此假說的三個主要論據；②反對此假說的三個主要論據；③若此假說成立，對貨幣與財政政策設計有何根本性含義？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>支持論據</strong>：①人口老齡化→儲蓄增加（為退休積累）、投資減少（市場萎縮）→r* 下壓；②不平等加劇→高儲蓄富人占比上升→總體儲蓄傾向提高→r* 下壓（Summers 2014）；③ICT 革命使邊際資本需求下降（軟體公司不需龐大實物資本），「資本-輕型（capital-light）」成長模式興起。<strong>反對論據</strong>：①AI 可能逆轉：若 AI 帶來新一波生產力加速與大規模資本需求（資料中心、能源基礎設施），r* 可能上升；②2022–2023 年 r* 顯著上升（Fed 升息後長端利率也上升），質疑長期停滯是否真實；③氣候投資需求：能源轉型需要龐大資本支出，可能重新提振投資需求。<strong>政策含義</strong>：若長期停滯成立，貨幣政策面臨「零利率下限（ZLB）」的長期陷阱——傳統降息空間嚴重受限；QE、負利率等非常規工具可能是常態，而非應急工具。財政政策的作用則相應提升（「財政主導（fiscal dominance）」）：在 r* 接近或低於成長率（r < g）的條件下，Blanchard（2019）論證政府債務的財政成本可能低於傳統估計，「財政空間（fiscal space）」大於傳統觀點。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能列出支持/反對論據，但論據深度不足；政策含義分析未能觸及 ZLB 問題與 Blanchard r < g 論點的關聯。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>對「長期停滯」概念理解不清，無法有效區分短期景氣衰退與結構性低增長的差別。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>支持論據（各 10 分，共 30 分）</td><td>30 分</td></tr>
+                  <tr><td>反對論據（各 10 分，共 30 分）</td><td>30 分</td></tr>
+                  <tr><td>政策含義（ZLB + 財政角色 + r&lt;g 論點）</td><td>40 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m01-gdp.html" class="lecture-nav-btn">← M01 GDP 與國民所得</a>
+          <a href="m03-consumption.html" class="lecture-nav-btn">M03 消費、投資與儲蓄 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

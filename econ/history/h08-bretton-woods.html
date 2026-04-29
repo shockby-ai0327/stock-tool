@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H08 布列敦森林、美元霸權與福利國家 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H08 布列敦森林、美元霸權與福利國家</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H08</span>
+            <span class="lecture-period">1944 — 1971</span>
+          </div>
+          <h1 class="article-title">布列敦森林、美元霸權與福利國家</h1>
+          <p class="article-subtitle">Bretton Woods, Dollar Hegemony &amp; the Welfare State</p>
+          <p class="article-lead">1944 年夏天，44 個同盟國代表聚集於美國新罕布夏州布列敦森林（Bretton Woods, New Hampshire），設計了二戰後的國際貨幣秩序。這次會議的核心問題是：如何避免 1930 年代的「以鄰為壑」貿易戰與金本位枷鎖重演，同時給予各國足夠的政策空間以實現充分就業？凱因斯（代表英國）與懷特（Harry Dexter White，代表美國）的方案之爭，最終以美國的壓倒性優勢奠定了美元霸權（dollar hegemony/美元霸權）的制度基礎，並催生了 IMF（國際貨幣基金/International Monetary Fund）與世界銀行（World Bank/世界銀行）兩大機構。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#design">布列敦森林體系的設計邏輯</a></li>
+            <li><a href="#keynes-white">凱因斯 vs. 懷特：兩個方案的政治經濟學</a></li>
+            <li><a href="#dollar-hegemony">美元霸權的機制：特里芬困境</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#golden-age">黃金年代（1950–1973）：有管理的資本主義的巔峰</a></li>
+            <li><a href="#welfare-state">福利國家的興起：嵌入式自由主義的社會契約</a></li>
+            <li><a href="#collapse">布列敦森林的崩潰：1971 年尼克森衝擊</a></li>
+            <li><a href="#market-implications">市場含意：黃金年代的資產配置</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="design">
+          <h2>一、布列敦森林體系的設計邏輯</h2>
+
+          <h3>從失敗中學習的制度設計</h3>
+          <p>布列敦森林體系（Bretton Woods System/布列敦森林體系）的設計者們，在腦海中鮮明地記著 1930 年代的三個教訓：</p>
+          <ol>
+            <li><strong>競爭性貶值（competitive devaluation/競爭性貶值）的惡性循環：</strong>各國為提升出口競爭力而競相貶值，結果是「以鄰為壑」——每個人都想貶值，但不可能所有人同時獲益，只是加速了貿易萎縮。</li>
+            <li><strong>貿易保護主義的傳染：</strong>斯穆特—霍利關稅觸發全球報復，貿易崩潰加深衰退。</li>
+            <li><strong>缺乏流動性支援：</strong>陷入國際收支危機的國家沒有借款管道，只能採取緊縮措施加劇衰退，而非獲得時間進行調整。</li>
+          </ol>
+
+          <p>針對這三個教訓，布列敦森林設計了三個對應支柱：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">布列敦森林體系的三個支柱</div>
+            <p><strong>支柱一：可調整的固定匯率（Adjustable Peg/可調整釘住匯率）</strong>：各國貨幣對美元維持固定匯率（±1% 波動範圍），美元則以每盎司 35 美元的比率固定兌換黃金。這既提供了匯率穩定（避免競爭性貶值），又允許在「根本性失衡（fundamental disequilibrium）」時，經 IMF 同意後進行匯率調整。</p>
+            <p><strong>支柱二：資本管制（Capital Controls/資本管制）</strong>：為了讓各國保留國內貨幣政策自主權（擴張以維持充分就業），允許對跨國資本流動進行管制，防止投機性資本攻擊固定匯率。這是蒙代爾—弗萊明「三難困境（trilemma/三難困境）」的政策選擇——選擇固定匯率＋貨幣政策自主，放棄資本自由流動。</p>
+            <p><strong>支柱三：IMF 緊急借款機制</strong>：國際貨幣基金（IMF/International Monetary Fund）提供短期國際收支（balance of payments/國際收支）融資，使陷入暫時性赤字的國家有時間調整，而無需立即採取緊縮性措施。這是凱因斯原始方案（Bancor 計畫）的縮小版。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="keynes-white">
+          <h2>二、凱因斯 vs. 懷特：兩個方案的政治經濟學</h2>
+
+          <h3>凱因斯的 Bancor 計畫</h3>
+          <p>凱因斯代表英國提出了更為雄心勃勃的「Bancor 計畫」：建立一個超國家的世界央行，發行一種國際貨幣「Bancor」，各國可憑貿易順差或逆差持有或耗用 Bancor。凱因斯方案的革命性在於對<strong>順差國</strong>施加調整壓力——如果一國長期保持貿易順差，其超額 Bancor 餘額將被課徵費用，迫使順差國擴大進口或升值貨幣。這是對 1920 年代「美國積累巨大順差而不願調整」問題的直接回應。</p>
+
+          <h3>懷特的方案</h3>
+          <p>哈里·懷特（Harry Dexter White）代表美國提出的方案則更保守：建立一個資金有限的國際貨幣基金，向逆差國提供貸款（附帶條件），但不要求順差國調整。美元成為唯一與黃金掛鉤的貨幣，其他貨幣與美元掛鉤——美國因此成為這個體系的核心。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">談判中的權力政治</div>
+            <p>凱因斯的方案在智識上更為精緻，在對稱性調整機制上更為公正，但在政治上完全不可行：</p>
+            <ul>
+              <li>美國是最大的順差國，凱因斯方案意味著美國必須承擔調整成本。</li>
+              <li>1944 年美國佔全球黃金儲備的約 70%，GDP 約佔西方世界的 40%，在談判中握有決定性的權力優勢。</li>
+              <li>英國因戰爭債務纏身（主要欠美國），幾乎沒有談判籌碼。</li>
+            </ul>
+            <p>結果是懷特方案的基本框架獲得採納，凱因斯在哲學上輸掉了關於調整責任對稱性的辯論，但在多邊機構建設上為後世留下了寶貴的制度遺產。</p>
+          </div>
+
+          <h3>GATT 與世界銀行：布列敦森林的配套制度</h3>
+          <p>布列敦森林體系不只是貨幣安排，還配套了兩個重要機構：</p>
+          <ul>
+            <li><strong>GATT（關稅與貿易總協定/General Agreement on Tariffs and Trade）：</strong>1947 年生效，通過多輪談判逐步降低貿易壁壘，旨在防止 1930 年代貿易保護主義的重演。GATT 是 1995 年世界貿易組織（WTO）的前身。</li>
+            <li><strong>世界銀行（World Bank）：</strong>原名「國際復興開發銀行（IBRD）」，初始目的是為歐洲戰後重建提供長期貸款，後來轉向對開發中國家的發展融資。</li>
+          </ul>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="dollar-hegemony">
+          <h2>三、美元霸權的機制：特里芬困境</h2>
+
+          <h3>美元的雙重角色</h3>
+          <p>布列敦森林體系中，美元同時扮演兩個角色：美國的<strong>國內貨幣</strong>，以及國際貿易和儲備的<strong>全球貨幣</strong>。這兩個角色之間存在一個根本性矛盾，由比利時裔美國經濟學家羅伯特·特里芬（Robert Triffin）在 1960 年提出，史稱「特里芬困境（Triffin Dilemma/特里芬困境）」：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">特里芬困境（Triffin Dilemma）</div>
+            <pre>
+情境一：美國保持國際收支平衡（維持黃金儲備）
+         │
+         ▼
+  全球美元供給不足
+  （因為美元只能通過美國逆差輸出到世界）
+         │
+         ▼
+  全球流動性短缺 → 限制世界貿易和成長
+  （「美元荒/Dollar shortage」）
+
+─────────────────────────────────
+
+情境二：美國持續赤字（輸出足夠美元）
+         │
+         ▼
+  美元的黃金背書比例不斷下降
+  （黃金儲備固定，美元存量持續增加）
+         │
+         ▼
+  對美元可兌換黃金的信心下降
+  → 外國央行競相將美元換成黃金
+  → 布列敦森林體系崩潰
+
+─────────────────────────────────
+
+特里芬結論：這兩種情境都導致系統失敗。
+美元作為全球儲備貨幣，
+其國內政策目標與全球穩定性之間存在
+不可化解的根本矛盾。</pre>
+          </div>
+
+          <h3>「囂張的特權」與美元的政治經濟學</h3>
+          <p>法國財政部長瓦勒里·吉斯卡爾·德斯坦（Valéry Giscard d'Estaing）批評美國享有「囂張的特權（exorbitant privilege/囂張的特權）」——因為美元是全球儲備貨幣，美國可以用本幣發行債務，其他國家的外匯儲備需求為美國提供了低廉的融資成本，相當於全世界在向美國提供無息貸款。</p>
+
+          <p>這個「特權」有其代價：美國必須持續提供美元（通過貿易逆差），這意味著美國製造業長期面臨競爭壓力；美元過強時，美國出口競爭力受損；全球政策協調要求美國在一定程度上犧牲本國經濟利益以維護系統穩定。這個矛盾在布列敦森林崩潰後以「美元霸權的政治代價」形式持續存在至今。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">布列敦森林體系的運作機制與崩潰路徑</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">1944 年：體系建立</div>
+                <div class="t-node-desc">美元與黃金掛鉤（$35/盎司）；各國貨幣與美元掛鉤；資本管制允許各國維持貨幣政策自主；IMF 提供流動性支援</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">1950s–1960s：黃金年代</div>
+                <div class="t-node-desc">美國提供全球美元流動性（Marshall Plan/馬歇爾計畫 + 軍事支出）；歐日在固定匯率下享受出口導向復甦；全球貿易快速增長；Keynesian 需求管理普遍施行</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">1960s：矛盾積累</div>
+                <div class="t-node-desc">美國越戰開支 + 大社會計畫（Great Society）→ 財政赤字擴大 → 美元供給超出黃金儲備支撐；歐洲央行開始懷疑美元可兌換性 → 特里芬困境浮現</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">1971 年：尼克森衝擊</div>
+                <div class="t-node-desc">尼克森宣布暫停美元兌換黃金 → 布列敦森林固定匯率機制瓦解 → 1973 年各主要貨幣開始浮動匯率</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">後布列敦森林時代</div>
+                <div class="t-node-desc">浮動匯率成為主流；資本管制逐步鬆綁；美元仍是事實上的全球儲備貨幣，但失去制度保障；全球金融不穩定性上升</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="golden-age">
+          <h2>五、黃金年代（1950–1973）：有管理的資本主義的巔峰</h2>
+
+          <h3>前所未有的繁榮</h3>
+          <p>1950–1973 年，主要資本主義國家經歷了有歷史記錄以來最持續的高速成長期，歷史學家稱之為「資本主義黃金年代（Golden Age of Capitalism/黃金年代）」或法國人所稱的「光輝三十年（Les Trente Glorieuses/光輝三十年）」。主要數據：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>國家</th>
+                <th>1950–1973 年均實質 GDP 成長率</th>
+                <th>備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>西德 West Germany</td><td>約 6%</td><td>「萊茵河奇蹟（Wirtschaftswunder）」</td></tr>
+              <tr><td>法國 France</td><td>約 5%</td><td>「光輝三十年」</td></tr>
+              <tr><td>義大利 Italy</td><td>約 5.5%</td><td>「義大利奇蹟（Miracolo Italiano）」</td></tr>
+              <tr><td>日本 Japan</td><td>約 9.3%</td><td>「日本奇蹟（高度成長期）」</td></tr>
+              <tr><td>美國 USA</td><td>約 3.9%</td><td>戰後技術擴散受益者</td></tr>
+              <tr><td>英國 UK</td><td>約 3%</td><td>相對較慢，但仍遠高於歷史平均</td></tr>
+            </tbody>
+          </table>
+
+          <h3>黃金年代的結構性原因</h3>
+          <p>這段非凡繁榮並非偶然，有幾個相互強化的結構性原因：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">黃金年代的五個結構性驅動力</div>
+            <p><strong>1. 技術追趕（Technology Catch-Up）：</strong>歐洲和日本在低基數上快速採用美國已成熟的技術（汽車、家電、化工），技術的邊際報酬率極高。這是 Abramovitz（1986）所描述的「追趕潛力（potential for catch-up）」。</p>
+            <p><strong>2. 勞動力充裕：</strong>農村勞動力向都市製造業大規模轉移（Lewis 二元模型/Lewis Two-Sector Model）提供了近乎無限彈性的勞動供給，壓低了工資上升壓力，支撐了投資報酬率。</p>
+            <p><strong>3. 布列敦森林提供的匯率穩定：</strong>固定但可調整的匯率減少了貿易的匯率風險，促進了貿易和投資。</p>
+            <p><strong>4. 資本管制保護的政策空間：</strong>各國可以在不受國際投機衝擊的情況下，實行凱因斯式需求管理，維持接近充分就業的狀態。</p>
+            <p><strong>5. 美國的馬歇爾計畫（Marshall Plan/馬歇爾計畫）：</strong>1948–1952 年，美國向西歐提供約 130 億美元援助（以 1948 年美元計，約相當於 2024 年的 1,500 億美元以上），不只是資金，更重要的是帶來了美國的生產技術和管理模式。</p>
+          </div>
+
+          <h3>Angus Maddison 的長期數據透視</h3>
+          <p>歷史學家兼統計學家安格斯·麥迪遜（Angus Maddison）的長期 GDP 數據庫顯示，1950–1973 年的全球人均 GDP 年均成長率（約 3%）在人類整個有記錄的歷史中是史無前例的——超過了工業革命時期（約 1%），也超過了 1980 年代後的「新自由主義時代」（約 2%）。黃金年代在長期歷史視野中是真正的異常，而不是「正常狀態」。</p>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="welfare-state">
+          <h2>六、福利國家的興起：嵌入式自由主義的社會契約</h2>
+
+          <h3>嵌入式自由主義（Embedded Liberalism）</h3>
+          <p>政治學家約翰·拉吉（John Ruggie, 1982）提出了「嵌入式自由主義（embedded liberalism/嵌入式自由主義）」概念，精確描述了戰後政治經濟的核心共識：在國際層面推進自由貿易（multilateralism at the border），但在國內允許福利國家和需求管理（interventionism at home）——自由主義的國際秩序「嵌入」在社會保護的國內制度框架之中。</p>
+
+          <p>這個共識回應了一個政治現實：選民在大蕭條和二戰的雙重創傷後，要求政府保障就業和基本生活水準；如果資本主義無法做到這一點，社會主義/共產主義作為替代選項就有吸引力。福利國家因此是資本主義的「政治保險單」，而非其對立面。</p>
+
+          <h3>福利國家的制度多樣性</h3>
+          <p>Gøsta Esping-Andersen（1990）在《福利資本主義的三個世界》（<em>The Three Worlds of Welfare Capitalism</em>）中，將戰後福利國家分為三種類型：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>類型</th>
+                <th>代表國家</th>
+                <th>核心邏輯</th>
+                <th>去商品化程度</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>社會民主型</strong><br>Social Democratic</td>
+                <td>瑞典、丹麥、挪威</td>
+                <td>普世性福利（universal benefits）；政府直接提供服務；高稅收高福利</td>
+                <td>最高</td>
+              </tr>
+              <tr>
+                <td><strong>保守主義型</strong><br>Conservative/Corporatist</td>
+                <td>德國、法國、義大利</td>
+                <td>以職業/身份為基礎的社會保險；雇主—工會—政府三方協商</td>
+                <td>中等</td>
+              </tr>
+              <tr>
+                <td><strong>自由主義型</strong><br>Liberal</td>
+                <td>美國、英國、加拿大</td>
+                <td>最低保障（means-tested benefits）；強調市場機制；私人保險為主</td>
+                <td>最低</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>「去商品化（Decommodification）」概念</h3>
+          <p>Esping-Andersen 的關鍵分析概念是「去商品化（decommodification/去商品化）」——個人在不依賴市場（即不賣勞動力）的情況下，仍能維持可接受生活水準的程度。福利國家越完善，勞動力越「去商品化」，工人在談判中的議價能力越強，但企業的勞動力成本也越高。這個張力是後來全球化時代（H12）中福利國家面臨的核心挑戰。</p>
+
+          <h3>黃金年代的收入分配：庫茲涅茨假說的短暫驗證</h3>
+          <p>西蒙·庫茲涅茨（Simon Kuznets）於 1955 年提出「庫茲涅茨曲線（Kuznets Curve/庫茲涅茨曲線）」假說：隨著工業化進程，收入不平等先升後降，形成倒 U 形曲線。黃金年代的西方國家恰好處於這條曲線的下降段——成長成果廣泛分享，中產階級擴大，基尼係數（Gini Coefficient/吉尼係數）下降。然而，1980 年代後的新自由主義轉向（H09）使不平等再度上升，打破了庫茲涅茨的樂觀預測（Piketty 的研究詳見 H12）。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="collapse">
+          <h2>七、布列敦森林的崩潰：1971 年尼克森衝擊</h2>
+
+          <h3>矛盾的積累</h3>
+          <p>1960 年代，特里芬困境的兩個惡化跡象同時出現：</p>
+          <ul>
+            <li>美國因越戰開支和「大社會（Great Society）」社會計畫的財政赤字，持續輸出美元；</li>
+            <li>歐洲各國（特別是法國）開始對美元的可兌換性失去信心，轉而向美國要求兌換黃金——法國甚至派遣海軍艦艇將黃金從紐約聯邦準備銀行運回巴黎；</li>
+            <li>1960 年代末，美國黃金儲備從 1940 年代末的約 700 億美元（按 $35/盎司計），下降至不足以支撐對外美元負債的水準。</li>
+          </ul>
+
+          <h3>1971 年 8 月 15 日：尼克森衝擊（Nixon Shock）</h3>
+          <p>1971 年 8 月 15 日，美國總統尼克森（Richard Nixon）在未事先知會盟友的情況下，透過電視宣布：<strong>暫停美元對黃金的兌換義務</strong>，同時徵收 10% 的進口關稅附加稅。這就是「尼克森衝擊（Nixon Shock/尼克森衝擊）」，布列敦森林體系的核心機制（美元—黃金錨）在一夜之間宣告終結。</p>
+
+          <p>1973 年 3 月，各主要貨幣放棄固定匯率，進入浮動匯率（floating exchange rate/浮動匯率）時代，延續至今。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">尼克森衝擊的政治背景</div>
+            <p>尼克森的決定不僅是貨幣政策，更是國際政治的突然轉向。幾個背景因素：</p>
+            <ul>
+              <li>1972 年是美國大選年，尼克森需要刺激國內經濟（在金本位約束下，聯準會難以寬鬆）；</li>
+              <li>財政部長約翰·康納利（John Connally）說出了名言：「美元是我們的貨幣，卻是你們的問題（The dollar is our currency, but your problem）」，點明了美國對全球影響的輕率態度；</li>
+              <li>1971 年 7 月，尼克森宣布訪問中國計畫，整個地緣政治格局正在重組，布列敦森林的終結是更大範圍美國外交重整的一部分。</li>
+            </ul>
+          </div>
+
+          <h3>後布列敦森林的「非體系」</h3>
+          <p>布列敦森林崩潰後，國際貨幣秩序進入了一個沒有正式框架的「非體系（non-system）」——各國匯率自由浮動，但美元仍因慣性、美國資本市場的深度和廣度、以及石油以美元計價（petrodollar/石油美元）等因素，繼續充當全球儲備貨幣的角色，形成了學者所稱的「布列敦森林 II（Bretton Woods II）」——一個非正式的、不穩定的全球貨幣秩序，其矛盾至今未能根本解決。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：黃金年代的資產配置</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">布列敦森林時代（1944–1971）各資產表現</div>
+            <p><strong>股票（Equities）：</strong>黃金年代是股票的長期牛市——企業盈利隨 GDP 快速成長而上升，通膨溫和，利率穩定（資本管制阻止了利率的劇烈波動）。美股在 1950–1970 年間實質年化報酬率約為 7–8%，是少數幾個可以讓股票長期投資者睡得安穩的歷史時期。</p>
+            <p><strong>政府公債（Government Bonds）：</strong>由於凱因斯式財政政策的流行和資本管制的保護，各國政府債券收益率被壓低在相對低位（金融抑制/financial repression）。實際上，這是戰後各國政府以低利率稀釋巨大戰債的隱性手段——犧牲了債券持有者的真實報酬，換取了財政整頓。</p>
+            <p><strong>黃金（Gold）：</strong>布列敦森林下，黃金以 $35/盎司被固定，幾乎沒有自由市場定價空間。1971 年體系崩潰後，黃金在自由市場迅速升值——1971 年 $35/盎司，1980 年達 $850/盎司（名目漲幅超過 20 倍），可見固定匯率期間黃金的市場定價被嚴重壓制。</p>
+            <p><strong>房地產（Real Estate）：</strong>戰後嬰兒潮（Baby Boom/嬰兒潮）和都市化浪潮驅動了住宅房地產的長期需求；工業化進程推動了商業地產的需求。黃金年代的房地產在多數主要城市是長期保值甚至增值的良好資產。</p>
+          </div>
+
+          <h3>金融抑制（Financial Repression）的歷史教訓</h3>
+          <p>Carmen Reinhart 和 Belen Sbrancia（2011）的研究記錄了戰後各國政府如何通過「金融抑制（financial repression/金融抑制）」——低利率、資本管制、強制銀行持有政府債券——悄悄消滅了龐大的戰爭債務。在這個過程中，持有政府債券的投資者（特別是養老基金、保險公司）承受了負實際利率損失。金融抑制的歷史提醒：當政府面臨龐大債務壓力時，「安全」資產可能並不安全。這個教訓在 2020 年後通膨回升（H14）的環境中再次被驗證。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「布列敦森林是純粹的金本位制度」</h3>
+            <p><strong>更準確的理解</strong>：布列敦森林是「黃金兌換本位（gold-exchange standard/黃金兌換本位）」，而非傳統金本位。傳統金本位下，所有貨幣直接與黃金掛鉤，且公民可以直接以鈔票兌換黃金。布列敦森林下，只有美元直接與黃金掛鉤，其他貨幣與美元掛鉤；且黃金兌換權僅限於各國中央銀行（非私人公民）。此外，資本管制的存在使各國央行有了政策空間，這與古典金本位要求的自動調整機制根本不同。布列敦森林實際上是一個「有管理的固定匯率制（managed fixed exchange rate）」，而非純金本位。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「黃金年代的高速成長說明政府主導的資本主義比市場更有效率」</h3>
+            <p><strong>更準確的理解</strong>：黃金年代的高速成長有其特殊的歷史條件：二戰後的技術追趕潛力（後來隨追趕完成而遞減）、農村勞動力大規模轉移（Lewis 轉型，一次性的）、戰後重建的低基數效應。這些條件在 1970 年代逐漸消退，使「有管理的資本主義」的政策效能下降，通膨和停滯同時出現（H09）。不能簡單地將黃金年代的成功歸因於政府干預，而忽略其特定的結構條件。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「尼克森終結金本位是因為美國不再有黃金」</h3>
+            <p><strong>更準確的理解</strong>：1971 年美國仍有相當規模的黃金儲備，問題在於對外美元債務（foreign dollar claims）相對於黃金儲備的比例過高——即黃金儲備無法支撐所有對外美元的兌換承諾。這是一個信心危機（confidence crisis），而非黃金耗盡。如果美國願意讓黃金價格自由上升（放棄 $35/盎司的承諾），從技術上仍可以繼續維持某種兌換關係，但這意味著承認美元貶值，政治上無法接受。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「馬歇爾計畫是美國的無私慷慨援助」</h3>
+            <p><strong>更準確的理解</strong>：馬歇爾計畫確實是有史以來規模最大的和平時期對外援助計畫，但它同時符合美國的多重戰略利益：防止西歐因經濟崩潰轉向共產主義（冷戰遏制戰略）；為美國的過剩工業產能創造出口市場；建立以美元為中心的全球貿易秩序。援助與利益在此高度重疊，不是無私，而是「有遠見的自利（enlightened self-interest）」——這並不貶低馬歇爾計畫的歷史意義，但需要超越簡單的道德敘事。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「為什麼布列敦森林體系在 1944–1971 年能夠運作，而它的根本矛盾（特里芬困境）從一開始就存在？」</div>
+
+            <p>這個問題要求我們區分「制度設計的邏輯漏洞」和「制度實際運作的條件窗口」。</p>
+
+            <p><strong>特里芬困境從一開始就存在</strong>，但它在 1950 年代末之前並不緊迫，原因在於初始條件：1944–1950 年代初，世界面臨的是「美元荒（dollar shortage）」而非「美元過剩」——歐洲和日本的重建需要大量美元進口，美國輸出美元正好填補了全球流動性缺口，兩個矛盾中的「A 情境」（供給不足）才是實際問題。這個階段，美元的角色是積極的。</p>
+
+            <p><strong>矛盾在 1960 年代爆發的原因</strong>：歐洲重建完成、黃金年代成長積累了大量美元儲備、美國越戰和大社會計畫導致財政擴張 → 美元持續外流 → 外國美元存量接近美國黃金儲備的可兌換臨界點 → 從「美元荒」轉入「美元泛濫」階段 → 特里芬困境的「B 情境」開始主導。</p>
+
+            <p><strong>制度的「生命週期」視角</strong>：布列敦森林體系的成功運作，依賴一個特殊的歷史視窗——美國相對實力壓倒性強大，美元外流恰好滿足全球需求而未超出黃金儲備支撐能力。這個視窗在 1960 年代末關閉。這個案例說明：任何國際制度都有其「有效條件（enabling conditions）」，一旦底層的權力結構和經濟條件改變，制度就面臨調整壓力。布列敦森林的終結不是失敗，而是一個特定歷史條件下設計的制度因條件改變而壽終正寢的必然結果。</p>
+
+            <p><strong>對今天的啟示</strong>：美元仍是全球儲備貨幣，特里芬困境仍以變體形式存在。2000 年代後，Dooley、Folkerts-Landau 和 Garber 提出的「布列敦森林 II」框架描述了一個新的非正式體系：中國等出口導向型經濟體積累美元儲備，壓低本幣匯率，換取美國市場準入，而美國享受低融資成本和過剩儲蓄的支撐。這個體系同樣面臨特里芬式的內在矛盾，其調整是否也將以衝擊形式出現，是今日最重要的國際政治經濟學問題之一。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">解釋「特里芬困境」的核心邏輯，並說明為何這個困境在 1950 年代並不緊迫，但在 1960 年代末成為致命威脅？</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>特里芬困境的兩個情境均能準確描述：</strong>情境 A（美元不足 → 全球流動性短缺）和情境 B（美元過剩 → 可兌換性喪失信心），並理解兩個情境都導致系統失敗。</p>
+                  <p><strong>歷史條件的分期分析：</strong>1950 年代的「美元荒」使情境 A 主導，美國輸出美元解決了流動性問題而未超出兌換能力；1960 年代越戰+大社會計畫的財政赤字使美元外流加速，加上歐洲儲備積累，向情境 B 轉變。能說明「初始條件窗口」這個分析框架。</p>
+                  <p><strong>制度生命週期的一般化：</strong>能從特里芬困境抽象出更一般的制度設計啟示——制度的有效性依賴底層條件，條件改變制度需調整，這是布列敦森林的根本教訓。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能描述特里芬困境的基本矛盾，理解「美元荒」到「美元泛濫」的轉變，但對兩個情境的精確描述和歷史條件分期不夠嚴謹。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「美國印太多美元導致崩潰」，未能掌握特里芬困境的雙面性和歷史條件分析。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>特里芬困境兩個情境的準確描述</td><td>30 分</td></tr>
+                    <tr><td>1950s vs 1960s 歷史條件的分期分析</td><td>35 分</td></tr>
+                    <tr><td>制度設計的一般化啟示</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">比較凱因斯的 Bancor 計畫與懷特的 IMF 方案在「調整責任」分配上的根本差異。如果 Bancor 計畫被採納，1960 年代的國際貨幣危機是否可以避免？請評估這個反事實。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>核心差異的準確把握：</strong>懷特方案將調整負擔完全放在逆差國（借款＋緊縮條件），順差國（美國）無需調整；凱因斯方案通過 Bancor 超額餘額的費用機制，對持續順差國施加對稱性調整壓力。這是「逆差國承擔調整成本（asymmetric adjustment）」 vs 「對稱調整（symmetric adjustment）」的根本差異。</p>
+                  <p><strong>反事實評估的嚴格性：</strong>若 Bancor 被採納，美國的貿易順差在 1950–1960 年代初可能被費用機制所遏制，促進美國更大規模的進口或對外援助，全球流動性分配可能更均衡。但優秀答案能識別反事實的複雜性：① 美國是否真的會遵守 Bancor 費用機制，而非通過政治壓力繞過它？② Bancor 體系是否有足夠的執行能力？③ 即使 Bancor 解決了「美元荒」問題，其他冷戰時期的政治因素（越戰、大社會計畫）是否仍會產生壓力？</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明凱因斯方案對順差國施壓而懷特方案只針對逆差國，提出 Bancor 可能緩解不均衡問題，但對反事實的評估較為簡單化，未能識別執行機制的不確定性。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「凱因斯方案更好」，無法說明具體的機制差異，反事實討論缺失或極為表淺。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>兩個方案調整責任差異的精確分析</td><td>35 分</td></tr>
+                    <tr><td>反事實因果邏輯的嚴格評估</td><td>35 分</td></tr>
+                    <tr><td>執行機制和政治可行性的識別</td><td>20 分</td></tr>
+                    <tr><td>論述結構</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">約翰·拉吉的「嵌入式自由主義（embedded liberalism）」概念如何解釋戰後福利國家與自由貿易秩序的共存？這個共識在 1980 年代後為何開始瓦解？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>嵌入式自由主義的準確理解：</strong>能說明「嵌入（embedding）」的雙層含義——在國際層面追求貿易自由化，在國內層面以福利國家保護公民免受市場波動衝擊。這不是矛盾，而是政治可行性的必要條件：選民接受開放市場的代價，前提是國家提供社會保護網。資本管制是「嵌入」的技術支撐——防止國際資本流動破壞國內政策空間。</p>
+                  <p><strong>1980 年代後的瓦解機制：</strong>布列敦森林崩潰後的資本自由化（金融自由化）打破了「嵌入」的技術基礎——資本可以自由流動，對高稅收國家「以腳投票」，使福利國家的稅收基礎受到侵蝕；全球化（詳見 H12）使低工資地區與福利國家的勞工直接競爭，壓低工資和降低勞動條件談判籌碼；新自由主義意識形態（H09 詳述）在政策層面取代了凱因斯主義共識。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明嵌入式自由主義是自由貿易和社會保護的結合，提到資本自由化和全球化削弱了福利國家，但分析連結較為表面。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「福利國家是好的，後來新自由主義破壞了它」，對嵌入式自由主義概念的理解停留在字面。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>嵌入式自由主義「嵌入」邏輯的準確理解</td><td>35 分</td></tr>
+                    <tr><td>資本管制作為技術支撐的識別</td><td>20 分</td></tr>
+                    <tr><td>1980 年代後瓦解的機制分析</td><td>35 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h07-great-depression.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H07 大蕭條、銀行危機與凱因斯革命</span>
+          </a>
+          <a href="h09-stagflation.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H09 停滯性通膨與新自由主義轉向</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

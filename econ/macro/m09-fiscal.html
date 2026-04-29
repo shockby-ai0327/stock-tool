@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M09 財政政策與債務可持續性 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link active">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M09</span>
+          <span class="topbar-title">財政政策與債務可持續性</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 09</div>
+          <h1 class="lecture-hero-title">財政政策與債務可持續性</h1>
+          <p class="lecture-hero-subtitle">Fiscal Policy and Debt Sustainability</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：財政動態</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：進階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">「政府能借多少錢？」是現代總體政治經濟學中最核心的爭議之一。日本政府債務已超過 GDP 的 260%，卻未發生危機；希臘在 2010 年債務佔 GDP 不到 150% 就遭遇主權危機。美國聯邦債務持續創歷史新高，而利率在 2022 年前幾十年來長期低於增長率。這些事實如何解讀？財政政策的有效性取決於什麼條件？本講系統分析財政政策的傳導機制、自動穩定器（automatic stabilizers）、政府債務的動態方程，以及 Blanchard 的「r &lt; g」論點如何挑戰傳統財政保守主義。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、財政政策的工具與分類</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 財政政策工具的分類</div>
+            <pre>
+一、裁量性財政政策（Discretionary Fiscal Policy）
+  需要政治決策的主動政策調整：
+
+  擴張性（Expansionary）：
+    增加政府支出（G↑）：基建、教育、國防
+    減稅（T↓）：所得稅減免、企業稅率下調
+    增加移轉支付：失業補貼、社會福利擴大
+
+  緊縮性（Contractionary）：
+    削減政府支出（G↓）
+    增稅（T↑）
+    削減移轉支付
+
+二、自動穩定器（Automatic Stabilizers）
+  不需政治決策自動運作的財政緩衝：
+
+  景氣衰退時自動擴張：
+    失業保險：衰退→就業減少→保險給付自動增加→支撐需求
+    累進所得稅：衰退→所得下降→稅收自動減少→稅後所得下降幅度小於稅前
+
+  景氣過熱時自動緊縮：
+    稅收：繁榮→所得上升→累進稅率→稅負自動增加→壓制需求
+    失業保險給付減少（就業改善）
+
+  優點：速度快（自動觸發），無政治延誤（inside lag = 0）
+  限制：規模固定，無法精準針對特定衝擊
+
+三、兩種效果的比較
+  ┌────────────────┬──────────────────┬─────────────────┐
+  │                │ 裁量性財政政策    │ 自動穩定器       │
+  ├────────────────┼──────────────────┼─────────────────┤
+  │ 反應速度       │ 慢（決策過程）    │ 快（即時）       │
+  │ 規模靈活性     │ 高               │ 低（固定設計）   │
+  │ 精準度         │ 可針對特定目標   │ 廣泛但被動       │
+  │ 政治依賴性     │ 高               │ 低               │
+  └────────────────┴──────────────────┴─────────────────┘
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、財政政策的時滯問題</h2>
+          <p>財政政策的執行面臨三種時滯，是其相較於貨幣政策的主要劣勢：</p>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>時滯類型</th>
+                  <th>內容</th>
+                  <th>典型時間</th>
+                  <th>緩解方式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>認知時滯（Recognition Lag）</td>
+                  <td>識別衝擊性質與嚴重程度的時間</td>
+                  <td>3–6 個月</td>
+                  <td>即時數據監測；大數據</td>
+                </tr>
+                <tr>
+                  <td>決策時滯（Decision Lag / Inside Lag）</td>
+                  <td>政治決策（立法/行政）所需時間</td>
+                  <td>6–18 個月</td>
+                  <td>授權總統緊急權限；自動穩定器</td>
+                </tr>
+                <tr>
+                  <td>執行時滯（Implementation Lag）</td>
+                  <td>從批准到實際支出/影響的時間</td>
+                  <td>6–24 個月</td>
+                  <td>預先規劃「鏟土即可開工」的基建項目</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>時滯問題使財政刺激有「順週期風險」：決策批准時（衰退期），支出到位時（可能已復甦）——反而可能在景氣過熱時火上加油。2009 年美國《復甦再投資法》（ARRA）的大部分基建支出在 2010–2011 年才真正落地，彼時 GDP 已開始回升，刺激效果大打折扣。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、政府債務動態方程</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 政府債務的動態方程</div>
+            <pre>
+定義：
+  B  = 政府債務餘額（存量）
+  D  = 財政赤字（流量）= 政府支出 − 稅收
+  r  = 政府借貸的名目利率
+  g  = 名目 GDP 成長率（= 實質成長 + 通膨）
+  b  = 債務佔 GDP 比率（= B / Y）
+  PB = 基本赤字（Primary Balance）= 總赤字 − 利息支出
+
+債務比率的動態方程：
+  Δb = (r − g) × b + pb
+
+  Δb  = 債務/GDP 比率的變化
+  pb  = 基本赤字佔 GDP 比率（pb > 0 代表基本赤字）
+  (r − g) = 利率-增長率差距（決定債務的自動膨脹速度）
+
+直覺解釋：
+  若 r > g（利率 > 增長率）：
+    債務以快於 GDP 的速度增長
+    → 即使維持基本平衡（pb = 0），債務/GDP 比仍上升
+    → 需要基本盈餘才能穩定債務比率
+
+  若 r < g（利率 < 增長率）：
+    GDP 增長「稀釋」了債務比率
+    → 即使有小幅基本赤字，債務/GDP 比仍可下降或穩定
+    → 政府有更大的財政空間
+
+穩定債務/GDP 比率的條件（Δb = 0）：
+  pb* = −(r − g) × b = (g − r) × b
+
+  若 r < g：pb* > 0（允許基本赤字）
+  若 r > g：pb* < 0（需要基本盈餘）
+
+歷史意義：
+  2010–2019 年：美國 r ≈ 1–2%，g ≈ 3–4%，r < g
+  → Blanchard（2019 年 AEA 主席演講）：
+    「政府債務在利率低於增長率時，財政成本可能非常低」
+  2022–2023 年：美國 r > g（升息後）
+  → 債務動態重新惡化，財政空間壓縮
+</pre>
+          </div>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>Blanchard 的「r &lt; g」論點（2019）</strong>：Olivier Blanchard 在其 2019 年美國經濟學會主席演講中，系統論證了在 r &lt; g 的環境下，政府債務的財政成本（利息支出佔 GDP 的比率）可能是「可管理的」，甚至可能為零或負值。這不意味著債務是「免費的」，但挑戰了傳統財政保守主義「任何赤字都是壞的」的規範性立場。然而，r &lt; g 的狀態並非永恆——2022 年的急速升息使美國 r 重新超過 g，提醒我們 Blanchard 論點的條件性。
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、財政乘數：現實比教科書複雜</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 財政乘數的決定因素</div>
+            <pre>
+簡單凱因斯乘數：k = 1 / (1 − MPC)
+若 MPC = 0.8 → k = 5
+
+但現實乘數遠低於此：
+
+影響乘數大小的因素：
+┌─────────────────────┬─────────────────┬────────────┐
+│ 因素                │ 乘數較大條件    │ 乘數較小條件│
+├─────────────────────┼─────────────────┼────────────┤
+│ 排擠效應            │ 流動性陷阱（r=0）│ 正常利率環境│
+│ 貿易開放程度        │ 封閉經濟       │ 高度開放   │
+│ 匯率制度            │ 固定匯率       │ 浮動匯率   │
+│ 預期/李嘉圖等價     │ 流動性受限者多 │ 未來增稅預期│
+│ 景氣循環位置        │ 負產出缺口     │ 充分就業   │
+│ 支出類型            │ 低收入轉移支付 │ 富人減稅   │
+│ 政府信用            │ 高信用評等     │ 債務危機邊緣│
+└─────────────────────┴─────────────────┴────────────┘
+
+IMF/Auerbach-Gorodnichenko（2012）實證：
+  衰退期（負缺口）：乘數 ≈ 1.5–2
+  繁榮期（正缺口）：乘數 ≈ 0.5 以下
+
+含義：財政政策應是「逆週期的（counter-cyclical）」
+  衰退時：擴張（乘數大，效果好）
+  繁榮時：緊縮（乘數小，代價低）
+
+李嘉圖等價（Ricardian Equivalence, Barro 1974）：
+  若消費者完全理性、預期政府今天的赤字未來必須增稅
+  → 今天的減稅→消費者儲蓄以備未來稅 → C 不增加 → 乘數 = 0
+
+  現實：完全李嘉圖等價不成立（流動性限制存在）
+  但提醒我們：財政刺激的效果部分被抵消
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、債務可持續性的國際比較</h2>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>日本 vs. 希臘：為何相同的債務比率結果截然不同？</strong>
+            <p>日本政府債務佔 GDP 超過 260%（2023 年），是發達國家中最高的，卻從未爆發主權債務危機，日圓仍維持相對穩定。希臘在 2010 年債務佔 GDP 約 146%，卻遭遇嚴重的主權危機，需要 IMF 和歐盟紓困。決定性差異：</p>
+            <ul>
+              <li><strong>債務貨幣化能力</strong>：日本以日圓借債，而日本央行（BOJ）可以（理論上）無限購買日圓計價債券。希臘以歐元借債，歐洲央行不是希臘的央行，不承擔無限救援義務（2012 年前）。</li>
+              <li><strong>債務持有者結構</strong>：日本政府債務約 90% 由本國機構持有（年金、保險、央行），資本外逃風險低，利率容易被壓制。希臘大量依賴外國債權人，當外資撤出，利率飆升引發危機。</li>
+              <li><strong>儲蓄率與資本帳</strong>：日本高儲蓄率（家庭與企業）提供國內資金池支撐政府借債，無需依賴外資。</li>
+              <li><strong>名義成長與通膨</strong>：日本陷入通縮（低名目成長），r − g 差距反而在債務動態上相對有利（因為 g 的通膨部分接近零甚至負值，但 r 也接近零）。</li>
+            </ul>
+            <p>結論：債務/GDP 比率是必要但不充分的指標。真正的可持續性取決於：貨幣主權、債務持有者結構、資本帳開放度、儲蓄率與利率水準。</p>
+          </div>
+
+          <h3 class="subsection-title">5.1 財政主導（Fiscal Dominance）的風險</h3>
+          <p>當政府債務規模大到央行「不敢」升息（因為升息會大幅增加政府利息負擔），貨幣政策就受到財政需求的約束——這被稱為「財政主導（fiscal dominance）」。在財政主導的環境下，即使通膨上升，央行升息能力受限 → 通膨持續惡化。歷史上的財政主導最終常以「通膨稅」（高通膨稀釋債務的實質價值）作為解決方式。</p>
+          <p>「財政理論的物價水準（Fiscal Theory of Price Level, FTPL）」（Leeper 1991, Sims 1994, Cochrane）認為，物價水準最終由政府的跨期預算約束決定——若市場預期政府未來無力增稅或削支以償債，就會「現在」推高物價水準（相當於預期「通膨稅」的提前定價）。這是一個有爭議但重要的理論框架，在分析高債務環境的長期通膨風險時尤為相關。</p>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">六、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「政府赤字就像家庭信用卡負債，必須盡快還清。」</strong>
+            <p>政府財政與家庭財務有根本差異：①政府有無限壽命——可以永續「滾動」債務（只要能以新債還舊債）；②政府有課稅能力——稅收是強制性的，不同於家庭的工資所得；③政府（若有本國貨幣）可以貨幣化部分債務；④政府的支出創造了私人部門的所得（會計恆等式：政府赤字 = 私人部門盈餘 + 外部盈餘的鏡像）。當然，以上差異不意味著政府可以無限借貸——市場信心、通膨風險與外部融資限制仍構成真實約束。但「家庭類比」嚴重誤導了政府財政的邏輯。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「財政緊縮可以通過信心效果刺激成長（擴張性緊縮論）。」</strong>
+            <p>Alesina & Ardagna（2010）提出「擴張性財政緊縮（expansionary fiscal contraction）」——在某些條件下，財政緊縮可以通過改善財政可信度、降低未來增稅預期、壓低利率而刺激私人投資與消費。然而，IMF（2012）重新分析了大量案例後，發現財政乘數在多數環境下為正且顯著（約 0.9–1.7），財政緊縮確實壓縮了產出。2010–2012 年歐洲的緊縮實驗——尤其希臘——提供了反例：激進緊縮引發深度衰退，使債務/GDP 比率反而上升（分子減少，但分母收縮更快）。「擴張性緊縮」在信心崩潰的危機情境下可能有效（因為不緊縮意味著更壞的信用危機），但不是一般規律。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「現代貨幣理論（MMT）說明，發行本幣的政府永遠不會破產，可以無限支出。」</strong>
+            <p>現代貨幣理論（Modern Monetary Theory, MMT）的核心主張——發行本幣政府的財政約束不是預算本身，而是通膨——確實有一定道理：技術上，本幣政府可以無限印鈔以支付債務，不會「資金用完」。然而，MMT 批評者（Summers、Krugman、Rogoff）指出：①「不超過通膨限制」是一個實際操作上極難精確拿捏的約束，歷史上大多數惡性通膨都始於政府過於自信「還有空間」；②「印鈔還債」的信號效應可能加速信心崩潰，引發匯率危機、資本外流，在開放經濟中的約束遠比 MMT 承認的更緊；③通膨一旦失控，治理成本極高（Volcker 衝擊的教訓）。MMT 作為分析框架有其啟發性，但「政府可以無限支出」是其批評者（公平或不公平地）歸咎於它的過度引申。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">七、教授標準答案</h2>
+          <p class="section-lead">試題：「美國聯邦債務在 2023 年已達到 GDP 的 120%，且未見短期內明顯改善跡象。請評估：美國政府債務是否已達到不可持續的水準？使用債務動態方程分析，並討論與日本、希臘的比較。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、債務動態方程分析（美國）：
+   Δb = (r − g) × b + pb
+
+   2023 年數據估計：
+   b   = 1.20（120% of GDP）
+   r   ≈ 5%（名目，加權平均到期殖利率約 3–4%）
+   g   ≈ 5–6%（名目，= 實質 2% + 通膨 3–4%）
+   pb  = 基本赤字（非利息赤字，估計約 3–4% of GDP）
+
+   計算：Δb ≈ (4% − 5.5%) × 1.20 + 3.5%
+            = −0.018 + 0.035 = +1.7% per year
+
+   → 在目前參數下，債務比率每年約上升 1–2pp
+   → 若通膨回落（g 降至 4%）而 r 維持（4%），則 r≈g
+     → Δb ≈ 0 + pb = 完全由基本赤字驅動
+
+二、可持續性評估（美國 vs. 日本 vs. 希臘）：
+
+   美國有利因素：
+   • 美元儲備貨幣地位：全球對美元資產的持續需求
+   • 深度資本市場：可吸納大規模債務發行
+   • 貨幣主權：Fed 可以購買國債（QE）
+   • 政治能力：雖然有爭議，仍保有調整能力
+
+   美國不利因素：
+   • 結構性基本赤字（社保/醫保的人口壓力）
+   • 政治極化使財政調整困難
+   • 「儲備貨幣稅（exorbitant privilege）」是否持續？
+   • r > g 的轉變（若持續），自動惡化機制重啟
+
+   與日本比較：
+   日本債務更高但更穩定（國內持有、央行壓制利率）
+   美國更依賴外國投資者 → 信心衝擊風險更高
+
+   與希臘比較：
+   美國有貨幣主權，希臘沒有 → 這是最根本的差異
+   美國的「危機情景」更接近「滯脹+美元貶值」而非「債務違約」
+
+三、結論：
+   以傳統指標（債務/GDP 比）衡量，美國接近「危險區」
+   但美國的制度因素（儲備貨幣、貨幣主權）給予顯著緩衝
+   「可持續性」的真正威脅是：
+   ① 長期基本赤字持續（結構性）
+   ② r − g 持久性上升（若增長放緩 + 利率高位）
+   ③ 儲備貨幣地位被侵蝕（去美元化）
+   三者同時發生才是高概率危機觸發條件
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>計算題：</strong>某國今年財政數據如下：政府支出（不含利息）800 億，稅收 700 億，政府負債 2,000 億，利率 5%，名目 GDP 2,500 億，名目 GDP 成長率 4%。①計算今年的基本赤字（Primary Deficit）和總赤字；②計算債務/GDP 比率（b）；③根據債務動態方程，明年的 b 將如何變化？④若政府希望穩定債務比率（Δb = 0），需要將基本赤字/GDP 調整到多少？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>基本赤字</strong> = 支出（不含利息）− 稅收 = 800 − 700 = <strong>100 億</strong>（pb = 100/2500 = 4%）；利息支出 = 5% × 2000 = 100 億；<strong>總赤字</strong> = 100 + 100 = <strong>200 億</strong>（總赤字/GDP = 8%）。②<strong>b</strong> = 2000/2500 = <strong>0.80（80%）</strong>。③<strong>Δb</strong>：r − g = 5% − 4% = 1%；Δb = (r−g) × b + pb = 1% × 0.80 + 4% = 0.008 + 0.04 = <strong>+4.8 個百分點</strong>；明年 b ≈ 80% + 4.8% = <strong>84.8%</strong>。④<strong>穩定 b 的條件</strong>：令 Δb = 0；0 = (r−g)×b + pb*；pb* = −(r−g)×b = −1% × 0.80 = −0.8%；即需要基本<em>盈餘</em>（primary surplus）0.8%（= 0.8% × 2500 = 20 億盈餘），而非目前的 100 億赤字。調整幅度 = 4% + (−0.8%) = 4.8% of GDP（相當於需要削赤 120 億元）。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>①②計算正確，③Δb 計算有誤（忘記加上 pb 項，或 r−g 計算錯誤），④調整目標的計算邏輯部分缺失。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>混淆基本赤字（不含利息）與總赤字（含利息），導致後續計算全部錯誤。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>①基本赤字與總赤字計算</td><td>20 分</td></tr>
+                  <tr><td>②債務/GDP 比計算</td><td>15 分</td></tr>
+                  <tr><td>③Δb 動態計算</td><td>35 分</td></tr>
+                  <tr><td>④穩定 b 的基本赤字目標</td><td>30 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>政策評估題：</strong>某國面臨景氣衰退（GDP 低於潛在 3%），政府計劃實施 GDP 的 2% 財政刺激（增加基建支出）。財政乘數估計為 1.5（衰退期）。①估計刺激對 GDP 的效果；②若同時考慮排擠效應（利率上升 1 個百分點，投資減少 0.5% of GDP），淨效果是多少？③評估這一刺激計劃的整體利弊（含債務影響、時滯問題、乘數不確定性）。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>乘數效果</strong>：ΔGDP = 乘數 × ΔG = 1.5 × 2% = <strong>3% of GDP</strong>（恰好填補產出缺口）。②<strong>排擠效應淨效果</strong>：若利率上升使私人投資減少 0.5% of GDP，淨效果 = 3% − 0.5% = <strong>2.5% of GDP</strong>（仍大於零，淨正效果，但小於純乘數效果）。③<strong>整體評估</strong>：<em>正面</em>：2.5% of GDP 的淨增長可填補約 83% 的產出缺口（3% 缺口），降低失業；基建投資有長期生產力效益（提升 Y*）；衰退期乘數較大，時機適宜。<em>負面/風險</em>：①債務增加（2% GDP 的支出 → 赤字擴大 → 債務積累）；若 r > g，長期債務動態惡化；②執行時滯（基建支出 6–18 個月才落地）——若衰退短暫，刺激可能在復甦期才生效（順週期風險）；③乘數不確定性（衰退期乘數 1.5 是估計值，實際可能 0.9–2.0 之間）；④若赤字擴大使主權信用評等下調，利率可能升幅超過 1pp，排擠效應更大。結論：在目前衰退情境下，刺激計劃整體正面，但需設計為「速效型」（已有設計圖的現成基建項目）以降低時滯風險，並制定「日落條款（sunset clause）」在景氣回升後自動退出。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>①②計算正確，但③的「整體評估」只列出優缺點清單，缺乏具體量化與政策設計建議。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>不知如何計算乘數效果（誤以為 ΔY = ΔG），或將排擠效應直接加上（未正確用減法）。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>①乘數效果計算</td><td>20 分</td></tr>
+                  <tr><td>②排擠效應淨效果計算</td><td>25 分</td></tr>
+                  <tr><td>③多維度評估（債務/時滯/乘數不確定/信用風險）</td><td>40 分</td></tr>
+                  <tr><td>政策設計建議（日落條款/速效設計）</td><td>15 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>比較制度題：</strong>台灣和義大利都是高度依賴出口的中型經濟體，但財政狀況差異顯著（台灣債務佔 GDP 約 30%，義大利約 140%）。假設兩國同時面臨全球衰退，都需要財政擴張。請比較兩國在財政空間（fiscal space）、成本和可行性上的差異，並評估每個國家最適合的財政工具選擇。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>台灣（低債務，30%）的優勢與選擇</strong>：①<strong>財政空間充裕</strong>：30% 的債務比率遠低於國際警戒線（通常 90–100% 開始引發市場疑慮）；②利率信用優勢：國際市場對台灣的信用評等高，發債成本低；③政策靈活性：可同時使用減稅（刺激消費/投資）和增支（基建/社福）；④無「主權信心」問題：擴張不會引發市場恐慌。最適工具：組合性刺激——目標性減稅（中小企業/家庭）+ 有生產力效益的基建（如半導體相關供應鏈基礎設施）。<strong>義大利（高債務，140%，歐元區成員）的限制</strong>：①<strong>財政空間極度受限</strong>：140% 已在 2010–2012 年危機水準（146%）附近；②歐元區成員：無貨幣主權，無法貨幣化債務，ECB 的支援是條件式的（需通過 OMT/PEPP 機制）；③市場信心脆弱：赤字擴大可能觸發利差（BTP-Bund spread）大幅走擴，提高借貸成本，抵消刺激效果（甚至引發負向螺旋）；④政治約束：歐盟《穩定與成長公約》（SGP，雖被暫停）限制赤字擴張。最適工具：依賴歐盟層面的共同財政工具（如 NextGenerationEU 資金，已撥付但有條件）；若需自行擴張，應聚焦高乘數、短期執行快的項目（家庭轉移支付優於慢工出細活的基建），並主動與 ECB 溝通以確保 OMT 覆蓋的明示或暗示承諾。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能識別台灣財政空間大、義大利受限，但對「歐元區成員缺乏貨幣主權」的含義分析偏淺，也缺乏具體工具選擇的邏輯推導。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「台灣債務低可以擴張，義大利債務高不能擴張」，缺乏制度、信心、貨幣主權等維度的分析。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>台灣財政空間與最適工具分析</td><td>35 分</td></tr>
+                  <tr><td>義大利的歐元區制度約束分析</td><td>35 分</td></tr>
+                  <tr><td>兩國比較的系統性框架（貨幣主權/信心/成本）</td><td>30 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m08-islm.html" class="lecture-nav-btn">← M08 IS-LM 與 AD-AS</a>
+          <a href="m10-monetary.html" class="lecture-nav-btn">M10 貨幣政策與央行 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

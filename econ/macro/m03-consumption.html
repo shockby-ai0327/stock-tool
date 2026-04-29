@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M03 消費、投資、儲蓄與利率 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link active">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M03</span>
+          <span class="topbar-title">消費、投資、儲蓄與利率</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 03</div>
+          <h1 class="lecture-hero-title">消費、投資、儲蓄與利率</h1>
+          <p class="lecture-hero-subtitle">Consumption, Investment, Savings, and Interest Rates</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：需求面決定</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：中階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">GDP = C + I + G + NX，其中民間消費（C）在多數發達國家佔 GDP 的 60–70%，是景氣循環最重要的單一驅動力。企業投資（I）雖佔比較小（約 15–20%），但其波動性遠高於消費，是商業週期的主要放大器。理解消費與投資的決定因素——尤其是利率如何連接兩者——是掌握總體需求的核心。本講梳理凱因斯消費函數、Friedman 的永久所得假說、Modigliani 的生命週期假說，以及資本邊際效率（MEC）與 Tobin 的 q 理論，最後討論儲蓄恆等式的政策含義。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、消費理論的三個世代</h2>
+
+          <h3 class="subsection-title">1.1 凱因斯消費函數：最簡版本</h3>
+          <div class="blackboard">
+            <div class="blackboard-title">■ 凱因斯消費函數</div>
+            <pre>
+C = a + b·Y_d
+
+  a   = 自發性消費（Autonomous Consumption）
+        即使收入為零仍需消費的最低水準
+  b   = 邊際消費傾向（Marginal Propensity to Consume, MPC）
+        0 &lt; MPC &lt; 1
+        每增加 1 元可支配所得，消費增加 b 元
+  Y_d = 可支配所得（Disposable Income）
+
+邊際儲蓄傾向（Marginal Propensity to Save, MPS）：
+  MPS = 1 − MPC
+
+凱因斯乘數（Keynesian Multiplier）：
+  ΔY = ΔG × 1/(1−MPC)
+
+  若 MPC = 0.8，乘數 = 1/(1−0.8) = 5
+  政府支出增加 1 元 → 總需求增加 5 元
+
+【問題】凱因斯消費函數的預測失靈：
+  Simon Kuznets (1946) 發現，跨國長期數據顯示
+  平均消費傾向（APC = C/Y）長期穩定，並不像
+  凱因斯函數預測的那樣隨收入上升而下降
+  → 這觸發了永久所得假說與生命週期假說的發展
+</pre>
+          </div>
+
+          <h3 class="subsection-title">1.2 Friedman 的永久所得假說（Permanent Income Hypothesis, PIH）</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>永久所得假說（PIH）</strong>：Milton Friedman（1957）認為，消費者並非根據<em>當期</em>所得決定消費，而是根據<em>永久所得（Permanent Income）</em>——即其對終生平均所得的估計。暫時性所得變化（如意外獎金、一次性政府補貼）對消費影響甚微，因為理性消費者會將其儲蓄起來，平滑生命週期的消費。只有當消費者修正其永久所得預期時，消費才會顯著改變。
+          </div>
+
+          <p><strong>政策含義：</strong>若 PIH 成立，一次性的政府退稅（temporary tax rebate）對刺激消費的效果有限——消費者知道這是暫時的，大部分將被儲蓄。這是反對某些財政刺激計劃的重要理論依據。2008 年金融危機後美國政府發放的一次性退稅，實證顯示確實只有約 30% 轉為消費，支持 PIH 的預測。</p>
+
+          <h3 class="subsection-title">1.3 Modigliani 的生命週期假說（Life-Cycle Hypothesis, LCH）</h3>
+          <p>Franco Modigliani（1954，諾貝爾獎 1985 年）的生命週期假說與 PIH 精神相似，但更明確聚焦於跨生命階段的儲蓄模式：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 生命週期儲蓄模式</div>
+            <pre>
+年齡    所得    消費    儲蓄/借貸
+────────────────────────────────────────
+青年期  低      中      負（借貸，學貸/房貸）
+壯年期  高      中      正（大量積累）
+退休期  低      中      負（消耗積蓄）
+
+個體總儲蓄 ≈ 0（理想化）
+
+總體含義：
+  一國儲蓄率取決於人口結構
+  壯年人口比例高 → 高儲蓄率（中國 1990–2010s）
+  老齡化加深 → 儲蓄率下降（日本、歐洲趨勢）
+
+「嬰兒潮世代退休效應」：
+  美國嬰兒潮（1946–1964）大規模退休
+  → 總體儲蓄率下降
+  → 對長期 r* 有下壓效應
+  → 部分解釋長期停滯假說的人口機制
+</pre>
+          </div>
+
+          <h3 class="subsection-title">1.4 行為經濟學的修正：消費者並非完全理性</h3>
+          <p>PIH 和 LCH 假設消費者具有完全理性、完全預見能力。行為總體經濟學（Behavioral Macroeconomics）的研究顯示，現實偏差系統性地存在：</p>
+          <ul>
+            <li><strong>流動性限制（Liquidity Constraints）：</strong>許多家庭「月光族」——即使面對暫時收入下降，也因為無法借款（缺乏抵押品、信用差）而被迫削減消費。這使當期收入對消費的影響遠大於 PIH 預測。</li>
+            <li><strong>現時偏誤（Present Bias）：</strong>人們對現在的消費有過度偏好（「及時行樂」），導致退休儲蓄長期不足。行為經濟學的應對設計：自動加入退休儲蓄計劃（opt-out 而非 opt-in）——Thaler & Sunstein 的「助推（Nudge）」理論。</li>
+            <li><strong>財富效果（Wealth Effect）：</strong>資產價格（股票、房屋）上漲使家庭感覺更富有，消費增加。美聯儲估計，股票財富每上升 1 元，消費約增加 3–4 美分；房屋財富效果約 5–6 美分（因房屋更廣泛持有）。這是 QE 政策的傳導機制之一。</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、投資決定：資本的需求</h2>
+          <p>企業投資（I）包含三類：固定投資（廠房設備）、住宅投資、存貨投資。其中固定投資的波動對景氣循環影響最大。</p>
+
+          <h3 class="subsection-title">2.1 資本邊際效率（MEC）與利率</h3>
+          <div class="blackboard">
+            <div class="blackboard-title">■ 投資決策的淨現值框架</div>
+            <pre>
+投資決策的基本邏輯：
+
+  投資 ↔ 「購買未來收益流」的決策
+  投資可行條件：NPV > 0
+
+  NPV = Σ [未來預期現金流 / (1+r)^t] − 初始投資成本
+
+  r = 實質利率（Real Interest Rate）
+
+資本邊際效率（Marginal Efficiency of Capital, MEC）：
+  = 使特定投資項目 NPV = 0 的折現率
+  = 該投資的「內部報酬率（IRR）」
+
+投資決策規則：
+  若 MEC > r（市場利率）→ 投資值得（NPV > 0）
+  若 MEC &lt; r            → ​投資不划算（NPV &lt; 0）
+
+因此：
+  r ↓ → 更多投資項目的 MEC > r → 投資增加
+  r ↑ → 投資減少
+
+這確立了「利率是投資的機會成本」的核心關係，
+也是 IS 曲線向下斜率的微觀基礎
+</pre>
+          </div>
+
+          <h3 class="subsection-title">2.2 Tobin 的 q 理論</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>Tobin's q（托賓 q 值）</strong>：James Tobin（1969）提出，企業投資決策取決於 q = 企業市場價值 / 資本重置成本。若 q &gt; 1，表示市場對企業的估值超過重建這些資產的成本，企業有激勵擴張投資（因為投資創造的市場價值超過投資成本）。若 q &lt; 1，表示買現有企業比新建資本更便宜，企業傾向停止投資、轉而進行併購。q 理論連接了股票市場（市場估值）與實體投資行為，使股市成為未來資本支出的領先指標。
+          </div>
+
+          <p><strong>q 理論的市場應用：</strong>在 2010 年代美國股市大牛市中，q 值長期高於 1（股市估值遠超重置成本），這應該激勵企業大量投資。但實際上，企業更多選擇股票回購與提高股息——這被稱為「投資謎題（investment puzzle）」，部分歸因於股東短期主義、管理層薪酬與股價掛鉤等公司治理問題。</p>
+
+          <h3 class="subsection-title">2.3 加速器模型（Accelerator Model）</h3>
+          <p>投資需求不只取決於利率，也取決於<strong>產出的變化速度</strong>。「加速器原理（Accelerator Principle）」指出：投資與 GDP 成長率（而非 GDP 水準）成正比——企業投資以維持所需的資本-產出比率。</p>
+          <p>這解釋了為何景氣循環中投資的波動幅度遠大於消費：當 GDP 成長率從 4% 放緩至 2%（仍是正增長），企業投資可能從擴張轉為萎縮——即使 GDP 本身仍在成長，投資需求已在下降，因為「成長速度」放緩了。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、儲蓄、利率與跨期選擇</h2>
+
+          <h3 class="subsection-title">3.1 費雪的跨期選擇模型（Fisher's Intertemporal Choice）</h3>
+          <div class="blackboard">
+            <div class="blackboard-title">■ 費雪兩期模型</div>
+            <pre>
+個人在今天（期1）與未來（期2）之間分配消費：
+
+預算約束（Budget Constraint）：
+  C₁ + C₂/(1+r) = Y₁ + Y₂/(1+r) = 財富（W）
+
+消費者在預算約束下最大化效用（Utility Maximization）
+
+無差異曲線（Indifference Curves）的斜率：
+  = 主觀時間偏好率（Subjective Time Preference Rate, ρ）
+  = 消費者對「今天消費」相對「未來消費」的偏好強度
+
+最優解條件：
+  1 + ρ = 1 + r
+  即：主觀時間偏好 = 市場利率
+
+利率上升的效果（雙向）：
+  替代效應（Substitution Effect）：
+    今天消費的機會成本上升 → 儲蓄增加 → 消費減少
+  所得效應（Income Effect）：
+    若為淨儲蓄者（net saver），利率上升→利息收入增加
+    → 消費可能增加
+
+  兩效應方向相反 → 利率上升對儲蓄的淨效應理論上不確定
+  但實證上多數研究顯示儲蓄對利率的敏感度較低
+</pre>
+          </div>
+
+          <h3 class="subsection-title">3.2 實質利率 vs. 名目利率：費雪方程式</h3>
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>費雪方程式（Fisher Equation）</strong>：實質利率（r）= 名目利率（i）− 通膨預期（πᵉ）。投資與儲蓄決策應基於<em>實質</em>利率，而非名目利率——因為借貸的真實成本是考量通膨後的購買力轉移。例：名目利率 5%、通膨 3% → 實質利率僅 2%。2021–2022 年美國名目利率雖然極低（接近 0%），但因通膨急升，實質利率實際上大幅負值（約 −6%），極度刺激投資與消費。
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、全球儲蓄過剩與低利率時代</h2>
+          <p>Ben Bernanke（2005）提出「全球儲蓄過剩（Global Saving Glut）」假說，解釋 2000 年代初美國長期利率意外保持低位的謎題：中國、石油出口國、德國等高儲蓄經濟體的龐大儲蓄流入美國資本市場，壓低了全球長期利率，助長了美國的信用擴張與房市泡沫。</p>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 全球儲蓄過剩的傳導鏈</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">中國/德國<br>高儲蓄率</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">經常帳<br>順差</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">資本流入<br>美國</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">美債需求<br>上升</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">全球長期<br>利率下壓</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">信用擴張<br>資產泡沫</div>
+            </div>
+          </div>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>中國儲蓄率之謎：為何中國人如此節儉？</strong>
+            <p>中國家庭儲蓄率在 2000 年代高達 30–40%（全球最高之一），遠超生命週期假說的預測。學界提出多種解釋：①<strong>社會保障體系薄弱</strong>：養老、醫療、教育支出高度依賴私人儲蓄（預防性儲蓄動機）；②<strong>「房子壓力」</strong>：高房價使年輕家庭（尤其男性）需積累大量存款以達婚嫁條件；③<strong>人口結構</strong>：「獨生子女」政策形成龐大壯年工作人口 → 生命週期高儲蓄階段；④<strong>流動性限制</strong>：信貸市場欠發達，無法以未來收入為抵押借款，被迫自我積累。隨著中國人口老齡化、社保體系改善、信貸市場成熟，儲蓄率已開始緩慢下降——這對全球儲蓄-投資均衡與長期利率走向有深遠含義。</p>
+          </div>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">五、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「高利率一定增加儲蓄。」</strong>
+            <p>費雪模型顯示，利率對儲蓄的影響有替代效應（鼓勵儲蓄）和所得效應（對淨儲蓄者反而增加消費能力）兩種方向相反的力量，理論上無法確定淨效果方向。實證上，儲蓄對利率的彈性估計普遍較低——家庭儲蓄更多受收入水準、生命週期階段、預防性動機驅動，而非利率。企業儲蓄（留存盈餘）對利率的反應也相當有限。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「節儉是美德，高儲蓄率對國家永遠有益。」</strong>
+            <p>「節儉悖論（Paradox of Thrift）」：凱因斯指出，若所有家庭同時增加儲蓄，總需求（消費）下降，GDP 收縮，國民所得下降，最終<em>總儲蓄量</em>未必增加（因為儲蓄 = 所得 × 儲蓄率，所得下降可能抵消儲蓄率上升）。這是個體理性（個人儲蓄有益）與集體結果（所有人同時儲蓄有害）背離的典型案例。在需求不足的情境下（如大蕭條），政府逆週期擴張支出正是為了對抗這種「節儉悖論」。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「企業投資主要由利率決定，降息一定能刺激投資。」</strong>
+            <p>利率是投資決策的重要變數，但不是唯一變數。Keynes 強調「動物本能（Animal Spirits）」——企業家對未來的主觀信心對投資的影響，可能大於利率的計算。在大蕭條或 COVID 初期，即使利率降至零，企業仍因需求前景不確定而拒絕投資。這是「流動性陷阱（Liquidity Trap）」的投資維度——貨幣政策在需求衝擊下可能失靈，財政政策（直接創造需求）的相對作用上升。Tobin 的 q 理論補充：若股市崩潰導致 q &lt; 1，即使利率再低，投資意願仍低。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">六、教授標準答案</h2>
+          <p class="section-lead">試題：「政府為刺激景氣而宣布一次性退稅（每位納稅人退稅 1,000 元）。請從凱因斯消費函數、永久所得假說與行為經濟學三個角度，分析此政策對消費的預期效果，並評估哪個框架在此情境下最具解釋力。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、凱因斯消費函數的預測：
+   ΔC = MPC × ΔY_d = MPC × 1000
+   若 MPC = 0.8 → ΔC = 800 元
+   乘數效果：ΔY = 1/(1-MPC) × 1000 = 5,000 元
+   → 預測效果顯著
+
+二、永久所得假說的預測：
+   一次性退稅 → 對永久所得影響極微
+   (若預期壽命剩 30 年，永久所得僅增加 1000/30 ≈ 33 元/年)
+   → ΔC ≈ MPC × 33 = 26 元（極小）
+   → 大部分退稅將被儲蓄
+
+三、行為經濟學的修正預測：
+   取決於人口特徵：
+   • 流動性受限者（月光族、低收入）：MPC 接近 1
+     → 退稅幾乎全部消費
+   • 富裕家庭：儲蓄率高 → 退稅多數儲蓄
+   分佈效果：累進式退稅（窮人多得）→ 整體乘數效果更高
+   心理帳戶（Mental Accounting）：退稅被「標記」為
+   「意外之財」→ 消費傾向可能高於一般所得
+
+四、實證評估：
+   Johnson, Parker, Souleles (2006) 研究 2001 年美國退稅：
+   退稅後 3 個月內，消費佔退稅額約 20-40%
+   → 介於 PIH（~3%）與凱因斯（~80%）之間
+   → 行為經濟學（流動性受限）解釋力最強
+
+五、政策含義：
+   若目的是快速刺激消費，退稅給低收入、流動性受限的家庭
+   比給富裕家庭的乘數效果高 3–5 倍
+   → 退稅的「對象設計」比「總金額」更關鍵
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>理論比較題：</strong>甲、乙兩位消費者，甲的收入穩定（年薪 100 萬，每年波動小於 2%），乙是自由接案工作者（年均收入 100 萬，但年際波動達 ±50%）。根據永久所得假說，兩人的消費行為有何差異？行為經濟學又會如何修正這個預測？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>PIH 預測</strong>：兩人的永久所得相同（均為 100 萬），因此消費水準應相同。乙在高收入年份將超額所得儲蓄，在低收入年份動用儲蓄，消費保持穩定。消費差異應為零（若 PIH 完全成立）。<strong>行為經濟學的修正</strong>：①<strong>流動性限制</strong>：乙若缺乏信用（自由業者常面臨較高借款難度），低收入年份無法借款以維持消費 → 消費波動與收入同步，不符合 PIH。②<strong>預防性儲蓄動機</strong>：乙面臨更高的收入不確定性，傾向積累更高的「緩衝存量（buffer stock）」，平均消費水準可能<em>低於</em>甲（即使永久所得相同）。③<strong>心理帳戶</strong>：乙可能在高收入年份過度消費（「享受豐收」心理），在低收入年份過度節省 → 消費波動可能<em>超過</em>理性預測。結論：PIH 預測兩人消費相同；行為經濟學預測乙的消費波動性更高、且可能系統性地低於甲（若預防性儲蓄主導）。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能說明 PIH 下兩人消費應相同，並提到流動性限制的修正，但未能系統討論預防性儲蓄與心理帳戶的潛在方向，且論述缺乏邏輯結構。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>直覺地回答「乙的收入波動大，所以消費也更不穩定」，但未能運用 PIH 框架分析，也未識別行為修正的具體機制。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>PIH 下消費相同的預測與邏輯</td><td>30 分</td></tr>
+                  <tr><td>流動性限制的修正分析</td><td>25 分</td></tr>
+                  <tr><td>預防性儲蓄動機的分析</td><td>25 分</td></tr>
+                  <tr><td>心理帳戶或其他行為修正</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>模型應用題：</strong>某企業考慮投資一條新生產線，初始成本 1,000 萬元，預期在未來 5 年每年帶來 250 萬元的稅後現金流，第 5 年末設備殘值 100 萬元。若目前實質利率為 3%，此投資是否划算？若利率上升至 8%，結論是否改變？請計算並解釋資本邊際效率（MEC）的含義。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>MEC 計算</strong>：設 MEC = r* 使 NPV = 0，即：0 = −1000 + 250/(1+r*) + 250/(1+r*)² + 250/(1+r*)³ + 250/(1+r*)⁴ + (250+100)/(1+r*)⁵。以試誤法或財務計算機，MEC ≈ <strong>18.7%</strong>（此為內部報酬率）。<strong>r = 3% 時</strong>：NPV = −1000 + 250×(年金現值係數，5年，3%) + 100×(1.03)⁻⁵ = −1000 + 250×4.5797 + 100×0.8626 = −1000 + 1144.9 + 86.3 = <strong>+231.2 萬元 > 0 → 值得投資</strong>。<strong>r = 8% 時</strong>：NPV = −1000 + 250×3.9927 + 100×0.6806 = −1000 + 998.2 + 68.1 = <strong>+66.3 萬元 > 0 → 仍值得投資</strong>（但獲利空間大幅縮小）。注意：只有當利率超過 MEC（18.7%）時，投資才不划算。利率上升從 3%→8% 顯著降低了 NPV，說明利率上升抑制投資的機制——許多邊際項目（MEC 略高於 3% 的項目）在利率升至 8% 後就不再划算，這就是為何「升息→投資需求曲線左移」。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>NPV 計算邏輯正確但數值有小誤差，能說明利率上升→NPV 下降→投資意願降低的關係，但未能解釋 MEC 的含義與 IRR 的計算概念。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>無法正確計算 NPV，或混淆名目利率與實質利率，或對 MEC 概念無法解釋。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>r=3% 時 NPV 計算正確</td><td>30 分</td></tr>
+                  <tr><td>r=8% 時 NPV 計算正確</td><td>25 分</td></tr>
+                  <tr><td>MEC 概念解釋（= 使 NPV=0 的 r*）</td><td>25 分</td></tr>
+                  <tr><td>利率→投資需求的宏觀含義</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>政策辯論題：</strong>「為了提高台灣的長期競爭力，政府應優先刺激企業投資還是鼓勵家庭消費？」請從消費與投資理論出發，分析兩種策略各自的總體效果與限制，並給出你的政策建議。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>刺激企業投資的論據</strong>：①投資（I）直接擴張資本存量（K），提升未來生產潛力——這是 Solow 模型中提升穩態的機制；②技術性投資（R&D、設備升級）可提升 TFP，有長期增長效果；③從 Tobin q 框架，高 q 值（股市繁榮）與低利率環境是投資擴張的最佳時機。限制：若內需不振，企業不會僅因稅賦優惠而投資（「推繩子（pushing on a string）」問題）；投資受動物本能（Animal Spirits）影響，政策可操作性有限。<strong>鼓勵消費的論據</strong>：①消費（C）是 GDP 最大分項，對短期景氣循環的穩定作用最直接；②凱因斯乘數效果（尤其對流動性受限家庭的補貼）可快速拉動就業；③內需穩固是企業投資意願的基礎（企業投資本質上是對未來需求的預測）。限制：消費刺激以消費為目的，不直接提升生產力；依賴消費的增長模式儲蓄率低，長期資本積累不足。<strong>政策建議（優秀答案應有具體立場）</strong>：短期景氣低迷時，消費刺激見效快；但若問的是「長期競爭力」，則投資（尤其人力資本和研發）的長期效益更高。最優解是「兩者並進，但有所側重」——強化社會安全網以降低預防性儲蓄，同時提供 R&D 稅額抵減以刺激生產性投資，這樣消費提升（預防性儲蓄下降）與生產力投資同步發生。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能列出兩種策略的優缺點，但分析未能扎根於具體理論框架（Solow/Tobin/凱因斯乘數），政策建議缺乏具體機制說明。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「投資和消費都重要」，無法進行有選擇的分析，缺乏理論支撐。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>投資策略：理論依據與限制</td><td>25 分</td></tr>
+                  <tr><td>消費策略：理論依據與限制</td><td>25 分</td></tr>
+                  <tr><td>政策建議具體、有邏輯一致性</td><td>30 分</td></tr>
+                  <tr><td>短期效果 vs. 長期效果的區分</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m02-growth.html" class="lecture-nav-btn">← M02 經濟成長理論</a>
+          <a href="m04-money.html" class="lecture-nav-btn">M04 貨幣、銀行與信用 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

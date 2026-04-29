@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M01 GDP、國民所得、流量與存量 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link active">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M01</span>
+          <span class="topbar-title">GDP、國民所得、流量與存量</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 01</div>
+          <h1 class="lecture-hero-title">GDP、國民所得、流量與存量</h1>
+          <p class="lecture-hero-subtitle">GDP, National Income, Flows and Stocks</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：總體基礎</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：基礎</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">GDP（Gross Domestic Product，國內生產毛額）是現代總體經濟學最核心的量測工具，也是全球政策制定、市場分析的基準語言。但 GDP 是什麼？它測量什麼、不測量什麼？如何計算？與 GNP、NNP、可支配所得等指標的關係為何？本講從概念基礎出發，建立你理解所有後續總體理論的計量框架——同時誠實面對 GDP 的侷限性，避免「GDP 崇拜（GDP fetishism）」的思考陷阱。</p>
+        </section>
+
+        <!-- Section 1 -->
+        <section class="section">
+          <h2 class="section-title">一、GDP 的三重定義：三種計算方法等值</h2>
+          <p>GDP 有三種等價的定義（三者在理論上必然得到相同結果），理解這三種定義是掌握國民所得帳（National Income Accounts）的關鍵：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ GDP 的三種計算方法</div>
+            <pre>
+方法一：支出法（Expenditure Approach）
+  GDP = C + I + G + (X − M)
+
+  C  = 民間消費（Private Consumption）
+  I  = 民間投資（Private Investment）：
+       包含固定投資（Fixed Investment）+ 存貨變動（Inventory Change）
+  G  = 政府支出（Government Expenditure）：
+       注意！不包含移轉支付（Transfer Payments）如社會福利
+  X  = 出口（Exports）
+  M  = 進口（Imports）
+  X−M = 淨出口（Net Exports）= 貿易帳餘額
+
+方法二：所得法（Income Approach）
+  GDP = 薪資所得 + 企業利潤 + 租金收入
+        + 利息收入 + 政府稅收淨額 + 折舊
+
+方法三：生產法（Production / Value-Added Approach）
+  GDP = 各產業的「附加價值（Value Added）」總和
+  附加價值 = 產出價值 − 中間投入成本
+
+  【為何要扣除中間投入？】
+  防止重複計算（double counting）
+  例：小麥(10元)→麵粉(15元)→麵包(25元)
+  GDP 只計 25 元，不是 50 元
+</pre>
+          </div>
+
+          <h3 class="subsection-title">1.1 支出法的直覺解釋</h3>
+          <p>支出法從「誰購買了經濟產出」的角度計算。C + I + G + (X−M) 的等式告訴我們：一個國家生產的所有商品與服務，最終被四類主體吸收——消費者、企業（投資）、政府、外國人（淨出口）。理解這個等式的關鍵是「所有生產必然等於所有支出」——這是帳恆等式（accounting identity），在邏輯上必然成立，不是理論假設。</p>
+          <p><strong>常見混淆：政府「移轉支付（Transfer Payments）」不計入 G。</strong> 老年年金、失業補貼、學生獎學金，都是政府將購買力從一方轉移給另一方，不代表政府「購買」了任何商品或服務，因此不計入 GDP。它們影響的是收到補貼的人的消費行為（進而影響 C），但本身不是 GDP 的組成部分。</p>
+
+          <h3 class="subsection-title">1.2 名目 GDP vs. 實質 GDP：通膨的剔除</h3>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>GDP 平減指數（GDP Deflator）</strong>：實質 GDP（Real GDP）= 名目 GDP（Nominal GDP）÷ GDP 平減指數 × 100。GDP 平減指數是一個涵蓋所有 GDP 組成部分的價格指數（不同於 CPI 只涵蓋消費籃）。實質 GDP 成長率是剔除通膨後的「真實」產出成長，是判斷經濟是否真正擴張的指標。當媒體報導「GDP 成長 5%」，必須釐清是名目還是實質——若通膨 4%，則名目 5% 的成長代表實質僅 1% 的真實增長。
+          </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section class="section">
+          <h2 class="section-title">二、從 GDP 到可支配所得：國民所得帳的完整鏈</h2>
+          <p>GDP 只是國民所得帳的起點。理解整條鏈條對於分析政策影響（如減稅如何影響可支配所得）至關重要：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 國民所得帳鏈條</div>
+            <pre>
+GDP（國內生產毛額）
+  + 國外要素淨收入（Net Factor Income from Abroad）
+  = GNP（Gross National Product，國民生產毛額）
+
+  【GDP vs. GNP 的差異】
+  GDP：在一國「領土內」生產（不論生產者國籍）
+  GNP：由一國「國民」生產（不論生產地點）
+
+  例：台灣人在美國工作的薪資 → 計入美國GDP、台灣GNP
+      外資在台灣工廠的利潤 → 計入台灣GDP、不計入台灣GNP
+
+GNP
+  − 折舊（Depreciation / Capital Consumption Allowance）
+  = NNP（Net National Product，國民生產淨額）
+
+NNP
+  − 間接稅 + 補貼
+  = NI（National Income，國民所得）
+
+NI
+  − 企業保留盈餘 − 社會保險稅 − 公司所得稅
+  + 移轉支付（政府補貼、年金等）
+  = PI（Personal Income，個人所得）
+
+PI
+  − 個人所得稅
+  = DI（Disposable Income，可支配所得）
+
+DI = 消費（C）+ 儲蓄（S）
+</pre>
+          </div>
+
+          <h3 class="subsection-title">2.1 儲蓄恆等式（Savings Identity）</h3>
+          <p>從國民所得帳可以推導出一個極為重要的帳恆等式——<strong>儲蓄恆等式</strong>，這是理解開放經濟中各部門平衡關係的基礎：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 儲蓄恆等式推導</div>
+            <pre>
+從支出法：Y = C + I + G + (X − M)
+
+整理：Y − C − G = I + (X − M)
+
+定義：私部門儲蓄 S_priv = Y − T − C   （稅後所得扣消費）
+      政府儲蓄  S_gov  = T − G         （稅收扣政府支出）
+      國民儲蓄  S      = S_priv + S_gov = Y − C − G
+
+因此：S = I + (X − M)
+
+進一步：S − I = X − M = 經常帳餘額（Current Account Balance）
+
+【政策含義】
+• 若政府赤字（S_gov < 0）：
+  → 若私部門儲蓄不足以彌補，必然對應經常帳赤字（進口超出口）
+  → 即「雙赤字（Twin Deficits）」假說
+• 反之，高儲蓄率國家傾向出現經常帳順差（中國、德國案例）
+</pre>
+          </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section class="section">
+          <h2 class="section-title">三、流量 vs. 存量：概念邊界的釐清</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>流量（Flow）vs. 存量（Stock）</strong>：流量是在特定時間區間內發生的數量（有「每年」「每月」等時間維度）；存量是在特定時間點上累積的數量（沒有時間維度）。GDP 是流量；財富（Wealth）是存量。投資（Investment）是流量；資本存量（Capital Stock）是存量。兩者的關係：存量 = 過去流量的累積。例：一個國家的國民財富（存量）= 歷年儲蓄（流量）的累積 + 資本利得。
+          </div>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>概念</th>
+                  <th>類型</th>
+                  <th>例子</th>
+                  <th>測量時點</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>GDP</td>
+                  <td>流量</td>
+                  <td>年產出 30 兆美元</td>
+                  <td>全年</td>
+                </tr>
+                <tr>
+                  <td>國民財富</td>
+                  <td>存量</td>
+                  <td>全國資產淨值</td>
+                  <td>年底某日</td>
+                </tr>
+                <tr>
+                  <td>政府赤字</td>
+                  <td>流量</td>
+                  <td>年度收支差額</td>
+                  <td>全年</td>
+                </tr>
+                <tr>
+                  <td>政府債務</td>
+                  <td>存量</td>
+                  <td>累計未償還負債</td>
+                  <td>特定日期</td>
+                </tr>
+                <tr>
+                  <td>貿易赤字</td>
+                  <td>流量</td>
+                  <td>年度進出口差額</td>
+                  <td>全年</td>
+                </tr>
+                <tr>
+                  <td>淨國際投資部位</td>
+                  <td>存量</td>
+                  <td>對外資產-負債淨值</td>
+                  <td>特定日期</td>
+                </tr>
+                <tr>
+                  <td>投資（I）</td>
+                  <td>流量</td>
+                  <td>年度資本支出</td>
+                  <td>全年</td>
+                </tr>
+                <tr>
+                  <td>資本存量</td>
+                  <td>存量</td>
+                  <td>現有廠房設備總值</td>
+                  <td>特定日期</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>流量-存量混淆是政策辯論中最常見的概念錯誤。「政府今年赤字 1 兆」（流量）是一回事；「政府總債務 30 兆」（存量）是另一回事。降低赤字（縮小流量）可以減少債務的累積速度，但不會立刻減少債務存量——這個區別在「債務永續性（debt sustainability）」分析中至關重要。</p>
+        </section>
+
+        <!-- Section 4 -->
+        <section class="section">
+          <h2 class="section-title">四、GDP 的侷限性：它測量不到什麼</h2>
+          <p>GDP 是 20 世紀的偉大發明，但在衡量「社會福祉（social welfare）」或「真實生活水準」時存在系統性侷限。諾貝爾經濟學獎得主 Joseph Stiglitz 主持的「測量經濟表現與社會進步委員會」（2009 年）發布的報告，系統整理了 GDP 的五大盲點：</p>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>盲點</th>
+                  <th>說明</th>
+                  <th>替代指標</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>無法測量分配</td>
+                  <td>GDP 上升不代表多數人受益；可能集中於少數人</td>
+                  <td>Gini 係數、P90/P10 比率</td>
+                </tr>
+                <tr>
+                  <td>無法測量家務勞動</td>
+                  <td>照護、育兒、家務不進市場 → 不計 GDP</td>
+                  <td>衛星帳（Satellite Accounts）</td>
+                </tr>
+                <tr>
+                  <td>無法測量環境損耗</td>
+                  <td>砍伐森林「增加」GDP，但損耗自然資本</td>
+                  <td>綠色 GDP、自然資本帳</td>
+                </tr>
+                <tr>
+                  <td>無法測量品質改善</td>
+                  <td>手機功能提升，但价格下降 → GDP 貢獻縮小</td>
+                  <td>享樂調整法（Hedonic Adjustment）</td>
+                </tr>
+                <tr>
+                  <td>無法測量閒暇與主觀福祉</td>
+                  <td>更長工時→更高GDP，但幸福感未必提升</td>
+                  <td>HDI、蓋洛普全球幸福調查</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="subsection-title">4.1 GDP 與福祉的脫鉤：實例</h3>
+          <p>Easterlin 悖論（Easterlin Paradox, 1974）：美國在 1946–1970 年代人均 GDP 快速增長，但全國調查顯示的「幸福感（happiness）」幾乎沒有上升。這挑戰了「更富有 = 更幸福」的線性假設，雖然後續研究對此存有爭議。Betsey Stevenson 與 Justin Wolfers（2008）的研究則發現，在更大的跨國樣本中，收入與主觀幸福感仍有正相關，但邊際效益遞減。</p>
+          <p>更直接的例子：自然災害「增加」GDP——重建支出使投資（I）和政府支出（G）上升，但明顯沒有讓社會變得「更好」。這揭示了 GDP 的根本問題：它計量的是<em>交易的貨幣價值</em>，不是<em>社會福祉的淨增量</em>。</p>
+        </section>
+
+        <!-- Section 5 -->
+        <section class="section">
+          <h2 class="section-title">五、GDP 的實際應用：如何閱讀經濟數據</h2>
+
+          <h3 class="subsection-title">5.1 GDP 成長分解</h3>
+          <p>當主要經濟體公布 GDP 數據時，分析師的首要工作是「成長分解（growth decomposition）」：各部門（C、I、G、NX）對總成長的貢獻度各為多少？</p>
+          <ul>
+            <li>消費（C）貢獻強，通常代表需求健康、就業市場緊俏——對股市偏正面。</li>
+            <li>投資（I）貢獻強，尤其是非住宅固定投資，代表企業擴張信心——長期增長動能的良好訊號。</li>
+            <li>存貨意外大幅增加（Inventory Build-up）拉高 GDP，但這可能意味著「供過於求」——未售出商品堆積，後續可能需要去庫存（destocking），對下一季 GDP 是逆風。</li>
+            <li>淨出口（NX）改善，可能源於出口成長（正面）或進口驟降（可能反映內需疲弱，並非真正正面）。</li>
+          </ul>
+
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>2022 Q1 美國 GDP 「負成長」的解讀陷阱</strong>
+            <p>2022 年第一季，美國 GDP 以年率計下跌 1.6%，媒體大量報導「美國陷入衰退」。然而，詳細分解顯示：消費（C）仍然強勁成長；投資中的固定投資亦上升。「負成長」的主要原因是：①存貨大幅去化（企業消耗去年積累的庫存，減少新訂單）；②貿易赤字大幅擴大（強勁內需拉動大量進口）。這兩個因素都是「需求旺盛」的徵兆，而非需求疲弱。因此，這個「技術性負成長」與真正的衰退性收縮（企業裁員、需求崩潰）有本質區別——就業市場在同期仍在強勁擴張。這一案例展示了不看細節、只看總量 GDP 的分析風險。</p>
+          </div>
+
+          <h3 class="subsection-title">5.2 GDP 的國際比較：購買力平價（PPP）的必要性</h3>
+          <p>用市場匯率比較各國 GDP 會產生扭曲：匯率受資本流動、投機、央行干預影響，並不反映各國實際購買力。<strong>購買力平價（Purchasing Power Parity, PPP）</strong>調整了各國相同商品籃的價格差異，給出更接近「實際生活水準」的比較。</p>
+          <p>以 2023 年為例：中國以市場匯率計算的 GDP 約 17.7 兆美元（美國的 65%）；以 PPP 計算則約 34 兆美元，超越美國成為全球最大經濟體。這一差距反映了中國低廉的勞動力成本與服務業價格。「中國 GDP 已超越美國」的說法，其準確性完全取決於使用哪種計算方法——這是一個真實的測量問題，不是政治宣傳。</p>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">六、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「政府支出乘數大於 1，所以財政刺激一定划算。」</strong>
+            <p>凱因斯乘數（Keynesian Multiplier）理論認為，政府支出 1 元可帶動 GDP 增加超過 1 元（乘數 > 1）。但這在以下情況可能不成立：①「排擠效應（Crowding Out）」：政府借債使利率上升，抑制私人投資，抵消政府支出的刺激效果；②經濟接近充分就業時，乘數效果較小（資源已充分動員）；③「李嘉圖等價（Ricardian Equivalence）」：理性的消費者預期政府今天的赤字等於未來的增稅，因此不增加消費。實際乘數在不同條件下差異懸殊——從 0.5 到 2 都有實證支持，具體情境具體分析。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「GDP 成長就代表人民生活改善。」</strong>
+            <p>GDP 成長是必要條件，但不是充分條件。分配（誰得到成長的果實）、生態（成長是否以環境損耗為代價）、可持續性（成長是否依賴債務積累）都同樣重要。Amartya Sen 的「能力取向（capabilities approach）」提醒我們：真正的發展是人的「可行能力（functionings and capabilities）」的擴展，GDP 只是工具，不是目的。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「貿易順差代表國家強大，赤字代表失敗。」</strong>
+            <p>貿易赤字（X − M < 0）意味著一國的支出超過生產——但這可以是「強勁需求吸引進口」的正面訊號（美國長期貿易赤字同時是全球最大消費市場的體現），而非弱點。貿易逆差必然對應資本帳盈餘（外資流入），這可能反映外國人願意投資於該國——對美國而言長期如此。德國的大幅貿易順差則被 IMF 批評為抑制了內需、出口了需求不足，對全球增長有負面外溢效應。貿易帳的「好壞」取決於背後的結構原因，而非符號本身。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Model Answer -->
+        <section class="section">
+          <h2 class="section-title">七、教授標準答案</h2>
+          <p class="section-lead">試題：「一個國家的 GDP 高速成長十年，但基尼係數（Gini Coefficient）從 0.30 上升至 0.45。請評估此國的經濟發展成就，並說明你會補充哪些指標進行更完整的判斷。」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、肯定面（GDP 成長的正面影響）：
+   • 若人均實質 GDP 顯著提升，平均生活水準有所改善
+   • 就業機會擴張，貧窮率可能下降（即使不平等上升）
+   • 政府稅基擴大，公共服務提供能力增強
+
+二、問題面（Gini 上升的隱憂）：
+   • 不平等從 0.30→0.45 是顯著惡化（丹麥約 0.28；美國約 0.39；巴西約 0.53）
+   • Rawlsian 正義觀（Rawls' Difference Principle）：
+     不平等只有在「最不利者也同時改善」的條件下才可接受
+   • 政治經濟風險：高不平等→精英捕獲政治（elite capture）
+     →政策偏向富裕者→長期制度惡化（Acemoglu & Robinson 論點）
+
+三、補充指標建議：
+   ① 貧窮率（Poverty Rate）：不平等上升但絕對貧窮下降，仍有條件性正面評價
+   ② 人類發展指數（HDI）：教育、健康、收入三維度
+   ③ 社會流動性（Intergenerational Mobility）：機會不平等 vs. 結果不平等
+   ④ 環境可持續性指標：成長是否以生態赤字為代價
+   ⑤ P50 實質薪資（中位數薪資）：確認「一般人」是否受益
+
+結論：GDP 成長提供了「做大餅（expanding the pie）」的機會，
+但高不平等顯示餅的分配出了問題。
+「做大餅」+ 「分好餅」才是完整的發展成就評估框架。
+</pre>
+          </div>
+        </section>
+
+        <!-- Exercises -->
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>計算題：</strong>某國今年的以下數據如下：民間消費 800、民間投資 200（其中存貨增加 30）、政府消費支出 150、政府移轉支付 50、出口 300、進口 250、折舊 80、國外要素淨收入 +20。請計算：①GDP；②GNP；③NNP；④淨出口對 GDP 的貢獻率；⑤民間儲蓄率（假設稅率 20%）。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>GDP</strong> = C + I + G + (X−M) = 800 + 200 + 150 + (300−250) = 800 + 200 + 150 + 50 = <strong>1,200</strong>（注意：政府移轉支付 50 不計入 G）。②<strong>GNP</strong> = GDP + 國外要素淨收入 = 1,200 + 20 = <strong>1,220</strong>。③<strong>NNP</strong> = GNP − 折舊 = 1,220 − 80 = <strong>1,140</strong>。④淨出口貢獻率 = (X−M)/GDP = 50/1,200 ≈ <strong>4.2%</strong>。⑤民間儲蓄率：設 Y = GDP = 1,200，T = 1,200 × 20% = 240，民間可支配所得 = Y − T + 移轉支付 = 1,200 − 240 + 50 = 1,010，消費 C = 800，民間儲蓄 S = 1,010 − 800 = 210，民間儲蓄率 = 210/1,010 ≈ <strong>20.8%</strong>。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>GDP、GNP、NNP 計算正確，但將移轉支付計入 G（導致 GDP 多計 50），或儲蓄率計算時忘記加回移轉支付至可支配所得。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>混淆 GDP 與 GNP 的概念差異，或無法正確應用 Y = C + I + G + NX 的等式。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>GDP 計算正確（含移轉支付不計入 G）</td><td>25 分</td></tr>
+                  <tr><td>GNP 與 NNP 計算正確</td><td>25 分</td></tr>
+                  <tr><td>淨出口貢獻率計算正確</td><td>20 分</td></tr>
+                  <tr><td>民間儲蓄率計算正確（含移轉支付處理）</td><td>30 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>概念辨析題：</strong>以下事件各自如何影響 GDP？請說明影響的方向、計入哪個分項（C/I/G/NX），並討論是否真正代表社會「更好」或「更差」。①一場地震後，政府斥資 500 億重建道路；②大量主婦進入職場，原本在家照顧的子女送至托嬰中心；③股市大漲，資產價格上升 20%；④一家工廠採購新機器設備，提升產能。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①地震重建：計入 G（政府支出），GDP 上升。但這不代表社會「更好」——GDP 衡量的是重建交易，未扣除地震造成的資本損失（道路本身的破壞不計入 GDP 負面項）。②主婦入職：托嬰中心費用計入 C（消費，因為有市場交易），薪資計入 NI，GDP 上升。但原本在家免費提供的育兒服務未計入 GDP，所以 GDP 的上升誇大了「真實產出的增加」——部分是將非市場活動市場化。③股市大漲：股票是資產存量（stock），其價格變動是資本利得（capital gain），不是流量，不計入 GDP。但資產價格上升會透過「財富效果（wealth effect）」刺激消費 C，間接影響 GDP。④採購機器：計入 I（企業固定投資），GDP 上升，且代表真實產能擴張，是可持續增長的正面訊號。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能正確判斷各事件對 GDP 的方向影響，但未能深入討論「GDP 變動是否等於社會福祉變動」的概念層次，尤其對①②的福祉含義分析不足。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>誤以為股市上漲計入 GDP；或混淆政府消費支出與移轉支付的差別。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>每個事件的 GDP 方向與分項判斷（各 10 分）</td><td>40 分</td></tr>
+                  <tr><td>每個事件的「是否代表社會更好」分析</td><td>40 分</td></tr>
+                  <tr><td>③股市大漲不計入 GDP 的原因（流量 vs. 存量）</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>政策分析題：</strong>A 國過去十年人均 GDP 年增 6%，人類發展指數（HDI）從 0.62 升至 0.72，但基尼係數從 0.32 升至 0.48，青年失業率長期高達 25%，且環境汙染指數排名全球倒數前 10%。你認為 A 國的發展是否值得效仿？你會建議 A 國政府優先處理哪個問題，為什麼？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>優秀答案應進行多維度評分——從不同理論框架給出不同評價，而非單一結論。<strong>功利主義角度</strong>：若 HDI 上升且絕對貧窮率下降，可辯稱整體效益正面。<strong>Rawlsian 角度</strong>：25% 青年失業、Gini 大升，最弱勢群體未必改善，難以支持為「值得效仿」。<strong>可持續發展角度</strong>：嚴重環境汙染意味著透支自然資本，當代增長代價由未來世代承擔，不符合代際公平。政策優先建議：青年失業是最迫切問題。理由：①青年失業「瘢痕效應（scarring effect）」——長期失業導致人力資本永久性損耗；②高青年失業是政治不穩定的強力預測因子（阿拉伯之春的前車之鑑）；③解決之道（職業培訓、降低勞動市場進入壁壘）有助於同時改善不平等。環境汙染雖嚴峻，但改善有技術路徑（產業升級、碳定價），且與增長矛盾相對可調和。不平等則需要更根本的稅制與社會政策改革，時間尺度較長。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能從多角度評估，政策建議有合理理由，但未能引用理論框架（功利主義/Rawls/可持續發展）明確化分析依據，政策優先順序的邏輯推導不夠嚴謹。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「GDP 成長很好，但不平等和失業問題需要解決」，缺乏有框架的評估與有邏輯的政策優先排序。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>從至少兩個理論框架評估發展成就</td><td>35 分</td></tr>
+                  <tr><td>提出明確的政策優先問題並給出邏輯理由</td><td>35 分</td></tr>
+                  <tr><td>引用具體概念（瘢痕效應/代際公平等）</td><td>20 分</td></tr>
+                  <tr><td>結論清晰，立場一致</td><td>10 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="../history/h15-ai-energy.html" class="lecture-nav-btn">← H15 AI 與能源轉型</a>
+          <a href="m02-growth.html" class="lecture-nav-btn">M02 經濟成長理論 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

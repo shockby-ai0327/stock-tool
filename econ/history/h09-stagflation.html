@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H09 停滯性通膨與新自由主義轉向 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H09 停滯性通膨與新自由主義轉向</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H09</span>
+            <span class="lecture-period">1971 — 1989</span>
+          </div>
+          <h1 class="article-title">停滯性通膨與新自由主義轉向</h1>
+          <p class="article-subtitle">Stagflation &amp; the Neoliberal Turn</p>
+          <p class="article-lead">1970 年代給了凱因斯主義（Keynesianism/凱因斯主義）一記沉重的打擊：停滯性通膨（stagflation/停滯性通膨）——高通膨與高失業同時出現——在理論上不應存在於凱因斯的模型中。這場危機不只是一次景氣衰退，更是一場政策範式（policy paradigm/政策範式）的大轉換，將思想舞台讓給了貨幣主義（monetarism/貨幣主義）、供給面經濟學（supply-side economics/供給面經濟學）和新自由主義（neoliberalism/新自由主義）。佛里德曼（Milton Friedman）取代凱因斯成為政策顯學，柴契爾與雷根成為歷史的代理人，全球資本主義進入了一個新的相位。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#oil-shocks">石油衝擊：1973 年與 1979 年</a></li>
+            <li><a href="#phillips-curve">菲利浦曲線的崩潰：理論危機</a></li>
+            <li><a href="#monetarism">貨幣主義的崛起：佛里德曼的反革命</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#volcker">伏克爾衝擊（1979–1982）：痛苦的去通膨</a></li>
+            <li><a href="#neoliberalism">新自由主義的政策議程：英美的政策革命</a></li>
+            <li><a href="#supply-side">供給面經濟學：理論與爭議</a></li>
+            <li><a href="#market-implications">市場含意：滯脹時代與去通膨時代的資產配置</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="oil-shocks">
+          <h2>一、石油衝擊：1973 年與 1979 年</h2>
+
+          <h3>第一次石油衝擊（1973 年）</h3>
+          <p>1973 年 10 月，第四次以阿戰爭（Yom Kippur War/贖罪日戰爭）爆發。OPEC（石油輸出國組織/Organization of the Petroleum Exporting Countries）的阿拉伯成員國宣布對支持以色列的西方國家實施石油禁運（oil embargo/石油禁運），並大幅削減產量。石油價格在數月內從約 3 美元/桶飆升至約 <strong>12 美元/桶</strong>（漲幅約 300%）。</p>
+
+          <p>這不只是一次能源價格衝擊，而是一次影響整個工業經濟供給面的系統性衝擊——石油是工業生產的投入要素，油價上漲相當於對整個工業體系的全面加稅。</p>
+
+          <h3>第二次石油衝擊（1979 年）</h3>
+          <p>1979 年，伊朗伊斯蘭革命（Iranian Islamic Revolution/伊朗伊斯蘭革命）推翻沙赫政權，伊朗石油出口中斷；隨後伊拉克入侵伊朗（1980 年），進一步壓縮中東石油供應。油價從 1978 年的約 13 美元/桶，在 1980 年升至約 <strong>35–40 美元/桶</strong>。</p>
+
+          <h3>供給衝擊的宏觀效應</h3>
+          <p>供給衝擊（supply shock/供給衝擊）與需求衝擊（demand shock/需求衝擊）的宏觀效應截然不同，這是 1970 年代政策困境的核心：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">需求衝擊 vs. 供給衝擊的政策困境</div>
+            <p><strong>需求衝擊（凱因斯主義的適用場景）：</strong>需求不足 → 通縮 + 失業 → 政策回應：財政擴張 or 貨幣寬鬆。政策選擇在通膨與失業之間有明確的「菲利浦曲線取捨」。</p>
+            <p><strong>供給衝擊（1970 年代的真實情境）：</strong>石油成本上升 → 同時推高通膨（成本推升/cost-push inflation）AND 壓低產出（企業成本上升 → 減產）→ 通膨 + 失業<strong>同時出現</strong>。</p>
+            <p><strong>政策的兩難：</strong>面對停滯性通膨，傳統的凱因斯政策工具全面失效——寬鬆政策能降低失業但加劇通膨；緊縮政策能壓低通膨但加劇失業。兩者沒有「兩全其美」的解法，這正是停滯性通膨的政策悖論。</p>
+          </div>
+
+          <h3>停滯性通膨的數據</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>年份</th>
+                <th>美國 CPI 通膨率</th>
+                <th>美國失業率</th>
+                <th>實質 GDP 成長率</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1972</td><td>3.3%</td><td>5.6%</td><td>5.3%</td></tr>
+              <tr><td>1973</td><td>6.2%</td><td>4.9%</td><td>5.6%</td></tr>
+              <tr><td>1974</td><td>11.1%</td><td>5.6%</td><td>-0.5%（衰退）</td></tr>
+              <tr><td>1975</td><td>9.1%</td><td>8.5%</td><td>-0.2%</td></tr>
+              <tr><td>1979</td><td>11.3%</td><td>5.8%</td><td>3.2%</td></tr>
+              <tr><td>1980</td><td>13.5%</td><td>7.1%</td><td>-0.3%</td></tr>
+              <tr><td>1981</td><td>10.3%</td><td>7.6%</td><td>2.5%</td></tr>
+              <tr><td>1982</td><td>6.2%</td><td>9.7%</td><td>-1.9%（衰退）</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="phillips-curve">
+          <h2>二、菲利浦曲線的崩潰：理論危機</h2>
+
+          <h3>菲利浦曲線的原始形式</h3>
+          <p>1958 年，紐西蘭籍經濟學家阿爾班·威廉·菲利浦（A.W. Phillips）發表了影響深遠的論文，以英國 1861–1957 年的數據，發現貨幣工資成長率與失業率之間存在穩定的負相關關係——失業率低時工資漲幅大（通膨高），失業率高時工資漲幅小（通膨低）。這條「菲利浦曲線（Phillips Curve/菲利浦曲線）」提供了政策制定者一個看似可以操控的「失業—通膨取捨（unemployment-inflation tradeoff）」。</p>
+
+          <p>1960 年代的美國，凱因斯主義政策制定者將菲利浦曲線作為決策工具：接受略高的通膨換取更低的失業率——這似乎是可行的「精細調控（fine-tuning）」。</p>
+
+          <h3>佛里德曼與菲爾普斯的預測（1968 年）</h3>
+          <p>早在 1970 年代的停滯性通膨爆發之前，Milton Friedman（1968）和 Edmund Phelps（1968）已各自獨立預測了菲利浦曲線的不穩定性，提出了「自然失業率（natural rate of unemployment/自然失業率）」（Friedman）和「非加速通膨的失業率（NAIRU/Non-Accelerating Inflation Rate of Unemployment）」概念：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">佛里德曼—菲爾普斯的「附加預期菲利浦曲線（Expectations-Augmented Phillips Curve）」</div>
+            <pre>
+短期菲利浦曲線（Short-run Phillips Curve, SRPC）：
+  π = πᵉ − α(u − u*)
+
+  π  = 實際通膨率
+  πᵉ = 預期通膨率（expected inflation）
+  u  = 實際失業率
+  u* = 自然失業率（natural rate）
+  α  = 敏感係數
+
+邏輯：
+  ① 政府以寬鬆政策壓低失業率至 u* 以下
+     → 短期內通膨上升（沿 SRPC 移動）
+  ② 工人和企業調整通膨預期 πᵉ 上升
+     → SRPC 整條曲線上移
+  ③ 失業率回到 u*（因為工人要求補償實際通膨的工資）
+     但通膨已永久性上升
+
+結論：長期菲利浦曲線（Long-run Phillips Curve, LRPC）
+  是一條垂直線，位於 u = u*
+  任何試圖把失業率壓到 u* 以下的政策
+  只會製造更高的通膨，而非持久的低失業率</pre>
+          </div>
+
+          <p>1970 年代的停滯性通膨數據完美驗證了佛里德曼與菲爾普斯的預測：各國政府試圖「買進」低失業率，結果只是通膨不斷升級，而失業率最終仍回到甚至高過自然失業率——1970 年代的美國同時面臨高通膨和高失業。菲利浦曲線作為政策工具宣告失效。</p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="monetarism">
+          <h2>三、貨幣主義的崛起：佛里德曼的反革命</h2>
+
+          <h3>貨幣主義的核心命題</h3>
+          <p>Milton Friedman 的貨幣主義（monetarism/貨幣主義）是對凱因斯主義的系統性挑戰，其核心命題可以歸納為三點：</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">貨幣主義三大核心命題</div>
+            <p><strong>1. 貨幣數量論（Quantity Theory of Money）：</strong>MV = PY（貨幣供給 × 流通速度 = 物價水準 × 實質產出）。如果流通速度 V 穩定，貨幣供給 M 的增長率直接決定名目 GDP 增長率，進而決定通膨率。「通膨在任何時候、任何地點都是一個貨幣現象（Inflation is always and everywhere a monetary phenomenon）」——Friedman（1963）。</p>
+            <p><strong>2. 長期中性（Long-run Neutrality）：</strong>貨幣供給變化在長期只影響物價水準，不影響實質產出和就業。政府試圖用貨幣政策提振實質經濟，短期可能有效（因為預期調整有時滯），長期只製造通膨。</p>
+            <p><strong>3. 固定貨幣成長規則（k-percent Rule）：</strong>Friedman 主張央行放棄相機抉擇（discretion/相機抉擇），改採固定的貨幣供給成長規則（例如每年固定增長 3%），與實質 GDP 潛在成長率匹配，以此保持價格穩定。這是對凱因斯主義「精細調控」能力的根本否定。</p>
+          </div>
+
+          <h3>預期理性化：盧卡斯批評（Lucas Critique）</h3>
+          <p>芝加哥大學經濟學家羅伯特·盧卡斯（Robert Lucas）在 1976 年提出了更深刻的方法論批評（Lucas Critique/盧卡斯批評）：如果政策改變，人們的行為也會改變——歷史數據估計的政策效果，在政策本身改變後就會失效。以過去的菲利浦曲線數據制定政策，忽略了人們在理性預期下會調整行為這一事實，因此政策評估是無效的。</p>
+
+          <p>盧卡斯批評從根本上動搖了凱因斯主義宏觀計量模型的方法論基礎，為「理性預期革命（Rational Expectations Revolution）」奠定了基礎。盧卡斯因此獲得 1995 年諾貝爾經濟學獎；Friedman 和 Phelps 分別於 1976 年和 2006 年獲諾貝爾獎。</p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="transmission">
+          <h2>四、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">1970 年代停滯性通膨的成因與演變</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">前期積累（1960s）</div>
+                <div class="t-node-desc">越戰財政赤字 + 大社會計畫 → 美國通膨預期開始上升；1971 年布列敦森林崩潰 → 美元貶值 → 進口商品通膨輸入；各國凱因斯式擴張政策在全球同步放大總需求</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">石油衝擊（1973, 1979）</div>
+                <div class="t-node-desc">供給面負衝擊：油價飆升 → 生產成本上升 → 企業減產（產出↓）+ 物價上漲（通膨↑）→ 停滯性通膨同時出現</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">政策困境</div>
+                <div class="t-node-desc">寬鬆以救失業 → 通膨更惡化；緊縮以壓通膨 → 衰退更深；通膨預期脫錨（de-anchoring）→ 工資—物價螺旋（wage-price spiral）形成</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">思想範式崩潰</div>
+                <div class="t-node-desc">菲利浦曲線作為政策工具失效；凱因斯主義精細調控信念瓦解；佛里德曼貨幣主義獲得政策主流地位；理性預期學派填補理論空缺</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">伏克爾衝擊（1979–1982）</div>
+                <div class="t-node-desc">聯準會主席伏克爾以極端升息壓制通膨預期；短期代價：1982 年衰退 + 失業率近 10%；長期效益：通膨從 13% 降至 3%，錨定通膨預期</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">新自由主義政策議程（1980s）</div>
+                <div class="t-node-desc">雷根（美）+ 柴契爾（英）的政策革命：減稅、去管制、私有化、工會弱化、金融自由化；思想基礎從凱因斯主義轉向海耶克—佛里德曼傳統</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="volcker">
+          <h2>五、伏克爾衝擊（1979–1982）：痛苦的去通膨</h2>
+
+          <h3>「誰能殺死通膨？」</h3>
+          <p>1979 年 8 月，吉米·卡特（Jimmy Carter）總統任命保羅·伏克爾（Paul Volcker）為聯準會主席。彼時美國通膨率接近 14%，聯準會的可信度岌岌可危。伏克爾採取了激進的貨幣緊縮措施：</p>
+
+          <ul>
+            <li>將聯邦基金利率（Federal Funds Rate/聯邦基金利率）從 1979 年的約 11% 推高至 1981 年 6 月的峰值 <strong>20%</strong>；</li>
+            <li>轉換貨幣政策操作框架：從盯住利率轉為盯住貨幣供給成長率（短暫採用 Friedman 的建議）；</li>
+            <li>明確傳達「無論代價，壓制通膨」的堅定承諾。</li>
+          </ul>
+
+          <h3>代價與效果</h3>
+          <p>伏克爾的政策代價極為慘重：1981–1982 年美國陷入嚴重衰退（「伏克爾衰退/Volcker Recession」），失業率升至 10.8%（1982 年 12 月），農業和製造業受到重創；高利率吸引全球資本流入，美元急劇升值，進一步打擊美國出口。</p>
+
+          <p>但通膨確實被壓制了：CPI 通膨率從 1980 年的 13.5% 降至 1983 年的 3.2%，長期通膨預期重新錨定（re-anchoring/重新錨定）。伏克爾衝擊奠定了此後 40 年美國低通膨環境（「大緩和（Great Moderation/大緩和）」）的基礎。</p>
+
+          <div class="case-study">
+            <div class="case-study-label">伏克爾衝擊的理論意義：「可信承諾（Credible Commitment）」</div>
+            <p>伏克爾衝擊的深層意義不只是「升息壓通膨」，而是建立了「央行可信度（central bank credibility/央行可信度）」的現代框架：</p>
+            <p>通膨在很大程度上是一個預期問題——如果人們預期通膨會持續，他們會在工資和定價決策中提前納入這個預期，通膨就真的持續了（自我實現）。打破通膨螺旋，需要的不只是緊縮政策本身，而是讓市場相信央行「真的願意承受衰退代價」的可信承諾。</p>
+            <p>伏克爾的做法正是付出真實代價來建立這個可信度：接受 10% 的失業率，讓市場相信通膨目標是「認真的」。這個邏輯後來被形式化為「規則 vs. 相機抉擇（rules vs. discretion）」的央行政策辯論，以及通膨目標制（inflation targeting/通膨目標制）的制度設計。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="neoliberalism">
+          <h2>六、新自由主義的政策議程：英美的政策革命</h2>
+
+          <h3>思想根源：海耶克與佛里德曼</h3>
+          <p>新自由主義（neoliberalism/新自由主義）有兩個主要的知識來源：</p>
+          <ul>
+            <li><strong>弗里德里希·海耶克（Friedrich Hayek）</strong>：強調分散知識的不可能計算性——沒有任何中央計畫者能夠掌握市場分散的價格信號所傳遞的資訊，因此計畫和管制必然低效；《通往奴役之路》（<em>The Road to Serfdom</em>, 1944）論證政府干預的政治危險。</li>
+            <li><strong>米爾頓·佛里德曼（Milton Friedman）</strong>：《資本主義與自由》（<em>Capitalism and Freedom</em>, 1962）從實用主義立場論證自由市場的效率優越性，反對政府管制、支持貨幣規則、主張負所得稅取代複雜的福利制度。</li>
+          </ul>
+
+          <h3>柴契爾主義（Thatcherism）</h3>
+          <p>1979 年，瑪格麗特·柴契爾（Margaret Thatcher）就任英國首相，開始推行一場前所未有的政策革命：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>政策領域</th>
+                <th>柴契爾的措施</th>
+                <th>目的/邏輯</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>工會改革</td><td>一系列立法限制罷工權、封閉工廠（closed shop）慣例；1984–1985 礦工大罷工的強硬對抗</td><td>打破工資—物價螺旋的主要推手；恢復勞動市場彈性</td></tr>
+              <tr><td>私有化</td><td>英國電信、英國航空、英國燃氣、英國鋼鐵、水務公司…… 大規模國有企業私有化</td><td>引入競爭、提升效率、降低財政負擔</td></tr>
+              <tr><td>金融去管制</td><td>1986 年「大爆炸（Big Bang）」金融市場改革：廢除固定佣金、引入外資、倫敦金融城現代化</td><td>增強倫敦的全球金融中心競爭力</td></tr>
+              <tr><td>財政緊縮</td><td>削減公共支出（社會住宅、教育補貼）；強調「政府無力創造就業，只能減少障礙」</td><td>降低財政赤字、給私人部門騰出空間</td></tr>
+              <tr><td>貨幣緊縮</td><td>1979–1981 年嚴格貨幣緊縮，容忍製造業大規模失業；去工業化加速</td><td>降低通膨、重建貨幣信用</td></tr>
+            </tbody>
+          </table>
+
+          <h3>雷根主義（Reaganomics）</h3>
+          <p>1981 年，羅納德·雷根（Ronald Reagan）就任美國總統，推行了與柴契爾相似但有其美國特色的政策組合：</p>
+          <ul>
+            <li><strong>大規模減稅（1981 年 ERTA）：</strong>最高所得稅率從 70% 降至 50%（後進一步降至 28%）；企業稅率降低；資本利得稅降低。</li>
+            <li><strong>去管制：</strong>放鬆對交通、能源、金融、電信業的管制。</li>
+            <li><strong>反工會立場：</strong>1981 年解雇拒絕復工的航空管制員（PATCO 事件）成為標誌性事件。</li>
+            <li><strong>國防軍費擴張：</strong>即使減稅，軍費大增，導致財政赤字急劇擴大——被批評為「借來的繁榮（debt-financed prosperity）」。</li>
+          </ul>
+
+          <p>雷根政策的矛盾在於：聲稱要縮小政府，但因軍費支出，聯邦債務佔 GDP 比率從 1981 年的約 26% 升至 1989 年的約 41%。這個矛盾預示了後來「共和黨財政困境」的結構性問題。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="supply-side">
+          <h2>七、供給面經濟學：理論與爭議</h2>
+
+          <h3>拉弗曲線（Laffer Curve）</h3>
+          <p>供給面經濟學（supply-side economics/供給面經濟學）的核心政策工具是「拉弗曲線（Laffer Curve/拉弗曲線）」，據說由經濟學家亞瑟·拉弗（Arthur Laffer）在 1974 年的一次晚餐中畫在餐巾紙上：</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">拉弗曲線的邏輯</div>
+            <pre>
+稅收收入
+   ^
+   |          ●（最大稅收點，某個稅率 t*）
+   |        /   \
+   |      /       \
+   |    /           \
+   |  /               \
+   | /                 \
+   |/                   \
+   ─────────────────────────→ 稅率
+  0%                       100%
+
+稅率 = 0%：政府無收入（無稅）
+稅率 = 100%：政府無收入（無人願意工作）
+中間存在稅收最大化的稅率 t*
+
+供給面邏輯：
+如果當前稅率 > t*，
+減稅 → 工作激勵上升 → 經濟活動增加
+    → 稅基擴大 → 稅收反而增加（「稅收自償/self-financing tax cuts」）</pre>
+          </div>
+
+          <h3>爭議：「滲漏效應（Trickle-Down Economics）」</h3>
+          <p>供給面減稅在實踐中的效果高度爭議。批評者稱之為「滲漏效應（trickle-down economics/滲漏效應）」：富人獲得的減稅利益，據稱會通過投資和就業「滴漏」給中低收入者。但實際的收入分配數據顯示，1980 年代後的減稅政策加劇了收入不平等而非緩解——最頂層 1% 的收入佔比從 1980 年代初開始急速上升（Piketty &amp; Saez 數據），而中位數工資實際停滯。</p>
+
+          <p>學術界的評估較為謹慎：降低過高（confiscatory）稅率確實有促進效率的作用，但「減稅必然自償」的說法在實證上缺乏廣泛支持——美國在雷根減稅後財政赤字事實上擴大了，並未出現預期的稅基擴張效應足以抵補的情況。</p>
+
+          <h3>金融自由化的深層影響</h3>
+          <p>1980 年代新自由主義最深遠的制度影響，可能是金融自由化（financial liberalization/金融自由化）：</p>
+          <ul>
+            <li>廢除存款利率上限（美國 Q 規定的廢除，1980–1986）；</li>
+            <li>放鬆對金融創新（financial innovation/金融創新）的限制，允許更複雜的金融產品；</li>
+            <li>資本帳戶開放（capital account liberalization/資本帳戶開放），使國際資本可以自由流動；</li>
+            <li>1999 年格拉斯—斯蒂格爾法（Glass-Steagall Act）的廢除（Gramm-Leach-Bliley Act），重新允許商業銀行從事投資銀行業務。</li>
+          </ul>
+          <p>這些去管制措施釋放了金融業的創新能量，但也累積了後來 2008 年金融危機（H13）的系統性風險。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：滯脹時代與去通膨時代的資產配置</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">兩個截然不同的市場環境</div>
+            <p><strong>停滯性通膨時期（1973–1982）：最佳資產</strong></p>
+            <p>• <strong>黃金（Gold）：</strong>布列敦森林崩潰後黃金自由定價，在高通膨環境中是最佳的實質資產保護工具。黃金從 1971 年的 $35/盎司漲至 1980 年的 $850/盎司（約 24 倍）。</p>
+            <p>• <strong>大宗商品（Commodities）：</strong>石油本身是通膨的原因，持有能源相關資產（能源公司股票、能源期貨）在 1970 年代表現優異。</p>
+            <p>• <strong>實物資產（Real Assets）：</strong>不動產、農地等實物資產在通膨環境中保值；REITs（不動產投資信託）在 1970 年代表現優於股票。</p>
+            <p>• <strong>最差：長期固定收益（Long-duration Fixed Income）。</strong>通膨侵蝕固定票息的實際價值；長期債券在 1970 年代是最差資產類別之一。</p>
+
+            <p><strong>去通膨時期（1983–2000）：最佳資產</strong></p>
+            <p>• <strong>股票（Equities）：</strong>通膨受控、利率持續下降的環境是股票的黃金時代——利率下降推高股票估值（P/E 擴張），企業盈利也因成本壓力減輕而改善。美股在 1982–2000 年間經歷了有史以來最長的牛市。</p>
+            <p>• <strong>長期公債（Long-term Treasuries）：</strong>伏克爾衝擊後，債券投資者享受了持續 40 年的利率下降周期（bond bull market），長期公債表現優異。2022 年的利率急升終結了這個 40 年循環（詳見 H14）。</p>
+            <p>• <strong>最差：黃金和大宗商品。</strong>去通膨和美元強勢的環境壓制了黃金和商品價格。</p>
+          </div>
+
+          <h3>「大緩和（Great Moderation, 1984–2007）」</h3>
+          <p>伏克爾去通膨成功後，美國進入「大緩和（Great Moderation/大緩和）」時期：GDP 波動性和通膨波動性均顯著降低，商業週期更為溫和。Ben Bernanke（2004）將大緩和的原因歸結為：更好的貨幣政策框架（通膨目標制、央行可信度）、有利的外生因素（中國加入全球化壓低通膨）、以及經濟結構變化（去工業化使供給衝擊影響下降）。大緩和滋養了對宏觀風險的過度樂觀，為 2008 年的金融危機埋下伏筆（詳見 H13）。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「停滯性通膨完全是石油衝擊造成的」</h3>
+            <p><strong>更準確的理解</strong>：石油衝擊是停滯性通膨的觸發器和加速器，但不是唯一原因。1960 年代末美國的財政擴張（越戰 + 大社會計畫）已在石油衝擊前推高了通膨預期；布列敦森林崩潰和美元貶值（1971 年）也輸入了通膨壓力；更重要的是，1970 年代的政策回應選擇了「以通膨換就業」，允許通膨預期脫錨，形成了工資—物價螺旋。石油衝擊在一個已有通膨壓力的體系中點燃了火焰，但燃料早已存在。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「新自由主義只是富人的意識形態，沒有任何智識基礎」</h3>
+            <p><strong>更準確的理解</strong>：新自由主義的興起有其真實的知識回應：1970 年代凱因斯主義「精細調控」確實失敗了；政府管制確實存在大量的效率損失（如航空業的管制、長途電話的壟斷）；工會的過度壟斷力量在某些領域確實扭曲了勞動市場。海耶克的分散知識論、佛里德曼的實證研究，都是嚴肅的知識貢獻。批評新自由主義的分配後果，不等於否定其中有效率意義的部分。學術上的態度應該是：識別哪些政策在特定條件下改善了效率，哪些則主要服務於特定利益集團，而非全盤接受或全盤否定。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「伏克爾升息是唯一壓制通膨的方法」</h3>
+            <p><strong>更準確的理解</strong>：伏克爾的貨幣緊縮在理論和實踐上確實有效，但其成功依賴幾個特定條件：美聯準有足夠的政治獨立性承受巨大的政治壓力（卡特和雷根政府都承受了強大的反對聲浪）；美國有足夠的制度可信度使市場相信緊縮是可持續的；同期油價（1980 年代初）因沙烏地阿拉伯增產而自然下滑，協助了通膨的下行。Thomas Sargent 等人的研究表明，在具有高度財政可信度的條件下，「冷火雞式（cold turkey）」的急劇反通膨可以比漸進主義更少地犧牲產出——關鍵在於預期的快速調整。但在制度可信度不足的國家，相同的緊縮政策可能代價更大。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「拉弗曲線是胡說八道」</h3>
+            <p><strong>更準確的理解</strong>：拉弗曲線作為邏輯命題是正確的——當稅率為 0% 或 100% 時，政府稅收都是零，中間某處必有最大值。爭議在於：最大稅收的稅率 t* 在哪裡？在大多數主流實證研究中，1980 年代的美國最高所得稅率已低於 t*（即減稅並不自償，反而擴大赤字）。但對於超高稅率的邊際效率改善，確實存在理論和部分實證支持。問題在於拉弗曲線被過度普遍化，用來為任何稅率下的任何減稅提供正當性，這超越了其理論的有效範圍。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「為什麼 1970 年代的停滯性通膨能夠引發如此深刻的政策範式轉換？僅僅是因為凱因斯主義失敗了嗎？」</div>
+
+            <p>這個問題要求我們區分「理論層面的失敗」、「政策實施的失敗」，以及「政治機會的利用」三個不同層次的原因。</p>
+
+            <p><strong>理論層面：</strong>凱因斯主義在應對供給衝擊時確實存在理論缺陷——《一般理論》的核心模型假設是需求不足的場景，未能充分處理供給衝擊和預期動態的互動。佛里德曼和菲爾普斯的「預期附加菲利浦曲線」是真正的理論進步，盧卡斯的方法論批評也暴露了傳統宏觀計量模型的弱點。這些是真實的知識貢獻，不是純政治操弄。</p>
+
+            <p><strong>政策實施的失敗：</strong>1960 年代的政策制定者誤讀了菲利浦曲線——把統計相關性當成穩定的政策工具，忽略了預期的作用。如果他們在通膨壓力出現時更早收緊政策（1968–1969 年的尼克森政府實際上嘗試了但過早放棄），停滯性通膨的嚴重程度可能可以降低。從這個角度，失敗部分是凱因斯主義的「誤用（misapplication）」，而非理論本身的必然失敗。</p>
+
+            <p><strong>政治機會的利用：</strong>Dani Rodrik（2011）等學者指出，1970 年代的危機被新自由主義的政策倡導者（特別是芝加哥學派）有效地利用，將一個有限的供給衝擊問題，轉化為對整個政府干預主義框架的否定。海耶克—佛里德曼傳統在思想上的準備（Mont Pelerin Society 自 1947 年起的持續積累）使他們在政策真空出現時具有「入場準備」。這不是陰謀論，而是思想市場的競爭——危機創造了政策議程的窗口，有準備的思想才能填補它。</p>
+
+            <p><strong>結論：</strong>範式轉換的完整解釋需要三個層次的結合——真實的理論失敗、可避免的政策錯誤、以及有準備的替代思想的政治動員。這也是「庫恩的科學革命（Kuhn's Scientific Revolution）」邏輯在社會科學和政策領域的展現：新的範式不只因舊範式的失敗而勝出，更因其解決了「異常（anomalies）」的初始能力以及背後的社會支持結構。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">用「預期附加菲利浦曲線（Expectations-Augmented Phillips Curve）」解釋為什麼 1970 年代各國政府試圖「買進」低失業率，最終只得到更高的通膨。畫出理論圖形並配合歷史數據說明。</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>理論框架的準確掌握：</strong>能清晰說明短期菲利浦曲線（SRPC）在給定預期通膨率下向下傾斜；政府寬鬆政策使失業率低於自然失業率時，沿 SRPC 移動，通膨上升；一旦預期通膨率上調，SRPC 整體上移，失業率回到自然失業率但通膨更高；若政府再度刺激，進入「通膨加速（accelerationist）」動態。</p>
+                  <p><strong>歷史數據連結：</strong>能引用 1970s 的美國數據：1973–1974 年油價衝擊後通膨從 6% 升至 11%，1975 年失業率 8.5% 但通膨仍高達 9%（兩者同時高），說明沿 SRPC 移動已無法解釋——只有 SRPC 上移（預期調整）才能解釋停滯性通膨。</p>
+                  <p><strong>政策啟示：</strong>說明這個分析如何導向「自然失業率（NAIRU）」成為貨幣政策的操作目標，以及通膨預期管理成為現代央行的核心功能。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明預期改變使菲利浦曲線上移，提到通膨和失業同時高的現象，但對動態過程的描述不夠精確，歷史數據引用較為表面。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「菲利浦曲線失效了」，無法說明預期附加的具體機制，無法連結理論與歷史數據。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>SRPC 上移的動態過程描述</td><td>35 分</td></tr>
+                    <tr><td>歷史數據的準確引用與連結</td><td>30 分</td></tr>
+                    <tr><td>政策啟示的推導</td><td>25 分</td></tr>
+                    <tr><td>圖形或邏輯結構的清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">伏克爾的去通膨策略與 Thomas Sargent 所描述的「理性預期去通膨」有何異同？如果市場真的具有完全理性預期，去通膨的成本（失業和衰退）是否可以更低？請評估這個論點。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>Sargent 的論點準確理解：</strong>Sargent（1982）在〈四次大通膨的終結〉中論證，四個超通膨（奧地利、匈牙利、波蘭、德國，1920s）的終結都幾乎「無痛」——通膨在政府宣布可信的財政—貨幣改革後迅速停止，而未造成大量失業。這說明如果改革足夠可信，理性預期者會立即更新預期，不需要「痛苦的漸進過程」。</p>
+                  <p><strong>伏克爾策略的異同：</strong>相同之處：兩者都強調可信承諾的核心作用；不同之處：伏克爾面對的不是超通膨（美國通膨 13%，非幾千%），且在民主政治下不能像 1920s 的財政改革那樣具有制度上的一次性可信變化，需要通過「行動說話（actions speak louder than words）」建立可信度，代價是真實的產出損失。</p>
+                  <p><strong>「完全理性預期」的評估：</strong>在完全理性預期假設下，一個完全可信的貨幣緊縮承諾應該能以極低成本降低通膨（「無犧牲率/zero sacrifice ratio」）。但現實中存在幾個摩擦：① 工資和價格合同的長期性（sticky wages/黏性工資）使即使預期調整，實際工資無法立即下調；② 可信度需要時間建立，在「觀望期」人們持有適應性預期而非完全理性預期；③ 信息不對稱使人們無法完全辨別政策意圖的真實性。因此「無犧牲去通膨」在理論上可能，在現實中幾乎不存在。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明 Sargent 的可信承諾論點，理解伏克爾的策略代價真實，討論理性預期去通膨的可能性，但對「摩擦」的分析不夠深入。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只能說明升息降通膨，無法理解 Sargent 的論點，對理性預期的政策含意幾乎沒有掌握。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>Sargent 論點的準確理解</td><td>30 分</td></tr>
+                    <tr><td>伏克爾策略的比較分析</td><td>30 分</td></tr>
+                    <tr><td>理性預期假設的現實評估</td><td>30 分</td></tr>
+                    <tr><td>論述結構與清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">新自由主義的政策革命（柴契爾與雷根）在哪些方面取得了其倡導者聲稱的成效？在哪些方面留下了後來需要付出代價的遺緒？</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>成效（有實證支持的部分）：</strong>① 通膨控制：1980 年代的貨幣緊縮確實壓制了通膨，建立了後來 40 年的低通膨基礎；② 特定去管制的效率改善：航空、電信去管制降低了消費者成本，增加了市場競爭；③ 英國私有化的部分成效：電信、能源等領域的效率有所提升；④ 勞動市場靈活性：英美在 1990 年代的就業增長部分得益於勞動市場改革。</p>
+                  <p><strong>代價與遺緒（需要後代付出的成本）：</strong>① 收入不平等急劇上升：Piketty 數據顯示，最頂層 1% 收入佔比從 1970s 末的約 10% 升至 2000s 的約 20%，中位數工資實際停滯；② 金融過度自由化：為 2008 年金融危機（H13）積累了系統性風險——格拉斯—斯蒂格爾廢除、影子銀行擴張、過度槓桿；③ 製造業去工業化：英國在柴契爾時代的「去工業化（deindustrialization）」形成了後來脫歐民粹主義的社會基礎；④ 公共服務的長期欠投資。</p>
+                  <p><strong>綜合評估：</strong>優秀答案能避免全盤否定或全盤接受，識別政策在特定歷史時點解決了特定問題（1970s 的通膨危機），但其副作用（不平等、金融過度自由化）在幾十年後才充分顯現，這是任何政策評估都需要考慮的長時間尺度問題。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能列舉一些成效和問題，但論述較為籠統，未能深入連結具體政策與其長期效果，評估較為黑白分明。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「雷根減稅讓富人更富」或「柴契爾很壞」，無法進行有依據的政策評估，缺乏均衡的分析視角。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>有實證支持的政策成效識別</td><td>30 分</td></tr>
+                    <tr><td>長期代價與遺緒的分析深度</td><td>35 分</td></tr>
+                    <tr><td>均衡評估（避免全盤接受或全盤否定）</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h08-bretton-woods.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H08 布列敦森林、美元與福利國家</span>
+          </a>
+          <a href="h10-soviet-collapse.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H10 蘇聯解體、轉型與華盛頓共識</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

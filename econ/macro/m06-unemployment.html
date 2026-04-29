@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M06 失業與勞動市場 — 總體經濟學</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚</span>
+        <span class="sidebar-title">經濟學課程</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">世界經濟史</div>
+        <a href="../history/h01-industrial-revolution.html" class="nav-link">H01 工業革命與現代資本主義</a>
+        <a href="../history/h02-imperialism.html" class="nav-link">H02 帝國主義與全球化第一波</a>
+        <a href="../history/h03-gold-standard.html" class="nav-link">H03 金本位、貿易與貨幣秩序</a>
+        <a href="../history/h04-interwar.html" class="nav-link">H04 兩次大戰間的政治經濟</a>
+        <a href="../history/h05-postwar-miracle.html" class="nav-link">H05 戰後重建與經濟奇蹟</a>
+        <a href="../history/h06-ww1.html" class="nav-link">H06 一戰、戰債與金融失衡</a>
+        <a href="../history/h07-great-depression.html" class="nav-link">H07 大蕭條與凱因斯革命</a>
+        <a href="../history/h08-bretton-woods.html" class="nav-link">H08 布列敦森林與美元霸權</a>
+        <a href="../history/h09-stagflation.html" class="nav-link">H09 停滯性通膨與新自由主義</a>
+        <a href="../history/h10-soviet-collapse.html" class="nav-link">H10 蘇聯解體與華盛頓共識</a>
+        <a href="../history/h11-japan-asia-euro.html" class="nav-link">H11 日本泡沫、亞洲危機與歐元</a>
+        <a href="../history/h12-china-wto.html" class="nav-link">H12 中國改革開放與 WTO</a>
+        <a href="../history/h13-2008.html" class="nav-link">H13 2008 金融危機與 QE 時代</a>
+        <a href="../history/h14-post-covid.html" class="nav-link">H14 疫情衝擊與去全球化</a>
+        <a href="../history/h15-ai-energy.html" class="nav-link">H15 AI、能源轉型與地緣政治</a>
+        <div class="nav-section-title">總體經濟學</div>
+        <a href="m01-gdp.html" class="nav-link">M01 GDP 與國民所得</a>
+        <a href="m02-growth.html" class="nav-link">M02 經濟成長理論</a>
+        <a href="m03-consumption.html" class="nav-link">M03 消費、投資與儲蓄</a>
+        <a href="m04-money.html" class="nav-link">M04 貨幣、銀行與信用</a>
+        <a href="m05-inflation.html" class="nav-link">M05 通膨的多重面貌</a>
+        <a href="m06-unemployment.html" class="nav-link active">M06 失業與勞動市場</a>
+        <a href="m07-expectations.html" class="nav-link">M07 預期形成與行為</a>
+        <a href="m08-islm.html" class="nav-link">M08 IS-LM 與 AD-AS</a>
+        <a href="m09-fiscal.html" class="nav-link">M09 財政政策與債務</a>
+        <a href="m10-monetary.html" class="nav-link">M10 貨幣政策與央行</a>
+        <a href="m11-exchange.html" class="nav-link">M11 匯率與三難困境</a>
+        <a href="m12-inequality.html" class="nav-link">M12 不平等與分配</a>
+        <a href="m13-financial-cycle.html" class="nav-link">M13 金融週期與危機</a>
+        <a href="m14-market-drivers.html" class="nav-link">M14 總體如何驅動市場</a>
+        <a href="m15-memo.html" class="nav-link">M15 總體投資備忘錄</a>
+        <a href="m16-wrong.html" class="nav-link">M16 如何判斷自己錯了</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="topbar-info">
+          <span class="topbar-course">總體經濟學 M06</span>
+          <span class="topbar-title">失業與勞動市場</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="lecture-hero">
+          <div class="lecture-hero-label">Macroeconomics · Lecture 06</div>
+          <h1 class="lecture-hero-title">失業與勞動市場</h1>
+          <p class="lecture-hero-subtitle">Unemployment and Labor Markets</p>
+          <div class="lecture-hero-meta">
+            <span>📊 模組：勞動動態</span>
+            <span>⏱ 建議研讀：90 分鐘</span>
+            <span>🎯 難度：中階</span>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">講座概覽</h2>
+          <p class="section-lead">失業率是最重要的總體經濟指標之一，也是最常被誤解的。「失業率 3.5%」聽起來很低，但這個數字背後隱藏了什麼？誰被算進「失業」、誰被排除在「勞動力」定義之外？失業有哪些不同類型（摩擦性、結構性、循環性），各需要什麼政策回應？菲利浦曲線（Phillips Curve）如何連結失業與通膨，在現代是否仍然有效？本講從勞動市場的測量基礎出發，建立理解失業動態的完整框架。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">一、失業的測量：比你想的更複雜</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 美國勞動市場分類體系（BLS）</div>
+            <pre>
+總人口（Civilian Noninstitutional Population, 16歲以上）
+    │
+    ├── 勞動力（Labor Force）
+    │       │
+    │       ├── 就業者（Employed）
+    │       │   包含：全職、兼職、自雇、臨時工
+    │       │
+    │       └── 失業者（Unemployed）
+    │           定義：過去4週積極求職，但無工作
+    │
+    └── 非勞動力（Not in Labor Force）
+            包含：學生、家庭主婦、退休者、
+                  「氣餒工作者（discouraged workers）」
+
+官方失業率 U-3：
+  = 失業者 / 勞動力
+
+更廣義的 U-6（「真實失業率」）：
+  = (失業者 + 邊際勞工 + 非自願兼職者) / (勞動力 + 邊際勞工)
+  通常比 U-3 高 3–5 個百分點
+
+勞動參與率（Labor Force Participation Rate, LFPR）：
+  = 勞動力 / 工作年齡人口
+
+就業人口比（Employment-Population Ratio）：
+  = 就業者 / 工作年齡人口
+  → 不受「失業者退出勞動力」影響，更穩健的勞動市場健康度指標
+</pre>
+          </div>
+
+          <h3 class="subsection-title">1.1 官方失業率的主要盲點</h3>
+          <p><strong>「氣餒工作者（Discouraged Workers）」：</strong>因長期找不到工作而放棄積極求職的人，不算入「失業者」，反而被歸類為「非勞動力」。在景氣低迷時期，大量工作者可能進入這一類別——使官方失業率看起來「改善」，但實際上是因為更多人放棄求職，而非找到工作。2009–2010 年美國失業率在某些月份看似下降，部分原因正是勞動參與率同步下降（大量人口退出勞動力統計）。</p>
+          <p><strong>非自願兼職（Involuntary Part-Time Employment）：</strong>希望全職工作但只能找到兼職工作的人，在 U-3 中被計為「就業」。在經濟衰退後的復甦期，企業常先增加兼職工時而非全職雇用，使 U-3 改善速度快於實際勞動市場健康度。U-6 的廣義定義正是為了捕捉這一維度。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">二、失業的三種類型</h2>
+
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>類型</th>
+                  <th>成因</th>
+                  <th>特徵</th>
+                  <th>政策回應</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>摩擦性失業</strong><br>(Frictional Unemployment)</td>
+                  <td>勞動市場的搜尋與配對過程</td>
+                  <td>短暫；工作轉換期間；工作機會存在，只是未配對</td>
+                  <td>改善就業資訊（就業媒合平台）；適度失業保險</td>
+                </tr>
+                <tr>
+                  <td><strong>結構性失業</strong><br>(Structural Unemployment)</td>
+                  <td>技能與職位不匹配；產業結構轉型</td>
+                  <td>較長期；受影響者技能過時；特定地區或產業集中</td>
+                  <td>職業培訓；教育改革；再培訓補貼；移民政策</td>
+                </tr>
+                <tr>
+                  <td><strong>循環性失業</strong><br>(Cyclical Unemployment)</td>
+                  <td>景氣衰退、總需求不足</td>
+                  <td>景氣循環同步；廣泛影響多產業；衰退期激增</td>
+                  <td>總體刺激（財政擴張、貨幣寬鬆）以恢復需求</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>自然失業率（Natural Rate of Unemployment, u*）/ NAIRU</strong>：即使在充分就業時，仍存在一定水準的摩擦性與結構性失業——這是「自然」的，反映勞動市場的動態搜尋過程，而非需求不足。NAIRU（Non-Accelerating Inflation Rate of Unemployment，非加速通膨失業率）是指在此失業率水準下，通膨不會因勞動市場過熱而加速上升。當實際失業率低於 NAIRU 時，勞動市場過熱，薪資上漲壓力形成通膨風險；高於 NAIRU 時，存在可以刺激的需求缺口。美國 NAIRU 估計值約 4–4.5%（但近年部分研究認為更低，因勞動市場結構改變）。
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">三、菲利浦曲線：失業與通膨的取捨</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 菲利浦曲線的三個歷史世代</div>
+            <pre>
+第一代：原始菲利浦曲線（Phillips 1958）
+  發現英國 1861–1957 年的統計規律：
+  失業率低 ↔ 薪資（通膨）增速高
+  失業率高 ↔ 薪資（通膨）增速低
+  → 政策含義：政府可以在「高就業/高通膨」與
+    「低就業/低通膨」之間選擇一個政策立足點
+
+  π = f(u)  反向關係
+
+  ┌──────────────────────────────┐
+  │ π ▲                          │
+  │   │ ×  × 短期菲利浦曲線      │
+  │   │    ×  ×                   │
+  │   │        ×   ×              │
+  │   │              ×            │
+  │   └───────────────────── u ▶ │
+  └──────────────────────────────┘
+
+第二代：預期擴增菲利浦曲線（Friedman-Phelps 1968）
+  批評：1960s 美國政府試圖「利用」菲利浦曲線長期低失業
+  → 通膨持續超過預期 → 工人調高薪資要求 → 曲線上移
+  → 短期存在取捨，長期不存在！
+
+  π = πᵉ − α(u − u*)
+
+  長期菲利浦曲線（LRPC）是垂直線：u = u*
+  任何低於 u* 的失業都會導致通膨持續加速
+  → 「加速論（Accelerationist Hypothesis）」
+
+  短期可以選擇點，長期只能在 u* 上
+
+第三代：「平坦化」的現代菲利浦曲線（2000s以來）
+  實證現象：失業率大幅下降，通膨卻保持溫和
+  2016–2019：美國失業率降至 3.5%，通膨仍低於 2%
+  → 曲線明顯「平坦化（flattening）」
+
+  可能原因：
+  • 全球化降低工資訂價能力（中國競爭效應）
+  • 通膨預期被有效錨定（2% 目標公信力高）
+  • 勞動市場搜尋技術改善
+  • 工會力量下降
+
+2021–22 年爭議：
+  失業率快速下降 → 通膨急升
+  「菲利浦曲線是否重新陡峭化？」仍是未解問題
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">四、奧肯定律（Okun's Law）：失業與 GDP 的連結</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-label">核心概念</div>
+            <strong>奧肯定律（Okun's Law, 1962）</strong>：Arthur Okun 發現，實際 GDP 每比潛在 GDP（Potential GDP）低 1 個百分點，失業率大約高 0.5 個百分點（後來研究估計係數在 0.3–0.5 之間）。反之，要使失業率下降 1 個百分點，GDP 需成長約高於潛在增長率 2–3 個百分點。這個關係使央行與政府可以透過 GDP 預測來推算失業率的走向，反之亦然。
+          </div>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 奧肯定律的應用</div>
+            <pre>
+奧肯定律方程式：
+  Δu ≈ −0.5 × (g_Y − g_Y*)
+
+  Δu   = 失業率變化
+  g_Y  = 實際 GDP 成長率
+  g_Y* = 潛在 GDP 成長率（約 1.5–2%，美國）
+
+實例：若 GDP 成長 3.5%（超過潛在 2%）：
+  Δu = −0.5 × (3.5% − 2%) = −0.75 個百分點
+  → 失業率大約下降 0.75pp
+
+重要含義：
+• 光是「GDP 正成長」不足以降低失業率
+  需要「超過潛在增長率」的成長，才能吸收新增勞動力
+• 若 GDP 成長 = 潛在增長率（約 2%），失業率幾乎不變
+  因為新增勞動力（人口成長）同步進入市場
+
+• 產出缺口（Output Gap）= (Y − Y*) / Y*
+  負缺口（Y &lt; Y*）→ 循環性失業存在，有刺激空間
+  正缺口（Y > Y*）→ 過熱，通膨壓力上升
+</pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">五、勞動市場的結構性變化：大辭職、AI 衝擊與工資黏性</h2>
+
+          <h3 class="subsection-title">5.1 「大辭職（Great Resignation）」現象</h3>
+          <p>2021–2022 年，美國每月辭職人數創歷史記錄（約 400–450 萬人次），推動「大辭職」的結構性因素包括：</p>
+          <ul>
+            <li><strong>疫情改變了工作偏好：</strong>遠端工作的普及使工作者開始重新評估工作與生活的平衡，部分人主動降低工時或退出勞動市場。</li>
+            <li><strong>超額儲蓄提供緩衝：</strong>疫情期間的政府補貼使低收入工作者積累了一定儲蓄，降低了「立即接受任何工作」的緊迫性。</li>
+            <li><strong>服務業的條件改善壓力：</strong>餐飲、零售業工人用「不工作」為籌碼，迫使雇主提高薪資與工作條件。</li>
+          </ul>
+
+          <h3 class="subsection-title">5.2 名目工資黏性（Nominal Wage Rigidity）</h3>
+          <div class="case-study">
+            <div class="case-study-label">案例研究 Case Study</div>
+            <strong>為何名目薪資難以下調？「效率工資（Efficiency Wage）」理論</strong>
+            <p>當景氣衰退時，理論上薪資應該下降以清除勞動市場。但現實中，企業極少降低名目薪資——即使面臨嚴重需求萎縮，也傾向以「解雇」代替「降薪」。原因在於效率工資理論：①<strong>道德風氣</strong>：薪資被視為企業對員工的「公平交換」，降薪會嚴重打擊士氣、降低生產力，甚至引發能力最強的員工（有外部選擇）率先離職；②<strong>逆向選擇</strong>：降薪後留下的，可能是外部選擇差（能力較低）的員工，整體勞動力品質下降；③<strong>社會規範</strong>：名目薪資下調在社會文化上被視為對工人的背叛，損害品牌雇主形象。名目工資黏性的宏觀含義：景氣衰退時，工資無法快速下調 → 企業選擇解雇 → 失業飆升 → 這是凱因斯「非自願失業（involuntary unemployment）」得以長期存在的根本原因，也是積極財政政策的理論依據。</p>
+          </div>
+
+          <h3 class="subsection-title">5.3 薩姆規則（Sahm Rule）：衰退的早期預警</h3>
+          <p>Claudia Sahm（2019）提出一個簡單但在美國歷史上幾乎 100% 準確的衰退指標：</p>
+          <p><strong>薩姆規則</strong>：當 U-3 失業率的三個月移動平均，比過去 12 個月的最低值<strong>高出 0.5 個百分點或以上</strong>時，美國已進入（或即將進入）衰退。</p>
+          <p>薩姆規則在 2023 年 7 月短暫觸發（失業率從低點上升約 0.5pp），引發市場對衰退的擔憂，但後來修正的數據顯示觸發值未達閾值，且就業市場並未出現大規模惡化。這一案例顯示，即使是簡單且歷史上可靠的指標，在非典型景氣循環中也需要謹慎解讀。</p>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">六、市場應用：勞動市場數據如何驅動資產定價</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">▶ 就業報告 → 資產市場傳導</div>
+            <div class="transmission-chain">
+              <div class="transmission-step">非農就業<br>數據（NFP）</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">Fed 政策<br>預期調整</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">短端利率<br>期貨定價</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">美債殖利率<br>曲線移動</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">股票<br>估值重設</div>
+              <div class="transmission-arrow">→</div>
+              <div class="transmission-step">美元<br>匯率反應</div>
+            </div>
+          </div>
+
+          <p>美國非農就業報告（Non-Farm Payrolls, NFP）是全球金融市場最重要的單一月度數據，每月第一個週五美東時間 8:30 公布。市場反應框架：</p>
+          <ul>
+            <li><strong>NFP 大幅超預期（就業強勁）</strong>：→ Fed 降息預期減少或升息預期增加 → 短端利率上升 → 美元強勢 → 股市通常承壓（除非基本面預期同步上修）。</li>
+            <li><strong>NFP 大幅低於預期（就業疲弱）</strong>：→ 降息預期增加 → 短端利率下降 → 美元弱 → 股市反應複雜（壞消息可能是好消息：降息帶來估值支撐；或是壞消息就是壞消息：盈利下修風險）。</li>
+            <li><strong>薪資成長率（Average Hourly Earnings）</strong>：被視為通膨壓力的前瞻指標。薪資成長超預期 → 核心通膨憂慮 → Fed 維持緊縮 → 對債市不利。</li>
+          </ul>
+        </section>
+
+        <!-- Misconceptions -->
+        <section class="section">
+          <h2 class="section-title">七、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 01</div>
+            <strong>「失業率越低越好，政府應追求零失業率。」</strong>
+            <p>「零失業率」在現實中既不可能也不可取。摩擦性失業（求職配對期間）是正常、健康的市場動態——工作者在不同工作間流動，尋找更好配對，有助於資源配置效率。若強制「零失業率」，意味著禁止勞動市場流動，實際上是壓制了效率提升的機制。更重要的是，過低失業率（低於 NAIRU）會引發通膨螺旋，最終使經濟更不穩定。目標應是「充分就業（full employment）」——維持自然失業率附近，消除循環性失業，而非追求零失業。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 02</div>
+            <strong>「失業率下降就代表勞動市場在改善。」</strong>
+            <p>失業率下降可以有兩種截然不同的原因：①失業者找到工作（真正的改善）；②失業者放棄求職、退出勞動力（「氣餒工作者」效應，虛假的改善）。分辨兩者需要同時觀察勞動參與率和就業人口比。若失業率下降但勞動參與率同步下降，很可能是「氣餒效應」主導，而非就業市場真正改善。2009–2012 年美國的失業率「改善」，相當程度反映了勞動參與率的下降。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解 03</div>
+            <strong>「最低工資提高必然增加失業率。」</strong>
+            <p>標準競爭市場模型確實預測，最低工資高於均衡工資會產生勞動力供給超過需求（失業）。但 Card & Krueger（1994）的里程碑研究發現，紐澤西提高最低工資後，快餐業就業人數<em>增加</em>而非減少——與標準模型預測相反。原因在於快餐業等低薪產業具有「獨買（monopsony）」特徵——雇主對薪資有定價權，均衡薪資本就低於競爭水準，適當提高最低工資反而可以靠近競爭均衡。David Card 因此項研究（及其他勞動市場研究）獲得 2021 年諾貝爾經濟學獎。現代學界共識：最低工資對就業的影響取決於提升幅度（溫和提升影響有限；大幅提升才可能顯著增加失業），且依勞動市場競爭程度而異。</p>
+          </div>
+        </section>
+
+        <!-- Professor's Answer -->
+        <section class="section">
+          <h2 class="section-title">八、教授標準答案</h2>
+          <p class="section-lead">試題：「菲利浦曲線是否已死？2010 年代的低失業率-低通膨現象，與 2021–2022 年的低失業率-高通膨現象，分別對菲利浦曲線的有效性意味著什麼？」</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">■ 標準答案結構</div>
+            <pre>
+一、菲利浦曲線「平坦化」（2010s）的解釋：
+
+   現象：U 低於 NAIRU 估計值，但通膨仍低
+   解釋框架：
+
+   ① 通膨預期錨定：2% 目標的公信力高
+      → 薪資談判內建 2% 通膨預期
+      → 即使失業率低，通膨不會「漂移」
+
+   ② 全球化壓制薪資訂價能力
+      → 製造業工人面對中國競爭，薪資談判力弱
+
+   ③ NAIRU 可能下移（結構性改變）
+      → 勞動市場搜尋技術（Indeed、LinkedIn）提升
+        使摩擦性失業下降
+      → 真正的「充分就業」失業率比過去更低
+
+   ④ 非線性關係：菲利浦曲線可能在低通膨區間「更平坦」
+      只有在通膨已高時，才會回到陡斜狀態
+
+二、2021–22 年的再陡峭化：
+
+   現象：失業率快速下降，通膨急速上升
+   BUT：這不等於「菲利浦曲線變陡」
+
+   分析：
+   • 供給衝擊（供應鏈中斷、俄烏能源）= AS 左移
+     這與菲利浦曲線無關（菲利浦曲線是需求面關係）
+   • 財政過度刺激 = AD 大幅右移 + 失業快速下降
+   • 兩者疊加 → 通膨 >> 菲利浦曲線的純需求預測
+
+三、結論：
+   菲利浦曲線並未「死亡」，而是：
+   ① 在低通膨-低預期波動環境中更平坦
+   ② 當供給衝擊或預期失錨時，可能急速「重新活化」
+   ③ 現代版本需要引入通膨預期和供給衝擊修正：
+      π = πᵉ − α(u − u*) + supply shock
+
+   實際意義：菲利浦曲線是一個「條件性」關係，
+   而非穩定的結構性方程——需要考慮預期形成機制
+   才能正確解讀（這連結了下一講：M07 預期形成）
+</pre>
+          </div>
+        </section>
+
+        <section class="exercise-section">
+          <h2 class="exercise-title">課堂練習</h2>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 01</div>
+            <div class="exercise-question">
+              <strong>數據解讀題：</strong>某國今年 1 月的勞動市場數據如下：工作年齡人口 1,000 萬；就業人數 620 萬；積極求職但未就業者 30 萬；已放棄求職者 20 萬；非自願兼職者 15 萬。請計算：①官方失業率（U-3）；②廣義失業率（U-6，含氣餒工作者與非自願兼職）；③勞動參與率；④就業人口比。並解釋四個數字之間的信息差異告訴你什麼。
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>勞動力</strong> = 就業 + 積極求職失業 = 620 + 30 = <strong>650 萬</strong>；<strong>U-3</strong> = 30 / 650 = <strong>4.6%</strong>。②<strong>U-6</strong> = (失業 + 放棄求職 + 非自願兼職) / (勞動力 + 放棄求職) = (30 + 20 + 15) / (650 + 20) = 65 / 670 = <strong>9.7%</strong>。③<strong>勞動參與率</strong> = 勞動力 / 工作年齡人口 = 650 / 1000 = <strong>65%</strong>。④<strong>就業人口比</strong> = 就業 / 工作年齡人口 = 620 / 1000 = <strong>62%</strong>。<strong>信息差異解讀</strong>：U-3（4.6%）vs. U-6（9.7%）的差距高達 5.1pp，說明勞動市場的真實壓力遠高於官方數字呈現的。20 萬「放棄求職者」（約為積極求職者的 67%）顯示市場可能存在系統性的就業困難，而非正常的摩擦性失業。若未來景氣改善，這 20 萬人可能重返勞動力——使失業率短期上升（但這是「真實改善」而非惡化）。就業人口比（62%）是最不受定義問題影響的健康指標。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>U-3 計算正確，但 U-6 計算時忘記將「放棄求職者」加入分母，或解讀部分缺乏對「放棄求職者重返市場效應」的深入分析。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>將放棄求職者或非自願兼職者錯誤地計入「失業者」或「勞動力」中，導致計算混亂。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>U-3 計算正確</td><td>20 分</td></tr>
+                  <tr><td>U-6 計算正確（含分母調整）</td><td>25 分</td></tr>
+                  <tr><td>勞動參與率與就業人口比計算</td><td>20 分</td></tr>
+                  <tr><td>四指標差異的信息解讀</td><td>35 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 02</div>
+            <div class="exercise-question">
+              <strong>政策分析題：</strong>某國面臨以下情況：GDP 成長 1.5%，潛在 GDP 成長率估計為 2%，失業率 6%（NAIRU 估計為 5%），通膨 2.5%（目標 2%）。請用奧肯定律估算循環性失業，並分析：①財政刺激是否適合？②貨幣政策是否應降息？③是否存在政策矛盾？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p><strong>奧肯定律估算</strong>：GDP 成長（1.5%）&lt; 潛在（2%），差距 = −0.5pp；奧肯係數 ≈ −0.5，則循環性失業 ≈ 0.5 × 0.5 = <strong>0.25pp</strong>（即約 0.25pp 的失業是循環性的，可透過需求刺激吸收）；實際失業（6%） − NAIRU（5%）= 1pp 的過剩失業，其中約 0.25pp 是循環性，其餘 0.75pp 可能是結構性或測量誤差。<strong>①財政刺激</strong>：GDP 低於潛在，存在負產出缺口（output gap < 0）→ 原則上支持財政刺激。但刺激幅度需謹慎——通膨已略高於目標（2.5% vs. 2%），過大刺激可能加速通膨。應採用有針對性的刺激（如職業培訓解決結構性失業），而非廣泛擴張。<strong>②貨幣降息</strong>：降息可刺激需求，有助於縮短負缺口。但通膨 2.5% 略高於目標 → 降息可能進一步推升通膨，與目標衝突。若通膨預期仍錨定，溫和降息仍可考慮；若通膨預期有上升跡象，降息應謹慎。<strong>③政策矛盾</strong>：此情境確實存在矛盾——負產出缺口（支持寬鬆）vs. 通膨略高於目標（支持緊縮）。最優組合：財政政策聚焦結構性（職訓、供給側），貨幣政策維持中性偏緊（不降息），等待通膨回到 2% 後再考慮降息。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能識別負產出缺口和通膨略高的矛盾，但奧肯定律的應用不完整，或政策建議缺乏「財政聚焦結構性 vs. 貨幣謹慎」的具體組合邏輯。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「失業高，應降息刺激」，完全忽略通膨高於目標的政策約束，無法識別政策矛盾。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>奧肯定律計算循環性失業</td><td>25 分</td></tr>
+                  <tr><td>財政刺激的分析（含通膨約束）</td><td>25 分</td></tr>
+                  <tr><td>貨幣降息的分析（矛盾識別）</td><td>25 分</td></tr>
+                  <tr><td>政策組合建議的邏輯一致性</td><td>25 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-number">練習 03</div>
+            <div class="exercise-question">
+              <strong>結構分析題：</strong>AI 和自動化可能在未來 10 年顯著改變勞動市場。請分析：①AI 主要影響的是哪種失業類型（摩擦性/結構性/循環性）？②「AI 造成的失業」應由什麼政策工具回應？③歷史上（農業機械化、工業化、IT 革命）類似的技術性失業最終如何解決？對 AI 時代有何啟示？
+            </div>
+            <button class="exercise-toggle" onclick="toggleAnswer(this)">顯示標準答案與評分標準</button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-quality">優秀答案（85–100 分）</div>
+                <p>①<strong>主要是結構性失業</strong>：AI 取代的是特定類型的認知任務（可文件化的例行任務），使某些職業技能永久性過時（如部分文書、資料分析、基礎法律工作），而非只是暫時找不到工作（摩擦性）或總需求不足（循環性）。但在短期快速自動化期間，也可能產生大規模摩擦性失業（大量工作者需在短時間內尋找新職業）。②<strong>政策工具</strong>：結構性失業的政策工具（而非需求刺激）：職業再培訓（Reskilling）計劃（如新加坡的 SkillsFuture）；全民基本收入（UBI）作為轉型期的收入緩衝（學界實驗如芬蘭、美國斯托克頓均有研究）；教育系統改革（從記憶/例行技能轉向創意/社會/批判性思維）；可攜式社會保障（將健保、退休金從雇主捆綁轉為個人持有，降低工作流動的摩擦）。③<strong>歷史先例的啟示</strong>：農業機械化（19–20 世紀）：美國農業就業從 50% → &lt;2%，但總體就業率未長期下降——因工業化創造了新職業（工廠工人、服務業）。IT 革命（1980–2000）：辦公室工作者技能需重大升級，但新工作類型（軟體工程師、UX 設計師、數據分析師）大量創生。歷史規律：技術創造的「新任務」最終超過被取代的「舊任務」——但轉型期（通常 10–30 年）的成本分布高度不均等，低技能、低彈性的工作者承擔最大代價。AI 時代的差異：速度可能更快（軟體可瞬間部署），且此次受衝擊的主要是「高技能例行任務」（前所未有），轉型期的再培訓挑戰更大。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-quality">一般答案（60–74 分）</div>
+                <p>能識別結構性失業，並提出再培訓作為政策工具，且有基本歷史例證，但未能深入分析「新任務創造」的機制，也未對 AI 時代的特殊性（速度更快、衝擊高技能）進行比較討論。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-quality">薄弱答案（40 分以下）</div>
+                <p>只說「AI 會造成失業，政府要幫助失業者」，缺乏結構性分析和歷史比較框架。</p>
+              </div>
+              <table class="rubric-table">
+                <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                <tbody>
+                  <tr><td>正確識別結構性失業為主，並說明原因</td><td>25 分</td></tr>
+                  <tr><td>政策工具（再培訓/UBI/社保改革）的具體分析</td><td>30 分</td></tr>
+                  <tr><td>歷史先例的引用與「新任務創造」機制</td><td>25 分</td></tr>
+                  <tr><td>AI 時代的差異性（速度/對象）分析</td><td>20 分</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="m05-inflation.html" class="lecture-nav-btn">← M05 通膨的多重面貌</a>
+          <a href="m07-expectations.html" class="lecture-nav-btn">M07 預期形成與行為 →</a>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/nav.js"></script>
+  <script>
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      answer.classList.toggle('visible');
+      btn.textContent = answer.classList.contains('visible') ? '隱藏答案' : '顯示標準答案與評分標準';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H02 國家能力、稅收、戰爭與市場形成 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H02 國家能力、稅收、戰爭與市場形成</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <header class="article-header">
+          <div class="article-part">第一部：世界經濟史 · Part I: World Economic History</div>
+          <div class="article-num">H02</div>
+          <h1 class="article-title">國家能力、稅收、戰爭與市場形成</h1>
+          <p class="article-subtitle">State Capacity, Taxation, War &amp; Market Formation — 國家不是市場的對立面，而是市場的創造者</p>
+          <div class="article-meta">
+            <span class="article-meta-item">閱讀時間約 22 分鐘</span>
+            <span class="article-meta-item">·</span>
+            <span class="article-meta-item">練習題 3 題</span>
+            <span class="article-meta-item">·</span>
+            <span class="article-meta-item">涵蓋時期：約 1000 — 1800 CE</span>
+          </div>
+        </header>
+
+        <nav class="toc">
+          <div class="toc-label">本講內容</div>
+          <ol class="toc-list">
+            <li class="toc-item"><a href="#intro"><span class="toc-num">01</span>開場：市場從哪裡來？</a></li>
+            <li class="toc-item"><a href="#state-capacity"><span class="toc-num">02</span>國家能力：定義與衡量</a></li>
+            <li class="toc-item"><a href="#war-and-tax"><span class="toc-num">03</span>戰爭如何逼出現代財政國家</a></li>
+            <li class="toc-item"><a href="#transmission"><span class="toc-num">04</span>傳導機制：戰爭→稅收→官僚→市場</a></li>
+            <li class="toc-item"><a href="#england"><span class="toc-num">05</span>案例：英國財政軍事國家的崛起</a></li>
+            <li class="toc-item"><a href="#china"><span class="toc-num">06</span>案例：中國的國家能力悖論</a></li>
+            <li class="toc-item"><a href="#markets"><span class="toc-num">07</span>國家如何創造市場</a></li>
+            <li class="toc-item"><a href="#policy"><span class="toc-num">08</span>政策取捨：強國家的雙刃劍</a></li>
+            <li class="toc-item"><a href="#modern"><span class="toc-num">09</span>現代含義：弱國家為何難以發展</a></li>
+            <li class="toc-item"><a href="#misconceptions"><span class="toc-num">10</span>常見誤解</a></li>
+            <li class="toc-item"><a href="#exercises"><span class="toc-num">11</span>練習題與評分標準</a></li>
+          </ol>
+        </nav>
+
+        <!-- 01 -->
+        <h2 id="intro" class="section-anchor">01 開場：市場從哪裡來？</h2>
+
+        <p>
+          主流經濟學教科書的標準敘事是：政府與市場是相互對立的。政府干預扭曲市場，市場越自由越有效率。然而，歷史告訴我們一個截然不同的故事：<strong>沒有強大的國家，就沒有運作良好的市場。</strong>
+        </p>
+        <p>
+          市場需要財產權（property rights）才能運作——沒有保護財產不被掠奪的力量，誰會投資？市場需要契約執行（contract enforcement）——沒有可信的司法體系，長期交易和信用就不可能存在。市場需要標準化貨幣——沒有國家壟斷的貨幣，交易成本高到令人咋舌。市場需要基礎設施——道路、港口、度量衡的標準化，這些都是公共財，私人無法單獨提供。
+        </p>
+        <p>
+          這些都是國家提供的。更根本的是：現代「財政國家」（fiscal state）本身，並不是社會自然演化的結果，而是幾個世紀戰爭壓力下被強制打造出來的。這一講的核心主題是：<strong>戰爭、稅收、官僚制度與市場形成之間，有一條清晰的因果鏈。</strong>
+        </p>
+
+        <!-- 02 -->
+        <h2 id="state-capacity" class="section-anchor">02 國家能力：定義與衡量</h2>
+
+        <p>
+          「國家能力」（State Capacity）是政治經濟學中的核心概念，指國家實施其決策的實際能力——包括徵稅、維持秩序、執行法律、提供公共財。
+        </p>
+        <p>
+          衡量歷史上的國家能力，學者通常使用幾個代理指標：
+        </p>
+        <ul>
+          <li><strong>稅收佔 GDP 的比率（Tax-to-GDP ratio）</strong>：這是最直接的衡量，反映國家從社會提取資源的能力</li>
+          <li><strong>官僚密度（Bureaucratic density）</strong>：每千人中的官方行政人員數量，反映行政滲透能力</li>
+          <li><strong>人口普查能力（Census capacity）</strong>：國家能否準確掌握其人口，是行政能力的基本指標</li>
+          <li><strong>法院密度與司法一致性</strong>：契約執行能力的衡量</li>
+        </ul>
+
+        <div class="blackboard">
+          <div class="blackboard-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
+            核心概念 · Core Concept
+          </div>
+          <h3>韋伯的國家定義與財政國家</h3>
+          <p>
+            社會學家馬克斯·韋伯（Max Weber）將現代國家定義為「在特定領土上，<strong>成功壟斷合法物理暴力使用</strong>的人類共同體」。這個定義的關鍵在「壟斷」：當一個組織能夠有效阻止其他行為者（盜匪、封建諸侯、私人軍隊）使用暴力，它就成為了「國家」。
+          </p>
+          <p>
+            「財政軍事國家」（Fiscal-Military State）則是歷史學家約翰·布魯爾（John Brewer）在研究 17–18 世紀英國時提出的概念：一個能夠有效徵稅、借貸，並將這些資源轉化為軍事力量的國家組織。這種國家的出現，是現代世界的門檻事件之一。
+          </p>
+          <div class="blackboard-eq">
+            強國家能力 → 有效財政汲取 → 可信的主權債務 → 更低的借貸成本 → 更強的軍事力量
+          </div>
+          <p>
+            這個循環是自我強化的：強國家能籌集更多資源，用資源打贏戰爭，戰勝後更能強化其國家能力。
+          </p>
+        </div>
+
+        <!-- 03 -->
+        <h2 id="war-and-tax" class="section-anchor">03 戰爭如何逼出現代財政國家</h2>
+
+        <p>
+          查爾斯·蒂利（Charles Tilly）在其經典著作《強制、資本與歐洲國家》（<em>Coercion, Capital, and European States, AD 990–1992</em>）中提出了一個震撼性的命題：<strong>戰爭製造了國家，國家製造了戰爭。</strong>
+        </p>
+        <p>
+          邏輯如下：中世紀的歐洲是碎片化的政治景觀——無數諸侯、城市邦國、教會領地相互競爭。要打贏一場戰爭，你需要持久的資金流。持久的資金流需要有效的稅收體系。有效的稅收體系需要官僚機構去評估、徵收和管理。官僚機構需要書面語言、標準化行政程序和某種形式的公民身份識別。
+        </p>
+        <p>
+          這一切都是在戰爭壓力下，在生死存亡的逼迫下被建立起來的。<strong>不能建立這些能力的政治實體被消滅或吞併；能夠建立這些能力的存活下來，成為現代民族國家（nation-state）的前身。</strong>
+        </p>
+        <p>
+          蒂利估計，從 1500 年到 1900 年，歐洲的國家數量從約 500 個縮減到約 25 個。這是一場殘酷的政治選擇壓力（selection pressure），淘汰了行政效率低下的政治實體，留下了能夠有效動員資源的組織——也就是現代國家。
+        </p>
+
+        <!-- 04 Transmission -->
+        <h2 id="transmission" class="section-anchor">04 傳導機制：戰爭→稅收→官僚→市場</h2>
+
+        <div class="transmission">
+          <div class="transmission-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            傳導機制圖 · Transmission Mechanism
+          </div>
+          <div class="transmission-title">戰爭壓力如何催生現代財政國家與市場</div>
+          <div class="t-chain">
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>生存壓力（Existential Threat from War）</strong>
+                <span>國家面臨軍事競爭：不籌資就滅亡，激勵統治者建立持久稅收</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>財政能力建設（Fiscal Infrastructure）</strong>
+                <span>建立官僚機構、土地登記、人口普查——國家開始「認識」其領土和人民</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>可信的主權信用（Sovereign Creditworthiness）</strong>
+                <span>能穩定徵稅的政府，才能向銀行家借長期債務、以較低利率融資</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>制度外溢（Institutional Spillovers）</strong>
+                <span>為稅收而建立的法律體系、度量衡標準、財產登記，同時服務於商業交易</span>
+              </div>
+            </div>
+            <div class="t-step">
+              <div class="t-connector"><div class="t-dot"></div><div class="t-line"></div></div>
+              <div class="t-content">
+                <strong>市場形成（Market Formation）</strong>
+                <span>統一的財產權、可執行的契約、標準化貨幣——現代市場的前提條件得以建立</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-branch">
+            <div class="t-branch-label">關鍵條件分支</div>
+            <p>若統治者能夠在徵稅的同時給予納稅人某種形式的政治代表權（如英國議會），稅收更為穩定且可信。若純靠強制，長期往往觸發叛亂，反而削弱財政能力。「代議政治」（representative institutions）是財政能力的重要補充。</p>
+          </div>
+        </div>
+
+        <!-- 05 England Case -->
+        <h2 id="england" class="section-anchor">05 案例：英國財政軍事國家的崛起</h2>
+
+        <div class="case-study">
+          <div class="cs-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+            歷史案例 · Case Study
+          </div>
+          <div class="cs-title">英國（1688–1815）：財政軍事國家的典範</div>
+          <p>
+            1688 年的「光榮革命」（Glorious Revolution）是英國財政史的分水嶺。荷蘭執政者威廉三世登上英國王位，帶來了荷蘭更成熟的財政技術——特別是「可信的政府借貸」的概念。
+          </p>
+          <p>
+            在此之前，英國君主借錢常常違約，貸款利率極高（有時達 20–30%）。光榮革命後，議會取得了對財政的最高控制權——「沒有議會批准，不得徵稅」。這個看似限制王權的安排，反而使政府信用大幅提升：債權人現在相信，由議會代表的納稅人共同體不會讓政府違約（因為違約損害的是他們自己的財產）。英國政府借貸利率在 18 世紀穩定下降至 3–4%。
+          </p>
+          <p>
+            結果是：英國能夠以低成本籌集大量戰爭資金。在 1689–1815 年間的多場大戰中（西班牙王位繼承戰爭、七年戰爭、拿破崙戰爭），英國的財政韌性遠超法國——儘管法國人口和經濟規模都更大。<strong>法國在每次大型衝突中都面臨財政危機，最終導致了 1789 年的大革命；英國則通過國債市場，每次都能撐到勝利。</strong>
+          </p>
+          <p>
+            布魯爾的研究顯示，英國的稅收佔國民所得比率從 1680 年代的約 5% 上升到拿破崙戰爭時期的約 20%——這是一個巨大的財政汲取能力的建設。這些稅收所建立的行政基礎設施（海關、消費稅局、財政部），後來也成為了商業活動的重要制度支柱。
+          </p>
+        </div>
+
+        <!-- 06 China Case -->
+        <h2 id="china" class="section-anchor">06 案例：中國的國家能力悖論</h2>
+
+        <div class="case-study">
+          <div class="cs-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+            歷史案例 · Case Study
+          </div>
+          <div class="cs-title">中國：高度集中的國家能力，為何沒有催生工業革命？</div>
+          <p>
+            表面上，中國應該是最有可能率先工業化的國家：中央集權的官僚體系可追溯至秦漢，科舉制度創造了世界上最早的精英選拔官僚機構，宋代已有紙幣、信用工具和複雜的市場體系。然而工業革命在英國，而非中國，發生。
+          </p>
+          <p>
+            這個「李約瑟問題」（Needham Question）——為什麼科技先進的中國沒有發展出現代科學和工業資本主義？——是經濟史上最重要的問題之一。部分答案涉及國家能力的性質差異：
+          </p>
+          <p>
+            中國的國家能力是「汲取型」（extractive）而非「賦權型」（enabling）：它擅長徵稅和維持秩序，但未建立保護私人財產的強健法律體系，也未形成商業利益能夠影響政策的代議制度。商人地位低下，商業財富隨時可能被帝國徵用——這根本性地壓制了長期投資的激勵。
+          </p>
+          <p>
+            此外，中國的統一（相對於歐洲的碎片化）消除了政治競爭的壓力。歐洲各國在競爭中被迫創新，引入更有效率的制度以吸引資本和人才；中國皇帝沒有可以逃去的「競爭對手」。統一是穩定的來源，但也是制度競爭的缺席。
+          </p>
+        </div>
+
+        <!-- 07 -->
+        <h2 id="markets" class="section-anchor">07 國家如何創造市場</h2>
+
+        <p>
+          一旦我們接受「國家是市場的前提條件」，就能理解許多歷史現象：
+        </p>
+
+        <h3>財產權的建立</h3>
+        <p>
+          英格蘭的「圈地運動」（Enclosure Movement，16–19 世紀）是一個典型例子：議會立法將公共土地劃入私人所有，強制推行清晰的財產權。這在道德上充滿爭議（趕走了依賴公地的農民），但它確實創造了可以被買賣、抵押、投資的清晰財產，是資本主義農業和隨後工業化的基礎。
+        </p>
+
+        <h3>標準化度量衡與貨幣</h3>
+        <p>
+          中世紀歐洲的貿易困境之一是度量衡的混亂：不同城市的「一磅」「一碼」可能相差甚遠。法國大革命後拿破崙推行的公制（metric system），是國家強制標準化的典型案例。統一的度量衡大幅降低了交易成本，是「市場整合」（market integration）的先決條件。
+        </p>
+
+        <h3>司法體系與契約執行</h3>
+        <p>
+          正式的法院體系、統一的商法（commercial law）使跨地域的長期商業關係成為可能。在沒有可信司法的環境下，商業僅限於家族或宗教共同體內的信任圈，規模天然受限。強大的司法能力讓陌生人之間的交易成為可能——這是市場規模擴大的關鍵。
+        </p>
+
+        <!-- 08 Policy Tradeoffs -->
+        <h2 id="policy" class="section-anchor">08 政策取捨：強國家的雙刃劍</h2>
+
+        <div class="policy-grid">
+          <div class="policy-actor">
+            <div class="policy-actor-name">強國家的收益</div>
+            <ul>
+              <li>有效提供公共財（國防、基礎設施、法律）</li>
+              <li>市場失靈的糾正能力</li>
+              <li>維持社會秩序、降低交易成本</li>
+              <li>主權信用支撐長期公共投資</li>
+            </ul>
+          </div>
+          <div class="policy-actor">
+            <div class="policy-actor-name">強國家的風險</div>
+            <ul>
+              <li>掠奪風險（predatory state）：汲取資源但不提供公共財</li>
+              <li>壓制商業創新（「朕即法律」）</li>
+              <li>戰爭成癮（強大的戰爭機器反而更愛打仗）</li>
+              <li>政治鞏固排擠制度競爭</li>
+            </ul>
+          </div>
+          <div class="policy-actor">
+            <div class="policy-actor-name">弱國家的代價</div>
+            <ul>
+              <li>財產不安全 → 無長期投資</li>
+              <li>契約不可執行 → 市場規模受限</li>
+              <li>無法提供基礎設施 → 高交易成本</li>
+              <li>政府違約 → 高借貸成本</li>
+            </ul>
+          </div>
+          <div class="policy-actor">
+            <div class="policy-actor-name">制度的關鍵設計</div>
+            <ul>
+              <li>代議制度：讓納稅人參與預算決策</li>
+              <li>司法獨立：保護財產不受政治侵犯</li>
+              <li>分權競爭：聯邦制維持制度創新壓力</li>
+              <li>透明度：降低腐敗的機會成本</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 09 -->
+        <h2 id="modern" class="section-anchor">09 現代含義：弱國家為何難以發展</h2>
+
+        <p>
+          這一講對理解今天的發展經濟學有直接含義。許多最貧窮的國家——尤其是撒哈拉以南非洲的部分國家——面對的核心問題不是缺乏市場，而是缺乏能夠支撐市場運作的國家基礎設施。
+        </p>
+        <p>
+          後殖民國家繼承的邊界是殖民者為行政方便劃定的，完全忽視了族群、語言和文化的自然疆界。這帶來了持續的國家合法性危機：公民對國家沒有認同感，納稅意願低，政府財政脆弱，更難提供公共財，又進一步削弱合法性——一個惡性循環。
+        </p>
+        <p>
+          達倫·阿齊默魯（Daron Acemoglu）和詹姆斯·羅賓遜（James Robinson）在《國家為什麼會失敗》（<em>Why Nations Fail</em>，2012）中將制度分為「包容性制度」（inclusive institutions，廣泛分享政治和經濟機會）和「汲取性制度」（extractive institutions，少數精英壟斷利益）。他們的核心論點：<strong>長期的繁榮取決於包容性制度的建立，而非地理或文化。</strong> 這個論點的前提，正是本講所討論的國家能力問題。
+        </p>
+
+        <!-- 10 Misconceptions -->
+        <h2 id="misconceptions" class="section-anchor">10 常見誤解</h2>
+
+        <div class="misconception">
+          <div class="mc-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            常見誤解 · Common Misconceptions
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「自由市場自然形成，不需要國家」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>歷史上沒有任何「自然形成的」市場；所有規模化的市場都依賴國家提供的財產權、契約執行和貨幣。主張「回到無國家市場」在邏輯上是一個歷史虛構。真正的問題是：國家應該如何介入，而不是是否介入。</p></div>
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「高稅收必然阻礙經濟發展」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>歷史表明，能夠有效徵稅的國家（英國、荷蘭）反而往往是最先發展的。稅收的「量」固然重要，更重要的是「質」——稅收如何使用，以及是否伴隨著代議制度和法治。北歐高稅高福利模式是現代的例子。</p></div>
+          </div>
+          <div class="mc-item">
+            <div class="mc-wrong"><span class="mc-wrong-tag">誤</span><p>「中國傳統的中央集權必然阻礙發展」</p></div>
+            <div class="mc-right"><span class="mc-right-tag">正</span><p>中國的中央集權本身不是問題；問題在於缺乏保護私人財產的制度和商業利益的政治代表性。當代中國的高速發展表明，足夠的財產權保障（即便不完美）加上強大的財政執行能力，也能支撐工業化。問題的本質是<strong>制度設計</strong>，而非集中或分散本身。</p></div>
+          </div>
+        </div>
+
+        <!-- Exercises -->
+        <section id="exercises" class="exercise-section section-anchor">
+          <div class="exercise-section-label">練習題 · Exercises</div>
+          <h2 class="exercise-section-title">思考與應用</h2>
+          <p class="exercise-section-sub">以下三題請先獨立作答，展開後對照標準答案與評分標準。</p>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目一 · Question 1</div>
+              <div class="exercise-question">蒂利（Charles Tilly）說「戰爭製造了國家，國家製造了戰爭」。請以 17–18 世紀英法兩國的對比為例，說明這個命題的邏輯，並解釋為什麼英國最終在多場衝突中取得優勢。</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p>優秀答案須涵蓋：① 蒂利命題的邏輯——生存壓力逼出財政能力，財政能力強化軍事，軍事能力反過來擴大國家；② 英國的具體機制——光榮革命後議會控制財政 → 政府信用提升 → 借貸利率下降 → 更持久的戰爭融資；③ 法國的對比——絕對君主制下的財政體系依賴包稅人（tax farmer），效率低、信用差，每次大戰都瀕臨財政崩潰（最終 1789 年大革命的直接導火線就是財政危機）；④ 結論：制度（代議制 vs. 絕對君主制）決定了財政能力，財政能力決定了戰爭結果。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能說明英國因議會制而財政穩定，法國財政困難，但未能清晰連接「制度→信用→借貸成本→戰爭韌性」的完整因果鏈；或只描述歷史事件而非分析機制。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>僅說「英國打贏了，因為更強」，沒有說明財政機制，或混淆了原因（財政能力）與結果（軍事勝利）。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">正確說明蒂利命題的邏輯（戰爭→財政壓力→國家建設）</span><span class="rubric-pts">25 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">具體說明英國財政軍事國家的制度機制</span><span class="rubric-pts">35 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">有效對比法國的財政弱點</span><span class="rubric-pts">25 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">結論清晰連結制度與歷史結果</span><span class="rubric-pts">15 分</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目二 · Question 2</div>
+              <div class="exercise-question">為什麼宋代的中國——擁有高度發展的官僚體系、紙幣和複雜的市場——沒有發展出工業資本主義？請從「國家能力的性質」（汲取型 vs. 賦權型）的角度分析，並說明缺乏哪些制度要素是關鍵。</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p>優秀答案需：① 承認中國的確擁有高度發展的國家和市場能力（不能簡單說「中國落後」）；② 說明汲取型 vs. 賦權型的核心差異——中國國家能汲取資源但不保護私人財產；③ 指出缺乏的關鍵制度：商業利益的政治代表性（皇帝可以隨時沒收商人財富）、獨立的司法保護財產不受政治干預；④ 政治競爭的缺席——中國的統一消除了歐洲式的制度競爭壓力；⑤ 可延伸討論：這不是文化問題，是制度設計問題。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能說明中國有高度官僚化但商人地位低，但分析較表面，未能清楚說明「為什麼商人地位低就阻礙工業化」的經濟機制（長期投資激勵的破壞）。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>以文化（如「中國人保守」）或技術（「中國沒有蒸汽機」）解釋，忽略了制度因素，或認為中國「根本沒有市場」（與史實不符）。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">準確承認中國的高度發展（避免錯誤的「中國落後」前提）</span><span class="rubric-pts">20 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">清楚說明汲取型 vs. 賦權型的差異及其後果</span><span class="rubric-pts">40 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">指出缺乏的關鍵制度要素</span><span class="rubric-pts">25 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">避免文化決定論的陷阱</span><span class="rubric-pts">15 分</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="exercise">
+            <div class="exercise-header">
+              <div class="exercise-num">題目三 · Question 3（進階）</div>
+              <div class="exercise-question">一位新自由主義者主張「最好的政府是最小的政府，市場自然會解決問題」。請用本講的歷史證據和理論框架批評這個主張。同時，你如何避免走向另一個極端——「國家越大越好」？什麼是「適當的國家能力」？</div>
+            </div>
+            <button class="exercise-toggle"><span class="toggle-label">查看標準答案與評分標準</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="exercise-answer">
+              <div class="answer-block excellent">
+                <div class="answer-block-label">優秀答案</div>
+                <p><strong>批評新自由主義主張：</strong>歷史上沒有「自然形成的市場」；英國工業革命的前提是強大的財政軍事國家；弱國家（如部分非洲國家）的問題正是缺乏提供公共財的能力，而非國家太大。「最小政府」在沒有市場基礎的地方，只會製造更多混亂。</p>
+                <p><strong>避免「國家越大越好」的陷阱：</strong>汲取型強國家（如殖民地行政）同樣造成災難；「大」不等於「有效」；國家的邊界應該由市場失靈（public goods, externalities, information asymmetry）劃定，而非意識形態偏好。</p>
+                <p><strong>「適當的國家能力」的定義：</strong>能夠提供市場所需的公共財（財產權、契約執行、標準化）；能夠糾正市場失靈（環境外部性、系統性金融風險）；同時受到法治和代議制度的約束，不能成為掠奪工具。這是一個「有限但有效」（bounded but effective）的國家概念。</p>
+              </div>
+              <div class="answer-block average">
+                <div class="answer-block-label">普通答案</div>
+                <p>能批評「最小政府」的論點，也知道「大國家有問題」，但缺乏清晰的分析框架來說明「適當」的標準。答案可能是「要均衡」但沒有說明均衡的判斷標準。</p>
+              </div>
+              <div class="answer-block weak">
+                <div class="answer-block-label">不足答案</div>
+                <p>只選一邊站隊：要嘛完全支持「最小政府」，要嘛主張「國家萬能」，沒有進行條件分析和批判性思考。</p>
+              </div>
+              <div class="rubric">
+                <div class="rubric-head"><span>評分標準</span><span>配分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">用歷史證據批評「自然市場」的論點</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">承認過強國家的風險並說明機制</span><span class="rubric-pts">25 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">提出有理論基礎的「適當國家能力」定義</span><span class="rubric-pts">30 分</span></div>
+                <div class="rubric-row"><span class="rubric-criterion">論述清晰、不落入非此即彼的二元對立</span><span class="rubric-pts">15 分</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <nav class="post-nav">
+          <a href="h01-malthus.html" class="post-nav-link prev">
+            <div class="post-nav-direction">← 上一講</div>
+            <div class="post-nav-title">H01 農業社會與馬爾薩斯陷阱</div>
+          </a>
+          <a href="h03-commercial-revolution.html" class="post-nav-link next">
+            <div class="post-nav-direction">下一講 →</div>
+            <div class="post-nav-title">H03 商業革命、殖民與公司制度</div>
+          </a>
+        </nav>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

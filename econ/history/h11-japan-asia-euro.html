@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H11 日本泡沫、亞洲金融危機與歐元制度 — 世界經濟學課程</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">世界經濟學<span>World Economics Course</span></div>
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="收合目錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">第一部：世界經濟史</div>
+        <a href="h01-malthus.html" class="nav-item"><span class="nav-item-num">H01</span>農業社會與馬爾薩斯陷阱</a>
+        <a href="h02-state-capacity.html" class="nav-item"><span class="nav-item-num">H02</span>國家能力、稅收與市場形成</a>
+        <a href="h03-commercial-revolution.html" class="nav-item"><span class="nav-item-num">H03</span>商業革命、殖民與公司制度</a>
+        <a href="h04-industrial-revolution.html" class="nav-item"><span class="nav-item-num">H04</span>工業革命：能源、技術與城市</a>
+        <a href="h05-gold-standard.html" class="nav-item"><span class="nav-item-num">H05</span>金本位、帝國與第一次全球化</a>
+        <a href="h06-ww1.html" class="nav-item"><span class="nav-item-num">H06</span>一戰、戰債與國際金融失衡</a>
+        <a href="h07-great-depression.html" class="nav-item"><span class="nav-item-num">H07</span>大蕭條、銀行危機與凱因斯革命</a>
+        <a href="h08-bretton-woods.html" class="nav-item"><span class="nav-item-num">H08</span>布列敦森林、美元與福利國家</a>
+        <a href="h09-stagflation.html" class="nav-item"><span class="nav-item-num">H09</span>停滯性通膨與新自由主義轉向</a>
+        <a href="h10-soviet-collapse.html" class="nav-item"><span class="nav-item-num">H10</span>蘇聯解體、轉型與華盛頓共識</a>
+        <a href="h11-japan-asia-euro.html" class="nav-item"><span class="nav-item-num">H11</span>日本泡沫、亞洲危機與歐元</a>
+        <a href="h12-china-wto.html" class="nav-item"><span class="nav-item-num">H12</span>中國改革開放與全球供應鏈</a>
+        <a href="h13-2008.html" class="nav-item"><span class="nav-item-num">H13</span>2008 金融危機與 QE 時代</a>
+        <a href="h14-post-covid.html" class="nav-item"><span class="nav-item-num">H14</span>疫情衝擊、通膨回歸與去全球化</a>
+        <a href="h15-ai-energy.html" class="nav-item"><span class="nav-item-num">H15</span>AI、能源轉型與新地緣政治秩序</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">第二部：總體經濟學</div>
+        <a href="../macro/m01-gdp.html" class="nav-item"><span class="nav-item-num">M01</span>GDP、國民所得、流量與存量</a>
+        <a href="../macro/m02-growth.html" class="nav-item"><span class="nav-item-num">M02</span>經濟成長：資本、勞動與制度</a>
+        <a href="../macro/m03-consumption.html" class="nav-item"><span class="nav-item-num">M03</span>消費、投資、儲蓄與利率</a>
+        <a href="../macro/m04-money-banking.html" class="nav-item"><span class="nav-item-num">M04</span>貨幣、銀行與信用創造</a>
+        <a href="../macro/m05-inflation.html" class="nav-item"><span class="nav-item-num">M05</span>通膨的多重面貌</a>
+        <a href="../macro/m06-unemployment.html" class="nav-item"><span class="nav-item-num">M06</span>失業與勞動市場</a>
+        <a href="../macro/m07-expectations.html" class="nav-item"><span class="nav-item-num">M07</span>預期形成：理性、適應與行為</a>
+        <a href="../macro/m08-islm-adas.html" class="nav-item"><span class="nav-item-num">M08</span>IS-LM、AD-AS 與菲利浦曲線</a>
+        <a href="../macro/m09-fiscal.html" class="nav-item"><span class="nav-item-num">M09</span>財政政策與債務可持續性</a>
+        <a href="../macro/m10-monetary.html" class="nav-item"><span class="nav-item-num">M10</span>貨幣政策與央行溝通</a>
+        <a href="../macro/m11-exchange.html" class="nav-item"><span class="nav-item-num">M11</span>匯率、國際收支與三難困境</a>
+        <a href="../macro/m12-inequality.html" class="nav-item"><span class="nav-item-num">M12</span>不平等、分配與總體回饋</a>
+        <a href="../macro/m13-financial-cycles.html" class="nav-item"><span class="nav-item-num">M13</span>金融週期、槓桿與系統性危機</a>
+        <a href="../macro/m14-macro-markets.html" class="nav-item"><span class="nav-item-num">M14</span>總體如何驅動市場</a>
+        <a href="../macro/m15-macro-memo.html" class="nav-item"><span class="nav-item-num">M15</span>總體投資備忘錄</a>
+        <a href="../macro/m16-being-wrong.html" class="nav-item"><span class="nav-item-num">M16</span>如何判斷自己錯了</a>
+      </div>
+      <div class="nav-section"><a href="../index.html" class="nav-item" style="opacity:.65;">← 課程首頁</a></div>
+    </nav>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="topbar-toggle" id="topbarToggleBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="toggle-label">隱藏目錄</span>
+        </button>
+        <nav class="breadcrumb">
+          <a href="../index.html">課程首頁</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="../index.html">世界經濟史</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">H11 日本泡沫、亞洲金融危機與歐元制度</span>
+        </nav>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <article class="article">
+
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="lecture-badge">H11</span>
+            <span class="lecture-period">1985 — 2002</span>
+          </div>
+          <h1 class="article-title">日本泡沫、亞洲金融危機與歐元制度</h1>
+          <p class="article-subtitle">Japan's Bubble Economy, the Asian Financial Crisis &amp; the Euro</p>
+          <p class="article-lead">1990 年代是亞洲金融史上最戲劇性的十年：日本泡沫的崩潰拉開了「失落的十年（Lost Decade/失落的十年）」序幕；1997–1998 年亞洲金融危機（Asian Financial Crisis/亞洲金融危機）以驚人的速度席捲泰國、韓國、印尼，令曾被讚揚為「亞洲奇蹟（Asian Miracle）」的高速成長戛然而止；與此同時，歐洲在 1999 年推出歐元（Euro），嘗試以貨幣聯盟（monetary union/貨幣聯盟）整合不同發展水準的國家——一個全新的制度實驗。這三個案例都是關於固定匯率、資本流動和制度設計的深刻教訓。</p>
+        </div>
+
+        <nav class="toc">
+          <div class="toc-title">本講目錄</div>
+          <ol class="toc-list">
+            <li><a href="#japan-bubble">日本資產泡沫（1985–1991）：廣場協議到崩潰</a></li>
+            <li><a href="#lost-decade">日本失落十年：流動性陷阱的現實教材</a></li>
+            <li><a href="#asian-miracle">亞洲奇蹟與脆弱性積累</a></li>
+            <li><a href="#asian-crisis">1997 年亞洲金融危機：從泰銖到全球衝擊</a></li>
+            <li><a href="#transmission">傳導機制圖解</a></li>
+            <li><a href="#imf-response">IMF 的危機應對：爭議與遺緒</a></li>
+            <li><a href="#euro">歐元的誕生：最優貨幣區理論與現實</a></li>
+            <li><a href="#market-implications">市場含意：危機的資產配置教訓</a></li>
+            <li><a href="#misconceptions">常見誤解</a></li>
+            <li><a href="#professor-answer">教授模型解答</a></li>
+            <li><a href="#exercises">課堂練習</a></li>
+          </ol>
+        </nav>
+
+        <!-- SECTION 1 -->
+        <section id="japan-bubble">
+          <h2>一、日本資產泡沫（1985–1991）：廣場協議到崩潰</h2>
+
+          <h3>廣場協議（Plaza Accord, 1985）</h3>
+          <p>1985 年 9 月，美、英、法、德、日五國財長和央行行長在紐約廣場飯店（Plaza Hotel）達成協議，聯合干預匯市，使美元對日圓和德國馬克貶值，以糾正美國龐大的貿易逆差。</p>
+
+          <p>廣場協議的直接效果：1985–1987 年，日圓從約 250 日圓/美元升值至約 120 日圓/美元（升值超過 50%）。日圓升值對日本出口形成壓力，日本央行（Bank of Japan）在 1986–1987 年間將短期利率從 5% 大幅降低至 2.5%，以抵消日圓升值對出口的衝擊。</p>
+
+          <h3>低利率的資產泡沫</h3>
+          <p>超低利率推動了大規模信貸擴張和資產價格泡沫：</p>
+          <ul>
+            <li><strong>股票市場：</strong>日經指數（Nikkei 225）從 1985 年的約 12,000 點，在 1989 年 12 月 29 日衝上 <strong>38,915 點</strong>的歷史高位——四年上漲約 225%；</li>
+            <li><strong>房地產市場：</strong>日本六大城市的商業用地價格在 1986–1991 年間上漲約 300%；據估算，1989 年時日本全國土地總價值相當於美國全國土地的 4 倍（日本國土面積僅為美國的 4%）；</li>
+            <li><strong>「財技（Zai-Tech）」文化：</strong>企業將大量流動資金用於股票和房地產投機，而非本業投資，股票投機成為日本 1980 年代末的全民文化。</li>
+          </ul>
+
+          <h3>泡沫的崩潰（1990–1991）</h3>
+          <p>1989 年底，日本央行開始升息（利率從 2.5% 升至 1990 年的 6%）以抑制通膨和資產泡沫；1990 年 3 月，大藏省（財政部）對房地產相關貸款實施總量管制。這兩個政策觸發了泡沫的崩潰：</p>
+          <ul>
+            <li>日經指數從 1989 年 12 月的 38,915 點，跌至 1992 年 8 月的約 15,000 點（跌幅 -62%）；</li>
+            <li>商業地產在 1990 年代持續下跌，部分地區跌幅超過 80%；</li>
+            <li>銀行業累積了大量不良貸款（non-performing loans/不良貸款），但未能及時承認和處置。</li>
+          </ul>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section id="lost-decade">
+          <h2>二、日本失落十年：流動性陷阱的現實教材</h2>
+
+          <h3>為何日本長達十年無法復甦？</h3>
+          <p>日本泡沫崩潰後的「失落十年（Lost Decade, 1991–2001）」——後來延伸為「失落的二十年」甚至「失落的三十年」——是現代宏觀經濟學最重要的自然實驗之一。它提供了「流動性陷阱（liquidity trap/流動性陷阱）」和「資產負債表衰退（balance sheet recession/資產負債表衰退）」的真實案例。</p>
+
+          <div class="key-concept">
+            <div class="key-concept-title">理查·辜（Richard Koo）的「資產負債表衰退」理論</div>
+            <p>辜朝明（Richard Koo, 2003）提出了解釋日本長期停滯的核心概念：資產負債表衰退（balance sheet recession）。當資產價格泡沫崩潰後，大量企業（和家庭）的資產負債表從淨資產（assets &gt; liabilities）轉為技術上的資不抵債（assets &lt; liabilities）。</p>
+            <p>在這種情況下，企業的首要目標不再是「最大化利潤」，而是「最小化債務（debt minimization）」——即使利率降至零，企業也不願借款投資（因為需要先修復資產負債表），貨幣政策因此失效。這是比凱因斯「流動性陷阱」更具體的機制說明。</p>
+            <p>政策含義：在資產負債表衰退中，財政政策（政府直接支出）是唯一有效的需求管理工具，因為政府是唯一沒有「去槓桿需求」的主體——它可以填補私人部門需求的缺口。這解釋了日本在 1990 年代大規模財政刺激仍未能扭轉頹勢的原因：刺激規模不足以填補私人去槓桿的缺口，而非財政刺激本身無效。</p>
+          </div>
+
+          <h3>日本銀行的延遲處置</h3>
+          <p>日本失落十年持續如此之久，一個關鍵原因是銀行業的不良貸款（NPL）長期未被正面處置——銀行以「待機（zombie lending）」方式對無法償債的企業持續放貸，避免承認損失（因為承認會使銀行自身資本不足，面臨破產或監管干預）。這製造了大量「殭屍企業（zombie firms/殭屍企業）」——它們持續佔用信貸資源，但無法帶來生產效率提升，壓制了健康企業的競爭和成長。</p>
+
+          <p>直到 2001–2002 年，日本才在竹中平藏等改革者推動下，強制銀行正面處置不良貸款，日本金融體系才開始真正的重建。這個「延遲承認（forbearance）→ 更長的停滯」教訓，後來在 2008 年危機中被美國歐洲的政策制定者廣泛引用作為「快速處置不良資產」的依據。</p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section id="asian-miracle">
+          <h2>三、亞洲奇蹟與脆弱性積累</h2>
+
+          <h3>「亞洲奇蹟」的真實基礎</h3>
+          <p>1960–1990 年代，東亞的高速成長——日本、韓國、台灣、香港、新加坡（「四小龍」），以及後來的泰國、馬來西亞、印尼（「四小虎」）——創造了歷史上最密集的發展成就。世界銀行在 1993 年的報告《東亞奇蹟》（<em>The East Asian Miracle</em>）試圖解釋這個現象。</p>
+
+          <p>然而，Paul Krugman（1994）在〈亞洲奇蹟的神話〉（"The Myth of Asia's Miracle"）中提出了挑戰：東亞的高速成長主要來自投入要素的大量增加（勞動力、資本積累、教育普及），而非全要素生產率（TFP/Total Factor Productivity）的提升——這與蘇聯 1950–1960 年代的高速成長性質類似，不可持續。Krugman 的判斷在 1997 年危機後在部分國家得到印證，但並非對所有東亞國家都成立（韓國和台灣的技術升級更明顯）。</p>
+
+          <h3>1990 年代的脆弱性積累</h3>
+          <p>1990 年代初，隨著資本帳戶逐步開放，大量外資流入泰國、韓國、印尼、馬來西亞：</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>脆弱性因素</th>
+                <th>具體表現</th>
+                <th>危機中的角色</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>匯率固定（Pegged Exchange Rate）</td><td>泰銖、印尼盾等釘住美元，被市場視為隱性保證</td><td>當美元升值時（1995–1997），釘住匯率使出口競爭力下降</td></tr>
+              <tr><td>期限錯配（Maturity Mismatch）</td><td>借入短期外幣貸款，投資長期本地資產（房地產、基建）</td><td>外資撤退時，本地資產無法迅速變現，外匯儲備告急</td></tr>
+              <tr><td>關係型貸款（Crony Capitalism）</td><td>銀行向有政治關係的企業集團（財閥）大量放貸，忽視風險評估</td><td>大量不良貸款積累，銀行體系脆弱</td></tr>
+              <tr><td>資本帳戶過度開放（Premature Capital Account Opening）</td><td>1990 年代初開放資本帳戶，但監管能力未同步提升</td><td>短期外資可以快速撤退，製造突然停止（sudden stop）</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section id="asian-crisis">
+          <h2>四、1997 年亞洲金融危機：從泰銖到全球衝擊</h2>
+
+          <h3>泰國的導火線（1997 年 7 月）</h3>
+          <p>1997 年 7 月 2 日，泰國宣布放棄泰銖（Thai baht）與美元的固定匯率，允許泰銖自由浮動。泰銖在當天貶值約 15–20%，引發了席捲整個東南亞和東北亞的金融危機。</p>
+
+          <p>泰國危機的前兆早已存在：1995–1996 年，美元升值使與美元掛鉤的泰銖相對升值，泰國出口競爭力下降，經常帳戶赤字擴大至 GDP 的 8%；同期，大量短期外資流入泰國房地產和股票市場，形成資產泡沫；1997 年初，市場對泰銖可持續性的質疑引發投機性攻擊，泰國央行動用外匯儲備捍衛匯率，但最終儲備耗盡而被迫放棄。</p>
+
+          <h3>危機的蔓延：傳染（Contagion）</h3>
+          <p>泰銖崩潰後，危機迅速蔓延至：</p>
+          <ul>
+            <li><strong>菲律賓、馬來西亞（1997 年 7–8 月）：</strong>貨幣貶值、股市暴跌；</li>
+            <li><strong>印尼（1997 年 8 月–1998 年）：</strong>印尼盾從約 2,500 盾/美元貶至 1998 年初的約 17,000 盾/美元（貶值近 85%）；蘇哈托政權在民眾暴動中崩潰；</li>
+            <li><strong>韓國（1997 年 11 月）：</strong>外匯儲備告急，韓國向 IMF 申請 570 億美元的緊急救助（史上最大規模的 IMF 援助計畫之一）；現代、起亞、大宇等財閥陷入危機；</li>
+            <li><strong>香港（1997 年 10 月）：</strong>港幣聯繫匯率遭到國際投機者攻擊，香港金融管理局動用外匯儲備捍衛成功，但股市仍大跌；</li>
+            <li><strong>俄羅斯（1998 年 8 月）：</strong>危機傳染至俄羅斯，盧布崩潰、政府債務違約（H10）；</li>
+            <li><strong>長期資本管理公司（LTCM，1998 年 9 月）：</strong>俄羅斯違約觸發了大型對沖基金 LTCM 的幾乎崩潰，聯準會緊急協調私人銀行注資救援，阻止了金融系統性危機。</li>
+          </ul>
+
+          <h3>傳染的機制</h3>
+          <p>為何泰國的危機能如此迅速蔓延至整個亞洲？有幾個傳染渠道：</p>
+          <div class="key-concept">
+            <div class="key-concept-title">金融危機的傳染渠道</div>
+            <p><strong>1. 貿易渠道（Trade Channel）：</strong>泰銖貶值使泰國出口品更具競爭力，直接威脅同類出口國（馬來西亞、印尼）的競爭地位，引發市場對這些國家匯率的同等貶值預期。</p>
+            <p><strong>2. 資訊溢出（Information Spillover）：</strong>投資者從泰國的危機中重新評估整個「新興亞洲」模式的風險——相似的失衡（大量短期外債、固定匯率、房地產泡沫）在其他國家也存在。</p>
+            <p><strong>3. 流動性收縮（Liquidity Squeeze）：</strong>國際投資者在泰國蒙受損失後，被迫縮減其他新興市場頭寸以填補保證金，引發連鎖賣出。</p>
+            <p><strong>4. 自我實現（Self-Fulfilling Expectations）：</strong>一旦預期匯率貶值，持有本地資產的投資者有強烈動機提前出售並換成美元，使預期自我實現——即使基本面原本尚可承受。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section id="transmission">
+          <h2>五、傳導機制圖解</h2>
+
+          <div class="transmission">
+            <div class="transmission-title">亞洲金融危機的傳導鏈</div>
+            <div class="transmission-chain">
+              <div class="t-node">
+                <div class="t-node-title">前期失衡積累（1990–1996）</div>
+                <div class="t-node-desc">資本帳戶開放 + 美元釘住匯率 → 外資大量流入；短期外幣債務 + 長期本地資產投資 → 期限錯配；關係型貸款 → 不良貸款積累；房地產和股票泡沫</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">觸發：美元升值（1995–1997）</div>
+                <div class="t-node-desc">美元強勢 → 釘住美元的亞洲貨幣事實上升值 → 出口競爭力下降 → 經常帳戶赤字擴大 → 市場開始質疑匯率可持續性</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">投機攻擊與匯率崩潰（1997 年 7 月）</div>
+                <div class="t-node-desc">索羅斯等投機者做空泰銖 → 央行捍衛外匯儲備耗盡 → 泰銖放棄釘住匯率 → 急劇貶值</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">傳染蔓延（1997 Q3–1998）</div>
+                <div class="t-node-desc">外資撤退 → 印尼、韓國、菲律賓、馬來西亞相繼崩潰；外幣債務激增（以本幣計值）→ 企業和銀行大規模違約；IMF 緊急干預</div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">實體衝擊（1998）</div>
+                <div class="t-node-desc">印尼 GDP -13%、泰國 -8%、韓國 -6%；大規模失業、貧困上升；政治動盪（蘇哈托垮台、泰韓政府更替）</td></tr></div>
+              </div>
+              <div class="t-arrow">↓</div>
+              <div class="t-node">
+                <div class="t-node-title">長期制度回應</div>
+                <div class="t-node-desc">危機後各國大量積累外匯儲備（「自我保險」策略）；清邁倡議（Chiang Mai Initiative）建立區域貨幣互換網絡；資本帳戶管理更謹慎；韓國財閥改革；IMF 模式反思</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section id="imf-response">
+          <h2>六、IMF 的危機應對：爭議與遺緒</h2>
+
+          <h3>IMF 的緊縮條件（Conditionality）</h3>
+          <p>1997–1998 年，IMF 向泰國、韓國、印尼提供了合計超過 1,000 億美元的緊急援助，但附帶嚴苛的條件：財政緊縮（削減支出、增稅）、高利率（以防止資本外流和穩定匯率）、結構性改革（金融重組、關閉問題銀行、財閥改革）。</p>
+
+          <p>IMF 的邏輯：高利率可以防止匯率進一步崩潰；財政緊縮可以恢復國際投資者的信心；結構改革可以消除危機的制度根源。</p>
+
+          <h3>IMF 條件的爭議</h3>
+          <p>Joseph Stiglitz（2002）和 Jeffery Sachs 對 IMF 的應對提出了嚴厲批評：</p>
+          <div class="case-study">
+            <div class="case-study-label">亞洲危機中的 IMF 爭議</div>
+            <p><strong>批評一：財政緊縮加深了衰退。</strong>在私人部門已在大量去槓桿的情況下，要求政府也緊縮（消除財政赤字），相當於讓財政政策也從反週期（countercyclical）變成順週期（procyclical），進一步壓縮總需求，加深衰退。Stiglitz 認為這犯了 1930 年代的同樣錯誤。</p>
+            <p><strong>批評二：高利率傷害了無辜的企業。</strong>許多亞洲企業並非因為管理不善而陷入困境，而是因為外部匯率衝擊使外幣負債急劇上升。在衰退環境中推行高利率，使本已脆弱的企業進一步崩潰。</p>
+            <p><strong>IMF 的辯護：</strong>馬來西亞選擇拒絕 IMF 援助、實施資本管制（1998 年 9 月），但其復甦速度與接受 IMF 方案的國家相近，令人對 IMF 條件的必要性存疑。然而，馬來西亞的成功可能部分源於其相對較低的初始外債。</p>
+            <p><strong>後期 IMF 的修正：</strong>2000 年代後，IMF 自我反思亞洲危機的教訓，在後來的危機（2010 年希臘等）中開始更多考慮財政緊縮的「乘數效應」，承認過度緊縮可能弄巧成拙。</p>
+          </div>
+
+          <h3>亞洲危機的制度遺緒</h3>
+          <p>亞洲危機在制度層面留下了深遠影響：各國大量積累外匯儲備作為「自我保險（self-insurance）」——中國外匯儲備從 1997 年的 1,400 億美元增至 2014 年的 4 兆美元；2000 年的「清邁倡議（Chiang Mai Initiative）」建立了區域貨幣互換網絡；亞洲各國開始更謹慎地管理資本帳戶開放的速度。這些回應深刻影響了後來的「全球失衡（global imbalances）」格局——亞洲國家大規模積累美元儲備，為 2000 年代美國的消費繁榮提供了廉價融資（詳見 H13）。</p>
+        </section>
+
+        <!-- SECTION 7 -->
+        <section id="euro">
+          <h2>七、歐元的誕生：最優貨幣區理論與現實</h2>
+
+          <h3>最優貨幣區理論（Optimal Currency Area Theory）</h3>
+          <p>1961 年，加拿大經濟學家羅伯特·蒙代爾（Robert Mundell，後獲 1999 年諾貝爾獎）提出了「最優貨幣區（Optimal Currency Area, OCA/最優貨幣區）」理論：什麼條件下，幾個國家共享同一貨幣（放棄匯率工具）是最優的？</p>
+
+          <div class="blackboard">
+            <div class="blackboard-title">最優貨幣區的條件（Mundell's OCA Criteria）</div>
+            <pre>
+一個貨幣區要運作良好，成員之間需要：
+
+條件 1：勞動力自由流動（Labor Mobility）
+  當一個地區面臨衰退而另一地區繁榮，
+  工人可以從衰退地區流動至繁榮地區，
+  代替匯率調整機制。
+
+條件 2：資本流動（Capital Mobility）
+  資本可以從高報酬地區流向低報酬地區，
+  均衡各地投資機會。
+
+條件 3：財政轉移機制（Fiscal Transfers）
+  聯邦或中央財政可以對衰退地區提供補貼
+  （如美國聯邦政府對衰退州的轉移支付）。
+
+條件 4：對稱性衝擊（Symmetric Shocks）
+  成員國面臨的景氣衝擊方向相似，
+  不需要差異性的貨幣政策回應。
+
+─────────────────────────────────────
+歐元區的評估：
+  條件 1（勞動力流動）：不足——語言文化障礙大
+  條件 2（資本流動）：完成——歐盟資本市場一體化
+  條件 3（財政轉移）：幾乎缺失——歐盟預算極小（約佔 GDP 1%）
+  條件 4（對稱衝擊）：部分——核心國 vs. 邊緣國週期差異顯著
+
+結論：歐元區並不滿足最優貨幣區的關鍵條件。</pre>
+          </div>
+
+          <h3>歐元的政治理由</h3>
+          <p>如果歐元區在經濟學意義上並非最優貨幣區，為何還要推出歐元？答案在於其<strong>政治理由壓倒了經濟學評估</strong>：</p>
+          <ul>
+            <li><strong>德法和解（Franco-German Reconciliation）：</strong>歐元是歐洲政治整合的深化，德國接受歐元（放棄強勢德國馬克）是在兩德統一過程中與法國達成的政治交換；</li>
+            <li><strong>消除匯率風險（Eliminating Exchange Rate Risk）：</strong>統一貨幣消除了成員國之間的貿易匯率風險，降低了交易成本，促進了歐洲內部貿易；</li>
+            <li><strong>「不可能的三位一體」的選擇：</strong>在資本自由流動的歐盟內部，固定匯率只能維持在放棄貨幣政策自主權（歐元）或實行資本管制之間二選一——歐元區選擇了前者。</li>
+          </ul>
+
+          <h3>歐元的制度缺陷：「沒有財政聯盟的貨幣聯盟」</h3>
+          <p>歐元推出時，批評者（包括 Martin Feldstein, Barry Eichengreen）指出一個根本性的制度缺陷：歐元建立了貨幣聯盟（統一的貨幣政策由歐洲央行/ECB 執行），但沒有對應的財政聯盟（各國財政政策各自為政，歐盟僅有極小的共同預算）。</p>
+
+          <p>這個缺陷在 2010–2012 年的歐洲主權債務危機（European Sovereign Debt Crisis）中充分暴露：希臘、愛爾蘭、葡萄牙、西班牙在景氣衰退中無法使用匯率貶值恢復競爭力（因為歐元不能單獨貶值），又缺乏財政聯盟的跨國轉移支付，陷入了類似道威斯循環（H06）的困境——以緊縮政策換取救助貸款，但緊縮加深了衰退，使債務可持續性更難達到。</p>
+        </section>
+
+        <!-- SECTION 8 -->
+        <section id="market-implications">
+          <h2>八、市場含意：危機的資產配置教訓</h2>
+
+          <div class="key-concept">
+            <div class="key-concept-title">三個案例的資產配置教訓</div>
+            <p><strong>日本泡沫崩潰（1989–2002）的教訓：</strong></p>
+            <p>• <strong>估值的長期壓力：</strong>日本股市在 1989 年的 P/E 比約為 60–70 倍（歷史均值約 15 倍），說明即使是強勁的基本面也無法支撐過度估值。從峰值計算，日本股市（以日圓計）直到 2023 年才重回 1989 年的歷史高位——34 年！這是對「長期持有股票必然獲利」假設的有力警示。</p>
+            <p>• <strong>流動性陷阱下的資產表現：</strong>日本政府公債（JGB）在 1990 年代是最佳資產類別——持續降息環境中債券價格上升；房地產是最差資產——泡沫崩潰後數十年持續下跌；現金因通縮而實際升值。</p>
+            <p><strong>亞洲金融危機（1997–1998）的教訓：</strong></p>
+            <p>• <strong>「突然停止（Sudden Stop）」的不對稱性：</strong>資本流入時緩慢積累，流出時急劇崩潰——這種不對稱性使固定匯率加資本帳戶開放的組合極度脆弱。投資者在享受高收益率的同時，必須評估「突然停止」的尾部風險。</p>
+            <p>• <strong>外匯儲備作為保險工具：</strong>危機後外匯儲備的大量積累（儘管有持有成本），是亞洲各國對系統性風險的理性回應。這也解釋了為何後危機亞洲成為全球最大的美元資產持有者。</p>
+            <p><strong>歐元（1999–）的教訓：</strong></p>
+            <p>• <strong>制度性匯率信用溢價：</strong>歐元推出後，希臘、葡萄牙、西班牙的國債利率迅速收斂至接近德國的水準——市場以為歐元體制提供了某種隱性擔保，因此未對邊緣國主權風險進行充分定價。2010 年危機說明，這是嚴重的系統性誤定價（mispricing），為投資者提供了昂貴的教訓：制度框架可以降低但不能消除主權風險。</p>
+          </div>
+
+          <h3>危機中的反向機會</h3>
+          <p>1997–1998 年亞洲危機也為那些能夠識別「過度拋售」的投資者提供了歷史性機會：韓國股市（KOSPI）在 1998 年初從高峰下跌超過 70%，此後十年的實際報酬率大幅超過大多數已開發市場。泰國、馬來西亞、印尼亦然。危機後進入新興市場的投資者（如果正確識別了哪些國家具備制度修復能力），獲得了顯著的超額報酬。這個模式在歷次新興市場危機後重複——識別「真正的過度拋售」需要的是對制度品質的判斷，而非簡單的技術分析。</p>
+        </section>
+
+        <!-- SECTION 9 -->
+        <section id="misconceptions">
+          <h2>九、常見誤解</h2>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解一</div>
+            <h3>「日本失落十年是因為日本人太保守、不願創新」</h3>
+            <p><strong>更準確的理解</strong>：日本失落十年的主要原因是資產負債表衰退（balance sheet recession）——資產泡沫崩潰後，企業和家庭集體去槓桿，即使利率降至零也不借款投資，使貨幣政策完全失效。銀行體系延遲處置不良貸款、「殭屍企業」的存在，進一步拖累了資源有效配置。這些是宏觀經濟和金融體系的結構性問題，而非日本文化特性的問題。事實上，日本企業在技術層面仍是全球頂尖——豐田的精益生產（lean manufacturing）在失落年代仍持續影響全球製造業。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解二</div>
+            <h3>「亞洲金融危機完全是索羅斯等投機者造成的」</h3>
+            <p><strong>更準確的理解</strong>：投機者（如索羅斯的量子基金）確實在危機中做空泰銖等貨幣並獲利，但他們並不是危機的「原因」，而是「觸發器」。真正的原因是亞洲各國在 1990 年代積累的結構性脆弱性：期限錯配的外債、固定匯率的過度使用、關係型貸款的不良資產積累、資本帳戶過早開放。正是這些失衡使投機攻擊「有利可圖」——如果沒有真實的失衡，投機者就無法成功。把危機全部歸咎於外部投機者，是轉移問題的便利說法，使真正的改革需求得不到正視。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解三</div>
+            <h3>「歐元是一個失敗的項目，應該被解散」</h3>
+            <p><strong>更準確的理解</strong>：歐元在某些維度是成功的——消除了歐盟內部的匯率風險，降低了貿易成本，促進了金融市場整合；德國在歐元框架下獲得了相對有利的有效匯率，成為最大受益者之一。歐元的問題在於其制度設計的不完整（缺乏財政聯盟），但這是「有待完善的不完整制度」而非「必須廢除的失敗制度」。2010–2012 年的主權債務危機後，歐盟推進了歐洲穩定機制（ESM）、銀行業聯盟（Banking Union）等制度補充，使歐元體系更為完整。解散歐元的交易和政治成本極為巨大，且其問題（缺乏財政聯盟）可以通過制度深化解決，而非必須依賴解散。</p>
+          </div>
+
+          <div class="misconception">
+            <div class="misconception-label">誤解四</div>
+            <h3>「蒙代爾的最優貨幣區理論說明歐元是錯的」</h3>
+            <p><strong>更準確的理解</strong>：蒙代爾本人是歐元的支持者，而非反對者。OCA 理論提供了評估貨幣聯盟成本和效益的框架，但並非說一個不滿足所有 OCA 條件的地區就「不應該」建立貨幣聯盟。蒙代爾（1973）後來的研究還指出，貨幣聯盟本身可以「內生地」促進 OCA 條件的形成——貿易整合加深、投資流動增加、景氣週期同步化。問題的核心不是歐元區是否滿足 OCA 條件，而是歐元區缺乏充分的財政聯盟機制，無法在不對稱衝擊時進行有效的自動調整。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 10 -->
+        <section id="professor-answer">
+          <h2>十、教授模型解答</h2>
+
+          <div class="blackboard">
+            <div class="blackboard-title">核心問題：「日本泡沫崩潰和 1997 年亞洲金融危機都涉及資產泡沫和金融危機，但它們的傳導機制和政策啟示有何根本差異？」</div>
+
+            <p>這個比較問題要求識別表面相似性背後的機制差異，這是高階分析能力的核心。</p>
+
+            <p><strong>相似之處：</strong>兩者都涉及資產泡沫（日本：股票 + 地產；亞洲：房地產 + 股票）的形成和崩潰；都源於低利率/資本流入帶動的信貸擴張；都在泡沫崩潰後引發了銀行體系危機和嚴重衰退。</p>
+
+            <p><strong>根本差異一：危機的地理結構（Domestic vs. External）</strong></p>
+            <p>日本危機本質上是<strong>國內金融危機</strong>——泡沫的形成和崩潰都在國內，外部衝擊（廣場協議）是誘因但不是主要傳導渠道。日圓是自由浮動貨幣（1973 年後），匯率問題不是核心。亞洲金融危機本質上是<strong>國際收支危機</strong>——核心傳導渠道是外幣債務 + 固定匯率 + 外資突然撤退，匯率崩潰才是核心。日本可以用擴張性財政和貨幣政策應對（雖然療效有限）；亞洲國家則因外幣債務而面臨「外部約束（external constraint）」——匯率貶值使以本幣計算的外債急劇膨脹，貨幣政策陷入兩難。</p>
+
+            <p><strong>根本差異二：最後貸款人角色</strong></p>
+            <p>日本危機中，日本政府是本國貨幣的發行者，可以無限量提供本幣流動性——問題不是無法提供流動性，而是流動性陷阱使貨幣擴張無效（企業不願借款）。亞洲危機中，各國央行無法提供足夠的美元（外幣）流動性——外匯儲備有限，外幣借款市場又因危機而關閉，最後只能依賴 IMF 作為外幣最後貸款人。這是主權貨幣危機和外幣危機的根本區別。</p>
+
+            <p><strong>政策啟示的差異：</strong>日本案例的啟示是「資產負債表修復的必要性」和「財政政策在流動性陷阱中的不可替代性」；亞洲危機的啟示是「外幣債務管理」、「資本帳戶開放的順序」和「外匯儲備的緩衝功能」。前者是宏觀管理和金融監管問題，後者是國際金融架構問題。兩者共同提示：金融體系的脆弱性既可以從國內渠道也可以從國際渠道傳導，宏觀審慎（macroprudential）政策必須同時關注兩個維度。</p>
+          </div>
+        </section>
+
+        <!-- SECTION 11 -->
+        <section id="exercises">
+          <h2>十一、課堂練習</h2>
+
+          <div class="exercise-section">
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 1</span>
+                <span class="exercise-difficulty difficulty-intermediate">中等難度</span>
+              </div>
+              <h3 class="exercise-question">用理查·辜（Richard Koo）的「資產負債表衰退（balance sheet recession）」理論，解釋為什麼日本的零利率政策（1999 年起）無法有效刺激經濟復甦，以及政府應如何應對。</h3>
+              <p><em>建議作答時間：25 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>資產負債表衰退機制的精確理解：</strong>資產泡沫崩潰後，大量企業資產（股票、房地產）價值暴跌，但負債（銀行貸款）面值不變，企業技術上陷入資不抵債（insolvent）。在此情況下，企業的行為目標從「最大化利潤」轉為「最小化債務」——即使利率為零甚至負利率，企業也不願借款，因為首要任務是償還現有債務。</p>
+                  <p><strong>為何零利率無效：</strong>貨幣政策透過降低借款成本來刺激投資需求，但前提是有人願意借款。在資產負債表衰退中，信貸需求曲線整體左移（願意以任何利率借款的人都減少），因此即使降至零利率，也難以刺激有效的信貸需求——即「推繩子（pushing on a string）」困境。</p>
+                  <p><strong>政策建議：</strong>辜朝明的處方是政府財政支出填補需求缺口——政府是唯一不需要修復資產負債表的主體，可以逆週期地借入並支出，抵消私人部門去槓桿導致的需求萎縮。日本的財政刺激之所以效果不彰，部分原因是規模不足和實施斷斷續續（多次開始後又因財政壓力而收縮）。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明企業因負債重而不願借款，理解零利率在此情境下的局限，提出財政政策的必要性，但對「資產負債表修復作為企業目標」的機制說明不夠精確。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只說「企業沒有信心」，無法解釋資產負債表衰退的具體機制，政策建議缺乏邏輯基礎。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>資產負債表衰退機制的精確描述</td><td>35 分</td></tr>
+                    <tr><td>零利率失效的邏輯推導</td><td>30 分</td></tr>
+                    <tr><td>財政政策作為替代工具的論證</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 2</span>
+                <span class="exercise-difficulty difficulty-advanced">進階難度</span>
+              </div>
+              <h3 class="exercise-question">用蒙代爾「不可能的三位一體（Impossible Trinity / Trilemma）」框架，分析 1997 年前亞洲各國的政策選擇，並解釋為何危機是「自食其果」而非純屬外部衝擊。</h3>
+              <p><em>建議作答時間：30 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>三難困境的精確框架：</strong>一個國家不能同時擁有：① 固定匯率（fixed exchange rate）；② 資本自由流動（free capital mobility）；③ 獨立的貨幣政策（independent monetary policy）。只能同時實現其中兩項。</p>
+                  <p><strong>亞洲各國的選擇：</strong>1990 年代初，亞洲各國在資本帳戶逐步開放（② 朝向自由化）、同時維持匯率釘住美元（① 維持）的情況下，實際上喪失了貨幣政策自主權（③ 放棄）——但許多政策制定者並未充分認識到這一點。當美元升值時，維持釘住匯率要求同步緊縮貨幣政策，即使本國經濟已在放緩；當國際資本大量流入時，維持釘住匯率要求大量購買外幣（擴張本幣），推高本地信貸和資產泡沫。</p>
+                  <p><strong>「自食其果」的邏輯：</strong>如果亞洲各國在資本帳戶開放的同時放棄固定匯率（選擇浮動），1997 年的突然衝擊可以通過匯率貶值部分吸收，而非形成外匯儲備的全面崩潰。選擇「資本開放 + 固定匯率」而不配套足夠的外匯儲備和宏觀審慎監管，是制度選擇的內生缺陷，不能完全歸咎於外部投機者。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明三難困境的三個要素，理解亞洲選擇了固定匯率 + 資本開放，提出這限制了貨幣政策，但對「自食其果」的內生邏輯推導不夠嚴謹。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道三難困境的名字，無法清晰說明亞洲各國具體選擇了哪兩個目標，無法推導出危機的內生邏輯。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>三難困境框架的準確運用</td><td>30 分</td></tr>
+                    <tr><td>亞洲各國政策選擇的分析</td><td>30 分</td></tr>
+                    <tr><td>「自食其果」內生邏輯的推導</td><td>30 分</td></tr>
+                    <tr><td>論述結構</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="exercise">
+              <div class="exercise-header">
+                <span class="exercise-num">練習 3</span>
+                <span class="exercise-difficulty difficulty-basic">基礎難度</span>
+              </div>
+              <h3 class="exercise-question">歐元區缺乏「財政聯盟（fiscal union）」被認為是其制度設計的核心缺陷。請解釋為什麼財政聯盟對於一個貨幣聯盟的穩定性至關重要，並說明美元區（美國各州）是如何解決這個問題的。</h3>
+              <p><em>建議作答時間：20 分鐘。</em></p>
+              <button class="reveal-btn" onclick="toggleAnswer(this)">顯示評分標準與參考答案</button>
+              <div class="exercise-answer">
+                <div class="answer-block excellent">
+                  <div class="answer-label">優秀答案的要素（85–100 分）</div>
+                  <p><strong>財政聯盟的功能：</strong>在貨幣聯盟中，成員沒有獨立的匯率工具，無法通過貶值調整競爭力。當某個成員面臨不對稱衝擊（asymmetric shock，即本國衰退而其他成員正常）時，需要其他調整機制：① 勞動力流動（工人遷移到繁榮地區）；② 跨區財政轉移（聯邦政府對衰退地區的自動穩定器）。財政聯盟提供了第②個機制。</p>
+                  <p><strong>美國各州的解決方案：</strong>美國各州共享同一貨幣（美元），但有強大的聯邦財政轉移機制：① 聯邦所得稅在衰退州自動減少（稅收自動穩定器）；② 聯邦轉移支付（失業補貼、Medicare、Medicaid）在衰退州自動增加；③ 聯邦采購和項目支出對各州有均衡效果。Sachs &amp; Sala-i-Martin（1992）估算，美國各州遭受衝擊後，聯邦財政自動吸收了約 40% 的初始衝擊。</p>
+                  <p><strong>歐元區的對比：</strong>歐盟預算僅佔 GDP 的約 1%（美國聯邦政府約 22%），且主要用於農業補貼和結構基金，幾乎沒有真正的自動穩定器功能。因此希臘等邊緣國面臨衰退時，只能依賴緊縮政策而非財政轉移，陷入債務—衰退的惡性循環。</p>
+                </div>
+                <div class="answer-block average">
+                  <div class="answer-label">一般答案（65–84 分）</div>
+                  <p>能說明財政聯盟在衰退時提供自動穩定器，理解美國各州有聯邦轉移支付而歐元區缺乏，但對機制的分析不夠深入，具體數字援引較少。</p>
+                </div>
+                <div class="answer-block weak">
+                  <div class="answer-label">薄弱答案（0–64 分）</div>
+                  <p>只知道「歐元區沒有財政聯盟」，無法說明財政聯盟的具體功能，也無法說明美國如何解決這個問題。</p>
+                </div>
+                <table class="rubric-table">
+                  <thead><tr><th>評分項目</th><th>分數</th></tr></thead>
+                  <tbody>
+                    <tr><td>財政聯盟功能的清晰說明</td><td>35 分</td></tr>
+                    <tr><td>美國聯邦財政機制的具體分析</td><td>30 分</td></tr>
+                    <tr><td>歐元區對比的批評性評估</td><td>25 分</td></tr>
+                    <tr><td>論述清晰度</td><td>10 分</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="lecture-nav">
+          <a href="h10-soviet-collapse.html" class="lecture-nav-btn prev">
+            <span class="lecture-nav-label">← 上一講</span>
+            <span class="lecture-nav-title">H10 蘇聯解體、轉型與華盛頓共識</span>
+          </a>
+          <a href="h12-china-wto.html" class="lecture-nav-btn next">
+            <span class="lecture-nav-label">下一講 →</span>
+            <span class="lecture-nav-title">H12 中國改革開放與全球供應鏈</span>
+          </a>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
