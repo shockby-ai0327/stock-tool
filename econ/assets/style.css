@@ -1480,3 +1480,7 @@ h1.hero-title {
   .hero-stats { gap: 1.5rem; }
   .hero-stat-val { font-size: 1.75rem; }
 }
+
+/* ─── Legacy compatibility (history pages use old wrapper names) ─── */
+.topbar-inner { display: contents; }
+.sidebar-toggle-btn { display: none !important; }
