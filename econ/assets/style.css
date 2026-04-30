@@ -1729,3 +1729,235 @@ h1.hero-title {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ============================================================
+   SVG ICON CONSTRAINTS — history page label containers
+   All inline icons must be ≤ 1.125rem × 1.125rem
+   ============================================================ */
+
+/* Shared label container style */
+.blackboard-label,
+.transmission-label,
+.cs-label,
+.mc-label,
+.case-study-label,
+.misconception-label,
+.toc-label,
+.exercise-section-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: var(--font-ui);
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .75rem;
+}
+
+.blackboard-label        { color: var(--amber-gold); }
+.transmission-label      { color: var(--navy); }
+.cs-label,
+.case-study-label        { color: var(--forest); }
+.mc-label,
+.misconception-label     { color: var(--crimson); }
+
+/* ── The actual icon size fix ── */
+.blackboard-label svg,
+.transmission-label svg,
+.cs-label svg,
+.mc-label svg,
+.case-study-label svg,
+.misconception-label svg,
+.toc-label svg,
+.exercise-section-label svg,
+.lecture-nav-label svg,
+.answer-label svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  flex-shrink: 0;
+}
+
+/* Global safety net: any inline SVG inside article content
+   that has no explicit width attribute gets capped at icon size */
+.article-main svg:not([width]):not(.no-cap),
+.article svg:not([width]):not(.no-cap),
+.content-wrapper svg:not([width]):not(.no-cap) {
+  max-width: 1.25rem;
+  max-height: 1.25rem;
+}
+
+/* History page old transmission structure */
+.t-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.t-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.t-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.t-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--navy);
+  flex-shrink: 0;
+  margin-top: .375rem;
+}
+
+.t-line {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  background: var(--navy-border);
+}
+
+.t-content {
+  flex: 1;
+  padding: .375rem 0 1rem;
+}
+
+.t-content strong {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: .25rem;
+}
+
+.t-content span {
+  font-size: .875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.t-branch-label {
+  font-family: var(--font-ui);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: .5rem 0 .25rem 1.5rem;
+}
+
+/* History lecture nav */
+.lecture-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.lecture-nav-btn {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  padding: .875rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  transition: border-color 150ms, box-shadow 150ms, transform 150ms;
+}
+.lecture-nav-btn:hover {
+  border-color: var(--amber);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.lecture-nav-label {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  font-family: var(--font-ui);
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lecture-nav-title {
+  font-family: var(--font-display);
+  font-size: .9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* History article header */
+.article-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.article-part {
+  font-family: var(--font-ui);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: .625rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.article-part::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.article-num {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--border-strong);
+  margin-bottom: .25rem;
+}
+
+.article-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.625rem, 3.5vw, 2.375rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  color: var(--text-primary);
+  margin-bottom: .5rem;
+}
+
+.article-subtitle {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-family: var(--font-ui);
+  font-size: .8125rem;
+  color: var(--text-secondary);
+}
