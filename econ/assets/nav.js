@@ -94,34 +94,31 @@
     });
   }
 
-  /* ── Exercise answer toggles (.toggle-answer, inline onclick) ── */
-  function initExercises() {
-    /* Support both class-based and any dynamically bound buttons */
-    document.querySelectorAll('.toggle-answer').forEach(btn => {
-      if (btn.dataset.bound) return;
-      btn.dataset.bound = '1';
-      btn.addEventListener('click', function () {
-        const exercise = this.closest('.exercise');
-        if (!exercise) return;
-        const ans = exercise.querySelector('.answer-content, .exercise-answer');
-        if (!ans) return;
-        const isOpen = ans.classList.toggle('visible');
-        this.classList.toggle('open', isOpen);
-        this.textContent = isOpen ? '▴ 收起答案' : '▾ 查看標準答案與評分標準';
-      });
-    });
-  }
+  /* ── Exercise answer toggles ── */
+  /* HTML uses .exercise-card as container; legacy may use .exercise */
+  const EXERCISE_SELECTOR = '.exercise-card, .exercise';
 
-  /* Global toggle function for inline onclick="toggleAnswer(this)" */
-  window.toggleAnswer = function (btn) {
-    const exercise = btn.closest('.exercise');
-    if (!exercise) return;
-    const ans = exercise.querySelector('.answer-content, .exercise-answer');
+  function toggleExercise(btn) {
+    const card = btn.closest(EXERCISE_SELECTOR);
+    if (!card) return;
+    const ans = card.querySelector('.exercise-answer, .answer-content');
     if (!ans) return;
     const isOpen = ans.classList.toggle('visible');
     btn.classList.toggle('open', isOpen);
-    btn.textContent = isOpen ? '▴ 收起答案' : '▾ 查看標準答案與評分標準';
-  };
+    btn.textContent = isOpen ? '▴ 收起答案' : '▾ 顯示標準答案與評分標準';
+  }
+
+  function initExercises() {
+    document.querySelectorAll('.exercise-toggle, .toggle-answer').forEach(btn => {
+      if (btn.dataset.bound) return;
+      if (btn.getAttribute('onclick')) return; // inline onclick already handles it
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () { toggleExercise(this); });
+    });
+  }
+
+  /* Global for inline onclick="toggleAnswer(this)" */
+  window.toggleAnswer = toggleExercise;
 
   /* ── Reading progress bar ── */
   function initProgress() {

@@ -955,9 +955,56 @@ body {
   background: var(--purple-light);
   border: 1px solid var(--purple-border);
   border-radius: var(--r-xl);
-  padding: 2rem 2.25rem;
-  margin: 3.5rem 0;
+  padding: 1.75rem 2rem;
+  margin: 2.5rem 0;
 }
+
+/* ── Exercise card (individual question) ── */
+.exercise-card {
+  background: #fff;
+  border: 1px solid var(--purple-border);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.exercise-number {
+  font-family: var(--font-ui);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: .5rem;
+}
+
+.exercise-question {
+  font-size: .9375rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.exercise-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: .4375rem .875rem;
+  font-family: var(--font-ui);
+  font-size: .8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, transform 100ms;
+  margin-bottom: 0;
+}
+
+.exercise-toggle:hover { background: #4C1D95; }
+.exercise-toggle:active { transform: scale(.98); }
+.exercise-toggle.open { background: #4C1D95; }
 
 .exercise-section-label {
   font-family: var(--font-ui);
