@@ -255,7 +255,7 @@ body {
 .content {
   max-width: calc(var(--content-max) + 8rem);
   margin: 0 auto;
-  padding: 3rem 4rem 6rem;
+  padding: 2.5rem 4rem 5rem;
 }
 
 /* ============================================================
@@ -339,19 +339,17 @@ body {
    ============================================================ */
 
 .lecture-hero {
-  padding: 2.5rem 0 2.25rem;
+  padding: 1.75rem 0 1.5rem;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 2.75rem;
+  margin-bottom: 2rem;
   position: relative;
+  overflow: hidden;
 }
 
 .lecture-hero::before {
   content: '';
   position: absolute;
-  left: -4rem;
-  right: -4rem;
-  top: 0;
-  bottom: 0;
+  inset: 0;
   background: linear-gradient(180deg, rgba(232,168,56,.04) 0%, transparent 100%);
   pointer-events: none;
 }
@@ -410,7 +408,7 @@ body {
    ============================================================ */
 
 .section {
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.25rem;
 }
 
 .section-title {
@@ -498,8 +496,8 @@ body {
   border: 1px solid var(--border);
   border-left: 4px solid var(--amber);
   border-radius: 0 var(--r-lg) var(--r-lg) 0;
-  padding: 1.5rem 1.75rem;
-  margin: 2rem 0;
+  padding: 1rem 1.375rem;
+  margin: 1.5rem 0;
   position: relative;
 }
 
@@ -550,8 +548,8 @@ body {
   background: #1A1614;
   color: #F0EBE3;
   border-radius: var(--r-lg);
-  padding: 2rem 2.25rem;
-  margin: 2.5rem 0;
+  padding: 1.375rem 1.75rem;
+  margin: 1.5rem 0;
   font-family: var(--font-ui);
   box-shadow: var(--shadow-md);
 }
@@ -595,11 +593,11 @@ body {
 
 .blackboard pre {
   font-family: var(--font-mono);
-  font-size: .8125rem;
+  font-size: .75rem;
   color: #C8C3BC;
-  line-height: 1.65;
+  line-height: 1.55;
   overflow-x: auto;
-  margin: 1rem 0 0;
+  margin: .75rem 0 0;
   white-space: pre;
 }
 
@@ -628,53 +626,73 @@ body {
   background: var(--navy-light);
   border: 1px solid var(--navy-border);
   border-radius: var(--r-lg);
-  padding: 1.75rem 2rem;
-  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .transmission-title {
   font-family: var(--font-display);
-  font-size: 1.0625rem;
+  font-size: .9375rem;
   font-weight: 600;
   font-style: italic;
   color: var(--navy);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
+/* ── Horizontal flow on desktop ── */
 .transmission-flow {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0;
 }
 
 .transmission-step {
-  background: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.75);
   border: 1px solid var(--navy-border);
   border-radius: var(--r);
-  padding: .75rem 1.125rem;
-  position: relative;
+  padding: .5rem .875rem;
+  flex: 1;
+  min-width: 120px;
+  max-width: 220px;
 }
 
 .step-label {
   font-family: var(--font-ui);
-  font-size: .8125rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--navy);
-  margin-bottom: .25rem;
+  margin-bottom: .2rem;
 }
 
 .step-desc {
-  font-size: .8125rem;
+  font-size: .7rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.45;
 }
 
+/* Vertical arrow becomes horizontal → */
 .transmission-arrow {
   text-align: center;
   color: var(--navy);
-  font-size: 1.125rem;
-  line-height: 1.6;
   opacity: .6;
+  padding: 0 .25rem;
+  font-size: 0;            /* hide original ↓ */
+  flex-shrink: 0;
+}
+.transmission-arrow::before {
+  content: '→';
+  font-size: 1rem;
+  display: block;
+}
+
+/* Fallback: on very narrow viewports go back to vertical */
+@media (max-width: 420px) {
+  .transmission-flow { flex-direction: column; }
+  .transmission-step { max-width: none; flex: none; }
+  .transmission-arrow { font-size: 1rem; padding: 0; }
+  .transmission-arrow::before { content: '↓'; }
 }
 
 /* ============================================================
@@ -685,8 +703,8 @@ body {
   background: var(--forest-light);
   border: 1px solid var(--forest-border);
   border-radius: var(--r-lg);
-  padding: 1.75rem 2rem;
-  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
   position: relative;
   overflow: hidden;
 }
@@ -1484,3 +1502,26 @@ h1.hero-title {
 /* ─── Legacy compatibility (history pages use old wrapper names) ─── */
 .topbar-inner { display: contents; }
 .sidebar-toggle-btn { display: none !important; }
+
+/* ─── Breadcrumb (history pages) ─── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: .8125rem;
+  color: var(--text-secondary);
+}
+.breadcrumb a { color: var(--amber); text-decoration: none; white-space: nowrap; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb-sep { color: var(--border-strong); flex-shrink: 0; }
+.breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
