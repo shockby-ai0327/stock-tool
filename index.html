@@ -1720,7 +1720,8 @@ async function loadNews(cat) {
   }
   div.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">載入新聞...</p></div>';
   // 美股/加密 → Finnhub API 直連（無 proxy，零 403）
-  // 綜合/台股 → Google News Topic ID URL（不走搜尋型，proxy 不擋）
+  // 台股 → 8 個台灣財經 RSS 並行（直連優先，proxy 備援）+ Finnhub 補充
+  // 綜合 → Google News Topic + Finnhub 並行（哪個先成功用哪個，互為備援）
   const GNEWS_TOPIC = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB';
   try {
     let allItems = [];
@@ -1744,11 +1745,14 @@ async function loadNews(cat) {
     } else if (cat === 'tw') {
       // ── 台股：並行嘗試多個台灣財經 RSS（直連優先，proxy 備援）
       const TW_FEEDS = [
-        { url: 'https://ec.ltn.com.tw/rss/news.xml',             name: '自由財經' },
-        { url: 'https://ctee.com.tw/feed',                        name: '工商時報' },
-        { url: 'https://money.udn.com/rssfeed/news/1001/5591',    name: '經濟日報' },
-        { url: 'https://www.businesstoday.com.tw/rss/index.rss',  name: '今周刊' },
-        { url: 'https://www.wealth.com.tw/rss',                   name: '財訊' },
+        { url: 'https://ec.ltn.com.tw/rss/news.xml',                                          name: '自由財經' },
+        { url: 'https://ctee.com.tw/feed',                                                     name: '工商時報' },
+        { url: 'https://money.udn.com/rssfeed/news/1001/5591',                                 name: '經濟日報' },
+        { url: 'https://www.businesstoday.com.tw/rss/index.rss',                               name: '今周刊' },
+        { url: 'https://www.wealth.com.tw/rss',                                                name: '財訊' },
+        { url: 'https://www.moneydj.com/MDAPP/News/NewsRSS.aspx?cate=MB010000',                name: 'MoneyDJ' },
+        { url: 'https://news.cnyes.com/news/cat/tw_stock/rss',                                 name: '鉅亨網' },
+        { url: 'https://rss.cts.com.tw/ctsb_financial.xml',                                    name: '中天財經' },
       ];
       // 並行嘗試：每個 feed 同時直連 + proxy，哪個先成功就用哪個
       const parseRSS = (xmlStr, name) => {
@@ -1814,18 +1818,48 @@ async function loadNews(cat) {
       if (!allItems.length) throw new Error('台股新聞暫時無法取得，請稍後再試');
 
     } else {
-      // ── 綜合：Google News Topic URL（topic ID 不走搜尋，proxy 不擋）
-      const r = await pFetch(GNEWS_TOPIC + '?hl=en-US&gl=US&ceid=US:en');
-      const xml = new DOMParser().parseFromString(await r.text(), 'text/xml');
-      xml.querySelectorAll('item').forEach(el => {
-        allItems.push({
-          title:   el.querySelector('title')?.textContent || '',
-          link:    el.querySelector('link')?.textContent || '',
-          pubDate: el.querySelector('pubDate')?.textContent || '',
-          desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
-          source:  el.querySelector('source')?.textContent || 'Google News'
+      // ── 綜合：並行嘗試 Google News Topic + Finnhub general，哪個先成功用哪個
+      const parseGNews = async () => {
+        const r = await pFetch(GNEWS_TOPIC + '?hl=en-US&gl=US&ceid=US:en', false, 6000);
+        const txt = await r.text();
+        if (!txt || txt.includes('<html') || txt.length < 200) throw new Error('invalid response');
+        const xml = new DOMParser().parseFromString(txt, 'text/xml');
+        const items = [];
+        xml.querySelectorAll('item').forEach(el => {
+          const title = el.querySelector('title')?.textContent || '';
+          if (!title) return;
+          items.push({
+            title,
+            link:    el.querySelector('link')?.textContent || '',
+            pubDate: el.querySelector('pubDate')?.textContent || '',
+            desc:    (el.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, ''),
+            source:  el.querySelector('source')?.textContent || 'Google News'
+          });
         });
-      });
+        if (items.length < 5) throw new Error('too few items');
+        return items;
+      };
+      const parseFinnhub = async () => {
+        const r = await fetch('https://finnhub.io/api/v1/news?category=general&token=' + FINNHUB_KEY, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error('Finnhub ' + r.status);
+        const data = await r.json();
+        return (Array.isArray(data) ? data : []).slice(0, 60).map(it => ({
+          title:   it.headline || '',
+          link:    it.url || '',
+          pubDate: it.datetime ? new Date(it.datetime * 1000).toUTCString() : '',
+          desc:    it.summary || '',
+          source:  it.source || 'Finnhub'
+        }));
+      };
+      // Try both simultaneously; prefer Google News (richer), fall back to Finnhub
+      const [gnRes, fhRes] = await Promise.allSettled([parseGNews(), parseFinnhub()]);
+      if (gnRes.status === 'fulfilled' && gnRes.value.length >= 5) {
+        allItems = gnRes.value;
+      } else if (fhRes.status === 'fulfilled' && fhRes.value.length > 0) {
+        allItems = fhRes.value;
+      } else {
+        throw new Error('綜合新聞暫時無法取得，請稍後再試');
+      }
     }
     // Deduplicate, sort newest first
     const seen = new Set();
@@ -1867,7 +1901,7 @@ async function loadNews(cat) {
         '<div class="meta">' + sourceBadge + '<span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div>' +
         '<p>' + it.desc.substring(0, 120) + (it.desc.length > 120 ? '...' : '') + '</p></div>';
     });
-    html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)">⚠ 新聞內容來自 Google News RSS 彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + new Date().toLocaleString('zh-TW') + '</div>';
+    html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)">⚠ 新聞內容來自 Finnhub、Google News RSS 等財經媒體彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + new Date().toLocaleString('zh-TW') + '</div>';
     div.innerHTML = html;
     // 存入 session 快取（10 分鐘）
     window._newsTabCache[cat] = { html, items: _newsItems, ts: Date.now() };
