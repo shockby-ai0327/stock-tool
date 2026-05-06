@@ -2609,6 +2609,154 @@ function showATRPopup(price, ticker) {
   document.body.appendChild(div);
 }
 
+// ============ JOURNAL MINDSET ANALYSIS ============
+function analyzeSingleNote(entry) {
+  const note = (entry.notes || '').toLowerCase();
+  if (!note.trim() || note.trim().length < 5) return null;
+  const flags = [], goods = [];
+
+  // ── 負向訊號（紅旗）
+  if (/追高|怕錯過|不想錯過|大家都在買|跟著買|fomo|熱門|要飛了|要噴了|千萬別錯過/.test(note))
+    flags.push({ tag:'FOMO', text:'偵測到「怕錯過」心態：追漲進場通常是接刀，高點進場停損距離小、風報比差。建議等回測支撐再進。' });
+
+  if (/攤平|補倉|跌了再加|越跌越買|向下加碼|越便宜越買/.test(note))
+    flags.push({ tag:'攤平', text:'向下攤平是帳戶殺手：對一個失敗方向持續加注。停損位破了就應出場，而不是越買越多。' });
+
+  if (/一定會|肯定|必漲|必跌|穩賺|100%|沒風險|保證|絕對/.test(note))
+    flags.push({ tag:'過度自信', text:'「一定」、「必漲」暗示過度自信，市場沒有確定性。任何交易都需要停損計劃，高確信度時更要小心。' });
+
+  if (/報仇|補回來|虧了要賺|損失要找回|討回來|賺回來/.test(note))
+    flags.push({ tag:'報復交易', text:'報復性交易是帳戶崩潰的主因：用新交易彌補舊虧損會影響客觀判斷。每筆交易都需要獨立評估。' });
+
+  if (/等它回|等回到|回到成本|回到買價|等解套/.test(note))
+    flags.push({ tag:'錨定效應', text:'「等回到成本」是錨定心理，市場不在乎你的成本。停損位破了，出場才是保護剩餘資金的正確選擇。' });
+
+  if (/衝了|衝動|賭一把|賭看看|試試運氣|碰運氣/.test(note))
+    flags.push({ tag:'衝動進場', text:'衝動/賭博心態進場，缺乏預期收益評估。交易應基於可重複執行的邏輯，而非衝動。' });
+
+  if (!/rsi|macd|均線|ma\d|ema|布林|kdj|kd |成交量|量能|突破|支撐|壓力|趨勢|型態|停損|財報|業績|roe|eps|pe |本益比|成長|獲利|毛利|營收|催化|題材/.test(note) &&
+      /感覺|直覺|覺得應該|好像會|試試看|看看再說/.test(note))
+    flags.push({ tag:'缺乏依據', text:'進場理由過於主觀（純靠感覺/直覺），缺乏技術面或基本面佐證，長期勝率會偏低。' });
+
+  if (note.trim().length < 20 && !flags.length && !goods.length)
+    flags.push({ tag:'記錄太簡短', text:'備註太少，難以事後覆盤。建議詳記：進場訊號、停損/停利位置、預期持有天數，事後才能從錯誤中學習。' });
+
+  // ── 正向訊號（綠燈）
+  if (/停損|止損|stop loss|設損|損位/.test(note))
+    goods.push('✅ 進場前設好停損，具備基本風控意識');
+  if (/停利|止盈|目標價|目標位|take profit|tp /.test(note))
+    goods.push('✅ 有明確的停利目標，避免「拿了又跌回去」的困境');
+  if (/rsi|macd|均線|ma\d|ema|布林|kdj|成交量|量能|突破|支撐|壓力|趨勢線|型態|kd /.test(note))
+    goods.push('✅ 有技術面訊號作為進場依據，決策有客觀基礎');
+  if (/財報|業績|roe|eps|pe |本益比|成長|獲利|毛利|營收|基本面/.test(note))
+    goods.push('✅ 有基本面分析支持，結合技術面是更完整的分析框架');
+  if (/風報比|風險報酬|1:2|1:3|2r|3r|reward|risk ratio/.test(note))
+    goods.push('✅ 考慮風險報酬比，展現成熟的倉位管理思維');
+  if (/等待|等確認|等突破|等回測|耐心|觀察/.test(note))
+    goods.push('✅ 耐心等待確認訊號，避免衝動進場，是優秀交易者的核心習慣');
+  if (/計劃|策略|規劃|預計|如果.*則|當.*時|一旦/.test(note))
+    goods.push('✅ 有事前條件式計劃（If-Then），紀律交易的核心思維');
+  if (/催化|題材|事件|新聞|財報季|fed|利率|政策|法說/.test(note))
+    goods.push('✅ 有具體催化劑觸發，不是純粹猜測方向');
+  if (/覆盤|錯誤|學到|改進|下次|反省/.test(note))
+    goods.push('✅ 有反省和學習意識，不斷改進是長期成功的關鍵');
+
+  // Score
+  let score = 5;
+  score -= Math.min(flags.length * 1.8, 5);
+  score += Math.min(goods.length * 1.2, 5);
+  score = Math.max(0, Math.min(10, Math.round(score * 10) / 10));
+  return { entry, flags, goods, score };
+}
+
+function showSingleNoteAnalysis(id) {
+  const e = getJ().find(x => x.id === id);
+  if (!e || !e.notes) return;
+  const a = analyzeSingleNote(e);
+  if (!a) return;
+  _showMindsetModal([a], 1);
+}
+
+function analyzeJournalMindset() {
+  const j = getJ();
+  const withNotes = j.filter(e => e.notes && e.notes.trim().length >= 5);
+  if (!withNotes.length) {
+    const ov = document.createElement('div'); ov.className = 'entry-modal-overlay';
+    ov.onclick = ev => { if (ev.target === ov) ov.remove(); };
+    ov.innerHTML = '<div class="entry-modal" style="max-width:460px;text-align:center;padding:40px">' +
+      '<div style="font-size:40px;margin-bottom:16px">📝</div><h3>尚無備註可分析</h3>' +
+      '<p style="color:var(--muted);margin-top:12px;line-height:1.8">新增交易記錄時請填寫「備註」欄，記錄你的進場理由、心態和判斷依據，系統才能分析你的交易思維模式。</p>' +
+      '<button class="btn btn-primary" style="margin-top:20px" onclick="this.closest(\'.entry-modal-overlay\').remove()">了解</button></div>';
+    document.body.appendChild(ov); return;
+  }
+  _showMindsetModal(withNotes.map(e => analyzeSingleNote(e)).filter(Boolean), withNotes.length);
+}
+
+function _showMindsetModal(analyzed, totalWithNotes) {
+  // Aggregate
+  const allFlagTags = analyzed.flatMap(a => a.flags.map(f => f.tag));
+  const freq = {}; allFlagTags.forEach(t => { freq[t] = (freq[t]||0) + 1; });
+  const topIssues = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const avgScore = analyzed.length ? analyzed.reduce((s,a)=>s+a.score,0)/analyzed.length : 5;
+  const sc = avgScore >= 7 ? 'var(--green)' : avgScore >= 4.5 ? 'var(--yellow)' : 'var(--red)';
+  const sLabel = avgScore >= 7 ? '思維品質良好 👍' : avgScore >= 4.5 ? '有改善空間 📈' : '需重點改善 ⚠️';
+
+  let html = '<div class="entry-modal" style="max-width:680px;max-height:88vh;overflow-y:auto">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:16px">' +
+    '<span style="font-weight:700;font-size:16px">🧠 交易思維分析</span>' +
+    '<button class="modal-close" onclick="this.closest(\'.entry-modal-overlay\').remove()">×</button></div>';
+
+  // Summary card
+  if (analyzed.length > 1) {
+    html += '<div style="padding:16px;background:var(--bg);border-radius:10px;margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">' +
+      '<div style="text-align:center;min-width:72px">' +
+      '<div style="font-size:34px;font-weight:700;color:' + sc + '">' + avgScore.toFixed(1) + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">平均評分</div></div>' +
+      '<div style="flex:1;min-width:200px">' +
+      '<div style="font-weight:600;color:' + sc + ';margin-bottom:6px;font-size:14px">' + sLabel + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);line-height:1.8">' +
+      '分析了 ' + analyzed.length + ' / ' + totalWithNotes + ' 筆有備註的交易。' +
+      (topIssues.length
+        ? '最常見問題：' + topIssues.map(([t,n])=>'<b style="color:var(--red)">'+t+'</b>（'+n+'次）').join('、') + '，建議優先改善。'
+        : '未偵測到明顯重複問題，整體思維模式健康。') +
+      '</div></div></div>';
+  }
+
+  // Per-entry
+  html += '<div style="display:flex;flex-direction:column;gap:12px">';
+  analyzed.forEach(a => {
+    const { entry:e, flags, goods, score } = a;
+    const bc = score >= 7 ? 'rgba(16,185,129,.06)' : score >= 4.5 ? 'rgba(245,158,11,.06)' : 'rgba(239,68,68,.06)';
+    const bd = score >= 7 ? 'rgba(16,185,129,.3)' : score >= 4.5 ? 'rgba(245,158,11,.3)' : 'rgba(239,68,68,.3)';
+    const ec = score >= 7 ? 'var(--green)' : score >= 4.5 ? 'var(--yellow)' : 'var(--red)';
+    html += '<div style="padding:14px;background:' + bc + ';border:1px solid ' + bd + ';border-radius:10px">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+      '<b style="color:var(--accent)">' + e.ticker + '</b>' +
+      '<span style="font-size:11px;color:' + (e.action==='buy'?'var(--green)':'var(--red)') + '">' + (e.action==='buy'?'買入':'賣出') + '</span>' +
+      '<span style="font-size:11px;color:var(--muted)">$' + e.price.toFixed(2) + ' · ' + e.date + '</span>' +
+      '<div style="margin-left:auto;font-size:20px;font-weight:700;color:' + ec + '">' + score.toFixed(0) + '<span style="font-size:11px;color:var(--muted)">/10</span></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text);background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;margin-bottom:10px;line-height:1.7;font-style:italic">"' +
+      e.notes.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '"</div>';
+    if (flags.length) html += flags.map(f =>
+      '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px">' +
+      '<span style="background:rgba(239,68,68,.2);color:var(--red);padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;margin-top:2px">' + f.tag + '</span>' +
+      '<span style="color:var(--text);line-height:1.7">' + f.text + '</span></div>'
+    ).join('');
+    if (goods.length) html += goods.map(g =>
+      '<div style="font-size:12px;color:var(--green);margin-bottom:4px;line-height:1.7">' + g + '</div>'
+    ).join('');
+    if (!flags.length && !goods.length) html += '<div style="font-size:12px;color:var(--muted);font-style:italic">備註內容中性，未偵測到明顯優劣訊號。建議增加更多技術/基本面依據的記錄。</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  const ov = document.createElement('div'); ov.className = 'entry-modal-overlay';
+  ov.onclick = ev => { if (ev.target === ov) ov.remove(); };
+  ov.innerHTML = html;
+  document.body.appendChild(ov);
+}
+
 function renderJournal() {
   const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
   if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
@@ -2619,7 +2767,18 @@ function renderJournal() {
   const tSell = j.filter(e => e.action === 'sell').reduce((s, e) => s + e.net, 0);
   const tFee = j.reduce((s, e) => s + (e.fee || 0), 0), pnl = tSell - tBuy;
   const sl = { value: '價值投資', swing: '波段交易', day: '當沖', other: '其他' };
-  st.innerHTML = '<div style="display:flex;gap:20px;flex-wrap:wrap"><div><span style="color:var(--muted)">總交易:</span> <b>' + j.length + '</b></div><div><span style="color:var(--muted)">總買入(含手續費):</span> <b style="color:var(--green)">$' + tBuy.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">總賣出(扣手續費):</span> <b style="color:var(--red)">$' + tSell.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">累計手續費:</span> <b style="color:var(--orange)">$' + tFee.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div><div><span style="color:var(--muted)">已實現損益:</span> <b style="color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + '">$' + pnl.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</b></div></div>';
+  const notesCount = j.filter(e => e.notes && e.notes.trim().length >= 5).length;
+  st.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">' +
+    '<div style="display:flex;gap:20px;flex-wrap:wrap">' +
+    '<div><span style="color:var(--muted)">總交易:</span> <b>' + j.length + '</b></div>' +
+    '<div><span style="color:var(--muted)">總買入:</span> <b style="color:var(--green)">$' + tBuy.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+    '<div><span style="color:var(--muted)">總賣出:</span> <b style="color:var(--red)">$' + tSell.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+    '<div><span style="color:var(--muted)">手續費:</span> <b style="color:var(--orange)">$' + tFee.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+    '<div><span style="color:var(--muted)">已實現損益:</span> <b style="color:' + (pnl>=0?'var(--green)':'var(--red)') + '">$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
+    '</div>' +
+    (notesCount ? '<button onclick="analyzeJournalMindset()" style="padding:6px 14px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;cursor:pointer;font-size:12px;font-weight:600">🧠 分析交易思維（' + notesCount + ' 筆）</button>' : '') +
+    '</div>';
   tb.innerHTML = j.map(e =>
     '<tr>' +
     '<td>' + e.date + '</td>' +
@@ -2638,6 +2797,7 @@ function renderJournal() {
     '</td>' +
     '<td style="white-space:nowrap">' +
       (e.action === 'buy' ? '<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;margin-right:4px;font-size:12px" title="進場計算（ATR）" onclick="showATRPopup(' + e.price + ',\'' + e.ticker + '\')">◎</button>' : '') +
+      (e.notes && e.notes.trim().length >= 5 ? '<button class="btn btn-sm" style="background:rgba(139,92,246,.12);color:#a78bfa;padding:3px 7px;margin-right:4px;font-size:12px" title="分析此筆交易思維" onclick="showSingleNoteAnalysis(' + e.id + ')">🧠</button>' : '') +
       '<button class="btn btn-danger btn-sm" onclick="delJ(' + e.id + ')">刪</button>' +
     '</td>' +
     '</tr>'
