@@ -2346,7 +2346,7 @@ function showJournalATRGuide(price, ticker) {
 }
 function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
 
-// ── Exit signal calculator — uses ATR, RSI, MACD, Bollinger to flag stop/reversal/target
+// ── Exit signal calculator — always returns levels + optional alert signal
 function calcExitSignal(avgCost, curPrice, closes, highs, lows) {
   if (!closes || closes.length < 20 || !curPrice || !avgCost) return null;
   // ATR-based levels
@@ -2354,6 +2354,7 @@ function calcExitSignal(avgCost, curPrice, closes, highs, lows) {
   if (!atr || atr <= 0) atr = avgCost * 0.02;
   const stopLevel = avgCost - 1.5 * atr;
   const target1R  = avgCost + atr;
+  const target2R  = avgCost + 2 * atr;
   const target3R  = avgCost + 3 * atr;
   // RSI(14)
   const rsiVal = rsi(closes, 14);
@@ -2364,38 +2365,42 @@ function calcExitSignal(avgCost, curPrice, closes, highs, lows) {
   const sigLine = emaArr(macdLine, 9);
   const histArr = macdLine.map((v, i) => sigLine[i] != null ? v - sigLine[i] : null).filter(v => v != null);
   const h0 = histArr[histArr.length-1] ?? 0, h1 = histArr[histArr.length-2] ?? 0, h2 = histArr[histArr.length-3] ?? 0;
-  const macdBearish   = h0 < h1 && h1 < h2 && h0 < 0; // 3-bar declining + negative zone
-  const macdShrinking = h0 < h1;                        // any histogram shrinkage
+  const macdBearish   = h0 < h1 && h1 < h2 && h0 < 0;
+  const macdShrinking = h0 < h1;
   // Bollinger (20,2)
   const boll = bollinger(closes, 20, 2);
   const atBollUpper = boll.hi != null && curPrice >= boll.hi * 0.985;
 
-  // 🔴 Stop loss triggered
-  if (curPrice <= stopLevel) return {
-    type:'stop', label:'停損觸發', icon:'🔴', color:'var(--red)', bg:'rgba(239,68,68,.18)',
-    detail:'現價 $' + curPrice.toFixed(2) + ' 已跌破停損位 $' + stopLevel.toFixed(2) + '（均成本 -1.5×ATR），建議立即出場'
-  };
-  // 🎯 3R profit target reached
-  if (curPrice >= target3R) return {
-    type:'target', label:'達 3R 目標', icon:'🎯', color:'var(--green)', bg:'rgba(16,185,129,.18)',
-    detail:'現價已超過 3R 停利目標 $' + target3R.toFixed(2) + '（+' + ((curPrice-avgCost)/avgCost*100).toFixed(1) + '%），建議分批出場鎖定獲利'
-  };
-  // ⚠️ Reversal warning: 2+ bearish signals
-  const reasons = [];
-  if (rsiVal >= 72) reasons.push('RSI ' + rsiVal.toFixed(0) + ' 超買');
-  if (atBollUpper) reasons.push('觸及布林上軌');
-  if (macdBearish) reasons.push('MACD 柱三連降（動能衰退）');
-  else if (macdShrinking && rsiVal >= 68) reasons.push('MACD 動能縮減');
-  if (reasons.length >= 2) return {
-    type:'reversal', label:'留意反轉', icon:'⚠️', color:'var(--yellow)', bg:'rgba(245,158,11,.15)',
-    detail: reasons.join('、') + '，線型出現可能反轉向下訊號（浮盈 +' + ((curPrice-avgCost)/avgCost*100).toFixed(1) + '%），建議移動停損至成本以上保護獲利'
-  };
-  // ⚠️ Light warning: 1R achieved, momentum fading
-  if (curPrice >= target1R && macdShrinking && rsiVal >= 65) return {
-    type:'reversal', label:'可移動停損', icon:'⚠️', color:'var(--yellow)', bg:'rgba(245,158,11,.12)',
-    detail: '已達 1R 目標（+' + ((curPrice-avgCost)/avgCost*100).toFixed(1) + '%），MACD 動能減弱，建議將停損上移至成本線保護獲利'
-  };
-  return null;
+  // Determine alert level
+  let alert = null;
+  if (curPrice <= stopLevel) {
+    alert = { type:'stop', label:'🔴 停損觸發', color:'var(--red)', bg:'rgba(239,68,68,.18)',
+      detail:'現價 $'+curPrice.toFixed(2)+' 已跌破停損位 $'+stopLevel.toFixed(2)+'（均成本 -1.5×ATR），建議立即出場' };
+  } else if (curPrice >= target3R) {
+    alert = { type:'target', label:'🎯 達 3R 目標', color:'var(--green)', bg:'rgba(16,185,129,.18)',
+      detail:'現價超過 3R 停利目標 $'+target3R.toFixed(2)+'（+'+((curPrice-avgCost)/avgCost*100).toFixed(1)+'%），建議分批出場鎖利' };
+  } else {
+    const reasons = [];
+    if (rsiVal >= 72) reasons.push('RSI '+rsiVal.toFixed(0)+' 超買');
+    if (atBollUpper) reasons.push('觸及布林上軌');
+    if (macdBearish) reasons.push('MACD 柱三連降');
+    else if (macdShrinking && rsiVal >= 68) reasons.push('MACD 動能縮減');
+    if (reasons.length >= 2) {
+      alert = { type:'reversal', label:'⚠️ 留意反轉', color:'var(--yellow)', bg:'rgba(245,158,11,.15)',
+        detail: reasons.join('、')+'，線型出現反轉跡象（浮盈 +'+((curPrice-avgCost)/avgCost*100).toFixed(1)+'%），建議移動停損保護獲利' };
+    } else if (curPrice >= target1R && macdShrinking && rsiVal >= 65) {
+      alert = { type:'reversal', label:'⚠️ 可移動停損', color:'var(--yellow)', bg:'rgba(245,158,11,.12)',
+        detail: '已達 1R（+'+((curPrice-avgCost)/avgCost*100).toFixed(1)+'%），MACD 動能減弱，建議停損上移至成本線' };
+    }
+  }
+
+  // Progress: position of curPrice between stop and 3R target
+  const range = target3R - stopLevel;
+  const progress = range > 0 ? Math.max(0, Math.min(100, ((curPrice - stopLevel) / range) * 100)) : 50;
+  // Distance to stop as %
+  const toStopPct = ((curPrice - stopLevel) / curPrice * 100);
+
+  return { alert, stopLevel, target1R, target2R, target3R, atr, rsiVal, progress, toStopPct };
 }
 
 async function renderHoldings() {
@@ -2461,10 +2466,35 @@ async function renderHoldings() {
     const days = Math.floor((Date.now() - new Date(p.firstDate)) / 86400000);
     totalMV += mv; totalCostAll += p.totalCost;
     const c = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    const sig = exitSig[ticker];
-    const sigCell = sig
-      ? '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:' + sig.bg + ';color:' + sig.color + ';cursor:help;white-space:nowrap" title="' + sig.detail.replace(/"/g,"'") + '">' + sig.icon + ' ' + sig.label + '</span>'
-      : (taData[ticker] ? '<span style="font-size:11px;color:var(--muted)">持倉中</span>' : '<span style="font-size:11px;color:var(--muted);opacity:.4">—</span>');
+    const es = exitSig[ticker];
+
+    // Exit signal cell — always show levels if TA loaded, alert badge if triggered
+    let exitCell = '';
+    if (es) {
+      const a = es.alert;
+      // Alert badge (top)
+      if (a) {
+        exitCell += '<div style="display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;background:' + a.bg + ';color:' + a.color + ';margin-bottom:5px;white-space:nowrap">' + a.label + '</div><br>';
+      }
+      // Progress bar: stop → current → 3R
+      const barColor = a?.type === 'stop' ? 'var(--red)' : a?.type === 'target' ? 'var(--green)' : a?.type === 'reversal' ? 'var(--yellow)' : 'var(--accent)';
+      exitCell +=
+        '<div style="min-width:140px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px">' +
+        '<span style="color:var(--red)">停 $' + es.stopLevel.toFixed(2) + '</span>' +
+        '<span style="color:var(--muted)">RSI ' + es.rsiVal.toFixed(0) + '</span>' +
+        '<span style="color:var(--green)">3R $' + es.target3R.toFixed(2) + '</span>' +
+        '</div>' +
+        '<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">' +
+        '<div style="width:' + es.progress.toFixed(0) + '%;height:100%;background:' + barColor + ';border-radius:3px;transition:width .4s"></div></div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">距停損 ' + (es.toStopPct >= 0 ? '+' : '') + es.toStopPct.toFixed(1) + '%</div>' +
+        '</div>';
+      // Hint text for alert
+      if (a) exitCell += '<div style="font-size:10px;color:' + a.color + ';margin-top:4px;line-height:1.4;max-width:170px">' + a.detail + '</div>';
+    } else {
+      exitCell = '<span style="font-size:11px;color:var(--muted);opacity:.5">計算中...</span>';
+    }
+
     return '<tr>' +
       '<td><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + ticker + '\';showPage(\'stock\');analyzeStock()">' + ticker + '</b></td>' +
       '<td>' + p.qty + '</td>' +
@@ -2473,7 +2503,7 @@ async function renderHoldings() {
       '<td style="color:' + c + ';font-weight:600">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</td>' +
       '<td style="color:' + c + ';font-weight:600">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
       '<td style="color:var(--muted)">' + days + ' 天</td>' +
-      '<td>' + sigCell + '</td>' +
+      '<td style="padding:8px 10px">' + exitCell + '</td>' +
       '<td><button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;font-size:12px" title="ATR 進場計算" onclick="showATRPopup(' + avgCost.toFixed(2) + ',\'' + ticker + '\')">◎</button></td>' +
       '</tr>';
   }).join('');
@@ -2482,25 +2512,25 @@ async function renderHoldings() {
   const totalPnlPct = totalCostAll > 0 ? (totalPnl / totalCostAll * 100) : 0;
   const tc = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
 
-  // Alert banners for critical signals
-  const stopList     = Object.entries(exitSig).filter(([,s]) => s?.type === 'stop');
-  const targetList   = Object.entries(exitSig).filter(([,s]) => s?.type === 'target');
-  const reversalList = Object.entries(exitSig).filter(([,s]) => s?.type === 'reversal');
+  // Top alert banners for critical signals
+  const stopList     = Object.entries(exitSig).filter(([,s]) => s?.alert?.type === 'stop');
+  const targetList   = Object.entries(exitSig).filter(([,s]) => s?.alert?.type === 'target');
+  const reversalList = Object.entries(exitSig).filter(([,s]) => s?.alert?.type === 'reversal');
   let alertHtml = '';
   if (stopList.length) alertHtml +=
     '<div style="padding:12px 16px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:10px;margin-bottom:10px">' +
     '<div style="font-weight:700;color:var(--red);margin-bottom:6px;font-size:14px">🔴 停損警報 — ' + stopList.map(([t])=>t).join('、') + '</div>' +
-    stopList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>' + t + '</b>：' + s.detail + '</div>').join('') +
+    stopList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>'+t+'</b>：'+s.alert.detail+'</div>').join('') +
     '<div style="font-size:11px;color:var(--muted);margin-top:6px">建議：嚴格執行停損，勿僥倖等待反彈。</div></div>';
   if (targetList.length) alertHtml +=
     '<div style="padding:12px 16px;background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.35);border-radius:10px;margin-bottom:10px">' +
     '<div style="font-weight:700;color:var(--green);margin-bottom:6px;font-size:14px">🎯 達到停利目標 — ' + targetList.map(([t])=>t).join('、') + '</div>' +
-    targetList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>' + t + '</b>：' + s.detail + '</div>').join('') +
+    targetList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>'+t+'</b>：'+s.alert.detail+'</div>').join('') +
     '<div style="font-size:11px;color:var(--muted);margin-top:6px">建議：可分批出場（先賣一半鎖利，剩半繼續持有並移動停損）。</div></div>';
   if (reversalList.length) alertHtml +=
     '<div style="padding:12px 16px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.35);border-radius:10px;margin-bottom:10px">' +
     '<div style="font-weight:700;color:var(--yellow);margin-bottom:6px;font-size:14px">⚠️ 反轉提示 — ' + reversalList.map(([t])=>t).join('、') + '</div>' +
-    reversalList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>' + t + '</b>：' + s.detail + '</div>').join('') +
+    reversalList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>'+t+'</b>：'+s.alert.detail+'</div>').join('') +
     '<div style="font-size:11px;color:var(--muted);margin-top:6px">建議：移動停損至成本線或近期低點，保留上行空間但鎖住主要獲利。</div></div>';
 
   div.innerHTML =
@@ -2511,10 +2541,10 @@ async function renderHoldings() {
     '<div><span style="color:var(--muted);font-size:13px">浮動損益</span><div style="font-size:22px;font-weight:700;color:' + tc + '">' + (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toLocaleString(undefined,{maximumFractionDigits:0}) + ' (' + (totalPnlPct >= 0 ? '+' : '') + totalPnlPct.toFixed(2) + '%)</div></div>' +
     '</div></div>' +
     (alertHtml ? '<div style="margin-bottom:12px">' + alertHtml + '</div>' : '') +
-    '<div class="card"><h3>個股明細</h3><div style="overflow-x:auto"><table>' +
-    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th>出場提示</th><th></th></tr></thead>' +
+    '<div class="card"><h3>個股明細與出場提示</h3><div style="overflow-x:auto"><table>' +
+    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th>出場提示（ATR/RSI/MACD）</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>' +
-    '<p style="font-size:11px;color:var(--muted);margin-top:10px">現價即時報價（15分延遲）；出場提示基於 ATR/RSI/MACD/布林帶，僅供參考，非投資建議。點擊 ◎ 查看 ATR 計算。</p></div>';
+    '<p style="font-size:11px;color:var(--muted);margin-top:10px">停損位 = 均成本 -1.5×ATR；3R 目標 = 均成本 +3×ATR。進度條顯示現價在停損-目標區間的位置。僅供參考，非投資建議。</p></div>';
 }
 
 window._jNotesMap = {};
