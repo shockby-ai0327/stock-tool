@@ -43,6 +43,8 @@ body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:v
 .mobile-nav::-webkit-scrollbar{display:none}
 .mobile-nav button{padding:10px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;flex:0 0 auto;white-space:nowrap;touch-action:manipulation}
 .mobile-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.holdings-mobile-hint{display:none}
+@media(max-width:700px){.holdings-exit-col{display:none}.holdings-atr-col{display:none}.holdings-mobile-hint{display:block}}
 @media(max-width:700px){.sidebar{display:none}.mobile-nav{display:flex}.main{flex:1;overflow-y:auto;padding:12px}
 .stock-header{gap:10px}.stock-name{font-size:18px}.stock-price{font-size:24px}.stock-change{font-size:13px}
 .search-box{flex-direction:column}.search-box input{font-size:16px;padding:12px 16px}.search-box button{padding:12px;font-size:15px}
@@ -237,6 +239,8 @@ firebase.initializeApp(_fbConfig);
 
       <!-- 盤前/盤後市場預測卡片 -->
       <div id="dash-premarket"></div>
+      <!-- 持倉動態 -->
+      <div id="dash-holdings"></div>
 
       <div class="dash-scan-grid">
         <div class="card">
@@ -327,6 +331,7 @@ firebase.initializeApp(_fbConfig);
           <div class="form-group"><label>價格</label><input type="number" id="j-price" step="0.01" placeholder="150.00"></div>
           <div class="form-group"><label>數量</label><input type="number" id="j-qty" placeholder="100"></div>
           <div class="form-group"><label>策略</label><select id="j-strategy"><option value="value">價值投資</option><option value="swing">波段交易</option><option value="day">當沖</option><option value="other">其他</option></select></div>
+          <div class="form-group"><label>停損價（選填）</label><input type="number" id="j-stop" step="0.01" placeholder="e.g. 125.00"></div>
           <div class="form-group"><label>手續費率</label><input type="text" value="買賣各 0.3%（自動計算）" disabled style="color:var(--orange);font-size:12px"></div>
           <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addJournal()">新增紀錄</button></div>
           <div class="form-group full"><label>備註</label><textarea id="j-notes" placeholder="交易理由、觀察..."></textarea></div>
@@ -336,7 +341,7 @@ firebase.initializeApp(_fbConfig);
           <div id="journal-atr-content"></div>
         </div>
       </div>
-      <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+      <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
       </div><!-- end journal-tab-records -->
       <div id="journal-tab-holdings" style="display:none">
         <div id="holdings-content"></div>
@@ -360,7 +365,10 @@ firebase.initializeApp(_fbConfig);
     <div id="page-scanner" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
         <h2 style="margin:0">掃描器</h2>
-        <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">一鍵掃描（Schwartz + Steinhardt）</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">一鍵掃描（Schwartz + Steinhardt）</button>
+          <button id="scan-cancel-btn" style="display:none;padding:8px 16px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;color:var(--red);cursor:pointer" onclick="cancelScan()">⏹ 取消掃描</button>
+        </div>
       </div>
       <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
       <div class="tab-bar" id="scanner-market-tabs">
@@ -1759,18 +1767,21 @@ async function loadNews(cat) {
         });
         return out;
       };
+      const feedStatus = {};
       const twResults = await Promise.allSettled(TW_FEEDS.map(async feed => {
         // 先試直連（部分台媒有 CORS），再試 proxy
         for (const fetcher of [
           () => fetch(feed.url, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.text() : Promise.reject()),
           () => pFetch(feed.url, false, 5000).then(r => r.text())
         ]) {
-          try { const txt = await fetcher(); const p = parseRSS(txt, feed.name); if (p.length > 2) return p; } catch(_) {}
+          try { const txt = await fetcher(); const p = parseRSS(txt, feed.name); if (p.length > 2) { feedStatus[feed.name] = true; return p; } } catch(_) {}
         }
+        feedStatus[feed.name] = false;
         return [];
       }));
       twResults.forEach(r => { if (r.status === 'fulfilled' && r.value.length) allItems = [...allItems, ...r.value]; });
       // 補充 Finnhub 國際台股相關新聞（直連，台灣 / 半導體 / 供應鏈關鍵字過濾）
+      let finnhubAdded = 0;
       try {
         const twKw = /taiwan|tsmc|mediatek|ase group|foxconn|semiconductor.*asia|supply chain.*taiwan|nvidia.*tsmc|asml.*taiwan/i;
         const fr = await fetch(
@@ -1781,6 +1792,7 @@ async function loadNews(cat) {
           const fdata = await fr.json();
           (Array.isArray(fdata) ? fdata : []).forEach(it => {
             if (twKw.test(it.headline + ' ' + it.summary)) {
+              finnhubAdded++;
               allItems.push({
                 title:   it.headline || '',
                 link:    it.url || '',
@@ -1792,6 +1804,13 @@ async function loadNews(cat) {
           });
         }
       } catch(_) {}
+      // Build source status line
+      const feedStatusHtml = TW_FEEDS.map(f =>
+        '<span style="margin-right:8px;color:' + (feedStatus[f.name] ? 'var(--green)' : 'var(--red)') + '">' +
+        f.name + ' ' + (feedStatus[f.name] ? '✓' : '✗') + '</span>'
+      ).join('') +
+      (finnhubAdded > 0 ? '<span style="color:var(--muted);font-size:11px">· 失敗來源由 Finnhub 補充 '+finnhubAdded+' 則國際台灣相關新聞</span>' : '');
+      window._twFeedStatusHtml = feedStatusHtml;
       if (!allItems.length) throw new Error('台股新聞暫時無法取得，請稍後再試');
 
     } else {
@@ -1834,7 +1853,10 @@ async function loadNews(cat) {
       '<span>本次共 ' + totalCount + ' 則新聞，其中 <b style="color:var(--green)">' + trustedCount + '</b> 則來自核實財經媒體，優先顯示</span>' +
       '<span style="margin-left:auto;color:var(--muted);font-size:10px">僅供參考，不構成投資建議</span>' +
       '</div>';
-    let html = summaryHtml + sourceLegend + '<div class="card" style="padding:0">';
+    const twFeedLine = (cat === 'tw' && window._twFeedStatusHtml)
+      ? '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:6px 10px;background:rgba(0,0,0,.15);border-radius:6px">來源：' + window._twFeedStatusHtml + '</div>'
+      : '';
+    let html = summaryHtml + sourceLegend + twFeedLine + '<div class="card" style="padding:0">';
     _newsItems.forEach((it, i) => {
       const trusted = isTrusted(it.source);
       const sourceBadge = trusted
@@ -2202,7 +2224,12 @@ function renderPreMarketCard(md) {
     if (hasEarn) news += '財報季驗證基本面，超預期才有追漲動力。';
     if (hasGeo) news += '地緣政治風險存在，避險情緒可能推升黃金與公債。';
     if (!news) news = sentimentLabel === '偏多' ? '新聞整體偏向正面，市場情緒尚穩。' : sentimentLabel === '偏空' ? '新聞負面訊號偏多，操作保守為宜。' : '新聞訊號混合，觀望為主。';
-    return base + '。' + news;
+    // VIX context
+    let vixNote = '';
+    if (vixV != null) { if (vixV < 15) vixNote = '波動率低，趨勢較為清晰。'; else if (vixV > 25) vixNote = '波動率偏高，注意盤中震盪。'; }
+    // Top theme reference
+    let themeNote = topThemes[0] ? '今日盤面焦點：' + topThemes[0].label + '。' : '';
+    return base + '。' + news + vixNote + themeNote;
   }
 
   // ── 台股預測文字
@@ -2215,7 +2242,12 @@ function renderPreMarketCard(md) {
     if (hasAI)  extra += '台積電、日月光等半導體族群受惠 AI 議題，為盤面主要焦點。';
     if (hasCN)  extra += '兩岸與中美關係仍是潛在下行風險，留意外資動向。';
     if (!extra)  extra = '台股短期高度連動美股，美股方向即為最大參考依據。';
-    return base + '。' + extra;
+    // USD/TWD context
+    let fxNote = twChg != null ? '新台幣走勢可能影響外資動向。' : '';
+    // Time context
+    const nowTWT = ((new Date().getUTCHours() + 8) % 24);
+    const timeNote = nowTWT < 9 ? '預計開盤方向：' : '';
+    return timeNote + base + '。' + extra + fxNote;
   }
 
   // ── 渲染
@@ -2303,15 +2335,45 @@ const FEE = 0.003;
 function getJ() { return JSON.parse(localStorage.getItem('stock-journal') || '[]'); }
 function saveJ(d) { localStorage.setItem('stock-journal', JSON.stringify(d)); syncField('journal', d); }
 function addJournal() {
-  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value };
+  const stopVal = parseFloat(document.getElementById('j-stop').value) || null;
+  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value, stop: stopVal };
   if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
   e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
-  const j = getJ(); j.unshift(e); saveJ(j);
-  document.getElementById('j-ticker').value = ''; document.getElementById('j-price').value = ''; document.getElementById('j-qty').value = ''; document.getElementById('j-notes').value = '';
+  if (window._editJId) {
+    // Edit mode: update existing entry
+    const j = getJ();
+    const idx = j.findIndex(x => x.id === window._editJId);
+    if (idx !== -1) { e.id = window._editJId; j[idx] = e; saveJ(j); }
+    window._editJId = null;
+    const btn = document.querySelector('.journal-form .btn-primary');
+    if (btn) btn.textContent = '新增紀錄';
+  } else {
+    const j = getJ(); j.unshift(e); saveJ(j);
+  }
+  document.getElementById('j-ticker').value = ''; document.getElementById('j-price').value = ''; document.getElementById('j-qty').value = ''; document.getElementById('j-notes').value = ''; document.getElementById('j-stop').value = '';
   renderJournal();
   if (e.action === 'buy') showJournalATRGuide(e.price, e.ticker);
   else { const g = document.getElementById('journal-atr-guide'); if (g) g.style.display = 'none'; }
 }
+function exportJournalCSV() {
+  const j = getJ();
+  if (!j.length) { alert('尚無交易紀錄'); return; }
+  const BOM = '﻿';
+  const headers = ['日期','代號','動作','價格','數量','金額','手續費','實收/實付','策略','停損價','備註'];
+  const rows = j.map(e => [
+    e.date, e.ticker, e.action==='buy'?'買入':'賣出',
+    e.price, e.qty, (e.amount||0).toFixed(0), (e.fee||0).toFixed(0), (e.net||0).toFixed(0),
+    e.strategy, e.stop||'',
+    '"'+(e.notes||'').replace(/"/g,'""')+'"'
+  ].join(','));
+  const csv = BOM + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'trading-journal-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
 function showJournalATRGuide(price, ticker) {
   let atr = null;
   for (const key in _entryData) { if (key.startsWith(ticker + '_')) { atr = _entryData[key]?.ta?.atr; break; } }
@@ -2345,14 +2407,30 @@ function showJournalATRGuide(price, ticker) {
   setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 }
 function delJ(id) { if (!confirm('確定刪除？')) return; saveJ(getJ().filter(e => e.id !== id)); renderJournal(); }
+function editJ(id) {
+  const e = getJ().find(x => x.id === id); if (!e) return;
+  document.getElementById('j-date').value = e.date || '';
+  document.getElementById('j-ticker').value = e.ticker || '';
+  document.getElementById('j-action').value = e.action || 'buy';
+  document.getElementById('j-price').value = e.price || '';
+  document.getElementById('j-qty').value = e.qty || '';
+  document.getElementById('j-strategy').value = e.strategy || 'other';
+  document.getElementById('j-notes').value = e.notes || '';
+  document.getElementById('j-stop').value = e.stop || '';
+  window._editJId = id;
+  const btn = document.querySelector('.journal-form .btn-primary');
+  if (btn) btn.textContent = '更新紀錄';
+  document.querySelector('.journal-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // ── Exit signal calculator — always returns levels + optional alert signal
-function calcExitSignal(avgCost, curPrice, closes, highs, lows) {
+function calcExitSignal(avgCost, curPrice, closes, highs, lows, userStop = null) {
   if (!closes || closes.length < 20 || !curPrice || !avgCost) return null;
   // ATR-based levels
   let atr = calcATR(closes, highs, lows, 14);
   if (!atr || atr <= 0) atr = avgCost * 0.02;
-  const stopLevel = avgCost - 1.5 * atr;
+  const stopLabel = (userStop && userStop > 0) ? '用戶設定停損' : 'ATR 估算停損';
+  const stopLevel = (userStop && userStop > 0) ? userStop : avgCost - 1.5 * atr;
   const target1R  = avgCost + atr;
   const target2R  = avgCost + 2 * atr;
   const target3R  = avgCost + 3 * atr;
@@ -2371,20 +2449,28 @@ function calcExitSignal(avgCost, curPrice, closes, highs, lows) {
   const boll = bollinger(closes, 20, 2);
   const atBollUpper = boll.hi != null && curPrice >= boll.hi * 0.985;
 
+  // RSI declining check (Item 4)
+  const rsiPrev2 = closes.length >= 17 ? rsi(closes.slice(0, -2), 14) : rsiVal;
+  const rsiDeclining = rsiVal < rsiPrev2 - 1;
+  // Strong trend filter: if price > 5% above EMA20, raise RSI threshold
+  const ema20Val = ema(closes, 20);
+  const strongTrend = ema20Val && curPrice > ema20Val * 1.05;
+  const rsiOverbought = strongTrend ? (rsiVal >= 78 && rsiDeclining) : (rsiVal >= 70 && rsiDeclining);
+
   // Determine alert level
   let alert = null;
   if (curPrice <= stopLevel) {
     alert = { type:'stop', label:'🔴 停損觸發', color:'var(--red)', bg:'rgba(239,68,68,.18)',
-      detail:'現價 $'+curPrice.toFixed(2)+' 已跌破停損位 $'+stopLevel.toFixed(2)+'（均成本 -1.5×ATR），建議立即出場' };
+      detail:'現價 $'+curPrice.toFixed(2)+' 已跌破停損位 $'+stopLevel.toFixed(2)+'（'+stopLabel+'），建議立即出場' };
   } else if (curPrice >= target3R) {
     alert = { type:'target', label:'🎯 達 3R 目標', color:'var(--green)', bg:'rgba(16,185,129,.18)',
       detail:'現價超過 3R 停利目標 $'+target3R.toFixed(2)+'（+'+((curPrice-avgCost)/avgCost*100).toFixed(1)+'%），建議分批出場鎖利' };
   } else {
     const reasons = [];
-    if (rsiVal >= 72) reasons.push('RSI '+rsiVal.toFixed(0)+' 超買');
+    if (rsiOverbought) reasons.push('RSI '+rsiVal.toFixed(0)+' 超買且下彎');
     if (atBollUpper) reasons.push('觸及布林上軌');
     if (macdBearish) reasons.push('MACD 柱三連降');
-    else if (macdShrinking && rsiVal >= 68) reasons.push('MACD 動能縮減');
+    else if (macdShrinking && rsiVal >= 68 && rsiDeclining) reasons.push('MACD 動能縮減');
     if (reasons.length >= 2) {
       alert = { type:'reversal', label:'⚠️ 留意反轉', color:'var(--yellow)', bg:'rgba(245,158,11,.15)',
         detail: reasons.join('、')+'，線型出現反轉跡象（浮盈 +'+((curPrice-avgCost)/avgCost*100).toFixed(1)+'%），建議移動停損保護獲利' };
@@ -2453,7 +2539,10 @@ async function renderHoldings() {
     const cur = prices[ticker];
     if (!cur || !taData[ticker]) return;
     const { closes, highs, lows } = taData[ticker];
-    const sig = calcExitSignal(avgCost, cur, closes, highs, lows);
+    // Get user-defined stop price from most recent buy entry
+    const lastBuy = j.slice().reverse().find(x => x.ticker === ticker && x.action === 'buy');
+    const userStop = lastBuy?.stop || null;
+    const sig = calcExitSignal(avgCost, cur, closes, highs, lows, userStop);
     exitSig[ticker] = sig;
     // Share real ATR with showATRPopup so both use the same value
     if (sig?.atr) window._holdingsATR[ticker] = sig.atr;
@@ -2507,8 +2596,8 @@ async function renderHoldings() {
       '<td style="color:' + c + ';font-weight:600">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</td>' +
       '<td style="color:' + c + ';font-weight:600">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
       '<td style="color:var(--muted)">' + days + ' 天</td>' +
-      '<td style="padding:8px 10px">' + exitCell + '</td>' +
-      '<td><button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;font-size:12px" title="ATR 進場計算" onclick="showATRPopup(' + avgCost.toFixed(2) + ',\'' + ticker + '\')">◎</button></td>' +
+      '<td class="holdings-exit-col" style="padding:8px 10px">' + exitCell + '</td>' +
+      '<td class="holdings-atr-col"><button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;font-size:12px" title="ATR 進場計算" onclick="showATRPopup(' + avgCost.toFixed(2) + ',\'' + ticker + '\')">◎</button></td>' +
       '</tr>';
   }).join('');
 
@@ -2546,9 +2635,11 @@ async function renderHoldings() {
     '</div></div>' +
     (alertHtml ? '<div style="margin-bottom:12px">' + alertHtml + '</div>' : '') +
     '<div class="card"><h3>個股明細與出場提示</h3><div style="overflow-x:auto"><table>' +
-    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th>出場提示（ATR/RSI/MACD）</th><th></th></tr></thead>' +
+    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th class="holdings-exit-col">出場提示（ATR/RSI/MACD）</th><th class="holdings-atr-col"></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>' +
-    '<p style="font-size:11px;color:var(--muted);margin-top:10px">停損位 = 均成本 -1.5×ATR；3R 目標 = 均成本 +3×ATR。進度條顯示現價在停損-目標區間的位置。僅供參考，非投資建議。</p></div>';
+    '<p style="font-size:11px;color:var(--muted);margin-top:10px">停損位 = 均成本 -1.5×ATR；3R 目標 = 均成本 +3×ATR。進度條顯示現價在停損-目標區間的位置。僅供參考，非投資建議。</p>' +
+    '<p class="holdings-mobile-hint" style="font-size:12px;color:var(--accent);margin-top:8px;text-align:center">📊 查看出場提示（橫屏或桌面版顯示完整欄位）</p>' +
+    '</div>';
 }
 
 window._jNotesMap = {};
@@ -2614,6 +2705,27 @@ function analyzeSingleNote(entry) {
   const note = (entry.notes || '').toLowerCase();
   if (!note.trim() || note.trim().length < 5) return null;
   const flags = [], goods = [];
+
+  // ── 賣出特定分析
+  if (entry.action === 'sell') {
+    if (/恐慌|嚇到|嚇壞|跌太兇|跌太多|受不了|忍不住|割肉|割了/.test(note))
+      flags.push({ tag:'恐慌離場', text:'恐慌性出場通常在最低點賣出。建議事前設好停損位，到達停損才出場，而非憑情緒決定。' });
+    if (/還沒跌夠|再等等|等一下|等它跌|等跌深一點/.test(note))
+      flags.push({ tag:'猶豫不決', text:'出場猶豫通常導致獲利回吐。有計劃的停利點到了就執行，不要再等更好的價格。' });
+    if (/感覺要跌|直覺說賣|好像不行了/.test(note) && !/rsi|macd|均線|訊號|停利/.test(note))
+      flags.push({ tag:'情緒出場', text:'憑感覺出場缺乏客觀依據，下次建議以技術訊號（如跌破均線、MACD 死叉）作為賣出觸發。' });
+    if (/計劃|目標|按照|達到|停利|到達設定/.test(note))
+      goods.push('✅ 按計劃執行停利，展現交易紀律');
+    if (/停損|跌破|破位|破支撐/.test(note))
+      goods.push('✅ 停損觸發後執行出場，嚴格風控');
+    if (/移動停損|鎖利|保護獲利/.test(note))
+      goods.push('✅ 使用移動停損保護獲利，是進階風控技巧');
+    let score = 5;
+    score -= Math.min(flags.length * 1.8, 5);
+    score += Math.min(goods.length * 1.2, 5);
+    score = Math.max(0, Math.min(10, Math.round(score * 10) / 10));
+    return { entry, flags, goods, score };
+  }
 
   // ── 負向訊號（紅旗）
   if (/追高|怕錯過|不想錯過|大家都在買|跟著買|fomo|熱門|要飛了|要噴了|千萬別錯過/.test(note))
@@ -2700,6 +2812,13 @@ function _showMindsetModal(analyzed, totalWithNotes) {
   const avgScore = analyzed.length ? analyzed.reduce((s,a)=>s+a.score,0)/analyzed.length : 5;
   const sc = avgScore >= 7 ? 'var(--green)' : avgScore >= 4.5 ? 'var(--yellow)' : 'var(--red)';
   const sLabel = avgScore >= 7 ? '思維品質良好 👍' : avgScore >= 4.5 ? '有改善空間 📈' : '需重點改善 ⚠️';
+  // Item 14: Save to mindset history
+  try {
+    const hist = JSON.parse(localStorage.getItem('mindset-history')||'[]');
+    hist.push({ date: new Date().toISOString().slice(0,10), score: avgScore, count: analyzed.length });
+    if (hist.length > 30) hist.splice(0, hist.length - 30);
+    localStorage.setItem('mindset-history', JSON.stringify(hist));
+  } catch(e) {}
 
   let html = '<div class="entry-modal" style="max-width:680px;max-height:88vh;overflow-y:auto">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:16px">' +
@@ -2777,7 +2896,10 @@ function renderJournal() {
     '<div><span style="color:var(--muted)">手續費:</span> <b style="color:var(--orange)">$' + tFee.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
     '<div><span style="color:var(--muted)">已實現損益:</span> <b style="color:' + (pnl>=0?'var(--green)':'var(--red)') + '">$' + pnl.toLocaleString(undefined,{maximumFractionDigits:0}) + '</b></div>' +
     '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
     (notesCount ? '<button onclick="analyzeJournalMindset()" style="padding:6px 14px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;cursor:pointer;font-size:12px;font-weight:600">🧠 分析交易思維（' + notesCount + ' 筆）</button>' : '') +
+    '<button onclick="exportJournalCSV()" style="padding:6px 14px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:8px;color:var(--green);cursor:pointer;font-size:12px;font-weight:600">📥 匯出 CSV</button>' +
+    '</div>' +
     '</div>';
   tb.innerHTML = j.map(e =>
     '<tr>' +
@@ -2795,9 +2917,11 @@ function renderJournal() {
         ? '<span style="display:block;max-width:130px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-decoration:underline dotted" title="點擊查看完整備註" onclick="showNotesPopup(' + e.id + ')">' + (e.notes.replace(/</g,'&lt;')) + '</span>'
         : '<span style="font-size:12px;color:var(--muted);opacity:.35">—</span>') +
     '</td>' +
+    '<td style="color:var(--red);font-size:12px">' + (e.stop ? '$'+e.stop.toFixed(2) : '—') + '</td>' +
     '<td style="white-space:nowrap">' +
       (e.action === 'buy' ? '<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;margin-right:4px;font-size:12px" title="進場計算（ATR）" onclick="showATRPopup(' + e.price + ',\'' + e.ticker + '\')">◎</button>' : '') +
       (e.notes && e.notes.trim().length >= 5 ? '<button class="btn btn-sm" style="background:rgba(139,92,246,.12);color:#a78bfa;padding:3px 7px;margin-right:4px;font-size:12px" title="分析此筆交易思維" onclick="showSingleNoteAnalysis(' + e.id + ')">🧠</button>' : '') +
+      '<button class="btn btn-sm" style="background:rgba(59,130,246,.1);color:var(--accent);padding:3px 7px;margin-right:4px;font-size:12px" onclick="editJ(' + e.id + ')">✏️</button>' +
       '<button class="btn btn-danger btn-sm" onclick="delJ(' + e.id + ')">刪</button>' +
     '</td>' +
     '</tr>'
@@ -4157,16 +4281,21 @@ function switchScannerMarket(market) {
   runScan(_scannerStrategy);
 }
 
+function cancelScan() { window._scanAbort = true; }
+
 async function runScan(strategy) {
+  window._scanAbort = false;
   _scannerStrategy = strategy;
   const stratOrder = ['schwartz','steinhardt'];
   document.querySelectorAll('#scanner-tabs button').forEach((b, i) =>
     b.classList.toggle('active', i === stratOrder.indexOf(strategy))
   );
   const tableDiv = document.getElementById('scanner-table');
+  const cancelBtn = document.getElementById('scan-cancel-btn');
   const setProgress = (msg) => {
     tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;color:var(--muted);font-size:13px">' + msg + '</p></div>';
   };
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
 
   // Overall 90-second scan timeout
   let _scanAborted = false;
@@ -4222,6 +4351,7 @@ async function runScan(strategy) {
     const _yfStageWork = Promise.allSettled(
       top15.map(async q => {
         if (_yfStageDone.v) return null;
+        if (window._scanAbort) { setProgress('掃描已取消'); return null; }
         try {
           let c, h, l, v, o;
           if (q._chartData) {
@@ -4273,6 +4403,8 @@ async function runScan(strategy) {
     tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
   } finally {
     clearTimeout(_scanTimer);
+    const cb = document.getElementById('scan-cancel-btn'); if (cb) cb.style.display = 'none';
+    window._scanAbort = false;
   }
 }
 
@@ -4673,6 +4805,11 @@ function showStrategy(type) {
 function renderJournalAnalysis(trades, stats, rawJ) {
   if (trades.length < 2) return '';
   const SL = { value:'價值投資', swing:'波段交易', day:'當沖', other:'其他', momentum:'動量突破', catalyst:'題材帶動', pullback:'回檔反彈', gapgo:'跳空追擊', meanrev:'均值回歸' };
+  // Sample size warning
+  let sampleWarn = '';
+  if (trades.length < 10) {
+    sampleWarn = '<div style="padding:10px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:12px;color:var(--yellow);margin-bottom:12px">⚠️ 目前僅有 '+trades.length+' 筆已結算交易。統計分析需要至少 20-30 筆才具有顯著意義，目前結論僅供參考方向。</div>';
+  }
   const hd = t => Math.floor((new Date(t.sellDate) - new Date(t.buyDate)) / 86400000);
   const winT = trades.filter(t => t.isWin), lossT = trades.filter(t => !t.isWin);
   const avgWH  = winT.length  ? winT.reduce((s,t)=>s+hd(t),0)/winT.length   : 0;
@@ -4706,10 +4843,10 @@ function renderJournalAnalysis(trades, stats, rawJ) {
       add('✅','good','獲利單持有 '+avgWH.toFixed(0)+' 天 > 虧損單 '+avgLH.toFixed(0)+' 天，有效執行「快速停損、讓獲利奔跑」原則，這是正確的交易習慣，持續保持。');
   }
 
-  // Strategy insight
-  if (best && best[1].total >= 2)
+  // Strategy insight (require ≥5 trades for meaningful insight)
+  if (best && best[1].total >= 5)
     add('🎯','good','你在「'+(SL[best[0]]||best[0])+'」策略勝率最高（'+((best[1].wins/best[1].total)*100).toFixed(0)+'%，共 '+best[1].total+' 筆）。建議集中資源在此策略，減少不擅長的類型。');
-  if (worst && best && worst[0]!==best[0] && worst[1].total >= 2)
+  if (worst && best && worst[0]!==best[0] && worst[1].total >= 5)
     add('📉','warn','「'+(SL[worst[0]]||worst[0])+'」策略勝率最低（'+((worst[1].wins/worst[1].total)*100).toFixed(0)+'%，共 '+worst[1].total+' 筆）。建議暫停此類交易，重新定義進場條件後再嘗試。');
 
   // Win rate
@@ -4729,23 +4866,38 @@ function renderJournalAnalysis(trades, stats, rawJ) {
     const kelly = Math.max(0, stats.winRate/100 - q/b);
     const halfK = Math.min(kelly/2, 0.25);
     if (halfK > 0.01)
-      add('📐','info','根據歷史勝率（'+stats.winRate.toFixed(0)+'%）與盈虧比（'+b.toFixed(2)+'），Half Kelly 建議單筆部位約總資金 '+(halfK*100).toFixed(0)+'%。若以 1% 停損法，建議同時最多持有約 '+Math.max(1,Math.round(0.01/Math.max(halfK*stats.avgLoss/100,0.001)))+' 個部位。');
+      add('📐','info','根據歷史勝率（'+stats.winRate.toFixed(0)+'%）與盈虧比（'+b.toFixed(2)+'），Half Kelly 建議單筆部位約總資金 '+(halfK*100).toFixed(0)+'%。若以 1% 停損法，建議同時最多持有約 '+Math.max(1,Math.round(0.01/Math.max(halfK*stats.avgLoss/100,0.001)))+' 個部位。（此計算需 30+ 筆交易才具統計意義）');
   }
 
   const C = {good:'var(--green)',warn:'var(--yellow)',bad:'var(--red)',info:'var(--accent)'};
   const BG= {good:'rgba(16,185,129,.07)',warn:'rgba(245,158,11,.07)',bad:'rgba(239,68,68,.07)',info:'rgba(59,130,246,.07)'};
   const BD= {good:'rgba(16,185,129,.25)',warn:'rgba(245,158,11,.25)',bad:'rgba(239,68,68,.25)',info:'rgba(59,130,246,.25)'};
+  // Item 14: Mindset trend
+  let mindsetTrendHtml = '';
+  try {
+    const mhist = JSON.parse(localStorage.getItem('mindset-history')||'[]');
+    if (mhist.length >= 3) {
+      const last3 = mhist.slice(-3);
+      const trend = last3.map(h => h.score.toFixed(1)).join(' → ');
+      const lastScore = last3[last3.length-1].score, firstScore = last3[0].score;
+      const trendLabel = lastScore > firstScore + 0.5 ? ' ↑改善中' : lastScore < firstScore - 0.5 ? ' ↓需關注' : ' →穩定';
+      const trendColor = lastScore > firstScore + 0.5 ? 'var(--green)' : lastScore < firstScore - 0.5 ? 'var(--red)' : 'var(--muted)';
+      mindsetTrendHtml = '<div style="margin-top:10px;padding:8px 12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px;font-size:12px">' +
+        '📈 思維品質趨勢（近3次分析）：<span style="color:'+trendColor+';font-weight:600">'+trend+trendLabel+'</span></div>';
+    }
+  } catch(e) {}
   return '<div class="card" style="margin-bottom:16px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
     '<h3 style="margin:0">🧠 AI 交易教練分析</h3>' +
     '<span style="font-size:11px;color:var(--muted)">基於 '+trades.length+' 筆已結算交易</span></div>' +
+    sampleWarn +
     '<div style="display:flex;flex-direction:column;gap:8px">' +
     ins.map(i =>
       '<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:'+BG[i.type]+';border:1px solid '+BD[i.type]+';border-radius:8px">' +
       '<span style="font-size:18px;flex-shrink:0;line-height:1.5">'+i.icon+'</span>' +
       '<div style="font-size:13px;line-height:1.75;color:var(--text)">'+i.text+'</div></div>'
     ).join('') +
-    '</div></div>';
+    '</div>' + mindsetTrendHtml + '</div>';
 }
 
 // ============ PERFORMANCE ============
@@ -4796,6 +4948,28 @@ function renderPerformance() {
   html += '<div class="card"><h3>📈 權益曲線</h3><div id="equity-curve" class="chart-container" style="height:250px"></div></div>';
   html += '<div class="card"><h3>📅 交易日曆熱力圖</h3><div id="calendar-heatmap" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>';
   html += '<div class="card"><h3>📊 R 倍數分布</h3><div id="r-distribution" style="display:flex;align-items:flex-end;gap:4px;height:150px;padding:20px 0"></div></div>';
+  // Item 7: Mindset vs Performance
+  const jAll = getJ();
+  const buyNoteMap = {};
+  jAll.filter(e=>e.action==='buy').forEach(e=>{ buyNoteMap[e.ticker+'_'+e.date] = e.notes||''; });
+  const withStop = trades.filter(t => { const n = (buyNoteMap[t.ticker+'_'+t.buyDate]||'').toLowerCase(); return /停損|止損|stop|設損/.test(n); });
+  const withoutStop = trades.filter(t => { const n = (buyNoteMap[t.ticker+'_'+t.buyDate]||'').toLowerCase(); return !/停損|止損|stop|設損/.test(n); });
+  if (withStop.length >= 3 && withoutStop.length >= 3) {
+    const wsStats = calcPerformanceStats(withStop), woStats = calcPerformanceStats(withoutStop);
+    const wsColor = wsStats.winRate >= woStats.winRate ? 'var(--green)' : 'var(--muted)';
+    const woColor = woStats.winRate > wsStats.winRate ? 'var(--green)' : 'var(--muted)';
+    html += '<div class="card"><h3>📊 思維習慣 vs 績效</h3>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+      '<div style="padding:12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">有記錄停損的交易</div>' +
+      '<div style="font-size:20px;font-weight:700;color:'+wsColor+'">' + wsStats.winRate.toFixed(0) + '% 勝率</div>' +
+      '<div style="font-size:12px;color:var(--muted)">共 '+withStop.length+' 筆 · 利潤因子 '+wsStats.profitFactor.toFixed(2)+'</div></div>' +
+      '<div style="padding:12px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">未記錄停損的交易</div>' +
+      '<div style="font-size:20px;font-weight:700;color:'+woColor+'">' + woStats.winRate.toFixed(0) + '% 勝率</div>' +
+      '<div style="font-size:12px;color:var(--muted)">共 '+withoutStop.length+' 筆 · 利潤因子 '+woStats.profitFactor.toFixed(2)+'</div></div>' +
+      '</div><p style="font-size:11px;color:var(--muted);margin-top:8px">進場備註中含「停損/止損/stop/設損」關鍵字視為有停損計劃。</p></div>';
+  }
   div.innerHTML = html;
   setTimeout(() => { renderEquityCurve(trades); renderCalendarHeatmap(trades); renderRDistribution(trades); }, 50);
 }
@@ -6028,10 +6202,49 @@ async function renderDashboard(forceRescan) {
   }
   renderPreMarketCard(marketData);
   fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
+  renderDashHoldings(); // 持倉動態
   // 6. T交易精選（15 分鐘快取，獨立載入）
   renderDashTTrading();
   // 7. 國際新聞摘要（10 分鐘快取）
   renderDashNews();
+}
+
+async function renderDashHoldings() {
+  const j = getJ();
+  if (!j.length) return;
+  const pos = {};
+  j.slice().reverse().forEach(e => {
+    if (!pos[e.ticker]) pos[e.ticker] = { qty:0, totalCost:0 };
+    if (e.action==='buy') { pos[e.ticker].qty += e.qty; pos[e.ticker].totalCost += e.net; }
+    else { const ac = pos[e.ticker].qty>0?pos[e.ticker].totalCost/pos[e.ticker].qty:0; pos[e.ticker].qty=Math.max(0,pos[e.ticker].qty-e.qty); pos[e.ticker].totalCost=pos[e.ticker].qty*ac; }
+  });
+  const open = Object.entries(pos).filter(([,p])=>p.qty>0);
+  if (!open.length) return;
+  const el = document.getElementById('dash-holdings');
+  if (!el) return;
+  el.innerHTML = '<div class="card"><h3>📂 持倉動態</h3><p style="font-size:12px;color:var(--muted)">抓取中...</p></div>';
+  const prices = {};
+  await Promise.all(open.map(async ([ticker])=>{
+    try { const d = await quickPrice(ticker); if(d) prices[ticker]=d.price; } catch(e){}
+  }));
+  let totalPnl = 0, totalCost = 0;
+  const items = open.map(([ticker,p])=>{
+    const ac = p.totalCost/p.qty, cur = prices[ticker]||0;
+    const pnl = (cur-ac)*p.qty, pct = ac>0?(cur-ac)/ac*100:0;
+    totalPnl += pnl; totalCost += p.totalCost;
+    const c = pct>=0?'var(--green)':'var(--red)';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="color:var(--accent);font-weight:600;cursor:pointer;font-size:13px" onclick="document.getElementById(\'ticker-input\').value=\''+ticker+'\';showPage(\'stock\');analyzeStock()">'+ticker+'</span>' +
+      '<span style="font-size:12px;color:var(--muted)">×'+p.qty+'</span>' +
+      '<span style="font-size:13px;font-weight:600;color:'+c+'">'+(pct>=0?'+':'')+pct.toFixed(2)+'%</span>' +
+      '<span style="font-size:12px;color:'+c+'">'+(pnl>=0?'+':'')+'$'+Math.round(pnl)+'</span>' +
+      '</div>';
+  }).join('');
+  const tc = totalPnl>=0?'var(--green)':'var(--red)';
+  el.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📂 持倉動態</h3>' +
+    '<span style="font-size:13px;font-weight:700;color:'+tc+'">'+(totalPnl>=0?'+':'')+'$'+Math.round(totalPnl)+' ('+(totalCost>0?(totalPnl/totalCost*100):0).toFixed(2)+'%)</span></div>' +
+    items +
+    '<div style="text-align:right;margin-top:8px"><button class="btn btn-sm" style="font-size:11px" onclick="showPage(\'journal\');setTimeout(()=>switchJournalTab(\'holdings\'),50)">詳細追蹤 →</button></div></div>';
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
