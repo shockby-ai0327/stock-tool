@@ -44,7 +44,8 @@ body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:v
 .mobile-nav button{padding:10px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;flex:0 0 auto;white-space:nowrap;touch-action:manipulation}
 .mobile-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .holdings-mobile-hint{display:none}
-@media(max-width:700px){.holdings-exit-col{display:none}.holdings-atr-col{display:none}.holdings-mobile-hint{display:block}}
+@media(max-width:700px){.holdings-exit-col{display:none}.holdings-atr-col{display:none}.holdings-mobile-hint{display:block}.holdings-mobile-sig{display:inline-block}.holdings-mobile-sig-desktop{display:none}}
+@media(min-width:701px){.holdings-mobile-sig{display:none}.holdings-mobile-sig-desktop{display:inline-block}}
 @media(max-width:700px){.sidebar{display:none}.mobile-nav{display:flex}.main{flex:1;overflow-y:auto;padding:12px}
 .stock-header{gap:10px}.stock-name{font-size:18px}.stock-price{font-size:24px}.stock-change{font-size:13px}
 .search-box{flex-direction:column}.search-box input{font-size:16px;padding:12px 16px}.search-box button{padding:12px;font-size:15px}
@@ -304,11 +305,14 @@ firebase.initializeApp(_fbConfig);
     </div>
     <div id="page-news" class="page">
       <h2 style="margin-bottom:20px">每日國際財經新聞</h2>
-      <div class="tab-bar" id="news-tabs">
-        <button class="active" onclick="loadNews('general')">綜合</button>
-        <button onclick="loadNews('us')">美股</button>
-        <button onclick="loadNews('tw')">台股</button>
-        <button onclick="loadNews('crypto')">加密貨幣</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:0">
+        <div class="tab-bar" id="news-tabs" style="margin-bottom:0;flex:1">
+          <button class="active" onclick="loadNews('general')">綜合</button>
+          <button onclick="loadNews('us')">美股</button>
+          <button onclick="loadNews('tw')">台股</button>
+          <button onclick="loadNews('crypto')">加密貨幣</button>
+        </div>
+        <button id="news-refresh-btn" onclick="forceRefreshNews()" style="padding:7px 14px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:8px;color:var(--accent);font-size:12px;cursor:pointer;font-weight:600;flex-shrink:0">🔄 刷新</button>
       </div>
       <div id="news-content"></div>
     </div>
@@ -415,7 +419,7 @@ function PROXY(url) {
 }
 let _lastProxyIdx = 0;
 const _cache = {};
-const CACHE_TTL = 1000; // 1s cache for real-time
+const CACHE_TTL = 30000; // 30s cache for real-time prices
 
 // ============ BOND ETF DETECTION ============
 const BOND_ETFS = new Set(['TLT','IEF','SHY','AGG','BND','LQD','HYG','JNK','VCSH','VCIT','VCLT','GOVT','BNDX','EMB','TIP','SCHZ','MUB','VGSH','VGIT','VGLT','IGSB','IGIB','IGLB','SPAB','SPTL','SPLB','SPTS','BWX','PCY','ZROZ','EDV','FLOT','SHV','BIL','SGOV','SCHO','SCHR','STIP','VTIP','IAGG','USIG','LQDH','SJNK','SHYG','ANGL','BKLN','SRLN','NEAR','MINT','JPST','GSY','FBND','FTSL','BOND','TLTW','PIMIX']);
@@ -515,7 +519,9 @@ async function pFetch(url, useCache, timeoutMs = 8000, cacheTTL = CACHE_TTL) {
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ============ FINNHUB (pre-screening, CORS direct — no proxy needed) ============
-const FINNHUB_KEY = 'd7eufb9r01qi33g7mk90d7eufb9r01qi33g7mk9g';
+// API key stored in localStorage so it's not baked into source
+// User can override via Settings: localStorage.setItem('finnhub_key','YOUR_KEY')
+const FINNHUB_KEY = localStorage.getItem('finnhub_key') || 'd7eufb9r01qi33g7mk90d7eufb9r01qi33g7mk9g';
 async function finnhubQuote(symbol) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), 5000);
@@ -673,8 +679,10 @@ async function fetchHistCloses(symbols) {
     await Promise.allSettled(batch.map(sym =>
       yfChart(sym, '1mo', '1d').then(chart => {
         const c = chart.indicators.quote[0].close.filter(v => v != null);
+        // Evict oldest entries if cache exceeds 120 symbols
+        const keys = Object.keys(_histCloses);
+        if (keys.length >= 120) delete _histCloses[keys[0]];
         _histCloses[sym] = c;
-        // Also store by Yahoo's normalized symbol
         if (chart.meta.symbol && chart.meta.symbol !== sym) _histCloses[chart.meta.symbol] = c;
       })
     ));
@@ -711,7 +719,8 @@ const PAGES = ['dashboard', 'stock', 'indices', 'scanner', 'news', 'journal', 'i
 const _pageLastRender = {};
 const PAGE_RERENDER_TTL = {
   dashboard: 2*60*1000, indices: 5*60*1000, sentiment: 10*60*1000,
-  news: 10*60*1000, industry: 10*60*1000, heatmap: 3*60*1000
+  news: 10*60*1000, industry: 10*60*1000, heatmap: 3*60*1000,
+  education: 60*60*1000  // 1 hour — static content, no need to rebuild
 };
 function _shouldRerender(name) {
   const ttl = PAGE_RERENDER_TTL[name];
@@ -743,11 +752,12 @@ function showPage(name) {
   }
   if (name === 'dashboard' && _shouldRerender('dashboard')) { renderDashboard();     _markRendered('dashboard'); }
   if (name === 'indices'   && _shouldRerender('indices'))   { loadIndices();         _markRendered('indices'); }
-  if (name === 'news'      && _shouldRerender('news'))      { loadNews('general');   _markRendered('news'); }
+  if (name === 'news'      && _shouldRerender('news'))      { loadNews('general');   _markRendered('news'); startNewsAutoRefresh('general'); }
+  if (name !== 'news') stopNewsAutoRefresh();
   if (name === 'industry'  && _shouldRerender('industry-global')) { loadIndustry('global'); _markRendered('industry-global'); }
-  if (name === 'journal')    { renderJournal(); switchJournalTab('records'); }
+  if (name === 'journal')    { renderJournal(); switchJournalTab(window._lastJournalTab || 'records'); }
   if (name === 'scanner')    loadScanner();
-  if (name === 'education')  renderEducation();
+  if (name === 'education' && _shouldRerender('education')) { renderEducation(); _markRendered('education'); }
   if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } }
 }
 
@@ -767,6 +777,7 @@ function switchIndicesTab(tab) {
 }
 
 function switchJournalTab(tab) {
+  window._lastJournalTab = tab; // remember for next visit
   document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['records','holdings','risk','performance'].indexOf(tab)));
   ['records','holdings','risk','performance'].forEach(t => {
     const el = document.getElementById('journal-tab-' + t);
@@ -793,7 +804,7 @@ function switchIndustryTab(tab) {
 
 // ============ STOCK ANALYSIS ============
 async function analyzeStock() {
-  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase().replace(/[^A-Z0-9.\-^]/g, '');
   if (!ticker) return;
   _lastAnalyzedTicker = ticker;
   const rd = document.getElementById('stock-result');
@@ -830,6 +841,12 @@ async function analyzeStock() {
     const candlePatterns = detectCandlePatterns(c, h, l, o);
     const chartPatterns  = detectChartPatterns(c, h, l);
     const allPatterns    = [...candlePatterns, ...chartPatterns];
+
+    // Store real ATR from analysis so ◎ popup uses accurate value even without scanner cache
+    if (ta.atr && ta.atr > 0) {
+      window._holdingsATR = window._holdingsATR || {};
+      window._holdingsATR[ticker] = ta.atr;
+    }
 
     if (isBondETF(ticker, fundamentals)) {
       const bondData = extractBondData(ticker, fundamentals, meta, price);
@@ -920,7 +937,9 @@ function renderKline(id, ohlcv) {
   const vs = ch.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: 'vol', scaleMargins: { top: 0.85, bottom: 0 } });
   vs.setData(ohlcv.map(d => ({ time: d.t, value: d.v, color: d.c >= d.o ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)' })));
   ch.timeScale().fitContent();
-  new ResizeObserver(() => ch.applyOptions({ width: el.clientWidth })).observe(el);
+  if (el._ro) el._ro.disconnect();
+  el._ro = new ResizeObserver(() => ch.applyOptions({ width: el.clientWidth }));
+  el._ro.observe(el);
 }
 
 // ============ K-LINE & CHART PATTERN DETECTION ============
@@ -1679,6 +1698,32 @@ async function loadSentiment() {
   }
 }
 
+// ============ NEWS AUTO-REFRESH ============
+let _newsAutoRefreshTimer = null;
+let _newsCurrentCat = 'general';
+function startNewsAutoRefresh(cat) {
+  _newsCurrentCat = cat;
+  if (_newsAutoRefreshTimer) clearInterval(_newsAutoRefreshTimer);
+  // Auto-refresh every 10 minutes while news page is active
+  _newsAutoRefreshTimer = setInterval(() => {
+    if (document.getElementById('page-news').classList.contains('active')) {
+      window._newsTabCache[_newsCurrentCat] = null; // bust cache
+      loadNews(_newsCurrentCat);
+    }
+  }, 10 * 60 * 1000);
+}
+function stopNewsAutoRefresh() {
+  if (_newsAutoRefreshTimer) { clearInterval(_newsAutoRefreshTimer); _newsAutoRefreshTimer = null; }
+}
+function forceRefreshNews() {
+  const btn = document.getElementById('news-refresh-btn');
+  if (btn) { btn.textContent = '⏳ 載入中...'; btn.disabled = true; }
+  window._newsTabCache[_newsCurrentCat] = null;
+  loadNews(_newsCurrentCat).finally(() => {
+    if (btn) { btn.textContent = '🔄 刷新'; btn.disabled = false; }
+  });
+}
+
 // ============ TRUSTED NEWS SOURCES ============
 // 核實財經媒體白名單 — 僅顯示來自可信賴機構的新聞以避免錯誤投資決策
 const TRUSTED_SOURCES = new Set([
@@ -1711,6 +1756,8 @@ async function loadNews(cat) {
   document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
   const _newsCats = ['general','us','tw','crypto'];
   document.querySelectorAll('#news-tabs button')[_newsCats.indexOf(cat)].classList.add('active');
+  _newsCurrentCat = cat; // track for auto-refresh
+  startNewsAutoRefresh(cat);
   // Session 快取：同一 tab 10 分鐘內不重抓
   const cached = window._newsTabCache[cat];
   if (cached && (Date.now() - cached.ts) < 10 * 60 * 1000) {
@@ -2457,6 +2504,24 @@ function editJ(id) {
   document.querySelector('.journal-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ── Shared open-position calculator (used by renderHoldings + renderDashHoldings)
+function calcOpenPositions(journal) {
+  const pos = {};
+  journal.slice().reverse().forEach(e => {
+    if (!pos[e.ticker]) pos[e.ticker] = { qty: 0, totalCost: 0, firstDate: e.date, strategy: e.strategy };
+    if (e.action === 'buy') {
+      pos[e.ticker].qty += e.qty;
+      pos[e.ticker].totalCost += e.net;
+      pos[e.ticker].firstDate = e.date;
+    } else {
+      const avgCost = pos[e.ticker].qty > 0 ? pos[e.ticker].totalCost / pos[e.ticker].qty : 0;
+      pos[e.ticker].qty = Math.max(0, pos[e.ticker].qty - e.qty);
+      pos[e.ticker].totalCost = pos[e.ticker].qty * avgCost;
+    }
+  });
+  return Object.entries(pos).filter(([, p]) => p.qty > 0);
+}
+
 // ── Exit signal calculator — always returns levels + optional alert signal
 function calcExitSignal(avgCost, curPrice, closes, highs, lows, userStop = null) {
   if (!closes || closes.length < 20 || !curPrice || !avgCost) return null;
@@ -2527,21 +2592,7 @@ async function renderHoldings() {
   const div = document.getElementById('holdings-content');
   const j = getJ();
   if (!j.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無交易紀錄</h3><p style="color:var(--muted);margin-top:8px">新增買入紀錄後，持倉追蹤將自動計算。</p></div>'; return; }
-  // Calculate open positions using average cost
-  const pos = {};
-  j.slice().reverse().forEach(e => {
-    if (!pos[e.ticker]) pos[e.ticker] = { qty: 0, totalCost: 0, firstDate: e.date, strategy: e.strategy };
-    if (e.action === 'buy') {
-      pos[e.ticker].qty += e.qty;
-      pos[e.ticker].totalCost += e.net;
-      pos[e.ticker].firstDate = e.date;
-    } else {
-      const avgCost = pos[e.ticker].qty > 0 ? pos[e.ticker].totalCost / pos[e.ticker].qty : 0;
-      pos[e.ticker].qty = Math.max(0, pos[e.ticker].qty - e.qty);
-      pos[e.ticker].totalCost = pos[e.ticker].qty * avgCost;
-    }
-  });
-  const open = Object.entries(pos).filter(([, p]) => p.qty > 0);
+  const open = calcOpenPositions(j);
   if (!open.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>目前無持倉</h3><p style="color:var(--muted);margin-top:8px">所有買入部位均已賣出。</p></div>'; return; }
   div.innerHTML = '<div class="card"><h3>持倉追蹤</h3><p style="font-size:12px;color:var(--muted);margin-bottom:12px">載入報價與技術指標中... <span class="spinner" style="width:14px;height:14px;border-width:2px;vertical-align:middle"></span></p></div>';
 
@@ -2578,7 +2629,8 @@ async function renderHoldings() {
     const userStop = lastBuy?.stop || null;
     const sig = calcExitSignal(avgCost, cur, closes, highs, lows, userStop);
     exitSig[ticker] = sig;
-    // Share real ATR with showATRPopup so both use the same value
+    // Share with mobile modal + ATR popup
+    if (sig) window._holdingsExitSig[ticker] = sig;
     if (sig?.atr) window._holdingsATR[ticker] = sig.atr;
   });
 
@@ -2622,8 +2674,14 @@ async function renderHoldings() {
       exitCell = '<span style="font-size:11px;color:var(--muted);opacity:.5">計算中...</span>';
     }
 
+    // Mobile signal badge — compact color dot with tap-to-detail
+    const mobileSigBadge = es
+      ? (es.alert
+          ? '<button class="holdings-mobile-sig btn btn-sm" style="background:' + es.alert.bg + ';color:' + es.alert.color + ';padding:2px 7px;font-size:11px;margin-left:4px" onclick="showHoldingsMobileSignal(\'' + ticker + '\')">' + es.alert.label + '</button>'
+          : '<button class="holdings-mobile-sig btn btn-sm" style="background:rgba(59,130,246,.12);color:var(--accent);padding:2px 7px;font-size:11px;margin-left:4px" onclick="showHoldingsMobileSignal(\'' + ticker + '\')">📊 出場提示</button>')
+      : '';
     return '<tr>' +
-      '<td><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + ticker + '\';showPage(\'stock\');analyzeStock()">' + ticker + '</b></td>' +
+      '<td><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + ticker + '\';showPage(\'stock\');analyzeStock()">' + ticker + '</b>' + mobileSigBadge + '</td>' +
       '<td>' + p.qty + '</td>' +
       '<td>$' + avgCost.toFixed(2) + '</td>' +
       '<td>' + (curPrice ? '$' + curPrice.toFixed(2) : '—') + '</td>' +
@@ -2674,6 +2732,39 @@ async function renderHoldings() {
     '<p style="font-size:11px;color:var(--muted);margin-top:10px">停損位 = 均成本 -1.5×ATR；3R 目標 = 均成本 +3×ATR。進度條顯示現價在停損-目標區間的位置。僅供參考，非投資建議。</p>' +
     '<p class="holdings-mobile-hint" style="font-size:12px;color:var(--accent);margin-top:8px;text-align:center">📊 查看出場提示（橫屏或桌面版顯示完整欄位）</p>' +
     '</div>';
+}
+
+// Mobile: tap on signal badge → full exit-signal modal
+window._holdingsExitSig = {};
+function showHoldingsMobileSignal(ticker) {
+  const es = window._holdingsExitSig[ticker];
+  if (!es) return;
+  const a = es.alert;
+  const barColor = a?.type === 'stop' ? 'var(--red)' : a?.type === 'target' ? 'var(--green)' : a?.type === 'reversal' ? 'var(--yellow)' : 'var(--accent)';
+  const existing = document.getElementById('holdings-sig-overlay');
+  if (existing) existing.remove();
+  const ov = document.createElement('div');
+  ov.id = 'holdings-sig-overlay';
+  ov.className = 'entry-modal-overlay';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML =
+    '<div class="entry-modal" style="max-width:400px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+    '<span style="font-weight:700;font-size:15px">📊 ' + ticker + ' 出場提示</span>' +
+    '<button class="modal-close" onclick="document.getElementById(\'holdings-sig-overlay\').remove()">×</button></div>' +
+    (a ? '<div style="padding:10px 14px;border-radius:8px;background:' + a.bg + ';color:' + a.color + ';font-weight:700;margin-bottom:12px">' + a.label + '</div>' : '') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+    '<div style="padding:8px;background:rgba(239,68,68,.08);border-radius:6px;border-left:2px solid var(--red)"><div style="font-size:10px;color:var(--muted)">停損位</div><div style="font-weight:700;color:var(--red)">$' + es.stopLevel.toFixed(2) + '</div><div style="font-size:10px;color:var(--muted)">距停損 ' + (es.toStopPct >= 0 ? '+' : '') + es.toStopPct.toFixed(1) + '%</div></div>' +
+    '<div style="padding:8px;background:rgba(16,185,129,.08);border-radius:6px;border-left:2px solid var(--green)"><div style="font-size:10px;color:var(--muted)">3R 目標</div><div style="font-weight:700;color:var(--green)">$' + es.target3R.toFixed(2) + '</div><div style="font-size:10px;color:var(--muted)">RSI ' + es.rsiVal.toFixed(0) + '</div></div>' +
+    '<div style="padding:8px;background:rgba(59,130,246,.06);border-radius:6px"><div style="font-size:10px;color:var(--muted)">1R</div><div style="font-weight:600">$' + es.target1R.toFixed(2) + '</div></div>' +
+    '<div style="padding:8px;background:rgba(59,130,246,.06);border-radius:6px"><div style="font-size:10px;color:var(--muted)">2R</div><div style="font-weight:600">$' + es.target2R.toFixed(2) + '</div></div>' +
+    '</div>' +
+    '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>停損</span><span>3R 目標</span></div>' +
+    '<div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden"><div style="width:' + es.progress.toFixed(0) + '%;height:100%;background:' + barColor + ';border-radius:4px"></div></div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">進度 ' + es.progress.toFixed(0) + '%</div></div>' +
+    (a ? '<div style="font-size:12px;color:' + a.color + ';line-height:1.6;padding:8px;background:rgba(255,255,255,.03);border-radius:6px">' + a.detail + '</div>' : '<div style="font-size:12px;color:var(--muted)">目前無出場訊號，繼續持有觀察。</div>') +
+    '</div>';
+  document.body.appendChild(ov);
 }
 
 window._jNotesMap = {};
@@ -2730,7 +2821,8 @@ function showATRPopup(price, ticker) {
     box('2R 目標（+2×ATR）', r2, 'var(--green)', '+' + pct(r2)) +
     box('3R 目標（+3×ATR）', r3, 'var(--green)', '+' + pct(r3)) +
     '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:12px">ATR ' + (fromCache ? '來自掃描器快取（精確）' : '以進場價 2% 估算，先掃描該股可獲精確值') + '。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div></div>';
+    '<div style="font-size:11px;color:var(--muted);margin-top:12px">ATR ' + (fromCache ? '來自掃描器快取（精確）' : '以進場價 2% 估算，先掃描該股可獲精確值') + '。停損建議 1.5×ATR；理想風報比至少 1:2（達 2R）再進場。</div>' +
+    '<div style="font-size:11px;color:rgba(245,158,11,.8);margin-top:6px;padding:6px 8px;background:rgba(245,158,11,.06);border-radius:6px">ℹ️ 以上價格以輸入的<b>進場價/均成本</b>為基準計算，非當前市價。持倉中移動停損請依現價重新評估。</div></div>';
   document.body.appendChild(div);
 }
 
@@ -6246,13 +6338,7 @@ async function renderDashboard(forceRescan) {
 async function renderDashHoldings() {
   const j = getJ();
   if (!j.length) return;
-  const pos = {};
-  j.slice().reverse().forEach(e => {
-    if (!pos[e.ticker]) pos[e.ticker] = { qty:0, totalCost:0 };
-    if (e.action==='buy') { pos[e.ticker].qty += e.qty; pos[e.ticker].totalCost += e.net; }
-    else { const ac = pos[e.ticker].qty>0?pos[e.ticker].totalCost/pos[e.ticker].qty:0; pos[e.ticker].qty=Math.max(0,pos[e.ticker].qty-e.qty); pos[e.ticker].totalCost=pos[e.ticker].qty*ac; }
-  });
-  const open = Object.entries(pos).filter(([,p])=>p.qty>0);
+  const open = calcOpenPositions(j);
   if (!open.length) return;
   const el = document.getElementById('dash-holdings');
   if (!el) return;
@@ -6283,6 +6369,7 @@ async function renderDashHoldings() {
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
 async function quickDashboardScan(force) {
+  window._scanAbort = false; // clear any stale cancel flag from scanner page
   const now = Date.now();
   const needRescan = force ||
     (now - _scanCache.schwartz.ts   > _scanCache.TTL) ||
@@ -7217,7 +7304,9 @@ function renderEduKline(id, ohlcv, ta, candleP, chartP, timestamps) {
     candleSeries.setMarkers(markers);
   }
 
-  new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth })).observe(el);
+  if (el._ro) el._ro.disconnect();
+  el._ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
+  el._ro.observe(el);
 }
 
 function renderEduAnalysisReport(ticker, price, meta, ta, candleP, chartP, c, h, l) {
