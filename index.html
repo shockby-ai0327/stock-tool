@@ -2447,12 +2447,16 @@ async function renderHoldings() {
 
   // Calculate exit signals
   const exitSig = {};
+  window._holdingsATR = window._holdingsATR || {};
   open.forEach(([ticker, p]) => {
     const avgCost = p.totalCost / p.qty;
     const cur = prices[ticker];
     if (!cur || !taData[ticker]) return;
     const { closes, highs, lows } = taData[ticker];
-    exitSig[ticker] = calcExitSignal(avgCost, cur, closes, highs, lows);
+    const sig = calcExitSignal(avgCost, cur, closes, highs, lows);
+    exitSig[ticker] = sig;
+    // Share real ATR with showATRPopup so both use the same value
+    if (sig?.atr) window._holdingsATR[ticker] = sig.atr;
   });
 
   // Build rows
@@ -2567,10 +2571,14 @@ function showNotesPopup(id) {
 }
 
 function showATRPopup(price, ticker) {
-  let atr = null;
+  let atr = null, fromCache = false;
+  // Priority 1: scanner cache (most accurate)
   for (const key in _entryData) { if (key.startsWith(ticker + '_')) { atr = _entryData[key]?.ta?.atr; break; } }
+  if (atr && atr > 0) { fromCache = true; }
+  // Priority 2: real ATR computed from OHLCV in holdings (same data used by progress bar)
+  if ((!atr || atr <= 0) && window._holdingsATR?.[ticker]) { atr = window._holdingsATR[ticker]; fromCache = true; }
+  // Priority 3: fallback 2% estimate
   if (!atr || atr <= 0) atr = price * 0.02;
-  const fromCache = Object.keys(_entryData).some(k => k.startsWith(ticker + '_'));
   const sl = price - 1.5 * atr;
   const r1 = price + atr, r2 = price + 2 * atr, r3 = price + 3 * atr;
   const fmt = v => '$' + v.toFixed(2);
