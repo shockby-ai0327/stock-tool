@@ -4556,7 +4556,7 @@ async function chartScanFallback(strategy) {
 }
 
 let _scannerMarket = 'us';
-let _scannerStrategy = 'momentum';
+let _scannerStrategy = 'schwartz';
 let _scannerResults = [];
 let _scannerTimer = null;
 let _todayWatchlist = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
@@ -5095,8 +5095,25 @@ function renderScannerResults(results, strategy, usedFallback) {
  const stratName = strategyNames[strategy] || strategy;
  if (!results.length) {
  const _fallbackPool = _scannerMarket === 'tw' ? (typeof SCAN_CURATED_TW !== 'undefined' ? SCAN_CURATED_TW : []) : SCAN_CURATED_US;
- tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">目前無符合「' + stratName + '」條件的股票' +
- (usedFallback ? '<br><small style="font-size:11px">（精選清單模式，共掃描 ' + _fallbackPool.length + ' 檔）</small>' : '') + '</div>';
+ const regime = window._marketRegime;
+ const regimeHint = regime
+   ? (regime.overall <= -1
+       ? '<div style="margin-top:10px;font-size:12px;color:var(--orange)">目前大盤環境偏弱（' + (regime.bench||'SPY') + ' vs 200MA: ' + (regime.spyVs200 ? regime.spyVs200.toFixed(1)+'%' : '—') + '），符合條件的個股較少屬正常現象。建議等待大盤站回均線後再掃描。</div>'
+       : '')
+   : '';
+ const schwartzHint = strategy === 'schwartz'
+   ? '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Schwartz 需要收盤突破 20 日高點，在大盤下跌日通常沒有符合標的。</div>'
+   : '';
+ const steinhardtHint = strategy === 'steinhardt'
+   ? '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Steinhardt 需要 EMA 多頭排列（8>21>60），大盤偏弱時多數個股 EMA 已翻空。</div>'
+   : '';
+ tableDiv.innerHTML =
+   '<div style="text-align:center;padding:30px;color:var(--muted)">' +
+   '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">未找到符合條件的標的</div>' +
+   '<div style="font-size:12px">策略：' + stratName + (usedFallback ? '　精選清單 ' + _fallbackPool.length + ' 檔' : '　SP500 全市場') + '</div>' +
+   schwartzHint + steinhardtHint + regimeHint +
+   '<div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="runScan(\'' + strategy + '\')">重新掃描</button></div>' +
+   '</div>';
  return;
  }
  let html = '';
