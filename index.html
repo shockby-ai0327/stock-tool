@@ -4559,7 +4559,7 @@ function calcInstStreak(history) {
 // chartScanFallback：直接用 yfChart 拉精選池，同時取得完整 OHLCV + 技術指標所需資料
 // Cloudflare Worker 作為主要 proxy，速度穩定
 async function chartScanFallback(strategy, customPool) {
- const pool = customPool ? customPool : (_scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60));
+ const pool = customPool ? customPool : ((_scannerMarket === 'us' || _scannerMarket === 'custom') ? SCAN_CURATED_US : getTwScanPool().slice(0, 60));
  const out = [];
  for (let i = 0; i < pool.length; i += 8) {
  const batch = pool.slice(i, i + 8);
@@ -4777,7 +4777,14 @@ async function fetchMarketRegime() {
  else { vixLevel = 'panic'; vixScore = -2; }
  }
  const overall = trendScore + vixScore; // -4 to +3
- window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall };
+ // 保留 HMM 計算結果，合併進最終 regime 物件
+ const existingHmm = window._marketRegime && window._marketRegime.hmm;
+ let finalOverall = overall;
+ if (existingHmm) {
+   if (existingHmm.state === 2 && existingHmm.confidence >= 0.6) finalOverall = Math.max(finalOverall - 1, -4);
+   else if (existingHmm.state === 0 && existingHmm.confidence >= 0.6) finalOverall = Math.min(finalOverall + 1, 3);
+ }
+ window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall: finalOverall, hmm: existingHmm || null };
  renderRegimeBanner();
  // FRED 殖利率曲線（非阻塞）
  fetchFredMacro().then(fred => {
