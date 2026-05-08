@@ -4539,6 +4539,31 @@ function calcRelativeStrength(stockCloses, benchCloses) {
  return { rs, stockReturn: stockReturn * 100, benchReturn: benchReturn * 100 };
 }
 
+// ============ APEWISDOM — Reddit 熱度 ============
+const _apeCache = { data: null, ts: 0, TTL: 30 * 60 * 1000 };
+async function fetchApeWisdom() {
+  if (_apeCache.data && Date.now() - _apeCache.ts < _apeCache.TTL) return _apeCache.data;
+  try {
+    // ApeWisdom 支援 CORS，可直接呼叫；抓前3頁涵蓋約150名
+    const pages = await Promise.all([1,2,3].map(p =>
+      fetch('https://apewisdom.io/api/v1.0/filter/all-stocks/page/' + p).then(r => r.json()).catch(() => ({ results: [] }))
+    ));
+    const map = {};
+    pages.forEach(page => {
+      (page.results || []).forEach(item => {
+        if (item.ticker) map[item.ticker.toUpperCase()] = {
+          rank: item.rank,
+          rankChange: (item.rank_24h_ago || item.rank) - item.rank, // 正數 = 排名上升
+          mentions: item.mentions || 0,
+          mentions24h: item.mentions_24h_ago || 0
+        };
+      });
+    });
+    _apeCache.data = map; _apeCache.ts = Date.now();
+    return map;
+  } catch(e) { return {}; }
+}
+
 // ============ SCAN HISTORY + PERFORMANCE TRACKING ============
 function saveScanToHistory(results, strategy, market) {
  if (!results || !results.length) return;
@@ -4794,6 +4819,13 @@ async function runScan(strategy) {
  _scannerResults = results;
  // Save to history (async, non-blocking)
  saveScanToHistory(results, strategy, _scannerMarket);
+ // ApeWisdom Reddit 熱度 — 非阻塞，US 市場才抓
+ if (_scannerMarket === 'us') {
+ fetchApeWisdom().then(apeMap => {
+ _scannerResults.forEach(r => { if (apeMap[r.symbol]) r.reddit = apeMap[r.symbol]; });
+ renderScannerResults(_scannerResults, strategy, usedFallback);
+ }).catch(() => {});
+ }
  renderScannerResults(results, strategy, usedFallback);
  // Earnings enrichment (Feature E) — non-blocking
  if (_scannerMarket === 'us') {
@@ -5023,8 +5055,14 @@ function renderScannerResults(results, strategy, usedFallback) {
  const detailHtml = (r.signalDetail && r.signalDetail.length)
  ? r.signalDetail.map(d => '<span class="tag" style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(59,130,246,.12);color:var(--accent)">' + d + '</span>').join('')
  : '<span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + r.signal + '</span>';
+ // Reddit badge
+ const ape = r.reddit;
+ const apeBadge = ape
+ ? '<div style="margin-top:2px;font-size:10px;color:' + (ape.rankChange >= 5 ? 'var(--orange)' : 'var(--muted)') + '">' +
+   'Reddit #' + ape.rank + (ape.rankChange > 0 ? ' ↑' + ape.rankChange : ape.rankChange < 0 ? ' ↓' + Math.abs(ape.rankChange) : '') + '</div>'
+ : '';
  html += '<tr>' +
- '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></td>' +
+ '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' + apeBadge + '</td>' +
  '<td style="font-size:12px">' + r.name + '</td>' +
  '<td>' + r.price.toFixed(2) + '</td>' +
  '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
