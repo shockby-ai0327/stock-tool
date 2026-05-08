@@ -234,8 +234,8 @@ firebase.initializeApp(_fbConfig);
       <div id="dash-regime" style="margin-bottom:20px"></div>
       <div class="dash-market-row" id="dash-market-kpis"></div>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
-        <div class="card" style="flex:1;min-width:180px;text-align:center" id="dash-fgi-card"></div>
-        <div class="card" style="flex:2;min-width:240px" id="dash-market-status"></div>
+        <div class="card" style="flex:1;min-width:160px;text-align:center" id="dash-fgi-card"></div>
+        <div class="card" style="flex:3;min-width:260px" id="dash-market-status"></div>
       </div>
 
       <!-- 盤前/盤後市場預測卡片 -->
@@ -6807,12 +6807,23 @@ async function renderDashboard(forceRescan) {
     const weekday = now.getDay() >= 1 && now.getDay() <= 5;
     const usOpen  = weekday && utcMin >= 810 && utcMin < 1200;
     const twOpen  = weekday && utcMin >= 60  && utcMin < 330;
-    statusDiv.innerHTML = '<h4 style="margin-bottom:10px;font-size:13px;color:var(--muted)">市場時段</h4>' +
-      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
-      '<div><div style="font-size:12px;color:var(--muted)">🇺🇸 美股</div><div style="font-size:14px;font-weight:600;color:' + (usOpen ? 'var(--green)' : 'var(--muted)') + '">' + (usOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
-      '<div><div style="font-size:12px;color:var(--muted)">🇹🇼 台股</div><div style="font-size:14px;font-weight:600;color:' + (twOpen ? 'var(--green)' : 'var(--muted)') + '">' + (twOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
-      '<div><div style="font-size:12px;color:var(--muted)">VIX</div><div style="font-size:14px;font-weight:600;color:' + (vixPrc > 25 ? 'var(--red)' : vixPrc > 18 ? 'var(--yellow)' : 'var(--green)') + '">' + vixPrc.toFixed(1) + '</div></div>' +
+    const sessionHtml =
+      '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">' +
+      '<div><div style="font-size:11px;color:var(--muted)">🇺🇸 美股</div><div style="font-size:13px;font-weight:600;color:' + (usOpen ? 'var(--green)' : 'var(--muted)') + '">' + (usOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
+      '<div><div style="font-size:11px;color:var(--muted)">🇹🇼 台股</div><div style="font-size:13px;font-weight:600;color:' + (twOpen ? 'var(--green)' : 'var(--muted)') + '">' + (twOpen ? '🟢 開盤中' : '⚪ 收盤') + '</div></div>' +
+      '<div><div style="font-size:11px;color:var(--muted)">VIX</div><div style="font-size:13px;font-weight:600;color:' + (vixPrc > 25 ? 'var(--red)' : vixPrc > 18 ? 'var(--yellow)' : 'var(--green)') + '">' + vixPrc.toFixed(1) + '</div></div>' +
       '</div>';
+    statusDiv.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+        '<h4 style="margin:0;font-size:13px;color:var(--muted)">市場時段</h4>' +
+      '</div>' +
+      sessionHtml +
+      '<div style="border-top:1px solid var(--border);padding-top:10px">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">📅 重要行事曆</div>' +
+        '<div id="dash-events-list" style="font-size:12px">載入中...</div>' +
+      '</div>';
+    // async load events
+    renderUpcomingEvents();
   }
 
   // 4. 觸發掃描（自動，快取 5 分鐘）
@@ -6836,6 +6847,152 @@ async function renderDashboard(forceRescan) {
   renderDashTTrading();
   // 7. 國際新聞摘要（10 分鐘快取）
   renderDashNews();
+}
+
+// ============ UPCOMING EVENTS CALENDAR ============
+function getHardcodedEvents() {
+  // FOMC meeting decision dates (Fed announces rate decision)
+  const fomc = [
+    '2025-01-29','2025-03-19','2025-05-07','2025-06-18',
+    '2025-07-30','2025-09-17','2025-10-29','2025-12-10',
+    '2026-01-28','2026-03-18','2026-05-06','2026-06-17',
+    '2026-07-29','2026-09-16','2026-10-28','2026-12-09',
+  ].map(d => ({ date: d, icon: '🏛️', label: 'Fed 利率決策（FOMC）', type: 'fomc', impact: 'high' }));
+
+  // US CPI releases (approximate 2nd week of each month; adjust based on BLS schedule)
+  const cpi = [
+    '2025-01-15','2025-02-12','2025-03-12','2025-04-10',
+    '2025-05-13','2025-06-11','2025-07-11','2025-08-12',
+    '2025-09-10','2025-10-14','2025-11-13','2025-12-10',
+    '2026-01-14','2026-02-11','2026-03-11','2026-04-10',
+    '2026-05-12','2026-06-10','2026-07-14','2026-08-12',
+    '2026-09-09','2026-10-14','2026-11-12','2026-12-09',
+  ].map(d => ({ date: d, icon: '📊', label: '美國 CPI 通膨數據', type: 'cpi', impact: 'high' }));
+
+  // US NFP (Non-Farm Payrolls) — first Friday of each month
+  const nfp = [
+    '2025-01-10','2025-02-07','2025-03-07','2025-04-04',
+    '2025-05-02','2025-06-06','2025-07-03','2025-08-01',
+    '2025-09-05','2025-10-03','2025-11-07','2025-12-05',
+    '2026-01-09','2026-02-06','2026-03-06','2026-04-03',
+    '2026-05-01','2026-06-05','2026-07-02','2026-08-07',
+    '2026-09-04','2026-10-02','2026-11-06','2026-12-04',
+  ].map(d => ({ date: d, icon: '💼', label: '美國非農就業（NFP）', type: 'nfp', impact: 'high' }));
+
+  // Earnings seasons — key "peak week" start dates (when major banks report)
+  const earnings = [
+    { date:'2025-01-13', label:'Q4 2024 財報季開始（JPMorgan、Wells Fargo）' },
+    { date:'2025-04-11', label:'Q1 2025 財報季開始（銀行股打頭陣）' },
+    { date:'2025-07-11', label:'Q2 2025 財報季開始' },
+    { date:'2025-10-10', label:'Q3 2025 財報季開始' },
+    { date:'2026-01-12', label:'Q4 2025 財報季開始' },
+    { date:'2026-04-13', label:'Q1 2026 財報季開始' },
+    { date:'2026-07-13', label:'Q2 2026 財報季開始' },
+    { date:'2026-10-12', label:'Q3 2026 財報季開始' },
+  ].map(e => ({ ...e, icon: '📈', type: 'earnings', impact: 'medium' }));
+
+  // Notable US-China trade / geopolitical events (hardcoded major known events)
+  const geopolitical = [
+    { date:'2025-05-12', label:'美中日內瓦貿易談判', icon:'🤝', type:'geopolitical', impact:'high' },
+    { date:'2025-07-09', label:'美國關稅暫緩期限（90 天）', icon:'🔔', type:'geopolitical', impact:'high' },
+  ];
+
+  return [...fomc, ...cpi, ...nfp, ...earnings, ...geopolitical];
+}
+
+async function renderUpcomingEvents() {
+  const el = document.getElementById('dash-events-list');
+  if (!el) return;
+
+  // Cache check (30 min)
+  const cacheKey = 'dash-events-cache';
+  const cached = (() => { try { const c = JSON.parse(sessionStorage.getItem(cacheKey)||'null'); return c && (Date.now()-c.ts)<30*60*1000 ? c.items : null; } catch(e){return null;} })();
+
+  let dynamicEvents = [];
+  if (!cached) {
+    // Try Finnhub economic calendar (next 45 days)
+    try {
+      if (FINNHUB_KEY) {
+        const today = new Date(), to = new Date(today); to.setDate(to.getDate() + 45);
+        const fmt = d => d.toISOString().slice(0,10);
+        const resp = await fetch('https://finnhub.io/api/v1/calendar/economic?from=' + fmt(today) + '&to=' + fmt(to) + '&token=' + FINNHUB_KEY);
+        if (resp.ok) {
+          const data = await resp.json();
+          const highImpact = (data.economicCalendar || []).filter(e =>
+            e.impact === 'high' && e.country === 'US' &&
+            /fomc|cpi|nonfarm|gdp|pce|payroll|unemployment|retail sales/i.test(e.event)
+          );
+          dynamicEvents = highImpact.slice(0, 20).map(e => {
+            let icon = '📊', type = 'economic';
+            if (/fomc|fed|interest rate/i.test(e.event)) { icon = '🏛️'; type = 'fomc'; }
+            else if (/nonfarm|payroll|employment/i.test(e.event)) { icon = '💼'; type = 'nfp'; }
+            else if (/cpi|inflation|consumer price/i.test(e.event)) { icon = '📊'; type = 'cpi'; }
+            else if (/gdp/i.test(e.event)) { icon = '🌐'; type = 'gdp'; }
+            else if (/pce/i.test(e.event)) { icon = '🛒'; type = 'pce'; }
+            return { date: e.time, icon, label: e.event, type, impact: 'high', source: 'live' };
+          });
+          sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), items: dynamicEvents }));
+        }
+      }
+    } catch(e) {}
+  } else {
+    dynamicEvents = cached;
+  }
+
+  // Merge hardcoded + dynamic (dedupe by type+date)
+  const hardcoded = getHardcodedEvents();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const allEvents = [...hardcoded, ...dynamicEvents];
+
+  // If we have dynamic FOMC/CPI/NFP data, prefer it over hardcoded for same date ±2 days
+  const deduped = [];
+  const seen = new Set();
+  allEvents.forEach(e => {
+    const d = new Date(e.date + 'T00:00:00'); // parse as local
+    const key = e.type + ':' + e.date;
+    // Skip if dynamic already covers this type+week
+    if (e.source !== 'live' && dynamicEvents.some(d2 => d2.type === e.type && Math.abs(new Date(d2.date) - new Date(e.date)) < 4 * 86400000)) return;
+    if (!seen.has(key)) { seen.add(key); deduped.push({ ...e, dateObj: d }); }
+  });
+
+  // Filter: today - 1 day to +90 days, sort by date
+  const horizon = new Date(today); horizon.setDate(horizon.getDate() + 90);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const upcoming = deduped
+    .filter(e => e.dateObj >= yesterday && e.dateObj <= horizon)
+    .sort((a, b) => a.dateObj - b.dateObj)
+    .slice(0, 8); // show max 8
+
+  if (!upcoming.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px">近期無重大事件</div>';
+    return;
+  }
+
+  const diffDays = d => Math.round((d - today) / 86400000);
+  const fmtDate = d => (d.getMonth()+1) + '/' + d.getDate();
+
+  el.innerHTML = upcoming.map(ev => {
+    const diff = diffDays(ev.dateObj);
+    let diffLabel, diffColor;
+    if (diff < 0)        { diffLabel = Math.abs(diff) + ' 天前'; diffColor = 'var(--muted)'; }
+    else if (diff === 0) { diffLabel = '今天'; diffColor = 'var(--red)'; }
+    else if (diff === 1) { diffLabel = '明天'; diffColor = 'var(--orange)'; }
+    else if (diff <= 3)  { diffLabel = diff + ' 天後'; diffColor = 'var(--orange)'; }
+    else if (diff <= 7)  { diffLabel = diff + ' 天後'; diffColor = 'var(--yellow)'; }
+    else                 { diffLabel = diff + ' 天後'; diffColor = 'var(--muted)'; }
+
+    const impactDot = ev.impact === 'high'
+      ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:4px;vertical-align:middle"></span>'
+      : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--yellow);margin-right:4px;vertical-align:middle"></span>';
+
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+      '<div style="min-width:32px;font-size:11px;color:var(--muted);white-space:nowrap">' + fmtDate(ev.dateObj) + '</div>' +
+      '<div style="font-size:15px;line-height:1">' + ev.icon + '</div>' +
+      '<div style="flex:1;font-size:11px;color:var(--text);line-height:1.4">' + impactDot + ev.label + '</div>' +
+      '<div style="min-width:46px;text-align:right;font-size:11px;font-weight:600;color:' + diffColor + ';white-space:nowrap">' + diffLabel + '</div>' +
+    '</div>';
+  }).join('') +
+  '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-align:right">🔴 高影響　🟡 中影響</div>';
 }
 
 async function renderDashHoldings() {
