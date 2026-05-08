@@ -6805,8 +6805,11 @@ async function quickDashboardScan(force) {
         const ta = technicalAnalysis(c, h, l, v, q.regularMarketPrice);
         const sw = classifySignal(ta, q, 'schwartz',   { closes: c, highs: h, lows: l });
         const st = classifySignal(ta, q, 'steinhardt', { closes: c, highs: h, lows: l });
-        if (sw) schResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol });
-        if (st) stResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: st.name, signalStrength: st.strength, signalDetail: st.detail, strategy: 'steinhardt', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol });
+        const benchClosesD = window._benchmarkCloses['SPY'] || [];
+        const rsDataD = calcRelativeStrength(c, benchClosesD);
+        const rsD = rsDataD ? rsDataD.rs : null;
+        if (sw) schResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol, rs: rsD });
+        if (st) stResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: st.name, signalStrength: st.strength, signalDetail: st.detail, strategy: 'steinhardt', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol, rs: rsD });
       } catch(e) {}
     }
     schResults.sort((a,b) => b.signalStrength - a.signalStrength);
@@ -6854,7 +6857,9 @@ function renderDashScanList(strategy, results, sortBy) {
   window._lastScanResults[strategy] = results;
   el.innerHTML = sortBar + sorted.map(r => {
     const up = (r.changePct || 0) >= 0;
-    const stars = '★'.repeat(Math.min(r.signalStrength || 0, 5));
+    const maxSt = strategy === 'schwartz' ? 7 : 8;
+    const filled = Math.min(r.signalStrength || 0, maxSt);
+    const stars = '★'.repeat(filled) + '☆'.repeat(Math.max(0, 5 - filled));
     const key = r.symbol + '_' + strategy;
     const fundBadge = strategy === 'steinhardt' && r.fundLoaded != null
       ? '<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;background:' +
@@ -6863,9 +6868,12 @@ function renderDashScanList(strategy, results, sortBy) {
                               'rgba(239,68,68,.15);color:var(--red)') +
           '">F' + (r.fundScore || 0) + '/5</span>'
       : '';
+    const rsVal = r.rs;
+    const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
+    const rsBadge = rsVal != null ? '<span style="font-size:10px;color:' + rsColor + ';margin-left:4px">RS' + (rsVal > 0 ? '+' : '') + rsVal.toFixed(1) + '%</span>' : '';
     return '<div class="scan-mini-row">' +
       '<div style="min-width:60px"><b style="color:var(--accent);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b></div>' +
-      '<div style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + fundBadge + '</div>' +
+      '<div style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + fundBadge + rsBadge + '</div>' +
       '<div style="text-align:right;min-width:80px">' +
         '<span style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + (r.changePct || 0).toFixed(2) + '%</span>' +
         ' <span style="color:var(--yellow);font-size:11px">' + stars + '</span>' +
@@ -7067,9 +7075,15 @@ async function runFullScan() {
   const fullDiv = document.getElementById('fullscan-results');
   if (!fullDiv) return;
   fullDiv.style.display = 'block';
-  fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">一鍵掃描中（40-60 秒）...</p></div>';
+  fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">⓪ 大盤環境偵測 + 一鍵掃描中（40-60 秒）...</p></div>';
   try {
+    // ── Stage 0: 大盤環境 + benchmark closes（並行，不阻塞掃描）──────
+    fetchMarketRegime(); // async, will populate window._marketRegime + window._benchmarkCloses
+
+    // ── Stage 1: 取得 OHLCV ───────────────────────────────────────────
     const quotes = await chartScanFallback('schwartz');
+    const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+
     const schResults = [], stResults = [];
     for (const q of quotes) {
       if (!q?._chartData) continue;
@@ -7079,40 +7093,82 @@ async function runFullScan() {
         const ta = technicalAnalysis(c, h, l, v, q.regularMarketPrice);
         const sw = classifySignal(ta, q, 'schwartz',   { closes: c, highs: h, lows: l });
         const st = classifySignal(ta, q, 'steinhardt', { closes: c, highs: h, lows: l });
-        const base = { ...q, ta, closes: c, highs: h, lows: l, price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol };
+        // Compute RS vs benchmark
+        const benchCloses = window._benchmarkCloses[bench] || [];
+        const rsData = calcRelativeStrength(c, benchCloses);
+        const rs = rsData ? rsData.rs : null;
+        const base = {
+          ...q, ta, closes: c, highs: h, lows: l,
+          price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0,
+          name: q.shortName || q.symbol, rs
+        };
         if (sw) schResults.push({ ...base, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz' });
         if (st) stResults.push({ ...base, signal: st.name, signalStrength: st.strength, signalDetail: st.detail, strategy: 'steinhardt' });
       } catch(e) {}
     }
     schResults.sort((a,b) => b.signalStrength - a.signalStrength);
     stResults.sort((a,b)  => b.signalStrength - a.signalStrength);
-    // Steinhardt 加跑基本面驗證
+
+    // ── Stage 2: Steinhardt 真實基本面驗證 ───────────────────────────
     fullDiv.innerHTML = '<div class="loading" style="padding:24px"><div class="spinner"></div><p style="margin-top:8px">Steinhardt：基本面驗證中（EPS / 營收 / ROE）...</p></div>';
     const stEnriched = await enrichSteinhardtFundamentals(stResults);
-    // 基本面硬過濾：fundScore < 2 排除
     const stFiltered = stEnriched.filter(r => !r.fundLoaded || r.fundScore >= 2);
+
     // 同步更新 _scanCache
     _scanCache.schwartz   = { results: schResults.slice(0,5), ts: Date.now() };
     _scanCache.steinhardt = { results: stFiltered.slice(0,5), ts: Date.now() };
 
+    // 存入掃描歷史
+    saveScanToHistory(schResults.slice(0,5), 'schwartz', _scannerMarket);
+    saveScanToHistory(stFiltered.slice(0,5), 'steinhardt', _scannerMarket);
+
+    // ── 大盤環境警告 ─────────────────────────────────────────────────
+    const regime = window._marketRegime;
+    let regimeBanner = '';
+    if (regime && regime.overall <= -2) {
+      regimeBanner = '<div style="padding:10px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:12px">' +
+        '🛑 <b>空頭環境警告</b>：大盤深跌200MA（' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + '）' +
+        (regime.vixNow ? '，VIX=' + regime.vixNow.toFixed(0) : '') +
+        '。以下訊號歷史勝率大幅降低，建議縮倉或觀望，嚴格停損。</div>';
+    } else if (regime && regime.overall === -1) {
+      regimeBanner = '<div style="padding:10px 14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:8px;font-size:12px;color:var(--orange);margin-bottom:12px">' +
+        '⚠️ 大盤偏弱（' + (regime.bench || 'SPY') + ' vs 200MA: ' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + '）。僅操作高強度標的，縮小倉位。</div>';
+    } else if (regime && regime.overall >= 2) {
+      regimeBanner = '<div style="padding:8px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:8px;font-size:12px;color:var(--green);margin-bottom:12px">' +
+        '🟢 <b>絕佳進場環境</b>：大盤多頭（' + (regime.spyVs200 ? '+' + regime.spyVs200.toFixed(1) + '%' : '') + ' vs 200MA）' +
+        (regime.vixNow ? '，VIX=' + regime.vixNow.toFixed(0) + ' 低恐慌' : '') + '。突破策略勝率最高。</div>';
+    }
+
+    // ── renderMini：與 renderScannerResults 一致的欄位 ───────────────
     const renderMini = (results, strategy, title) => {
       if (!results.length) return '<div class="card"><h3>' + title + '</h3><div style="padding:20px;text-align:center;color:var(--muted)">無符合條件的候選股</div></div>';
+      const maxStars = strategy === 'schwartz' ? 7 : 8;
       return '<div class="card"><h3 style="margin-bottom:12px">' + title + '</h3>' +
         results.slice(0,5).map(r => {
           _storeEntry(r.symbol, strategy, { ...r, strategy });
           const up    = r.changePct >= 0;
-          const stars = '★'.repeat(Math.min(r.signalStrength,5));
+          // 星星依實際上限顯示
+          const filledStars = Math.min(r.signalStrength, maxStars);
+          const stars = '★'.repeat(filledStars) + '☆'.repeat(Math.max(0, 5 - filledStars));
           const key   = r.symbol + '_' + strategy;
+          // RS badge
+          const rsVal = r.rs;
+          const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
+          const rsLabel = rsVal != null ? (rsVal > 0 ? '+' : '') + rsVal.toFixed(1) + '%' : '';
+          // Fund badge (Steinhardt only)
+          const fundBadge = r.fundDetail ? '<span style="font-size:10px;color:' + (r.fundScore >= 3 ? 'var(--green)' : r.fundScore >= 2 ? 'var(--yellow)' : 'var(--muted)') + ';margin-left:4px" title="' + (r.fundDetail||[]).join(' | ') + '">基本面' + r.fundScore + '/5</span>' : '';
           return '<div class="scan-mini-row">' +
             '<b style="color:var(--accent);min-width:55px;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' +
-            '<span style="flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.name + '</span>' +
-            '<span style="color:' + (up?'var(--green)':'var(--red)') + ';min-width:55px;text-align:right">' + (up?'+':'') + r.changePct.toFixed(2) + '%</span>' +
-            '<span style="color:var(--yellow);font-size:11px;min-width:40px;text-align:center">' + stars + '</span>' +
+            '<span style="flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.name + fundBadge + '</span>' +
+            '<span style="color:' + (up?'var(--green)':'var(--red)') + ';min-width:50px;text-align:right;font-size:12px">' + (up?'+':'') + r.changePct.toFixed(2) + '%</span>' +
+            (rsLabel ? '<span style="color:' + rsColor + ';font-size:11px;min-width:42px;text-align:right">RS' + rsLabel + '</span>' : '') +
+            '<span style="color:var(--yellow);font-size:11px;min-width:44px;text-align:center">' + stars + '</span>' +
             '<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 8px" onclick="showEntryGuideByKey(\'' + key + '\')">📋 進場</button>' +
           '</div>';
         }).join('') + '</div>';
     };
-    fullDiv.innerHTML = '<div class="dash-scan-grid">' +
+
+    fullDiv.innerHTML = regimeBanner + '<div class="dash-scan-grid">' +
       renderMini(schResults, 'schwartz',   '⚡ Schwartz突破 Top 5') +
       renderMini(stFiltered, 'steinhardt', '📈 Steinhardt動量 Top 5') +
     '</div>';
