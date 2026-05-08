@@ -372,7 +372,7 @@ firebase.initializeApp(_fbConfig);
  <div id="journal-atr-content"></div>
  </div>
  </div>
- <div class="card"><h3>交易紀錄</h3><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">交易記錄</h3><button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="exportJournalCSV()">匯出 CSV</button></div><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
  </div><!-- end journal-tab-records -->
  <div id="journal-tab-holdings" style="display:none">
  <div id="holdings-content"></div>
@@ -2788,6 +2788,34 @@ async function renderHoldings() {
  reversalList.map(([t,s])=>'<div style="font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.6"><b>'+t+'</b>：'+s.alert.detail+'</div>').join('') +
  '<div style="font-size:11px;color:var(--muted);margin-top:6px">建議：移動停損至成本線或近期低點，保留上行空間但鎖住主要獲利。</div></div>';
 
+ // ── 持倉健康度檢查（Ghostfolio 概念）──
+ let healthHtml = '';
+ if (totalMV > 0) {
+   const healthIssues = [];
+   // 1. 單一倉位過重
+   open.forEach(([tkr, p]) => {
+     const mv = (prices[tkr] || (p.totalCost / p.qty)) * p.qty;
+     const pct = mv / totalMV * 100;
+     if (pct > 40) healthIssues.push({ level: 'red', msg: tkr + ' 倉位過重（' + pct.toFixed(0) + '% 總資產）— 建議降至 25% 以下' });
+     else if (pct > 25) healthIssues.push({ level: 'orange', msg: tkr + ' 倉位偏高（' + pct.toFixed(0) + '% 總資產）— 注意集中度風險' });
+   });
+   // 2. 虧損倉位過多
+   const losingCount = open.filter(([tkr, p]) => {
+     const cur = prices[tkr] || (p.totalCost / p.qty);
+     return cur < (p.totalCost / p.qty);
+   }).length;
+   const totalCount = open.length;
+   if (totalCount >= 3 && losingCount / totalCount >= 0.6)
+     healthIssues.push({ level: 'orange', msg: '超過 60% 的持倉目前虧損（' + losingCount + '/' + totalCount + '）— 建議檢視大盤環境是否轉空' });
+   // 3. 整體浮虧超過 15%
+   if (totalPnlPct < -15) healthIssues.push({ level: 'red', msg: '整體浮虧 ' + totalPnlPct.toFixed(1) + '%，建議重新評估持倉策略與大盤環境' });
+   if (healthIssues.length) {
+     healthHtml = '<div style="margin-bottom:12px">' +
+       healthIssues.map(h => '<div style="padding:10px 14px;background:rgba(' + (h.level==='red'?'239,68,68':'249,115,22') + ',.10);border:1px solid rgba(' + (h.level==='red'?'239,68,68':'249,115,22') + ',.35);border-radius:8px;font-size:13px;color:var(--' + (h.level==='red'?'red':'orange') + ');margin-bottom:6px">' + h.msg + '</div>').join('') +
+       '</div>';
+   }
+ }
+
  div.innerHTML =
  '<div class="card" style="margin-bottom:12px">' +
  '<div style="display:flex;gap:24px;flex-wrap:wrap">' +
@@ -2795,6 +2823,7 @@ async function renderHoldings() {
  '<div><span style="color:var(--muted);font-size:13px">總成本</span><div style="font-size:22px;font-weight:700">$' + totalCostAll.toLocaleString(undefined,{maximumFractionDigits:0}) + '</div></div>' +
  '<div><span style="color:var(--muted);font-size:13px">浮動損益</span><div style="font-size:22px;font-weight:700;color:' + tc + '">' + (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toLocaleString(undefined,{maximumFractionDigits:0}) + ' (' + (totalPnlPct >= 0 ? '+' : '') + totalPnlPct.toFixed(2) + '%)</div></div>' +
  '</div></div>' +
+ (healthHtml ? healthHtml : '') +
  (alertHtml ? '<div style="margin-bottom:12px">' + alertHtml + '</div>' : '') +
  '<div class="card"><h3>個股明細與出場提示</h3><div style="overflow-x:auto"><table>' +
  '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th class="holdings-exit-col">出場提示（ATR/RSI/MACD）</th><th class="holdings-exit-col">移動停損</th><th class="holdings-atr-col"></th></tr></thead>' +
@@ -3070,6 +3099,25 @@ function _showMindsetModal(analyzed, totalWithNotes) {
  ov.onclick = ev => { if (ev.target === ov) ov.remove(); };
  ov.innerHTML = html;
  document.body.appendChild(ov);
+}
+
+function exportJournalCSV() {
+ const j = getJ();
+ if (!j.length) { alert('尚無交易紀錄'); return; }
+ const headers = ['日期','代號','動作','價格','數量','金額','手續費','實收實付','策略','停損','備註'];
+ const rows = j.map(r => [
+   r.date, r.ticker, r.action === 'buy' ? '買入' : '賣出',
+   r.price, r.qty, (r.price * r.qty).toFixed(2),
+   r.commission != null ? r.commission.toFixed(2) : '',
+   r.net != null ? r.net.toFixed(2) : '',
+   r.strategy || '', r.stop || '', (r.notes || '').replace(/,/g, '，')
+ ]);
+ const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+ const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a'); a.href = url;
+ a.download = '交易日誌_' + new Date().toISOString().slice(0,10) + '.csv';
+ a.click(); URL.revokeObjectURL(url);
 }
 
 function renderJournal() {
