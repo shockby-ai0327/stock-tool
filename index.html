@@ -1038,6 +1038,46 @@ function renderKline(id, ohlcv) {
  if (el._ro) el._ro.disconnect();
  el._ro = new ResizeObserver(() => ch.applyOptions({ width: el.clientWidth }));
  el._ro.observe(el);
+
+ // Debug Mode: show all indicator values on crosshair move
+ const debugTooltip = document.createElement('div');
+ debugTooltip.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(10,14,23,.92);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;pointer-events:none;z-index:10;min-width:180px;display:none';
+ el.style.position = 'relative';
+ el.appendChild(debugTooltip);
+
+ ch.subscribeCrosshairMove(param => {
+   if (!param.time || !param.seriesData) { debugTooltip.style.display = 'none'; return; }
+   const candle = param.seriesData.get(cs);
+   if (!candle) { debugTooltip.style.display = 'none'; return; }
+   // Find the bar index from ohlcv
+   const idx = ohlcv.findIndex(b => b.t === param.time);
+   if (idx < 0) { debugTooltip.style.display = 'none'; return; }
+
+   // Compute indicators for this bar using available data up to idx
+   const sliceTo = idx + 1;
+   const closes = ohlcv.slice(0, sliceTo).map(b => b.c);
+   const highs = ohlcv.slice(0, sliceTo).map(b => b.h);
+   const lows = ohlcv.slice(0, sliceTo).map(b => b.l);
+   const vols = ohlcv.slice(0, sliceTo).map(b => b.v || 0);
+
+   // Simple calculations inline
+   const smaL = (arr, n) => arr.length < n ? null : arr.slice(-n).reduce((s,v)=>s+v,0)/n;
+   const emaL = (arr, n) => { if (arr.length < n) return null; let e = arr.slice(0,n).reduce((s,v)=>s+v,0)/n; const k=2/(n+1); for(let i=n;i<arr.length;i++) e=arr[i]*k+e*(1-k); return e; };
+   const rsiVal = (() => { if (closes.length < 15) return null; const d=[]; for(let i=1;i<closes.length;i++) d.push(closes[i]-closes[i-1]); const r=d.slice(-14); const ag=r.filter(v=>v>0).reduce((s,v)=>s+v,0)/14, al=r.filter(v=>v<0).reduce((s,v)=>s+Math.abs(v),0)/14; return al===0?100:100-100/(1+ag/al); })();
+   const avgVol = smaL(vols, 20); const volRatio = avgVol && vols.length ? vols[vols.length-1] / avgVol : null;
+
+   const bar = ohlcv[idx];
+   const date = new Date(param.time * 1000).toLocaleDateString('zh-TW');
+   debugTooltip.innerHTML =
+     '<div style="color:var(--muted);margin-bottom:4px">' + date + '</div>' +
+     '<div>開 <b>' + bar.o.toFixed(2) + '</b>　高 <b style="color:var(--green)">' + bar.h.toFixed(2) + '</b>　低 <b style="color:var(--red)">' + bar.l.toFixed(2) + '</b>　收 <b>' + bar.c.toFixed(2) + '</b></div>' +
+     (smaL(closes,5) ? '<div>MA5 <b>' + smaL(closes,5).toFixed(2) + '</b>　MA20 <b>' + (smaL(closes,20) != null ? smaL(closes,20).toFixed(2) : '—') + '</b></div>' : '') +
+     (emaL(closes,8) ? '<div>EMA8 <b>' + emaL(closes,8).toFixed(2) + '</b>　EMA21 <b>' + (emaL(closes,21) != null ? emaL(closes,21).toFixed(2) : '—') + '</b></div>' : '') +
+     (rsiVal != null ? '<div>RSI(14) <b style="color:' + (rsiVal>70?'var(--red)':rsiVal<30?'var(--green)':'var(--text)') + '">' + rsiVal.toFixed(1) + '</b></div>' : '') +
+     (volRatio != null ? '<div>量比 <b style="color:' + (volRatio>1.5?'var(--yellow)':'var(--text)') + '">' + volRatio.toFixed(2) + 'x</b></div>' : '') +
+     '<div style="font-size:10px;color:var(--muted);margin-top:4px">移開滑鼠關閉</div>';
+   debugTooltip.style.display = 'block';
+ });
 }
 
 // ============ K-LINE & CHART PATTERN DETECTION ============
@@ -4601,6 +4641,91 @@ async function fetchFredMacro() {
 window._marketRegime = null; // cached regime object
 window._benchmarkCloses = {}; // { 'SPY': [...], '0050.TW': [...] }
 
+// ============ HMM — 隱馬可夫模型市場狀態偵測 ============
+// 3 hidden states: 0=牛市(Bull), 1=震盪(Sideways), 2=熊市(Bear)
+// Gaussian emission: P(obs | state) = N(obs; mu[state], sigma[state])
+
+function hmmGaussian(x, mu, sigma) {
+  if (sigma <= 0) return 1e-10;
+  return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2);
+}
+
+function hmmViterbi(obs, pi, A, mu, sigma) {
+  // obs: array of observations (daily returns)
+  // pi: initial state probabilities [3]
+  // A: transition matrix [3][3]
+  // mu, sigma: emission params [3]
+  const K = pi.length, T = obs.length;
+  if (T === 0) return [];
+  const delta = Array.from({length: T}, () => new Array(K).fill(0));
+  const psi = Array.from({length: T}, () => new Array(K).fill(0));
+  // Init
+  for (let k = 0; k < K; k++) delta[0][k] = Math.log(pi[k] + 1e-300) + Math.log(hmmGaussian(obs[0], mu[k], sigma[k]) + 1e-300);
+  // Recursion
+  for (let t = 1; t < T; t++) {
+    for (let k = 0; k < K; k++) {
+      let best = -Infinity, bestJ = 0;
+      for (let j = 0; j < K; j++) {
+        const v = delta[t-1][j] + Math.log(A[j][k] + 1e-300);
+        if (v > best) { best = v; bestJ = j; }
+      }
+      delta[t][k] = best + Math.log(hmmGaussian(obs[t], mu[k], sigma[k]) + 1e-300);
+      psi[t][k] = bestJ;
+    }
+  }
+  // Backtrack
+  const path = new Array(T);
+  path[T-1] = delta[T-1].indexOf(Math.max(...delta[T-1]));
+  for (let t = T-2; t >= 0; t--) path[t] = psi[t+1][path[t+1]];
+  return path;
+}
+
+function fitHMMParams(returns) {
+  // Simple moment-based parameter estimation for 3-state HMM
+  // Sort returns and split into thirds to initialize states
+  const sorted = [...returns].sort((a,b) => a-b);
+  const n = sorted.length;
+  const low = sorted.slice(0, Math.floor(n/3));
+  const mid = sorted.slice(Math.floor(n/3), Math.floor(2*n/3));
+  const high = sorted.slice(Math.floor(2*n/3));
+  const mean = arr => arr.reduce((s,v) => s+v, 0) / (arr.length || 1);
+  const std = arr => { const m = mean(arr); return Math.sqrt(arr.reduce((s,v) => s+(v-m)**2, 0) / (arr.length || 1)); };
+  // State 0 = Bull (high returns), 1 = Sideways (mid), 2 = Bear (low returns)
+  return {
+    pi: [1/3, 1/3, 1/3],
+    A: [[0.85, 0.10, 0.05], [0.10, 0.80, 0.10], [0.05, 0.10, 0.85]],
+    mu: [mean(high), mean(mid), mean(low)],
+    sigma: [Math.max(std(high), 0.003), Math.max(std(mid), 0.003), Math.max(std(low), 0.003)]
+  };
+}
+
+function classifyMarketHMM(closes) {
+  if (!closes || closes.length < 30) return null;
+  // Compute daily log returns
+  const returns = [];
+  for (let i = 1; i < closes.length; i++) {
+    if (closes[i] > 0 && closes[i-1] > 0) returns.push(Math.log(closes[i] / closes[i-1]));
+  }
+  if (returns.length < 20) return null;
+  const { pi, A, mu, sigma } = fitHMMParams(returns);
+  const path = hmmViterbi(returns, pi, A, mu, sigma);
+  if (!path.length) return null;
+  // Current state = last element of Viterbi path
+  const currentState = path[path.length - 1];
+  // Count recent 10-day state distribution
+  const recent = path.slice(-10);
+  const stateCounts = [0, 1, 2].map(s => recent.filter(v => v === s).length);
+  const stateNames = ['牛市', '震盪', '熊市'];
+  const stateColors = ['var(--green)', 'var(--yellow)', 'var(--red)'];
+  return {
+    state: currentState,
+    stateName: stateNames[currentState],
+    stateColor: stateColors[currentState],
+    recentDist: stateCounts, // [bull days, sideways days, bear days] in last 10
+    confidence: stateCounts[currentState] / 10 // % of last 10 days in current state
+  };
+}
+
 async function fetchMarketRegime() {
  const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
  const vixTicker = '^VIX';
@@ -4616,6 +4741,19 @@ async function fetchMarketRegime() {
  if (spyCloses.length >= 200) ma200 = sma(spyCloses, 200);
  else if (spyCloses.length >= 50) ma200 = sma(spyCloses, Math.min(200, spyCloses.length));
  window._benchmarkCloses[bench] = spyCloses;
+ }
+ // HMM 市場狀態偵測
+ const hmm = classifyMarketHMM(spyCloses);
+ if (hmm) {
+   window._marketRegime = window._marketRegime || {};
+   window._marketRegime.hmm = hmm;
+   // HMM state influences overall score
+   if (hmm.state === 2 && hmm.confidence >= 0.6) { // Bear with high confidence
+     window._marketRegime.overall = Math.min(window._marketRegime.overall || 0, -1);
+     window._marketRegime.hmmWarning = true;
+   } else if (hmm.state === 0 && hmm.confidence >= 0.6) { // Bull with high confidence
+     window._marketRegime.overall = Math.max(window._marketRegime.overall || 0, 1);
+   }
  }
  if (vixChart.status === 'fulfilled') {
  const vc = vixChart.value.indicators.quote[0].close.filter(v => v != null);
@@ -4687,6 +4825,11 @@ function renderRegimeBanner() {
      (r.yieldSpread < -0.3 ? ' ⚠ 曲線倒掛' : '') +
      '</span>'
    : '';
+ const hmmBadge = r.hmm
+   ? '<span style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);margin-left:8px">' +
+     'HMM: <span style="color:' + r.hmm.stateColor + ';font-weight:700">' + r.hmm.stateName + '</span>' +
+     ' <span style="color:var(--muted)">(' + Math.round(r.hmm.confidence * 100) + '%)</span></span>'
+   : '';
  el.innerHTML =
  '<div style="padding:12px 16px;border-radius:10px;border:1px solid ' + tc.border + ';background:' + tc.bg + ';display:flex;gap:16px;flex-wrap:wrap;align-items:center">' +
  '<div style="flex:1;min-width:160px">' +
@@ -4702,6 +4845,7 @@ function renderRegimeBanner() {
  '<div style="text-align:center;min-width:90px;padding:8px 12px;background:' + (r.overall >= 1 ? 'rgba(16,185,129,.15)' : r.overall <= -2 ? 'rgba(239,68,68,.15)' : 'rgba(245,158,11,.12)') + ';border-radius:8px">' +
  '<div style="font-size:11px;font-weight:700;color:' + overallColor + '">' + overallLabel + '</div>' +
  '</div>' +
+ hmmBadge +
  '</div>' +
  '</div>';
 }
