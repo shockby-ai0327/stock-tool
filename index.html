@@ -403,10 +403,27 @@ firebase.initializeApp(_fbConfig);
  </div>
  <!-- 大盤環境指示器 -->
  <div id="market-regime-banner" style="margin-bottom:14px"></div>
+ <!-- 自訂掃描清單管理器 -->
+ <div id="custom-pool-manager" style="display:none;margin-bottom:14px">
+   <div class="card" style="padding:14px">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+       <div class="section-label" style="margin:0">自訂掃描清單</div>
+       <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="clearCustomPool()">清空</button>
+     </div>
+     <div id="custom-pool-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:10px"></div>
+     <div style="display:flex;gap:8px">
+       <input id="custom-pool-input" placeholder="輸入代號（AAPL / 2330.TW）..." style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addToCustomPool()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+       <button class="btn btn-sm btn-primary" onclick="addToCustomPool()">加入</button>
+       <button class="btn btn-sm" style="background:var(--card);border:1px solid var(--border);color:var(--muted)" onclick="importFromWatchlist()" title="從今日自選股匯入">匯入自選股</button>
+     </div>
+     <div style="font-size:11px;color:var(--muted);margin-top:8px">最多 50 檔 · 美股或台股（.TW 後綴）皆可混合加入</div>
+   </div>
+ </div>
  <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
  <div class="tab-bar" id="scanner-market-tabs">
  <button class="active" onclick="switchScannerMarket('us')">美股</button>
  <button onclick="switchScannerMarket('tw')">台股</button>
+ <button onclick="switchScannerMarket('custom')">自訂</button>
  </div>
  <div class="tab-bar" id="scanner-tabs">
  <button class="active" onclick="runScan('schwartz')">Schwartz 突破</button>
@@ -962,6 +979,20 @@ async function analyzeStock() {
  rd.innerHTML += patternCard;
  }
  setTimeout(() => renderKline('stock-kline', ohlcv), 50);
+ // SEC EDGAR — 非阻塞，US股票才抓
+ if (!ticker.includes('.')) {
+   const edgarDiv = document.createElement('div');
+   edgarDiv.id = 'edgar-fundamentals';
+   edgarDiv.innerHTML = '<div class="card" style="margin-top:0"><div class="section-label">SEC 財報速覽</div><div style="color:var(--muted);font-size:12px;padding:8px 0">從 SEC EDGAR 載入中...</div></div>';
+   document.getElementById('stock-result').appendChild(edgarDiv);
+   fetchEdgarFundamentals(ticker).then(data => {
+     const el = document.getElementById('edgar-fundamentals');
+     if (el) el.outerHTML = renderEdgarCard(data) || '';
+   }).catch(() => {
+     const el = document.getElementById('edgar-fundamentals');
+     if (el) el.innerHTML = '';
+   });
+ }
  } catch (e) {
  console.error(e);
  const isNotFound = e.message && (e.message.includes('No data') || e.message.includes('not found') || e.message.includes('404') || e.message.includes('empty') || e.message.includes('undefined'));
@@ -4391,10 +4422,56 @@ const SCAN_CURATED_US = [
  'BA','CAT','DE','RTX','NOC','LMT','GD','HON','GE','UPS'
 ];
 
+// ============ TWSE 三大法人 ============
+const _twseInstCache = { data: null, ts: 0, TTL: 60 * 60 * 1000 };
+
+async function fetchTWSEInstitutional() {
+  if (_twseInstCache.data && Date.now() - _twseInstCache.ts < _twseInstCache.TTL) return _twseInstCache.data;
+  try {
+    // TWSE T86 — 三大法人買賣超資料（今日或最近交易日）
+    const today = new Date();
+    const fmt = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    let dateStr = fmt(today);
+    // 嘗試今日，若市場未開盤改昨日
+    const url = 'https://www.twse.com.tw/fund/T86?response=json&date=' + dateStr + '&selectType=ALLBUT0999';
+    const raw = await pFetch(url); // use existing proxy function
+    const data = JSON.parse(raw);
+    if (!data || data.stat !== 'OK') throw new Error('no data');
+    // data.data: each row = [代號, 名稱, 外資買, 外資賣, 外資淨, 投信買, 投信賣, 投信淨, 自營買, 自營賣, 自營淨, 三大法人]
+    const map = {};
+    (data.data || []).forEach(row => {
+      const sym = row[0].trim();
+      const foreign = parseInt((row[4] || '0').replace(/,/g, '')) || 0; // 外資淨買超
+      const trust = parseInt((row[7] || '0').replace(/,/g, '')) || 0;   // 投信淨買超
+      const total = parseInt((row[11] || '0').replace(/,/g, '')) || 0;  // 三大法人合計
+      map[sym] = { foreign, trust, total };
+    });
+    _twseInstCache.data = map;
+    _twseInstCache.ts = Date.now();
+    return map;
+  } catch(e) {
+    console.warn('TWSE institutional data error:', e);
+    return {};
+  }
+}
+
+// 計算連買連賣天數 (positive = 連買N天, negative = 連賣N天)
+function calcInstStreak(history) {
+  if (!history || !history.length) return 0;
+  const dir = history[0] > 0 ? 1 : history[0] < 0 ? -1 : 0;
+  if (!dir) return 0;
+  let streak = 0;
+  for (const v of history) {
+    if ((dir > 0 && v > 0) || (dir < 0 && v < 0)) streak++;
+    else break;
+  }
+  return dir * streak;
+}
+
 // chartScanFallback：直接用 yfChart 拉精選池，同時取得完整 OHLCV + 技術指標所需資料
 // Cloudflare Worker 作為主要 proxy，速度穩定
-async function chartScanFallback(strategy) {
- const pool = _scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60);
+async function chartScanFallback(strategy, customPool) {
+ const pool = customPool ? customPool : (_scannerMarket === 'us' ? SCAN_CURATED_US : getTwScanPool().slice(0, 60));
  const out = [];
  for (let i = 0; i < pool.length; i += 8) {
  const batch = pool.slice(i, i + 8);
@@ -4433,10 +4510,43 @@ async function chartScanFallback(strategy) {
 
 let _scannerMarket = 'us';
 let _scannerStrategy = 'schwartz';
+let _scannerCustomPool = JSON.parse(localStorage.getItem('scanner_custom_pool') || '[]');
+function saveCustomPool() { localStorage.setItem('scanner_custom_pool', JSON.stringify(_scannerCustomPool)); }
 let _scannerResults = [];
 let _scannerTimer = null;
 let _todayWatchlist = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
 let _watchlistTimer = null;
+
+// ============ FRED — 總經指標 ============
+// 使用 FRED 免費 API（公開 Demo key，有頻率限制）
+const FRED_KEY = localStorage.getItem('fred_key') || 'b4ae3c7d2f68f8e3d2dba6b5e0218d82';
+const _fredCache = {};
+
+async function fetchFredSeries(seriesId) {
+  const cacheKey = 'fred_' + seriesId;
+  if (_fredCache[cacheKey] && Date.now() - _fredCache[cacheKey].ts < 3600000) return _fredCache[cacheKey].val;
+  try {
+    const url = 'https://api.stlouisfed.org/fred/series/observations?series_id=' + seriesId +
+      '&api_key=' + FRED_KEY + '&sort_order=desc&limit=5&file_type=json';
+    const res = await fetch(url);
+    const data = await res.json();
+    const obs = (data.observations || []).filter(o => o.value !== '.');
+    const val = obs.length ? parseFloat(obs[0].value) : null;
+    _fredCache[cacheKey] = { val, ts: Date.now() };
+    return val;
+  } catch(e) { return null; }
+}
+
+async function fetchFredMacro() {
+  // T10Y2Y: 10年-2年殖利率利差（<0 = 殖利率曲線倒掛，衰退警示）
+  // VIXCLS: VIX 收盤 (從 FRED 取，與 Yahoo 互補)
+  // FEDFUNDS: 聯邦基準利率
+  const [yieldSpread, fedFunds] = await Promise.all([
+    fetchFredSeries('T10Y2Y').catch(() => null),
+    fetchFredSeries('FEDFUNDS').catch(() => null)
+  ]);
+  return { yieldSpread, fedFunds };
+}
 
 // ============ MARKET REGIME DETECTION ============
 // Fetches SPY (or 0050.TW) 200-day MA + VIX to judge whether conditions favour going long
@@ -4483,6 +4593,18 @@ async function fetchMarketRegime() {
  const overall = trendScore + vixScore; // -4 to +3
  window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall };
  renderRegimeBanner();
+ // FRED 殖利率曲線（非阻塞）
+ fetchFredMacro().then(fred => {
+   if (!window._marketRegime) return;
+   window._marketRegime.yieldSpread = fred.yieldSpread;
+   window._marketRegime.fedFunds = fred.fedFunds;
+   // 殖利率曲線倒掛 = 額外減分
+   if (fred.yieldSpread != null && fred.yieldSpread < -0.3) {
+     window._marketRegime.overall = Math.max(window._marketRegime.overall - 1, -4);
+     window._marketRegime.fredWarning = true;
+   }
+   renderRegimeBanner();
+ }).catch(() => {});
  return window._marketRegime;
  } catch(e) {
  window._marketRegime = null;
@@ -4511,16 +4633,24 @@ function renderRegimeBanner() {
  const vc = vixCfg[r.vixLevel] || vixCfg.normal;
  const overallLabel = r.overall >= 2 ? ' 絕佳進場環境' : r.overall >= 1 ? '環境良好' : r.overall === 0 ? ' 環境中性' : r.overall >= -1 ? ' 環境偏差' : ' 環境惡劣—建議觀望';
  const overallColor = r.overall >= 2 ? 'var(--green)' : r.overall >= 1 ? 'var(--green)' : r.overall === 0 ? 'var(--yellow)' : r.overall >= -1 ? 'var(--orange)' : 'var(--red)';
+ const fredLine = r.yieldSpread != null
+   ? '<span style="' + (r.yieldSpread < 0 ? 'color:var(--red)' : 'color:var(--green)') + '">' +
+     '殖利率利差(10Y-2Y): ' + (r.yieldSpread >= 0 ? '+' : '') + r.yieldSpread.toFixed(2) + '%' +
+     (r.yieldSpread < -0.3 ? ' ⚠ 曲線倒掛' : '') +
+     '</span>'
+   : '';
  el.innerHTML =
  '<div style="padding:12px 16px;border-radius:10px;border:1px solid ' + tc.border + ';background:' + tc.bg + ';display:flex;gap:16px;flex-wrap:wrap;align-items:center">' +
  '<div style="flex:1;min-width:160px">' +
  '<div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">大盤環境指示器</div>' +
  '<div style="font-size:16px;font-weight:700;color:' + tc.color + '">' + tc.icon + ' ' + tc.label + '</div>' +
  '<div style="font-size:11px;color:var(--muted);margin-top:3px">' + tc.tip + '</div>' +
+ (fredLine ? '<div style="font-size:11px;margin-top:4px">' + fredLine + '</div>' : '') +
  '</div>' +
  '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
  '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">' + r.bench + ' vs 200MA</div><div style="font-size:15px;font-weight:700;color:' + tc.color + '">' + (r.spyVs200 !== null ? (r.spyVs200 > 0 ? '+' : '') + r.spyVs200.toFixed(1) + '%' : '—') + '</div></div>' +
  (r.vixNow !== null ? '<div style="text-align:center;min-width:60px"><div style="font-size:10px;color:var(--muted)">VIX</div><div style="font-size:15px;font-weight:700;color:' + vc.color + '">' + r.vixNow.toFixed(1) + '</div><div style="font-size:10px;color:' + vc.color + '">' + vc.label + '</div></div>' : '') +
+ (r.fedFunds != null ? '<div style="text-align:center;min-width:60px"><div style="font-size:10px;color:var(--muted)">Fed利率</div><div style="font-size:15px;font-weight:700;color:var(--text)">' + r.fedFunds.toFixed(2) + '%</div></div>' : '') +
  '<div style="text-align:center;min-width:90px;padding:8px 12px;background:' + (r.overall >= 1 ? 'rgba(16,185,129,.15)' : r.overall <= -2 ? 'rgba(239,68,68,.15)' : 'rgba(245,158,11,.12)') + ';border-radius:8px">' +
  '<div style="font-size:11px;font-weight:700;color:' + overallColor + '">' + overallLabel + '</div>' +
  '</div>' +
@@ -4562,6 +4692,103 @@ async function fetchApeWisdom() {
     _apeCache.data = map; _apeCache.ts = Date.now();
     return map;
   } catch(e) { return {}; }
+}
+
+// ============ SEC EDGAR — US 基本面速覽 ============
+const _edgarCache = {};
+let _edgarTickerMap = null; // ticker → CIK map, loaded once
+
+async function loadEdgarTickerMap() {
+  if (_edgarTickerMap) return _edgarTickerMap;
+  try {
+    const res = await fetch('https://www.sec.gov/files/company_tickers.json');
+    const data = await res.json();
+    _edgarTickerMap = {};
+    Object.values(data).forEach(item => {
+      _edgarTickerMap[item.ticker.toUpperCase()] = String(item.cik_str).padStart(10, '0');
+    });
+    return _edgarTickerMap;
+  } catch(e) { _edgarTickerMap = {}; return {}; }
+}
+
+async function fetchEdgarConcept(cik, concept) {
+  const url = 'https://data.sec.gov/api/xbrl/companyconcept/CIK' + cik + '/us-gaap/' + concept + '.json';
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+async function fetchEdgarFundamentals(ticker) {
+  if (ticker.includes('.')) return null; // TW stocks — skip
+  const cacheKey = 'edgar_' + ticker;
+  if (_edgarCache[cacheKey] && Date.now() - _edgarCache[cacheKey].ts < 3600000) return _edgarCache[cacheKey].data;
+  try {
+    const map = await loadEdgarTickerMap();
+    const cik = map[ticker.toUpperCase()];
+    if (!cik) return null;
+    // Fetch EPS and Revenue in parallel
+    const [epsData, revData] = await Promise.all([
+      fetchEdgarConcept(cik, 'EarningsPerShareBasic').catch(() => null),
+      fetchEdgarConcept(cik, 'Revenues').catch(() => null) ||
+      fetchEdgarConcept(cik, 'RevenueFromContractWithCustomerExcludingAssessedTax').catch(() => null)
+    ]);
+    // Extract last 4 quarterly EPS values
+    const extractQuarterly = (data) => {
+      if (!data) return [];
+      const units = data.units || {};
+      const arr = units['USD/shares'] || units['USD'] || [];
+      return arr
+        .filter(x => x.form === '10-Q' || x.form === '10-K')
+        .filter(x => x.end && x.start && (new Date(x.end) - new Date(x.start)) < 120 * 86400000) // quarterly
+        .sort((a, b) => b.end.localeCompare(a.end))
+        .slice(0, 4);
+    };
+    const epsQ = extractQuarterly(epsData);
+    const revQ = extractQuarterly(revData);
+    const result = { cik, epsQ, revQ };
+    _edgarCache[cacheKey] = { data: result, ts: Date.now() };
+    return result;
+  } catch(e) { return null; }
+}
+
+function renderEdgarCard(data) {
+  if (!data || (!data.epsQ.length && !data.revQ.length)) return '';
+  const fmtRev = v => {
+    if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1) + 'B';
+    if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(0) + 'M';
+    return v.toFixed(0);
+  };
+  let html = '<div class="card" style="margin-top:0"><div class="section-label">SEC 財報速覽</div>';
+  if (data.epsQ.length >= 2) {
+    html += '<div style="margin-bottom:12px"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">近4季EPS（每股盈餘）</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    data.epsQ.forEach((q, i) => {
+      const yoy = data.epsQ.length > 3 && i === 0 && data.epsQ[3]
+        ? ((q.val - data.epsQ[3].val) / Math.abs(data.epsQ[3].val || 1) * 100)
+        : null;
+      html += '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:80px;text-align:center">' +
+        '<div style="font-size:10px;color:var(--muted)">' + q.end.slice(0,7) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:' + (q.val >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (q.val >= 0 ? '+' : '') + q.val.toFixed(2) + '</div>' +
+        (yoy != null && i === 0 ? '<div style="font-size:10px;color:' + (yoy >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (yoy >= 0 ? '+' : '') + yoy.toFixed(0) + '% YoY</div>' : '') +
+        '</div>';
+    });
+    html += '</div></div>';
+  }
+  if (data.revQ.length >= 2) {
+    html += '<div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">近4季營收</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    data.revQ.forEach((q, i) => {
+      const yoy = data.revQ.length > 3 && i === 0 && data.revQ[3]
+        ? ((q.val - data.revQ[3].val) / Math.abs(data.revQ[3].val || 1) * 100)
+        : null;
+      html += '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:80px;text-align:center">' +
+        '<div style="font-size:10px;color:var(--muted)">' + q.end.slice(0,7) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--text)">$' + fmtRev(q.val) + '</div>' +
+        (yoy != null && i === 0 ? '<div style="font-size:10px;color:' + (yoy >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (yoy >= 0 ? '+' : '') + yoy.toFixed(0) + '% YoY</div>' : '') +
+        '</div>';
+    });
+    html += '</div></div>';
+  }
+  html += '<div style="font-size:10px;color:var(--muted);margin-top:8px">資料來源：SEC EDGAR · 季度報告</div></div>';
+  return html;
 }
 
 // ============ SCAN HISTORY + PERFORMANCE TRACKING ============
@@ -4677,13 +4904,67 @@ function showScanHistory() {
  });
 }
 
+function renderCustomPoolTags() {
+  const el = document.getElementById('custom-pool-tags');
+  if (!el) return;
+  if (!_scannerCustomPool.length) {
+    el.innerHTML = '<span style="color:var(--muted);font-size:12px">尚無標的，請輸入代號後加入</span>';
+    return;
+  }
+  el.innerHTML = _scannerCustomPool.map(sym =>
+    '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:20px;font-size:12px;color:var(--accent)">' +
+    sym + '<span style="cursor:pointer;color:var(--muted);margin-left:2px" onclick="removeFromCustomPool(\'' + sym + '\')">&times;</span></span>'
+  ).join('');
+}
+
+function addToCustomPool() {
+  const input = document.getElementById('custom-pool-input');
+  if (!input) return;
+  const raw = input.value.trim().toUpperCase().split(/[\s,，]+/);
+  raw.forEach(sym => {
+    if (!sym) return;
+    if (_scannerCustomPool.length >= 50) { alert('最多 50 檔'); return; }
+    if (!_scannerCustomPool.includes(sym)) _scannerCustomPool.push(sym);
+  });
+  saveCustomPool();
+  renderCustomPoolTags();
+  input.value = '';
+}
+
+function removeFromCustomPool(sym) {
+  _scannerCustomPool = _scannerCustomPool.filter(s => s !== sym);
+  saveCustomPool();
+  renderCustomPoolTags();
+}
+
+function clearCustomPool() {
+  if (!confirm('確定清空自訂清單？')) return;
+  _scannerCustomPool = [];
+  saveCustomPool();
+  renderCustomPoolTags();
+}
+
+function importFromWatchlist() {
+  const wl = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
+  const syms = wl.map(w => (w.symbol || w).toUpperCase()).filter(Boolean);
+  syms.forEach(sym => {
+    if (_scannerCustomPool.length >= 50) return;
+    if (!_scannerCustomPool.includes(sym)) _scannerCustomPool.push(sym);
+  });
+  saveCustomPool();
+  renderCustomPoolTags();
+}
+
 function switchScannerMarket(market) {
- _scannerMarket = market;
- window._marketRegime = null; // force re-fetch for correct benchmark
- document.querySelectorAll('#scanner-market-tabs button').forEach((b, i) =>
- b.classList.toggle('active', (market === 'us' ? 0 : 1) === i)
- );
- runScan(_scannerStrategy);
+  _scannerMarket = market;
+  window._marketRegime = null; // force re-fetch for correct benchmark
+  document.querySelectorAll('#scanner-market-tabs button').forEach((b, i) =>
+    b.classList.toggle('active', ['us','tw','custom'][i] === market)
+  );
+  const mgr = document.getElementById('custom-pool-manager');
+  if (mgr) { mgr.style.display = market === 'custom' ? '' : 'none'; }
+  if (market === 'custom') renderCustomPoolTags();
+  runScan(_scannerStrategy);
 }
 
 function cancelScan() { window._scanAbort = true; }
@@ -4718,7 +4999,16 @@ async function runScan(strategy) {
  let quotes = [];
  let usedFallback = false;
 
- if (_scannerMarket === 'us') {
+ if (_scannerMarket === 'custom') {
+   if (!_scannerCustomPool.length) {
+     tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">自訂清單為空，請先加入標的。</div>';
+     window._scanRunning = false;
+     return;
+   }
+   usedFallback = true;
+   setProgress('② 自訂清單模式（' + _scannerCustomPool.length + ' 檔）...');
+   quotes = await chartScanFallback(strategy, _scannerCustomPool);
+ } else if (_scannerMarket === 'us') {
  // Try Yahoo spark with 12-second hard timeout
  try {
  quotes = await Promise.race([
@@ -4827,6 +5117,16 @@ async function runScan(strategy) {
  }).catch(() => {});
  }
  renderScannerResults(results, strategy, usedFallback);
+ // 台股三大法人 — 非阻塞
+ if (_scannerMarket === 'tw') {
+   fetchTWSEInstitutional().then(instMap => {
+     _scannerResults.forEach(r => {
+       const sym = r.symbol.replace('.TW', '');
+       if (instMap[sym]) r.institutional = instMap[sym];
+     });
+     renderScannerResults(_scannerResults, strategy, usedFallback);
+   }).catch(() => {});
+ }
  // Earnings enrichment (Feature E) — non-blocking
  if (_scannerMarket === 'us') {
  fetchEarningsCalendar(results.map(r => r.symbol), 'us').then(earningsMap => {
@@ -5047,6 +5347,7 @@ function renderScannerResults(results, strategy, usedFallback) {
  const isRole = strategy === 'schwartz' || strategy === 'steinhardt';
  html += '<div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>現價</th><th>漲跌%</th><th>量比</th>';
  if (isRole) html += '<th>指標確認</th><th>RS vs大盤</th>';
+ if (_scannerMarket === 'tw') html += '<th>法人</th>';
  html += '<th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
  results.forEach(r => {
  const up = r.changePct >= 0;
@@ -5079,6 +5380,19 @@ function renderScannerResults(results, strategy, usedFallback) {
  const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
  const rsLabel = rsVal == null ? '—' : (rsVal > 0 ? '+' : '') + rsVal.toFixed(1) + '%';
  html += '<td style="color:' + rsColor + ';font-weight:600">' + rsLabel + '</td>';
+ }
+ // 台股法人欄位
+ if (_scannerMarket === 'tw') {
+   const inst = r.institutional;
+   if (inst) {
+     const fColor = inst.foreign > 0 ? 'var(--green)' : inst.foreign < 0 ? 'var(--red)' : 'var(--muted)';
+     const fStr = inst.foreign > 0 ? '+' + (inst.foreign/1000).toFixed(0) + 'K' : (inst.foreign/1000).toFixed(0) + 'K';
+     html += '<td style="font-size:11px"><span style="color:' + fColor + '">外資 ' + fStr + '</span>' +
+       (inst.trust !== 0 ? '<br><span style="color:' + (inst.trust > 0 ? 'var(--green)' : 'var(--red)') + ';font-size:10px">投信 ' + (inst.trust > 0 ? '+' : '') + (inst.trust/1000).toFixed(0) + 'K</span>' : '') +
+       '</td>';
+   } else {
+     html += '<td style="color:var(--muted);font-size:11px">—</td>';
+   }
  }
  // 進場指引按鈕（Schwartz/Steinhardt 專屬）
  let entryBtn = '';
