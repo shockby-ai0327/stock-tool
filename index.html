@@ -367,13 +367,15 @@ firebase.initializeApp(_fbConfig);
       <div id="heatmap-content" style="display:none"></div>
     </div>
     <div id="page-scanner" class="page">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
         <h2 style="margin:0">掃描器</h2>
         <div style="display:flex;align-items:center;gap:8px">
           <button class="btn btn-primary" style="font-size:14px;padding:10px 24px;font-weight:600" onclick="runFullScan()">一鍵掃描（Schwartz + Steinhardt）</button>
           <button id="scan-cancel-btn" style="display:none;padding:8px 16px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;color:var(--red);cursor:pointer" onclick="cancelScan()">⏹ 取消掃描</button>
         </div>
       </div>
+      <!-- 大盤環境指示器 -->
+      <div id="market-regime-banner" style="margin-bottom:14px"></div>
       <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
       <div class="tab-bar" id="scanner-market-tabs">
         <button class="active" onclick="switchScannerMarket('us')">美股</button>
@@ -382,6 +384,7 @@ firebase.initializeApp(_fbConfig);
       <div class="tab-bar" id="scanner-tabs">
         <button class="active" onclick="runScan('schwartz')">Schwartz 突破</button>
         <button onclick="runScan('steinhardt')">Steinhardt 動量</button>
+        <button onclick="showScanHistory()">📋 歷史績效</button>
       </div>
       <div class="card" id="scanner-results">
         <h3>掃描結果</h3>
@@ -847,6 +850,12 @@ async function analyzeStock() {
       window._holdingsATR = window._holdingsATR || {};
       window._holdingsATR[ticker] = ta.atr;
     }
+    // Fetch market regime + RS if not already loaded (async, non-blocking)
+    if (!window._marketRegime) fetchMarketRegime();
+    // Compute RS vs SPY (use cached benchmark closes if available)
+    const _rsBench = ticker.endsWith('.TW') ? '0050.TW' : 'SPY';
+    const _benchC = window._benchmarkCloses[_rsBench] || [];
+    const _rsData = calcRelativeStrength(c, _benchC);
 
     if (isBondETF(ticker, fundamentals)) {
       const bondData = extractBondData(ticker, fundamentals, meta, price);
@@ -879,6 +888,23 @@ async function analyzeStock() {
         '<p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6">此股已通過掃描器動能篩選，策略邏輯為<b>趨勢追蹤</b>（RSI 50-75 動能區間），與下方個股分析的<b>超賣反彈</b>策略不同。「不建議進場」指的是反彈型訊號不足，不代表掃描器訊號失效。</p>' +
         '</div>';
       rd.innerHTML = _scannerBanner + rd.innerHTML;
+    }
+    // RS vs 大盤 + 市場環境 mini-banner
+    {
+      const regime = window._marketRegime;
+      const rsDisplay = _rsData
+        ? '<span style="font-size:12px;font-weight:700;color:' + (_rsData.rs > 2 ? 'var(--green)' : _rsData.rs > 0 ? 'var(--yellow)' : 'var(--red)') + '">RS ' + (_rsData.rs > 0 ? '+' : '') + _rsData.rs.toFixed(1) + '% vs ' + _rsBench + '</span>'
+        : '';
+      const regimeDisplay = regime
+        ? '<span style="font-size:12px;color:' + (regime.overall >= 1 ? 'var(--green)' : regime.overall <= -1 ? 'var(--red)' : 'var(--muted)') + '">' + (regime.overall >= 2 ? '🟢' : regime.overall >= 1 ? '🟡' : regime.overall <= -2 ? '🔴' : '🟠') + ' 大盤 ' + (regime.spyVs200 != null ? (regime.spyVs200 > 0 ? '+' : '') + regime.spyVs200.toFixed(1) + '% vs 200MA' : '') + (regime.vixNow ? ' · VIX ' + regime.vixNow.toFixed(0) : '') + '</span>'
+        : '';
+      if (rsDisplay || regimeDisplay) {
+        const ctxBar = '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:8px 14px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border);margin-bottom:12px">' +
+          '<span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px">市場環境</span>' +
+          (regimeDisplay ? regimeDisplay : '') + (rsDisplay ? rsDisplay : '') +
+          '</div>';
+        rd.innerHTML = ctxBar + rd.innerHTML;
+      }
     }
     // Append K-line pattern card (after main render, before kline chart init)
     if (allPatterns.length) {
@@ -1147,27 +1173,87 @@ function technicalAnalysis(closes, highs, lows, volumes, price) {
   const rsiV = rsi(closes, 14), bb = bollinger(closes, 20, 2), kdV = stoch(closes, highs, lows, 9, 3, 3), atrV = calcATR(closes, highs, lows, 14);
   const avgVol = avg(volumes.slice(-20)), volRatio = avgVol > 0 ? volumes[volumes.length - 1] / avgVol : 1;
 
+  // ── 情境判斷：先確定大趨勢環境，再給指標加權 ──────────────────────
+  const inStrongUptrend  = ma60 && price > ma60 && ma20 && ma20 > ma60 && ma5 && ma5 > ma20;
+  const inWeakUptrend    = ma60 && ma20 && ma20 > ma60 && !(ma5 && ma5 > ma20);
+  const inDowntrend      = ma60 && price < ma60 && ma20 && ma20 < ma60;
+  const trendMult = inStrongUptrend ? 1.3 : inWeakUptrend ? 1.0 : inDowntrend ? 0.6 : 1.0;
+  // In downtrend: oversold signals get LESS weight (falling knife), bearish signals MORE weight
+  const bullMult = inDowntrend ? 0.5 : inStrongUptrend ? 1.3 : 1.0;
+  const bearMult = inDowntrend ? 1.4 : inStrongUptrend ? 0.7 : 1.0;
+
   let sigs = [], score = 0;
-  if (ma5 > ma20 && ma20 > ma60) { sigs.push({ n: '均線多頭排列', t: 'b' }); score += 15; }
-  else if (ma5 < ma20 && ma20 < ma60) { sigs.push({ n: '均線空頭排列', t: 's' }); score -= 15; }
+
+  // ── 均線系統 ─────────────────────────────────────────────────────────
+  if (inStrongUptrend) { sigs.push({ n: '強勢多頭排列', t: 'b' }); score += Math.round(20 * bullMult); }
+  else if (inWeakUptrend) { sigs.push({ n: '均線多頭排列', t: 'b' }); score += Math.round(12 * bullMult); }
+  else if (inDowntrend) { sigs.push({ n: '均線空頭排列', t: 's' }); score -= Math.round(20 * bearMult); }
+
   const pma5 = sma(closes.slice(0, -1), 5), pma20 = sma(closes.slice(0, -1), 20);
-  if (ma5 > ma20 && pma5 && pma20 && pma5 <= pma20) { sigs.push({ n: 'MA5/MA20 黃金交叉', t: 'b' }); score += 20; }
-  if (ma5 < ma20 && pma5 && pma20 && pma5 >= pma20) { sigs.push({ n: 'MA5/MA20 死亡交叉', t: 's' }); score -= 20; }
-  if (histV > 0 && histP != null && histP <= 0) { sigs.push({ n: 'MACD 柱狀翻正', t: 'b' }); score += 15; }
-  if (histV < 0 && histP != null && histP >= 0) { sigs.push({ n: 'MACD 柱狀翻負', t: 's' }); score -= 15; }
-  if (macdV > sigV) score += 5; else score -= 5;
-  if (rsiV < 30) { sigs.push({ n: 'RSI 超賣 (' + rsiV.toFixed(1) + ')', t: 'b' }); score += 15; }
-  else if (rsiV > 70) { sigs.push({ n: 'RSI 超買 (' + rsiV.toFixed(1) + ')', t: 's' }); score -= 15; }
-  else if (rsiV < 40) score += 5; else if (rsiV > 60) score -= 5;
-  if (bb.lo != null && price <= bb.lo) { sigs.push({ n: '觸及布林下軌', t: 'b' }); score += 10; }
-  if (bb.hi != null && price >= bb.hi) { sigs.push({ n: '觸及布林上軌', t: 's' }); score -= 10; }
-  if (kdV.k < 20 && kdV.d < 20) { sigs.push({ n: 'KD 超賣區', t: 'b' }); score += 10; }
-  if (kdV.k > 80 && kdV.d > 80) { sigs.push({ n: 'KD 超買區', t: 's' }); score -= 10; }
-  if (kdV.k > kdV.d && kdV.k < 30) { sigs.push({ n: 'KD 低檔黃金交叉', t: 'b' }); score += 15; }
-  if (kdV.k < kdV.d && kdV.k > 70) { sigs.push({ n: 'KD 高檔死亡交叉', t: 's' }); score -= 15; }
-  if (volRatio > 1.5 && price > closes[closes.length - 2]) { sigs.push({ n: '放量上漲', t: 'b' }); score += 10; }
-  if (volRatio > 1.5 && price < closes[closes.length - 2]) { sigs.push({ n: '放量下跌', t: 's' }); score -= 10; }
-  // Advanced indicators
+  if (ma5 > ma20 && pma5 && pma20 && pma5 <= pma20) { sigs.push({ n: 'MA5/MA20 黃金交叉', t: 'b' }); score += Math.round(20 * bullMult); }
+  if (ma5 < ma20 && pma5 && pma20 && pma5 >= pma20) { sigs.push({ n: 'MA5/MA20 死亡交叉', t: 's' }); score -= Math.round(20 * bearMult); }
+
+  // ── MACD ─────────────────────────────────────────────────────────────
+  if (histV > 0 && histP != null && histP <= 0) { sigs.push({ n: 'MACD 柱狀翻正', t: 'b' }); score += Math.round(15 * bullMult); }
+  if (histV < 0 && histP != null && histP >= 0) { sigs.push({ n: 'MACD 柱狀翻負', t: 's' }); score -= Math.round(15 * bearMult); }
+  // MACD 柱狀擴張（動能加速）
+  if (histV > 0 && histP != null && histV > histP * 1.1) { sigs.push({ n: 'MACD 柱狀擴張', t: 'b' }); score += Math.round(8 * bullMult); }
+  if (macdV > sigV) score += Math.round(5 * trendMult); else score -= Math.round(5 * trendMult);
+
+  // ── RSI（情境化）────────────────────────────────────────────────────
+  if (rsiV < 30) {
+    if (inDowntrend) {
+      // 下跌趨勢中 RSI<30 = 仍在跌，不是買點
+      sigs.push({ n: 'RSI 超賣 ' + rsiV.toFixed(0) + '（趨勢弱，謹慎）', t: 's' });
+      score -= 5;
+    } else {
+      sigs.push({ n: 'RSI 超賣 (' + rsiV.toFixed(1) + ')', t: 'b' });
+      score += Math.round(18 * bullMult);
+    }
+  } else if (rsiV > 70) {
+    if (inStrongUptrend) {
+      // 強多頭趨勢中 RSI>70 可以繼續漲，不急著賣
+      sigs.push({ n: 'RSI 高位 ' + rsiV.toFixed(0) + '（強勢趨勢）', t: 'b' });
+      score += 5;
+    } else {
+      sigs.push({ n: 'RSI 超買 (' + rsiV.toFixed(1) + ')', t: 's' });
+      score -= Math.round(15 * bearMult);
+    }
+  } else if (rsiV >= 50 && rsiV <= 70 && inStrongUptrend) {
+    // RSI 50-70 甜區 in uptrend = 最佳動能區間
+    sigs.push({ n: 'RSI 動能甜區 ' + rsiV.toFixed(0), t: 'b' });
+    score += 10;
+  } else if (rsiV < 40) score += 5; else if (rsiV > 60) score -= 3;
+
+  // ── 布林通道（情境化）──────────────────────────────────────────────
+  if (bb.lo != null && price <= bb.lo) {
+    if (!inDowntrend) { sigs.push({ n: '觸及布林下軌', t: 'b' }); score += Math.round(10 * bullMult); }
+    else { sigs.push({ n: '跌破布林下軌（強跌）', t: 's' }); score -= 8; }
+  }
+  if (bb.hi != null && price >= bb.hi) {
+    if (inStrongUptrend) { sigs.push({ n: '突破布林上軌（強勢）', t: 'b' }); score += 5; }
+    else { sigs.push({ n: '觸及布林上軌', t: 's' }); score -= Math.round(10 * bearMult); }
+  }
+
+  // ── KD ───────────────────────────────────────────────────────────────
+  if (kdV.k < 20 && kdV.d < 20) { sigs.push({ n: 'KD 超賣區', t: 'b' }); score += Math.round(10 * bullMult); }
+  if (kdV.k > 80 && kdV.d > 80) { sigs.push({ n: 'KD 超買區', t: 's' }); score -= Math.round(10 * bearMult); }
+  if (kdV.k > kdV.d && kdV.k < 30) { sigs.push({ n: 'KD 低檔黃金交叉', t: 'b' }); score += Math.round(15 * bullMult); }
+  if (kdV.k < kdV.d && kdV.k > 70) { sigs.push({ n: 'KD 高檔死亡交叉', t: 's' }); score -= Math.round(15 * bearMult); }
+
+  // ── 量能（情境化）──────────────────────────────────────────────────
+  if (volRatio > 1.5 && price > closes[closes.length - 2]) {
+    const label = volRatio > 2.5 ? '大量上漲' : '放量上漲';
+    sigs.push({ n: label, t: 'b' });
+    score += Math.round((volRatio > 2.5 ? 15 : 10) * bullMult);
+  }
+  if (volRatio > 1.5 && price < closes[closes.length - 2]) {
+    const label = volRatio > 2.5 ? '大量下跌（危險）' : '放量下跌';
+    sigs.push({ n: label, t: 's' });
+    score -= Math.round((volRatio > 2.5 ? 18 : 10) * bearMult);
+  }
+
+  // ── 進階指標 ─────────────────────────────────────────────────────────
   const ema8 = ema(closes, 8), ema21 = ema(closes, 21);
   const vwapV = vwap(closes, highs, lows, volumes);
   const fib = fibRetrace(closes, highs, lows);
@@ -1175,11 +1261,20 @@ function technicalAnalysis(closes, highs, lows, volumes, price) {
   const obvV = obv(closes, volumes);
   const ichV = ichimoku(closes, highs, lows);
   if (ema8 && ema21) {
-    if (ema8 > ema21) { sigs.push({ n: 'EMA8>EMA21 短多', t: 'b' }); score += 5; }
-    else { sigs.push({ n: 'EMA8<EMA21 短空', t: 's' }); score -= 5; }
+    if (ema8 > ema21) { sigs.push({ n: 'EMA8>EMA21 短多', t: 'b' }); score += Math.round(5 * trendMult); }
+    else { sigs.push({ n: 'EMA8<EMA21 短空', t: 's' }); score -= Math.round(5 * trendMult); }
   }
-  if (ichV && price > ichV.cloudTop) { sigs.push({ n: '站上一目雲', t: 'b' }); score += 5; }
-  else if (ichV && price < ichV.cloudBottom) { sigs.push({ n: '跌破一目雲', t: 's' }); score -= 5; }
+  if (ichV && price > ichV.cloudTop) { sigs.push({ n: '站上一目雲', t: 'b' }); score += Math.round(6 * bullMult); }
+  else if (ichV && price < ichV.cloudBottom) { sigs.push({ n: '跌破一目雲', t: 's' }); score -= Math.round(6 * bearMult); }
+
+  // ── 大盤環境加減分 ────────────────────────────────────────────────────
+  const regime = window._marketRegime;
+  if (regime) {
+    if (regime.overall >= 2)       { sigs.push({ n: '大盤多頭環境加成', t: 'b' }); score += 8; }
+    else if (regime.overall <= -2) { sigs.push({ n: '大盤空頭環境折扣', t: 's' }); score -= 12; }
+    else if (regime.overall === -1) score -= 5;
+  }
+
   score = Math.max(-100, Math.min(100, score));
   let sig = score >= 40 ? 'strong-buy' : score >= 15 ? 'buy' : score <= -40 ? 'strong-sell' : score <= -15 ? 'sell' : 'hold';
   return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig, ema8, ema21, vwap: vwapV, fib, pivot, obv: obvV, ichimoku: ichV };
@@ -1195,12 +1290,17 @@ function valueAnalysis(meta, fund, price) {
   const rg = r(fd.revenueGrowth) ? r(fd.revenueGrowth) * 100 : null;
   const tp = r(fd.targetMeanPrice), peg = r(ks.pegRatio);
 
+  // Detect if this is likely a high-growth/tech company (higher PE threshold)
+  const isHighGrowth = (rg != null && rg > 20) || (pe != null && pe > 40 && roe != null && roe > 20);
+  const peBenchmark = isHighGrowth ? { low: 25, ok: 50, high: 80, vhigh: 120 } : { low: 10, ok: 20, high: 35, vhigh: 60 };
+
   let score = 0, factors = [];
   if (pe != null) {
-    if (pe < 10) { score += 20; factors.push({ n: '本益比偏低(' + pe.toFixed(1) + ')', i: '+' }); }
-    else if (pe < 15) { score += 10; factors.push({ n: '本益比合理(' + pe.toFixed(1) + ')', i: '+' }); }
-    else if (pe > 50) { score -= 25; factors.push({ n: '本益比過高(' + pe.toFixed(1) + ')', i: '-' }); }
-    else if (pe > 30) { score -= 15; factors.push({ n: '本益比偏高(' + pe.toFixed(1) + ')', i: '-' }); }
+    if (pe < peBenchmark.low)   { score += 20; factors.push({ n: '本益比低估(' + pe.toFixed(1) + (isHighGrowth ? '，成長股' : '') + ')', i: '+' }); }
+    else if (pe < peBenchmark.ok) { score += 10; factors.push({ n: '本益比合理(' + pe.toFixed(1) + ')', i: '+' }); }
+    else if (pe > peBenchmark.vhigh) { score -= 25; factors.push({ n: '本益比極高(' + pe.toFixed(1) + '，謹慎)', i: '-' }); }
+    else if (pe > peBenchmark.high)  { score -= 12; factors.push({ n: '本益比偏高(' + pe.toFixed(1) + ')', i: '-' }); }
+    else { factors.push({ n: '本益比(' + pe.toFixed(1) + ')', i: '0' }); }
   }
   if (pb != null) {
     if (pb < 1) { score += 20; factors.push({ n: 'PB<1 低於淨值(' + pb.toFixed(2) + ')', i: '+' }); }
@@ -4399,8 +4499,219 @@ let _scannerTimer = null;
 let _todayWatchlist = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
 let _watchlistTimer = null;
 
+// ============ MARKET REGIME DETECTION ============
+// Fetches SPY (or 0050.TW) 200-day MA + VIX to judge whether conditions favour going long
+window._marketRegime = null; // cached regime object
+window._benchmarkCloses = {}; // { 'SPY': [...], '0050.TW': [...] }
+
+async function fetchMarketRegime() {
+  const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+  const vixTicker = '^VIX';
+  try {
+    // Fetch benchmark 1-year daily (need 200 bars for MA200)
+    const [benchChart, vixChart] = await Promise.allSettled([
+      yfChart(bench, '1y', '1d', 8000),
+      yfChart(vixTicker, '1mo', '1d', 6000)
+    ]);
+    let spyCloses = [], ma200 = null, vixNow = null;
+    if (benchChart.status === 'fulfilled') {
+      spyCloses = benchChart.value.indicators.quote[0].close.filter(v => v != null);
+      if (spyCloses.length >= 200) ma200 = sma(spyCloses, 200);
+      else if (spyCloses.length >= 50) ma200 = sma(spyCloses, Math.min(200, spyCloses.length));
+      window._benchmarkCloses[bench] = spyCloses;
+    }
+    if (vixChart.status === 'fulfilled') {
+      const vc = vixChart.value.indicators.quote[0].close.filter(v => v != null);
+      vixNow = vc[vc.length - 1];
+    }
+    const spyNow = spyCloses[spyCloses.length - 1];
+    const spyVs200 = ma200 && spyNow ? ((spyNow - ma200) / ma200 * 100) : null;
+    // Classify regime
+    let trend = 'neutral', trendScore = 0;
+    if (spyVs200 !== null) {
+      if (spyVs200 > 2)        { trend = 'bull';        trendScore = 2; }
+      else if (spyVs200 > -2)  { trend = 'neutral';     trendScore = 0; }
+      else if (spyVs200 > -8)  { trend = 'caution';     trendScore = -1; }
+      else                     { trend = 'bear';         trendScore = -2; }
+    }
+    let vixLevel = 'normal', vixScore = 0;
+    if (vixNow !== null) {
+      if (vixNow < 15)       { vixLevel = 'calm';     vixScore = 1; }
+      else if (vixNow < 20)  { vixLevel = 'normal';   vixScore = 0; }
+      else if (vixNow < 30)  { vixLevel = 'elevated'; vixScore = -1; }
+      else                   { vixLevel = 'panic';    vixScore = -2; }
+    }
+    const overall = trendScore + vixScore; // -4 to +3
+    window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall };
+    renderRegimeBanner();
+    return window._marketRegime;
+  } catch(e) {
+    window._marketRegime = null;
+    return null;
+  }
+}
+
+function renderRegimeBanner() {
+  const el = document.getElementById('market-regime-banner');
+  if (!el) return;
+  const r = window._marketRegime;
+  if (!r) { el.innerHTML = ''; return; }
+  const trendCfg = {
+    bull:    { icon: '🟢', label: '多頭環境', color: 'var(--green)', bg: 'rgba(16,185,129,.08)', border: 'rgba(16,185,129,.3)', tip: '大盤站上200MA，突破策略勝率最高。' },
+    neutral: { icon: '🟡', label: '中性震盪', color: 'var(--yellow)', bg: 'rgba(245,158,11,.08)', border: 'rgba(245,158,11,.3)', tip: '大盤接近200MA，謹慎擇優進場。' },
+    caution: { icon: '🟠', label: '偏弱注意', color: 'var(--orange)', bg: 'rgba(249,115,22,.08)', border: 'rgba(249,115,22,.3)', tip: '大盤低於200MA，縮小倉位，嚴格停損。' },
+    bear:    { icon: '🔴', label: '空頭環境', color: 'var(--red)', bg: 'rgba(239,68,68,.08)', border: 'rgba(239,68,68,.3)', tip: '大盤深跌200MA，訊號勝率大幅降低，建議觀望。' }
+  };
+  const vixCfg = {
+    calm:     { label: 'VIX 低恐慌', color: 'var(--green)' },
+    normal:   { label: 'VIX 正常',   color: 'var(--muted)' },
+    elevated: { label: 'VIX 升高',   color: 'var(--yellow)' },
+    panic:    { label: 'VIX 恐慌',   color: 'var(--red)' }
+  };
+  const tc = trendCfg[r.trend] || trendCfg.neutral;
+  const vc = vixCfg[r.vixLevel] || vixCfg.normal;
+  const overallLabel = r.overall >= 2 ? '⚡ 絕佳進場環境' : r.overall >= 1 ? '✅ 環境良好' : r.overall === 0 ? '⚠️ 環境中性' : r.overall >= -1 ? '🚨 環境偏差' : '🛑 環境惡劣—建議觀望';
+  const overallColor = r.overall >= 2 ? 'var(--green)' : r.overall >= 1 ? 'var(--green)' : r.overall === 0 ? 'var(--yellow)' : r.overall >= -1 ? 'var(--orange)' : 'var(--red)';
+  el.innerHTML =
+    '<div style="padding:12px 16px;border-radius:10px;border:1px solid ' + tc.border + ';background:' + tc.bg + ';display:flex;gap:16px;flex-wrap:wrap;align-items:center">' +
+    '<div style="flex:1;min-width:160px">' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">大盤環境指示器</div>' +
+      '<div style="font-size:16px;font-weight:700;color:' + tc.color + '">' + tc.icon + ' ' + tc.label + '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:3px">' + tc.tip + '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+      '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">' + r.bench + ' vs 200MA</div><div style="font-size:15px;font-weight:700;color:' + tc.color + '">' + (r.spyVs200 !== null ? (r.spyVs200 > 0 ? '+' : '') + r.spyVs200.toFixed(1) + '%' : '—') + '</div></div>' +
+      (r.vixNow !== null ? '<div style="text-align:center;min-width:60px"><div style="font-size:10px;color:var(--muted)">VIX</div><div style="font-size:15px;font-weight:700;color:' + vc.color + '">' + r.vixNow.toFixed(1) + '</div><div style="font-size:10px;color:' + vc.color + '">' + vc.label + '</div></div>' : '') +
+      '<div style="text-align:center;min-width:90px;padding:8px 12px;background:' + (r.overall >= 1 ? 'rgba(16,185,129,.15)' : r.overall <= -2 ? 'rgba(239,68,68,.15)' : 'rgba(245,158,11,.12)') + ';border-radius:8px">' +
+        '<div style="font-size:11px;font-weight:700;color:' + overallColor + '">' + overallLabel + '</div>' +
+      '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+// ============ RELATIVE STRENGTH vs BENCHMARK ============
+function calcRelativeStrength(stockCloses, benchCloses) {
+  if (!stockCloses || !benchCloses || stockCloses.length < 2 || benchCloses.length < 2) return null;
+  // Use the shorter of the two arrays for comparison
+  const n = Math.min(stockCloses.length, benchCloses.length);
+  const stockReturn  = (stockCloses[stockCloses.length - 1] / stockCloses[stockCloses.length - n]) - 1;
+  const benchReturn  = (benchCloses[benchCloses.length - 1] / benchCloses[benchCloses.length - n]) - 1;
+  const rs = (stockReturn - benchReturn) * 100; // in percentage points above/below benchmark
+  return { rs, stockReturn: stockReturn * 100, benchReturn: benchReturn * 100 };
+}
+
+// ============ SCAN HISTORY + PERFORMANCE TRACKING ============
+function saveScanToHistory(results, strategy, market) {
+  if (!results || !results.length) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const key = today + '_' + strategy + '_' + market;
+  const history = JSON.parse(localStorage.getItem('scan-history') || '[]');
+  // One record per day+strategy+market combo
+  if (history.find(h => h.key === key)) return;
+  history.push({
+    key, date: today, strategy, market,
+    picks: results.slice(0, 10).map(r => ({
+      symbol: r.symbol, price: r.price, strength: r.signalStrength, rs: r.rs || null
+    }))
+  });
+  if (history.length > 120) history.splice(0, history.length - 120);
+  localStorage.setItem('scan-history', JSON.stringify(history));
+}
+
+async function enrichScanHistory() {
+  // Called lazily: for each history record, check if 7+ days old and fetch current price
+  const history = JSON.parse(localStorage.getItem('scan-history') || '[]');
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const needsResult = history.filter(h => h.date <= sevenDaysAgo && !h.result);
+  if (!needsResult.length) return;
+  for (const rec of needsResult.slice(0, 5)) { // max 5 at once
+    const results = await Promise.allSettled(rec.picks.map(async p => {
+      try {
+        const chart = await yfChart(p.symbol, '1mo', '1d', 5000);
+        const closes = chart.indicators.quote[0].close.filter(v => v != null);
+        const curPrice = closes[closes.length - 1];
+        const returnPct = ((curPrice - p.price) / p.price) * 100;
+        return { symbol: p.symbol, entryPrice: p.price, curPrice, returnPct };
+      } catch { return null; }
+    }));
+    rec.result = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+    const wins = rec.result.filter(r => r.returnPct > 0).length;
+    rec.winRate = rec.result.length ? (wins / rec.result.length * 100).toFixed(0) : null;
+    rec.avgReturn = rec.result.length ? (rec.result.reduce((s, r) => s + r.returnPct, 0) / rec.result.length).toFixed(2) : null;
+  }
+  localStorage.setItem('scan-history', JSON.stringify(history));
+}
+
+function showScanHistory() {
+  const tableDiv = document.getElementById('scanner-table');
+  document.querySelectorAll('#scanner-tabs button').forEach((b, i) => b.classList.toggle('active', i === 2));
+  const history = JSON.parse(localStorage.getItem('scan-history') || '[]').slice().reverse();
+  if (!history.length) {
+    tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">📋</div><p>尚無掃描記錄。<br>執行掃描後系統會自動記錄，7天後自動計算績效。</p></div>';
+    return;
+  }
+  // Aggregate win rate by strategy
+  const stratStats = {};
+  history.forEach(h => {
+    if (!h.result) return;
+    const k = h.strategy;
+    if (!stratStats[k]) stratStats[k] = { wins: 0, total: 0, totalReturn: 0 };
+    h.result.forEach(r => {
+      stratStats[k].total++;
+      if (r.returnPct > 0) stratStats[k].wins++;
+      stratStats[k].totalReturn += r.returnPct;
+    });
+  });
+  let summaryHtml = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">';
+  ['schwartz','steinhardt'].forEach(strat => {
+    const s = stratStats[strat];
+    const label = strat === 'schwartz' ? '⚡ Schwartz' : '📈 Steinhardt';
+    if (s && s.total > 0) {
+      const wr = (s.wins / s.total * 100).toFixed(0);
+      const avgRet = (s.totalReturn / s.total).toFixed(2);
+      const color = parseFloat(avgRet) > 0 ? 'var(--green)' : 'var(--red)';
+      summaryHtml += '<div style="padding:12px 16px;background:var(--card);border-radius:10px;border:1px solid var(--border);min-width:160px">' +
+        '<div style="font-size:12px;color:var(--muted)">' + label + ' 歷史績效</div>' +
+        '<div style="font-size:20px;font-weight:700;color:' + color + ';margin:4px 0">' + (parseFloat(avgRet) > 0 ? '+' : '') + avgRet + '%</div>' +
+        '<div style="font-size:11px;color:var(--muted)">勝率 ' + wr + '% · ' + s.total + ' 筆</div></div>';
+    } else {
+      summaryHtml += '<div style="padding:12px 16px;background:var(--card);border-radius:10px;border:1px solid var(--border);min-width:160px;opacity:.5">' +
+        '<div style="font-size:12px;color:var(--muted)">' + label + ' 歷史績效</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-top:6px">7天後自動追蹤</div></div>';
+    }
+  });
+  summaryHtml += '</div>';
+  let html = summaryHtml + '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">顯示最近 ' + history.length + ' 次掃描記錄（7 天後自動計算績效）</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>日期</th><th>策略</th><th>市場</th><th>選股</th><th>7日勝率</th><th>7日平均報酬</th></tr></thead><tbody>';
+  history.slice(0, 30).forEach(h => {
+    const pickList = h.picks.map(p =>
+      '<span style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + p.symbol + '\';showPage(\'stock\');analyzeStock()">' + p.symbol + '</span>'
+    ).join(' · ');
+    const stratLabel = h.strategy === 'schwartz' ? '⚡ Schwartz' : '📈 Steinhardt';
+    let resultCell = '<span style="color:var(--muted);font-size:11px">待追蹤</span>';
+    if (h.result) {
+      const avgRet = parseFloat(h.avgReturn);
+      const color = avgRet > 0 ? 'var(--green)' : 'var(--red)';
+      resultCell = '<span style="color:' + color + ';font-weight:600">' + (avgRet > 0 ? '+' : '') + h.avgReturn + '%</span>';
+    }
+    html += '<tr>' +
+      '<td style="font-size:12px;color:var(--muted)">' + h.date + '</td>' +
+      '<td>' + stratLabel + '</td>' +
+      '<td style="font-size:12px">' + (h.market === 'us' ? '🇺🇸 美股' : '🇹🇼 台股') + '</td>' +
+      '<td style="font-size:12px">' + pickList + '</td>' +
+      '<td>' + (h.winRate ? h.winRate + '%' : '<span style="color:var(--muted);font-size:11px">待追蹤</span>') + '</td>' +
+      '<td>' + resultCell + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:12px;text-align:right"><button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="if(confirm(\'清除所有歷史紀錄？\')){localStorage.removeItem(\'scan-history\');showScanHistory()}">🗑 清除歷史</button></div>';
+  tableDiv.innerHTML = html;
+  // Async: enrich old records with performance data
+  enrichScanHistory().then(showScanHistory);
+}
+
 function switchScannerMarket(market) {
   _scannerMarket = market;
+  window._marketRegime = null; // force re-fetch for correct benchmark
   document.querySelectorAll('#scanner-market-tabs button').forEach((b, i) =>
     b.classList.toggle('active', (market === 'us' ? 0 : 1) === i)
   );
@@ -4412,7 +4723,7 @@ function cancelScan() { window._scanAbort = true; }
 async function runScan(strategy) {
   window._scanAbort = false;
   _scannerStrategy = strategy;
-  const stratOrder = ['schwartz','steinhardt'];
+  const stratOrder = ['schwartz','steinhardt','history'];
   document.querySelectorAll('#scanner-tabs button').forEach((b, i) =>
     b.classList.toggle('active', i === stratOrder.indexOf(strategy))
   );
@@ -4428,6 +4739,10 @@ async function runScan(strategy) {
   const _scanTimer = setTimeout(() => { _scanAborted = true; }, 90000);
 
   try {
+    // ── Stage 0: market regime + benchmark closes (async, non-blocking) ─────
+    setProgress('⓪ 大盤環境偵測中...');
+    fetchMarketRegime(); // fires async, renders banner when done; don't await to avoid blocking
+
     // ── Stage 1: batch pre-screen ──────────────────────────────────────────
     setProgress('① 取得報價中（Yahoo Finance）...');
     let quotes = [];
@@ -4505,6 +4820,12 @@ async function runScan(strategy) {
           const patternTags = [...detectCandlePatterns(c, h, l, o), ...detectChartPatterns(c, h, l)]
             .slice(0, 2)
             .map(p => (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n);
+          // Relative Strength vs benchmark
+          const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+          const benchCloses = window._benchmarkCloses[bench] || [];
+          const rsData = calcRelativeStrength(c, benchCloses);
+          const rs = rsData ? rsData.rs : null; // RS in percentage points vs benchmark
+
           return {
             symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
             price, changePct: q.regularMarketChangePercent || 0,
@@ -4512,7 +4833,7 @@ async function runScan(strategy) {
             volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
             signal: signal.name, signalStrength: signal.strength,
             signalDetail: [...(signal.detail || []), ...patternTags],
-            ta, closes: c, highs: h, lows: l
+            ta, closes: c, highs: h, lows: l, rs
           };
         } catch(e) { return null; }
       })
@@ -4524,6 +4845,8 @@ async function runScan(strategy) {
       : [];
     results.sort((a, b) => b.signalStrength - a.signalStrength);
     _scannerResults = results;
+    // Save to history (async, non-blocking)
+    saveScanToHistory(results, strategy, _scannerMarket);
     renderScannerResults(results, strategy, usedFallback);
   } catch (e) {
     tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
@@ -4556,49 +4879,111 @@ function classifySignal(ta, quote, strategy, chartData) {
   const volRatio = (quote.regularMarketVolume || 0) / (quote.averageDailyVolume3Month || 1);
   switch (strategy) {
 
-    // ── Marty Schwartz 突破策略 ──────────────────────────────────────
-    // 核心：股價突破 20 日高點 + 成交量 ≥ 1.5 倍均量 + RSI 50-75 + MACD 正
+    // ── Marty Schwartz 突破策略（修正版）────────────────────────────
+    // 核心：真突破 = 收盤 > 前20日高點（非「接近」）+ 量 ≥ 1.8x + 強力收盤 + RSI 50-75 + MACD 正
+    // + 相對大盤跑贏（RS > 0）
     case 'schwartz': {
       const closes = chartData ? chartData.closes : [];
       const highs  = chartData ? chartData.highs : [];
-      const high20 = highs.length >= 20 ? Math.max(...highs.slice(-20)) : (ta.ma20 ? ta.ma20 * 1.05 : price);
-      const prevHigh20 = highs.length >= 21 ? Math.max(...highs.slice(-21, -1)) : high20;
-      // 突破條件：當日創近 20 日新高（或在前高 1% 內）
-      const breakout = price >= high20 * 0.99;
-      if (!breakout) return null;
-      const volOk  = volRatio >= 1.5;   // Schwartz 要求量能確認
-      const rsiOk  = ta.rsi >= 50 && ta.rsi <= 75;  // 有動能但不超買
-      const macdOk = ta.hist > 0 && ta.macd > ta.signal; // MACD 正且翻多
-      const kdOk   = ta.kd.k > ta.kd.d && ta.kd.k > 50; // KD 黃金交叉
-      let strength = 1;
+      const lows   = chartData ? chartData.lows  : [];
+      // 必須有足夠歷史才計算
+      if (highs.length < 21) return null;
+      // ① 真突破：今天收盤 > 前20日（不含今天）的最高點
+      const prevHigh20 = Math.max(...highs.slice(-21, -1));
+      const trueBreakout = price > prevHigh20;
+      if (!trueBreakout) return null;
+      // ② 強力收盤：收盤在今日振幅上 60% 以上（機構尾盤買進特徵）
+      const dayHigh = highs[highs.length - 1];
+      const dayLow  = lows[lows.length - 1];
+      const dayRange = dayHigh - dayLow;
+      const closeStrength = dayRange > 0.001 ? (price - dayLow) / dayRange : 0.5;
+      const strongClose = closeStrength >= 0.55;
+      // ③ 量能：≥ 1.8 倍均量（Schwartz: volume confirms breakout）
+      const volOk = volRatio >= 1.8;
+      // ④ RSI 動能甜區（50-75 = 有動能但未超買）
+      const rsiOk = ta.rsi >= 50 && ta.rsi <= 76;
+      // ⑤ MACD 正向確認
+      const macdOk = ta.hist > 0 && ta.macd > ta.signal;
+      // ⑥ KD 多頭
+      const kdOk = ta.kd.k > ta.kd.d && ta.kd.k > 50;
+      // ⑦ 相對大盤跑贏（RS）—— Schwartz 只買強中之強
+      const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+      const benchCloses = window._benchmarkCloses[bench] || [];
+      const rsData = calcRelativeStrength(closes, benchCloses);
+      const rsOk = rsData ? rsData.rs > 0 : true; // positive RS vs benchmark
+      // 市場環境加減分
+      const regime = window._marketRegime;
+      const regimeBonus = regime ? (regime.overall >= 2 ? 1 : regime.overall <= -2 ? -1 : 0) : 0;
+      // 計算強度（最高 7 星）
+      let strength = 1; // 真突破本身
       const detail = [];
+      if (strongClose) { strength++; detail.push('強力收盤 ' + (closeStrength * 100).toFixed(0) + '%✓'); }
+      else               detail.push('收盤位置 ' + (closeStrength * 100).toFixed(0) + '%');
       if (volOk)  { strength++; detail.push('量 ' + volRatio.toFixed(1) + 'x✓'); }
-      else          detail.push('量 ' + volRatio.toFixed(1) + 'x');
+      else          detail.push('量 ' + volRatio.toFixed(1) + 'x⚠');
       if (rsiOk)  { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + '✓'); }
       else          detail.push('RSI ' + ta.rsi.toFixed(0));
       if (macdOk) { strength++; detail.push('MACD✓'); }
       if (kdOk)   { strength++; detail.push('KD✓'); }
+      if (rsData)   detail.push('RS ' + (rsData.rs > 0 ? '+' : '') + rsData.rs.toFixed(1) + '%' + (rsOk ? '✓' : '⚠'));
+      if (!rsOk)  strength = Math.max(1, strength - 1); // 跑輸大盤降一星
+      strength = Math.max(1, Math.min(7, strength + regimeBonus));
       return { name: '⚡ Schwartz突破', strength, detail };
     }
 
-    // ── Michael Steinhardt 動量策略 ─────────────────────────────────
-    // 核心：EMA8 > EMA21 > EMA60 + MACD > 0 且擴張 + RSI 50-70 + 價格在 EMA8 上方
+    // ── Michael Steinhardt 動量策略（Variant Perception 完整版）────
+    // 核心：EMA多頭排列 + MACD擴張 + RSI 50-70 + 相對強弱 + 基本面驗證
+    // Steinhardt: 「市場對一家公司的理解與現實有落差，才是機會所在」
     case 'steinhardt': {
+      const closes = chartData ? chartData.closes : [];
       const ema8   = ta.ema8;
       const ema21  = ta.ema21;
-      const ema60  = ta.ma60; // MA60 ≈ EMA60 夠用
-      // 必要條件：EMA 多頭排列
+      const ema60  = ta.ma60;
+      // ① 必要條件：EMA 多頭排列（機構資金流入的核心特徵）
       if (!ema8 || !ema21 || !ema60 || !(ema8 > ema21 && ema21 > ema60)) return null;
-      const priceAboveEma = price > ema8;     // 價格在 EMA8 上方
-      const macdExpand = ta.hist > 0 && ta.macd > 0;  // MACD 正且擴張
-      const rsiOk = ta.rsi >= 50 && ta.rsi <= 70;     // 動能區間
-      const trendStrong = ta.ma5 > ta.ma20;            // 短期均線也多頭
-      let strength = 2; // EMA 多排本身就值 2 星
+      const priceAboveEma = price > ema8;
+      // ② MACD 擴張（動能加速中）
+      const macdExpand = ta.hist > 0 && ta.macd > 0;
+      // ③ RSI 動能甜區
+      const rsiOk = ta.rsi >= 50 && ta.rsi <= 72;
+      // ④ 短期趨勢確認
+      const trendStrong = ta.ma5 > ta.ma20;
+      // ⑤ 相對強弱 vs 大盤
+      const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+      const benchCloses = window._benchmarkCloses[bench] || [];
+      const rsData = calcRelativeStrength(closes, benchCloses);
+      const rsOk = rsData ? rsData.rs > 2 : true; // 跑贏大盤 2% 以上才算真動量
+      // ⑥ 基本面代理指標（scanner 無法即時抓 fundamentals，用技術面代理）
+      // Steinhardt Variant Perception 特徵：
+      //   - 股價趨勢持續向上 ≥ 3個月（MA60 上升斜率）
+      //   - 近 3 個月漲幅 > 10%（獲利中的公司才有這樣的持續動能）
+      const n = closes.length;
+      const price3mAgo = closes[Math.max(0, n - 63)]; // ~3 months back
+      const gain3m = price3mAgo > 0 ? ((price - price3mAgo) / price3mAgo) * 100 : 0;
+      const fundamentalProxy = gain3m > 8; // 3個月漲 >8%，代表基本面有支撐
+      // MA60 上升：近 20 天均線是上升的
+      const ma60now = ta.ma60;
+      const ma60prev = closes.length >= 80 ? sma(closes.slice(0, -20), 60) : null;
+      const ma60rising = ma60now && ma60prev ? ma60now > ma60prev : false;
+      // ⑦ 市場環境加減分
+      const regime = window._marketRegime;
+      const regimeBonus = regime ? (regime.overall >= 2 ? 1 : regime.overall <= -2 ? -1 : 0) : 0;
+      // 計算強度
+      let strength = 2; // EMA 多排本身值 2 星
       const detail = ['EMA多排✓'];
-      if (priceAboveEma){ strength++; detail.push('價>EMA8✓'); }
-      if (macdExpand)   { strength++; detail.push('MACD擴張✓'); }
-      if (rsiOk)        { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + '✓'); }
+      if (priceAboveEma) { strength++; detail.push('價>EMA8✓'); }
+      if (macdExpand)    { strength++; detail.push('MACD擴張✓'); }
+      if (rsiOk)         { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + '✓'); }
       if (trendStrong)     detail.push('短線多頭');
+      if (ma60rising)    { strength++; detail.push('MA60↑'); }
+      if (fundamentalProxy) detail.push('3M+' + gain3m.toFixed(0) + '%');
+      if (rsData) {
+        detail.push('RS ' + (rsData.rs > 0 ? '+' : '') + rsData.rs.toFixed(1) + '%' + (rsOk ? '✓' : ''));
+        if (rsOk) strength++;
+        else strength = Math.max(2, strength - 1);
+      }
+      if (!fundamentalProxy) strength = Math.max(2, strength - 1); // 基本面代理不過關降星
+      strength = Math.max(1, Math.min(8, strength + regimeBonus));
       return { name: '📈 Steinhardt動量', strength, detail };
     }
 
@@ -4612,8 +4997,8 @@ function renderScannerResults(results, strategy, usedFallback) {
     schwartz: '⚡ Schwartz突破', steinhardt: '📈 Steinhardt動量'
   };
   const roleDescriptions = {
-    schwartz: '基於 Marty Schwartz 策略：20日高點突破 × 量能確認(≥1.5x) × RSI 50-75 × MACD正向。停損：突破線下 1ATR。目標：2-3ATR。',
-    steinhardt: '基於 Michael Steinhardt 策略（Variant Perception）：EMA8>21>60 均線多排 × MACD擴張 × RSI 50-70，同時驗證基本面：EPS 正值、營收成長 >5%、ROE >15%、估值合理（PE<35）。技術面反映機構資金流入，基本面確認公司真實價值被低估。移動停損跟隨 EMA21。'
+    schwartz: '修正版 Marty Schwartz：收盤真突破20日高點 × 強力收盤（振幅上55%+）× 量能確認(≥1.8x) × RSI 50-76 × MACD正向 × 相對大盤跑贏（RS>0）。停損：突破線下 1ATR。目標：2-3ATR。',
+    steinhardt: '完整 Steinhardt Variant Perception：EMA8>21>60多排 × MACD擴張 × RSI 50-72 × 相對大盤跑贏(RS>+2%) × MA60上升斜率 × 3個月漲幅>8%（基本面代理）。移動停損跟隨 EMA21。'
   };
   const stratName = strategyNames[strategy] || strategy;
   if (!results.length) {
@@ -4629,9 +5014,20 @@ function renderScannerResults(results, strategy, usedFallback) {
   }
   const sourceNote = usedFallback ? ' <small style="color:var(--muted)">(精選清單 ' + SCAN_CURATED_US.length + ' 檔)</small>' : '';
   html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">找到 <b style="color:var(--text)">' + results.length + '</b> 檔符合「' + stratName + '」的股票' + sourceNote + '</div>';
+  // Market regime warning
+  const regime = window._marketRegime;
+  if (regime && regime.overall <= -2) {
+    html += '<div style="padding:10px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:12px">' +
+      '🛑 <b>空頭環境警告</b>：大盤深跌200MA(' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + ')' +
+      (regime.vixNow ? '，VIX=' + regime.vixNow.toFixed(0) + '恐慌升高' : '') +
+      '。以下訊號歷史勝率大幅降低，建議<b>縮倉或觀望</b>，嚴格執行停損。</div>';
+  } else if (regime && regime.overall === -1) {
+    html += '<div style="padding:10px 14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:8px;font-size:12px;color:var(--orange);margin-bottom:12px">' +
+      '⚠️ 大盤偏弱（' + (regime.bench || 'SPY') + ' vs 200MA: ' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + '）。僅操作強度 ★★★★+ 以上的標的，縮小倉位。</div>';
+  }
   const isRole = strategy === 'schwartz' || strategy === 'steinhardt';
   html += '<div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>現價</th><th>漲跌%</th><th>量比</th>';
-  if (isRole) html += '<th>指標確認</th>';
+  if (isRole) html += '<th>指標確認</th><th>RS vs大盤</th>';
   html += '<th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
   results.forEach(r => {
     const up = r.changePct >= 0;
@@ -4646,7 +5042,14 @@ function renderScannerResults(results, strategy, usedFallback) {
       '<td>' + r.price.toFixed(2) + '</td>' +
       '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
       '<td>' + r.volRatio.toFixed(1) + 'x</td>';
-    if (isRole) html += '<td>' + detailHtml + '</td>';
+    if (isRole) {
+      html += '<td>' + detailHtml + '</td>';
+      // RS vs 大盤
+      const rsVal = r.rs;
+      const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
+      const rsLabel = rsVal == null ? '—' : (rsVal > 0 ? '+' : '') + rsVal.toFixed(1) + '%';
+      html += '<td style="color:' + rsColor + ';font-weight:600">' + rsLabel + '</td>';
+    }
     // 進場指引按鈕（Schwartz/Steinhardt 專屬）
     let entryBtn = '';
     if (isRole) {
@@ -4797,6 +5200,8 @@ function loadScanner() {
   if (_todayWatchlist.length > 0) startWatchlistRefresh();
   if (_scannerTimer) clearInterval(_scannerTimer);
   _scannerTimer = setInterval(() => { if (_currentPage === 'scanner') runScan(_scannerStrategy); }, 180000);
+  // Always refresh regime banner on scanner load
+  fetchMarketRegime();
 }
 
 // ============ RISK CENTER ============
