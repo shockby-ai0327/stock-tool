@@ -899,7 +899,7 @@ async function analyzeStock() {
  const _sd = _entryData[_scanKey];
  const _strat = _scanKey.split('_')[1];
  const _stratLabel = _strat === 'schwartz' ? 'Schwartz 突破策略' : 'Steinhardt 動量策略';
- const _stars = ''.repeat(Math.min(_sd.signalStrength || 0, 5)) || '—';
+ const _stars = '★'.repeat(Math.min(_sd.signalStrength || 0, 5)) || '—';
  const _scannerBanner =
  '<div class="card" style="border-left:3px solid var(--green);margin-bottom:0;background:rgba(16,185,129,.04)">' +
  '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
@@ -5142,7 +5142,7 @@ function renderScannerResults(results, strategy, usedFallback) {
  html += '<th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
  results.forEach(r => {
  const up = r.changePct >= 0;
- const stars = ''.repeat(Math.min(r.signalStrength, 5)) + ''.repeat(Math.max(0, 5 - r.signalStrength));
+ const stars = '★'.repeat(Math.min(r.signalStrength, 5)) + '☆'.repeat(Math.max(0, 5 - r.signalStrength));
  const inWatchlist = _todayWatchlist.some(w => w.symbol === r.symbol);
  const detailHtml = (r.signalDetail && r.signalDetail.length)
  ? r.signalDetail.map(d => '<span class="tag" style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(59,130,246,.12);color:var(--accent)">' + d + '</span>').join('')
@@ -7147,7 +7147,7 @@ function renderDashScanList(strategy, results, sortBy) {
  const up = (r.changePct || 0) >= 0;
  const maxSt = strategy === 'schwartz' ? 7 : 8;
  const filled = Math.min(r.signalStrength || 0, maxSt);
- const stars = ''.repeat(filled) + ''.repeat(Math.max(0, 5 - filled));
+ const stars = '★'.repeat(filled) + '☆'.repeat(Math.max(0, 5 - filled));
  const key = r.symbol + '_' + strategy;
  const fundBadge = strategy === 'steinhardt' && r.fundLoaded != null
  ? '<span style="font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;background:' +
@@ -7249,7 +7249,7 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
  const guide = calcEntryGuide(taInfo, price, strategy, closes, highs);
  const ta = taInfo;
  const pctRisk = price > 0 ? ((price - guide.stop) / price * 100).toFixed(1) : '?';
- const stars = ''.repeat(Math.min(quoteInfo.signalStrength || 0, 5)) + ''.repeat(Math.max(0, 5 - (quoteInfo.signalStrength || 0)));
+ const stars = '★'.repeat(Math.min(quoteInfo.signalStrength || 0, 5)) + '☆'.repeat(Math.max(0, 5 - (quoteInfo.signalStrength || 0)));
 
  // 從風控中心讀帳戶資金（支援 TWD/USD 幣別）
  const capitalEl = document.getElementById('risk-capital');
@@ -7437,7 +7437,7 @@ async function runFullScan() {
  const up = r.changePct >= 0;
  // 星星依實際上限顯示
  const filledStars = Math.min(r.signalStrength, maxStars);
- const stars = ''.repeat(filledStars) + ''.repeat(Math.max(0, 5 - filledStars));
+ const stars = '★'.repeat(filledStars) + '☆'.repeat(Math.max(0, 5 - filledStars));
  const key = r.symbol + '_' + strategy;
  // RS badge
  const rsVal = r.rs;
