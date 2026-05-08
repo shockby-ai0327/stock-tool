@@ -374,6 +374,14 @@ firebase.initializeApp(_fbConfig);
           <button id="scan-cancel-btn" style="display:none;padding:8px 16px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;color:var(--red);cursor:pointer" onclick="cancelScan()">⏹ 取消掃描</button>
         </div>
       </div>
+      <!-- 板塊輪動 -->
+      <div id="sector-rotation-card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)" onclick="toggleSectorCard()">
+          <span style="font-weight:600;font-size:14px">🔄 板塊輪動</span>
+          <span id="sector-toggle-icon">▼</span>
+        </div>
+        <div id="sector-rotation-body" style="display:none;margin-top:8px"></div>
+      </div>
       <!-- 大盤環境指示器 -->
       <div id="market-regime-banner" style="margin-bottom:14px"></div>
       <div id="fullscan-results" style="display:none;margin-bottom:20px"></div>
@@ -385,6 +393,7 @@ firebase.initializeApp(_fbConfig);
         <button class="active" onclick="runScan('schwartz')">Schwartz 突破</button>
         <button onclick="runScan('steinhardt')">Steinhardt 動量</button>
         <button onclick="showScanHistory()">📋 歷史績效</button>
+        <button onclick="runBacktest()">📊 回測</button>
       </div>
       <div class="card" id="scanner-results">
         <h3>掃描結果</h3>
@@ -2720,6 +2729,14 @@ async function renderHoldings() {
     }
   }));
 
+  // Fetch earnings calendar for US holdings (Feature E)
+  const holdingTickers = open.map(([t]) => t);
+  const usTickers = holdingTickers.filter(t => !t.endsWith('.TW') && !t.endsWith('.TWO'));
+  let holdingsEarnings = {};
+  if (usTickers.length) {
+    try { holdingsEarnings = await fetchEarningsCalendar(usTickers, 'us'); } catch(e) {}
+  }
+
   // Calculate exit signals
   const exitSig = {};
   window._holdingsATR = window._holdingsATR || {};
@@ -2777,6 +2794,32 @@ async function renderHoldings() {
     } else {
       exitCell = '<span style="font-size:11px;color:var(--muted);opacity:.5">計算中...</span>';
     }
+    // Earnings warning (Feature E)
+    if (holdingsEarnings[ticker]) {
+      const earnDate = new Date(holdingsEarnings[ticker]);
+      const today = new Date();
+      const daysUntil = Math.round((earnDate - today) / 86400000);
+      if (daysUntil >= 0 && daysUntil <= 7) {
+        const mm = (earnDate.getMonth() + 1).toString().padStart(2,'0');
+        const dd = earnDate.getDate().toString().padStart(2,'0');
+        exitCell += '<div style="margin-top:5px;padding:4px 8px;background:rgba(249,115,22,.12);border-radius:6px;font-size:11px;color:var(--orange)">⚠️ 財報 ' + mm + '/' + dd + ' — 建議縮倉至停損前出場</div>';
+      }
+    }
+
+    // Trailing stop calculation
+    let trailingStopCell = '<span style="font-size:11px;color:var(--muted);opacity:.5">—</span>';
+    if (curPrice && taData[ticker]) {
+      const { closes: tc, highs: th, lows: tl } = taData[ticker];
+      const ts = calcTrailingStop(tc, th, tl, curPrice, avgCost);
+      const peak = updateHoldingsPeak(ticker, curPrice);
+      if (ts) {
+        trailingStopCell =
+          (ts.warning ? '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:2px">🔴 跌破移動停損</div>' : '') +
+          '<div style="font-size:12px;font-weight:700;color:' + ts.color + '">$' + ts.trailingStop.toFixed(2) + '</div>' +
+          '<div style="font-size:11px;color:' + ts.color + '">' + ts.distPct.toFixed(1) + '% 緩衝</div>' +
+          (peak ? '<div style="font-size:10px;color:var(--muted)">峰值 $' + peak.toFixed(2) + '</div>' : '');
+      }
+    }
 
     // Mobile signal badge — compact color dot with tap-to-detail
     const mobileSigBadge = es
@@ -2793,6 +2836,7 @@ async function renderHoldings() {
       '<td style="color:' + c + ';font-weight:600">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
       '<td style="color:var(--muted)">' + days + ' 天</td>' +
       '<td class="holdings-exit-col" style="padding:8px 10px">' + exitCell + '</td>' +
+      '<td class="holdings-exit-col" style="padding:8px 10px">' + trailingStopCell + '</td>' +
       '<td class="holdings-atr-col"><button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:var(--green);padding:3px 7px;font-size:12px" title="ATR 進場計算" onclick="showATRPopup(' + avgCost.toFixed(2) + ',\'' + ticker + '\')">◎</button></td>' +
       '</tr>';
   }).join('');
@@ -2831,7 +2875,7 @@ async function renderHoldings() {
     '</div></div>' +
     (alertHtml ? '<div style="margin-bottom:12px">' + alertHtml + '</div>' : '') +
     '<div class="card"><h3>個股明細與出場提示</h3><div style="overflow-x:auto"><table>' +
-    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th class="holdings-exit-col">出場提示（ATR/RSI/MACD）</th><th class="holdings-atr-col"></th></tr></thead>' +
+    '<thead><tr><th>代號</th><th>持股數</th><th>均成本</th><th>現價</th><th>損益</th><th>%</th><th>持有</th><th class="holdings-exit-col">出場提示（ATR/RSI/MACD）</th><th class="holdings-exit-col">移動停損</th><th class="holdings-atr-col"></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>' +
     '<p style="font-size:11px;color:var(--muted);margin-top:10px">停損位 = 均成本 -1.5×ATR；3R 目標 = 均成本 +3×ATR。進度條顯示現價在停損-目標區間的位置。僅供參考，非投資建議。</p>' +
     '<p class="holdings-mobile-hint" style="font-size:12px;color:var(--accent);margin-top:8px;text-align:center">📊 查看出場提示（橫屏或桌面版顯示完整欄位）</p>' +
@@ -4844,6 +4888,7 @@ async function runScan(strategy) {
             volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
             signal: signal.name, signalStrength: signal.strength,
             signalDetail: [...(signal.detail || []), ...patternTags],
+            weeklyTrend: signal.weeklyTrend || 'neutral',
             ta, closes: c, highs: h, lows: l, rs
           };
         } catch(e) { return null; }
@@ -4859,6 +4904,12 @@ async function runScan(strategy) {
     // Save to history (async, non-blocking)
     saveScanToHistory(results, strategy, _scannerMarket);
     renderScannerResults(results, strategy, usedFallback);
+    // Earnings enrichment (Feature E) — non-blocking
+    if (_scannerMarket === 'us') {
+      fetchEarningsCalendar(results.map(r => r.symbol), 'us').then(earningsMap => {
+        enrichScannerWithEarnings(earningsMap);
+      }).catch(() => {});
+    }
   } catch (e) {
     tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
   } finally {
@@ -4940,7 +4991,17 @@ function classifySignal(ta, quote, strategy, chartData) {
       if (rsData)   detail.push('RS ' + (rsData.rs > 0 ? '+' : '') + rsData.rs.toFixed(1) + '%' + (rsOk ? '✓' : '⚠'));
       if (!rsOk)  strength = Math.max(1, strength - 1); // 跑輸大盤降一星
       strength = Math.max(1, Math.min(7, strength + regimeBonus));
-      return { name: '⚡ Schwartz突破', strength, detail };
+      // Weekly trend check (Feature D)
+      const weeklyTrendSch = chartData ? calcWeeklyTrend(closes, highs, lows) : 'neutral';
+      if (weeklyTrendSch === 'bear') { strength = Math.max(1, strength - 1); detail.push('週線空頭⚠️'); }
+      else if (weeklyTrendSch === 'bull') { strength = Math.min(8, strength + 1); detail.push('週線多頭✓'); }
+      // Sector check (Feature C) — quote.symbol used to match top sectors
+      if (window._topSectors && quote.symbol) {
+        // Map stock to a sector ETF (rough heuristic for US tech/etc.)
+        // For now just check if the symbol itself is in top sectors (handles ETF-level scans)
+        if (window._topSectors.includes(quote.symbol)) { strength = Math.min(8, strength + 1); detail.push('Sector✓'); }
+      }
+      return { name: '⚡ Schwartz突破', strength, detail, weeklyTrend: weeklyTrendSch };
     }
 
     // ── Michael Steinhardt 動量策略（Variant Perception 完整版）────
@@ -4996,7 +5057,11 @@ function classifySignal(ta, quote, strategy, chartData) {
       }
       if (!fundamentalProxy) strength = Math.max(2, strength - 1); // 基本面代理不過關降星
       strength = Math.max(1, Math.min(8, strength + regimeBonus));
-      return { name: '📈 Steinhardt動量', strength, detail };
+      // Weekly trend check (Feature D)
+      const weeklyTrendSt = chartData ? calcWeeklyTrend(closes, highs, lows) : 'neutral';
+      if (weeklyTrendSt === 'bear') { strength = Math.max(1, strength - 1); detail.push('週線空頭⚠️'); }
+      else if (weeklyTrendSt === 'bull') { strength = Math.min(9, strength + 1); detail.push('週線多頭✓'); }
+      return { name: '📈 Steinhardt動量', strength, detail, weeklyTrend: weeklyTrendSt };
     }
 
   }
@@ -5057,7 +5122,12 @@ function renderScannerResults(results, strategy, usedFallback) {
       '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
       '<td>' + r.volRatio.toFixed(1) + 'x</td>';
     if (isRole) {
-      html += '<td>' + detailHtml + '</td>';
+      const wtBadge = r.weeklyTrend === 'bull'
+        ? '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(16,185,129,.15);color:var(--green);border-radius:3px">📈 週多</span>'
+        : r.weeklyTrend === 'bear'
+        ? '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(239,68,68,.12);color:var(--red);border-radius:3px">📉 週空</span>'
+        : '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(255,255,255,.06);color:var(--muted);border-radius:3px">➡️ 週中</span>';
+      html += '<td>' + detailHtml + wtBadge + '</td>';
       // RS vs 大盤
       const rsVal = r.rs;
       const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
@@ -5216,6 +5286,10 @@ function loadScanner() {
   _scannerTimer = setInterval(() => { if (_currentPage === 'scanner' && !window._scanRunning) runScan(_scannerStrategy); }, 180000);
   // Always refresh regime banner on scanner load
   fetchMarketRegime();
+  // Load sector rotation (lazy — user must expand card)
+  // Auto-load if body is already expanded
+  const srBody = document.getElementById('sector-rotation-body');
+  if (srBody && srBody.style.display !== 'none') loadSectorRotation();
 }
 
 // ============ RISK CENTER ============
@@ -7196,6 +7270,13 @@ async function runFullScan() {
       renderMini(schResults, 'schwartz',   '⚡ Schwartz突破 Top 5') +
       renderMini(stFiltered, 'steinhardt', '📈 Steinhardt動量 Top 5') +
     '</div>';
+    // Earnings enrichment for fullscan results (Feature E)
+    if (_scannerMarket === 'us') {
+      const allSymbols = [...new Set([...schResults.slice(0,5).map(r=>r.symbol), ...stFiltered.slice(0,5).map(r=>r.symbol)])];
+      fetchEarningsCalendar(allSymbols, 'us').then(earningsMap => {
+        enrichScannerWithEarnings(earningsMap);
+      }).catch(() => {});
+    }
   } catch(e) {
     fullDiv.innerHTML = '<div style="color:var(--red);padding:16px">掃描失敗：' + e.message + '</div>';
   }
@@ -7924,6 +8005,309 @@ function renderEduAnalysisReport(ticker, price, meta, ta, candleP, chartP, c, h,
 
   html += '</div>';
   return html;
+}
+
+// ============ FEATURE A: BACKTESTING ENGINE ============
+async function runBacktest() {
+  const stratOrder = ['schwartz','steinhardt','history','backtest'];
+  document.querySelectorAll('#scanner-tabs button').forEach((b, i) =>
+    b.classList.toggle('active', i === 3)
+  );
+  const tableDiv = document.getElementById('scanner-table');
+  const pool = (_scannerMarket === 'us' ? SCAN_CURATED_US : (typeof SCAN_CURATED_TW !== 'undefined' ? SCAN_CURATED_TW : SCAN_CURATED_US)).slice(0, 20);
+  tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;color:var(--muted);font-size:13px">回測初始化中... (0/' + pool.length + ')</p></div>';
+
+  const allTrades = [];
+  let done = 0;
+
+  for (const ticker of pool) {
+    if (window._scanAbort) break;
+    tableDiv.querySelector('p').textContent = '回測中... (' + (++done) + '/' + pool.length + ') ' + ticker;
+    try {
+      const chart = await yfChart(ticker, '2y', '1d', 10000);
+      const oq = chart.indicators.quote[0];
+      const closes = [], highs = [], lows = [], vols = [];
+      for (let i = 0; i < (oq.close||[]).length; i++) {
+        if (oq.close[i] != null && oq.high[i] != null && oq.low[i] != null && oq.volume[i] != null) {
+          closes.push(oq.close[i]); highs.push(oq.high[i]); lows.push(oq.low[i]); vols.push(oq.volume[i]);
+        }
+      }
+      if (closes.length < 80) continue;
+
+      for (let i = 60; i < closes.length - 1; i++) {
+        const prevHigh20 = Math.max(...highs.slice(i - 21, i));
+        const trueBreakout = closes[i] > prevHigh20;
+        if (!trueBreakout) continue;
+        const avgVol20 = vols.slice(i - 20, i).reduce((a,b)=>a+b,0) / 20;
+        const volRatio = avgVol20 > 0 ? vols[i] / avgVol20 : 0;
+        if (volRatio < 1.5) continue;
+        const rsiVal = rsi(closes.slice(0, i + 1), 14);
+        if (rsiVal < 50 || rsiVal > 76) continue;
+
+        const entry = closes[i];
+        const atrVal = calcATR(closes.slice(0, i + 1), highs.slice(0, i + 1), lows.slice(0, i + 1), 14);
+        const stop = prevHigh20 - atrVal;
+        const risk = entry - stop;
+        if (risk <= 0) continue;
+        const target1 = entry + 2 * risk;
+
+        let outcome = null, pnlPct = 0;
+        for (let j = i + 1; j <= Math.min(i + 30, closes.length - 1); j++) {
+          if (lows[j] <= stop) { outcome = 'loss'; pnlPct = (stop - entry) / entry * 100; break; }
+          if (highs[j] >= target1) { outcome = 'win'; pnlPct = 2 * risk / entry * 100; break; }
+          if (j === Math.min(i + 30, closes.length - 1)) { outcome = 'timeout'; pnlPct = (closes[j] - entry) / entry * 100; }
+        }
+        if (outcome) allTrades.push({ ticker, outcome, pnlPct });
+      }
+    } catch(e) { /* skip failed tickers */ }
+    await delay(50);
+  }
+
+  // Aggregate
+  const wins = allTrades.filter(t => t.outcome === 'win' || (t.outcome === 'timeout' && t.pnlPct > 0));
+  const losses = allTrades.filter(t => t.outcome === 'loss' || (t.outcome === 'timeout' && t.pnlPct <= 0));
+  const total = allTrades.length;
+  const winRate = total > 0 ? (wins.length / total * 100) : 0;
+  const avgWin = wins.length ? wins.reduce((s,t)=>s+t.pnlPct,0)/wins.length : 0;
+  const avgLoss = losses.length ? Math.abs(losses.reduce((s,t)=>s+t.pnlPct,0)/losses.length) : 0;
+  const profitFactor = avgLoss > 0 ? (wins.length * avgWin) / (losses.length * avgLoss) : 0;
+  const expectancy = total > 0 ? allTrades.reduce((s,t)=>s+t.pnlPct,0)/total : 0;
+
+  // Distribution buckets
+  const buckets = {};
+  allTrades.forEach(t => {
+    const b = Math.round(t.pnlPct / 2) * 2;
+    buckets[b] = (buckets[b] || 0) + 1;
+  });
+  const maxCount = Math.max(...Object.values(buckets), 1);
+  const sortedBuckets = Object.keys(buckets).map(Number).sort((a,b)=>a-b);
+
+  let distHtml = sortedBuckets.map(b => {
+    const pct = Math.round(buckets[b] / maxCount * 100);
+    const color = b >= 0 ? 'var(--green)' : 'var(--red)';
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
+      '<span style="font-size:10px;color:var(--muted);width:36px;text-align:right">' + (b>=0?'+':'') + b + '%</span>' +
+      '<div style="flex:1;background:rgba(255,255,255,.06);border-radius:3px;height:14px"><div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:3px"></div></div>' +
+      '<span style="font-size:10px;color:var(--muted);width:20px">' + buckets[b] + '</span></div>';
+  }).join('');
+
+  tableDiv.innerHTML =
+    '<div style="padding:16px">' +
+    '<h3 style="margin-bottom:16px">📊 Schwartz 突破回測結果（精選 ' + pool.length + ' 檔 · 近 2 年）</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px">' +
+    _btStat('總交易次數', total, 'var(--text)') +
+    _btStat('勝率', winRate.toFixed(1) + '%', winRate >= 50 ? 'var(--green)' : 'var(--red)') +
+    _btStat('平均獲利', '+' + avgWin.toFixed(2) + '%', 'var(--green)') +
+    _btStat('平均虧損', '-' + avgLoss.toFixed(2) + '%', 'var(--red)') +
+    _btStat('獲利因子', profitFactor.toFixed(2), profitFactor >= 1.5 ? 'var(--green)' : profitFactor >= 1 ? 'var(--yellow)' : 'var(--red)') +
+    _btStat('期望值', (expectancy >= 0 ? '+' : '') + expectancy.toFixed(2) + '%', expectancy >= 0 ? 'var(--green)' : 'var(--red)') +
+    '</div>' +
+    '<h4 style="font-size:13px;color:var(--muted);margin-bottom:10px">損益分佈（每 2% 一組）</h4>' +
+    distHtml +
+    '<p style="font-size:11px;color:var(--muted);margin-top:14px">僅技術面回測，不含滑價、手續費。以前 20 檔精選股、近 2 年日線資料為樣本。非投資建議。</p>' +
+    '</div>';
+}
+
+function _btStat(label, val, color) {
+  return '<div style="padding:10px;background:rgba(255,255,255,.04);border-radius:8px">' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">' + label + '</div>' +
+    '<div style="font-size:18px;font-weight:700;color:' + color + '">' + val + '</div></div>';
+}
+
+// ============ FEATURE B: AUTO TRAILING STOP TRACKER ============
+function calcEMA21(closes) {
+  if (!closes || closes.length < 21) return null;
+  const arr = emaArr(closes, 21);
+  return arr[arr.length - 1];
+}
+
+function calcTrailingStop(closes, highs, lows, curPrice, avgCost) {
+  const atrVal = calcATR(closes, highs, lows, 14);
+  const ema21Val = calcEMA21(closes);
+  if (!atrVal || !ema21Val) return null;
+  const stop1 = avgCost - 1.5 * atrVal;
+  const stop2 = ema21Val - 0.5 * atrVal;
+  const trailingStop = Math.max(stop1, stop2);
+  const distPct = (curPrice - trailingStop) / curPrice * 100;
+  const color = distPct < 3 ? 'var(--red)' : distPct < 5 ? 'var(--yellow)' : 'var(--green)';
+  const warning = curPrice < trailingStop;
+  return { trailingStop, distPct, color, warning, atrVal, ema21Val };
+}
+
+function updateHoldingsPeak(ticker, curPrice) {
+  const peaks = JSON.parse(localStorage.getItem('holdings-peaks') || '{}');
+  const now = new Date().toISOString().slice(0,10);
+  if (!peaks[ticker] || curPrice > peaks[ticker].peak) {
+    peaks[ticker] = { peak: curPrice, lastUpdated: now };
+    localStorage.setItem('holdings-peaks', JSON.stringify(peaks));
+  }
+  return (peaks[ticker] || {}).peak;
+}
+
+// ============ FEATURE C: SECTOR ROTATION DASHBOARD ============
+function toggleSectorCard() {
+  const body = document.getElementById('sector-rotation-body');
+  const icon = document.getElementById('sector-toggle-icon');
+  if (!body || !icon) return;
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    icon.textContent = '▲';
+    if (!body._loaded) { body._loaded = true; loadSectorRotation(); }
+  } else {
+    body.style.display = 'none';
+    icon.textContent = '▼';
+  }
+}
+
+async function loadSectorRotation() {
+  const body = document.getElementById('sector-rotation-body');
+  if (!body) return;
+  body.innerHTML = '<div class="loading" style="padding:16px"><div class="spinner"></div><p style="margin-top:8px;font-size:12px;color:var(--muted)">載入板塊資料中...</p></div>';
+
+  const isUS = _scannerMarket === 'us';
+  const tickers = isUS
+    ? ['XLK','XLE','XLF','XLV','XLI','XLP','XLU','XLB','XLRE','XLC','XLY']
+    : ['0050.TW','0051.TW','0055.TW','0056.TW','006208.TW'];
+  const names = isUS
+    ? ['科技','能源','金融','醫療','工業','必需消費','公用事業','原材料','不動產','通訊','非必需消費']
+    : ['台灣50','中型100','台灣高股息','高股息ETF','富邦台50'];
+
+  try {
+    // Fetch 3mo chart for each sector to compute 1M and 3M returns
+    const results = await Promise.allSettled(tickers.map(async (t, idx) => {
+      const chart = await yfChart(t, '3mo', '1d', 8000);
+      const oq = chart.indicators.quote[0];
+      const closes = (oq.close || []).filter(v => v != null);
+      if (closes.length < 5) return null;
+      const cur = closes[closes.length - 1];
+      const prev1m = closes.length >= 22 ? closes[closes.length - 22] : closes[0];
+      const prev3m = closes[0];
+      const ret1m = prev1m > 0 ? (cur - prev1m) / prev1m * 100 : 0;
+      const ret3m = prev3m > 0 ? (cur - prev3m) / prev3m * 100 : 0;
+      return { ticker: t, name: names[idx], cur, ret1m, ret3m };
+    }));
+
+    const sectors = results
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .map(r => r.value)
+      .sort((a,b) => b.ret1m - a.ret1m);
+
+    // Store top 3 for classifySignal use
+    window._topSectors = sectors.slice(0, 3).map(s => s.ticker);
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px">';
+    sectors.forEach((s, i) => {
+      const color = i < 3 ? 'var(--green)' : i >= sectors.length - 3 ? 'var(--red)' : 'var(--muted)';
+      const bg = i < 3 ? 'rgba(16,185,129,.08)' : i >= sectors.length - 3 ? 'rgba(239,68,68,.08)' : 'rgba(255,255,255,.03)';
+      const badge = i < 3 ? '▲' : i >= sectors.length - 3 ? '▼' : '→';
+      html += '<div style="padding:10px;background:' + bg + ';border-radius:8px;border:1px solid ' + (i < 3 ? 'rgba(16,185,129,.2)' : i >= sectors.length - 3 ? 'rgba(239,68,68,.2)' : 'var(--border)') + '">' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">' + badge + ' ' + s.ticker + '</div>' +
+        '<div style="font-weight:700;font-size:13px;margin-bottom:4px">' + s.name + '</div>' +
+        '<div style="font-size:12px;color:' + color + ';font-weight:600">1M ' + (s.ret1m >= 0 ? '+' : '') + s.ret1m.toFixed(1) + '%</div>' +
+        '<div style="font-size:11px;color:var(--muted)">3M ' + (s.ret3m >= 0 ? '+' : '') + s.ret3m.toFixed(1) + '%</div>' +
+        '<div style="font-size:12px;color:var(--text);margin-top:2px">$' + s.cur.toFixed(2) + '</div>' +
+        '</div>';
+    });
+    html += '</div><div style="font-size:11px;color:var(--muted);padding:0 8px 8px">綠色=近1月表現前3；紅色=近1月表現後3。僅供參考。</div>';
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px">板塊資料載入失敗：' + e.message + '</div>';
+  }
+}
+
+// ============ FEATURE D: DAILY-TO-WEEKLY HELPER ============
+function dailyToWeekly(closes, highs, lows) {
+  const wc = [], wh = [], wl = [];
+  for (let i = 0; i < closes.length; i += 5) {
+    const cSlice = closes.slice(i, i + 5);
+    const hSlice = highs.slice(i, i + 5);
+    const lSlice = lows.slice(i, i + 5);
+    if (cSlice.length < 3) break;
+    wc.push(cSlice[cSlice.length - 1]);
+    wh.push(Math.max(...hSlice));
+    wl.push(Math.min(...lSlice));
+  }
+  return { wc, wh, wl };
+}
+
+function calcWeeklyTrend(closes, highs, lows) {
+  const { wc } = dailyToWeekly(closes, highs, lows);
+  if (wc.length < 20) return 'neutral';
+  const wma10 = wc.slice(-10).reduce((a,b)=>a+b,0) / 10;
+  const wma20 = wc.slice(-20).reduce((a,b)=>a+b,0) / 20;
+  const lastWC = wc[wc.length - 1];
+  if (lastWC > wma10 && wma10 > wma20) return 'bull';
+  if (lastWC < wma10 && wma10 < wma20) return 'bear';
+  return 'neutral';
+}
+
+// ============ FEATURE E: EARNINGS CALENDAR ============
+window._earningsCache = null;
+window._earningsCacheTs = 0;
+
+async function fetchEarningsCalendar(tickers, market) {
+  if (market !== 'us') return {};
+  const now = Date.now();
+  if (window._earningsCache && now - window._earningsCacheTs < 3600000) {
+    // filter cached result to requested tickers
+    const tickerSet = new Set(tickers.map(t => t.toUpperCase()));
+    return Object.fromEntries(Object.entries(window._earningsCache).filter(([k]) => tickerSet.has(k)));
+  }
+  try {
+    const today = new Date();
+    const from = today.toISOString().slice(0,10);
+    const to = new Date(today.getTime() + 14*86400000).toISOString().slice(0,10);
+    const url = 'https://finnhub.io/api/v1/calendar/earnings?from=' + from + '&to=' + to + '&token=' + FINNHUB_KEY;
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 8000);
+    let data = null;
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      if (r.ok) data = await r.json();
+    } finally { clearTimeout(tid); }
+    if (!data || !data.earningsCalendar) return {};
+    const tickerSet = new Set(tickers.map(t => t.toUpperCase()));
+    const map = {};
+    (data.earningsCalendar || []).forEach(e => {
+      if (e.symbol && tickerSet.has(e.symbol.toUpperCase()) && e.date) {
+        map[e.symbol.toUpperCase()] = e.date;
+      }
+    });
+    // Cache all results (not just requested tickers)
+    const fullMap = {};
+    (data.earningsCalendar || []).forEach(e => { if (e.symbol && e.date) fullMap[e.symbol.toUpperCase()] = e.date; });
+    window._earningsCache = fullMap;
+    window._earningsCacheTs = now;
+    return map;
+  } catch(e) { return {}; }
+}
+
+function enrichScannerWithEarnings(earningsMap) {
+  const rows = document.querySelectorAll('#scanner-table tbody tr');
+  const today = new Date();
+  rows.forEach(row => {
+    const firstTd = row.querySelector('td');
+    if (!firstTd) return;
+    const ticker = (firstTd.querySelector('b') || firstTd).textContent.trim().toUpperCase();
+    if (!earningsMap[ticker]) return;
+    const earnDate = new Date(earningsMap[ticker]);
+    const daysUntil = Math.round((earnDate - today) / 86400000);
+    if (daysUntil < 0 || daysUntil > 7) return;
+    const mm = (earnDate.getMonth() + 1).toString().padStart(2,'0');
+    const dd = earnDate.getDate().toString().padStart(2,'0');
+    const urgentColor = daysUntil <= 3 ? 'rgba(239,68,68,.9)' : 'rgba(249,115,22,.9)';
+    const badge = '<span style="display:inline-block;margin-left:4px;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' + urgentColor + ';color:#fff">⚠️ 財報 ' + mm + '/' + dd + '</span>';
+    firstTd.innerHTML = firstTd.innerHTML + badge;
+    // If within 3 days, add grey star note
+    if (daysUntil <= 3) {
+      const starTds = row.querySelectorAll('td');
+      starTds.forEach(td => {
+        if (td.style && td.textContent.includes('★')) {
+          td.innerHTML += '<span style="font-size:9px;color:var(--muted)"> ★-1</span>';
+        }
+      });
+    }
+  });
 }
 
 // ============ INIT ============
