@@ -7850,7 +7850,7 @@ async function batchQuotePreFilter(symbols, topN = 65) {
 // ── Pre-computed scan JSON (from GitHub Actions) ──────────────────────────
 // Raw URL pattern for this repo's data directory
 const GH_RAW = 'https://raw.githubusercontent.com/shockby-ai0327/stock-tool/main/data/';
-const SCAN_JSON_MAX_AGE_MS = 4 * 60 * 60 * 1000; // treat JSON stale after 4h
+const SCAN_JSON_MAX_AGE_MS = 8 * 60 * 60 * 1000; // treat JSON stale after 8h (3 auto-runs/day covers this)
 
 async function fetchPrecomputedScan(market) {
   try {
