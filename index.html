@@ -7847,6 +7847,94 @@ async function batchQuotePreFilter(symbols, topN = 65) {
   return top;
 }
 
+// ── Pre-computed scan JSON (from GitHub Actions) ──────────────────────────
+// Raw URL pattern for this repo's data directory
+const GH_RAW = 'https://raw.githubusercontent.com/shockby-ai0327/stock-tool/main/data/';
+const SCAN_JSON_MAX_AGE_MS = 4 * 60 * 60 * 1000; // treat JSON stale after 4h
+
+async function fetchPrecomputedScan(market) {
+  try {
+    const file = market === 'tw' ? 'tw_scan.json' : 'us_scan.json';
+    const url = GH_RAW + file + '?t=' + Date.now(); // bust CDN cache
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.scannedAt || !data.leaders || data.leaders.length === 0) return null;
+    const age = Date.now() - new Date(data.scannedAt).getTime();
+    if (age > SCAN_JSON_MAX_AGE_MS) {
+      console.log('[fetchPrecomputedScan] stale (' + Math.round(age/60000) + 'min), will fallback');
+      return { stale: true, data }; // still usable but mark as stale
+    }
+    return { stale: false, data };
+  } catch(e) {
+    console.warn('[fetchPrecomputedScan]', e.message);
+    return null;
+  }
+}
+
+// Overlay live prices onto pre-computed leaders (only 15 calls vs 120+)
+async function overlayLivePrices(leaders) {
+  if (!leaders || !leaders.length) return leaders;
+  try {
+    const syms = leaders.map(l => l.symbol).join(',');
+    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms +
+      '&fields=symbol,regularMarketPrice,regularMarketChangePercent';
+    const raw = await pFetch(url, false, 6000);
+    const data = JSON.parse(raw);
+    const map = {};
+    (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
+    leaders.forEach(l => {
+      const q = map[l.symbol];
+      if (q) {
+        l.price = q.regularMarketPrice || l.price;
+        l.changePct = q.regularMarketChangePercent || l.changePct;
+        l._livePrice = true;
+      }
+    });
+  } catch(e) { console.warn('[overlayLivePrices]', e.message); }
+  return leaders;
+}
+
+// Trigger a fresh GitHub Actions scan (requires PAT stored in localStorage)
+async function triggerGithubScan() {
+  const token = localStorage.getItem('gh_pat');
+  if (!token) {
+    const t = prompt('請輸入 GitHub Personal Access Token（需要 workflow 權限）：');
+    if (!t) return;
+    localStorage.setItem('gh_pat', t);
+  }
+  const pat = localStorage.getItem('gh_pat');
+  try {
+    const r = await fetch('https://api.github.com/repos/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml/dispatches', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main', inputs: { market: _scannerMarket === 'tw' ? 'tw' : 'us' } }),
+    });
+    if (r.status === 204) {
+      showToast('✅ 掃描任務已觸發，約 3-5 分鐘後結果更新');
+      // Poll for new results every 30s for up to 6 minutes
+      let polls = 0;
+      const pollId = setInterval(async () => {
+        polls++;
+        const res = await fetchPrecomputedScan(_scannerMarket);
+        if (res && res.data && res.data.leaders.length > 0) {
+          clearInterval(pollId);
+          window._rsLeaderRunning = false;
+          runRSLeaderScan(); // reload with fresh data
+        }
+        if (polls >= 12) clearInterval(pollId); // give up after 6 min
+      }, 30000);
+    } else if (r.status === 401) {
+      localStorage.removeItem('gh_pat');
+      showToast('❌ Token 無效，請重試', 'error');
+    } else {
+      showToast('❌ 觸發失敗 HTTP ' + r.status, 'error');
+    }
+  } catch(e) {
+    showToast('❌ 網路錯誤：' + e.message, 'error');
+  }
+}
+
 async function runRSLeaderScan() {
   if (window._rsLeaderRunning) return;
   window._rsLeaderRunning = true;
@@ -7855,6 +7943,40 @@ async function runRSLeaderScan() {
   const setMsg = msg => {
     if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
   };
+
+  // ── FAST PATH: try pre-computed JSON from GitHub Actions ──────────────
+  setMsg('讀取伺服器預算排行...');
+  const precomputed = await fetchPrecomputedScan(_scannerMarket);
+
+  if (precomputed && precomputed.data && precomputed.data.leaders.length > 0) {
+    const { data, stale } = precomputed;
+    const leaders = data.leaders;
+    const ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
+
+    // Overlay live prices (only 15-25 stocks, very fast)
+    setMsg('更新即時報價...');
+    await overlayLivePrices(leaders);
+
+    // Cache for dashboard
+    window._rsLeaderCache = leaders.slice(0, 15);
+    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
+
+    // Render with metadata banner
+    renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+    window._rsLeaderRunning = false;
+
+    // Non-blocking Reddit enrichment
+    if (_scannerMarket !== 'tw') {
+      fetchApeWisdom().then(apeMap => {
+        if (!apeMap || !Object.keys(apeMap).length) return;
+        leaders.forEach(r => { const a = apeMap[r.symbol]; if (a) r.reddit = a; });
+        renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+      }).catch(() => {});
+    }
+    return;
+  }
+
+  // ── SLOW PATH: browser-side scan (fallback when JSON not yet available) ──
 
   try { // ← try/finally guarantees _rsLeaderRunning always resets
 
@@ -7958,30 +8080,66 @@ async function runRSLeaderScan() {
   }
 }
 
+// Render pre-computed results with metadata banner + re-scan trigger button
+function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+
+  const universeLabel = meta.universeSize
+    ? '全市場 ' + meta.universeSize + ' 檔掃描池（S&P500 + 中小型成長股 + 動能 ETF 持股）'
+    : '預算排行';
+  const freshLabel = stale
+    ? '<span style="color:var(--yellow)">⚠ 資料較舊（' + ageMin + ' 分鐘前）</span>'
+    : '<span style="color:var(--green)">● 伺服器掃描（' + ageMin + ' 分鐘前）</span>';
+  const scanTime = meta.scannedAt ? new Date(meta.scannedAt).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'}) : '';
+
+  const banner =
+    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;' +
+    'background:rgba(59,130,246,.08);border-radius:8px;border:1px solid rgba(59,130,246,.2)">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 更新於 ' + scanTime + ' · ' + freshLabel + '</div>' +
+      '</div>' +
+      '<button onclick="triggerGithubScan()" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
+      'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
+      '⚡ 重新掃描</button>' +
+    '</div>';
+
+  // Reuse table render with banner prepended
+  _renderRSLeaderTable(results, tableDiv, banner);
+}
+
 function renderRSLeaderResults(results) {
   const tableDiv = document.getElementById('scanner-table');
   if (!tableDiv) return;
+  _renderRSLeaderTable(results, tableDiv, '');
+}
+
+function _renderRSLeaderTable(results, tableDiv, prependHtml) {
   const f = (v, d=2) => (v == null ? 'N/A' : Number(v).toFixed(d));
   const pct = v => (v >= 0 ? '+' : '') + f(v, 1) + '%';
   const rows = results.map((r, i) => {
     const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
-    const rsColor = r.rs6m >= 5 ? 'var(--green)' : r.rs6m >= 0 ? 'var(--yellow)' : 'var(--red)';
+    const rsMom = r.rs12_1 != null ? r.rs12_1 : (r.rs6m || 0); // server=rs12_1, browser=rs6m
+    const rsColor = rsMom >= 5 ? 'var(--green)' : rsMom >= 0 ? 'var(--yellow)' : 'var(--red)';
     const volColor = r.volExpand >= 1.5 ? 'var(--green)' : r.volExpand >= 1.0 ? 'var(--muted)' : 'var(--red)';
+    const liveDot = r._livePrice ? '<span title="即時報價" style="color:var(--green);font-size:9px;margin-left:3px">●</span>' : '';
+    const nameStr = r.name || r.symbol;
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
       '<td style="padding:10px 8px">' +
         '<div style="font-weight:700;font-size:15px">' + r.symbol + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + r.name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
       '</td>' +
       '<td style="padding:10px 8px;text-align:right">' +
-        '<div style="font-weight:600">$' + f(r.price) + '</div>' +
+        '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
         '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
       '</td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:22px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.rsRating + '</div>' +
         '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
       '</td>' +
-      '<td class="col-rs6m" style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(r.rs6m) + '<div style="font-size:10px;color:var(--muted)">6M vs 大盤</div></td>' +
+      '<td class="col-rs6m" style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(rsMom) + '<div style="font-size:10px;color:var(--muted)">12-1月 vs 大盤</div></td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
@@ -7991,13 +8149,10 @@ function renderRSLeaderResults(results) {
     '</tr>';
   }).join('');
 
-  const poolLabel = _scannerMarket === 'tw'
-    ? '台股精選池'
-    : '全市場動態池（大中小型股，Yahoo 即時篩選 + 精選錨定）';
   tableDiv.innerHTML =
+    (prependHtml || '') +
     '<div style="margin-bottom:12px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
       '<span>依綜合分數排列 — RS Rating 越高代表相對大盤動能越強</span>' +
-      '<span style="padding:2px 8px;border-radius:4px;background:rgba(59,130,246,.1);color:var(--accent);font-size:11px">掃描池：' + poolLabel + '</span>' +
       '<span style="margin-left:auto;opacity:.7">僅顯示 MA50 上方個股</span>' +
     '</div>' +
     '<div class="table-wrap">' +
@@ -8008,7 +8163,7 @@ function renderRSLeaderResults(results) {
             '<th style="padding:6px 8px;text-align:left">股票</th>' +
             '<th style="padding:6px 8px;text-align:right">現價</th>' +
             '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
-            '<th class="col-rs6m" style="padding:6px 8px;text-align:center">6M 相對強弱</th>' +
+            '<th class="col-rs6m" style="padding:6px 8px;text-align:center">12-1月動能</th>' +
             '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
             '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
             '<th style="padding:6px 8px;text-align:center">操作</th>' +

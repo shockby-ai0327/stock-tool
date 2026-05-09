@@ -1,0 +1,15 @@
+{
+  "name": "stock-scan",
+  "version": "1.0.0",
+  "description": "Server-side RS Leader scanner for GitHub Actions",
+  "main": "scan.js",
+  "scripts": {
+    "scan:us": "node scan.js us",
+    "scan:tw": "node scan.js tw",
+    "scan:all": "node scan.js all"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "type": "module"
+}
