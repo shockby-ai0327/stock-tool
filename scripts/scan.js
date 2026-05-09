@@ -48,24 +48,7 @@ async function yfFetch(url, retries = 3) {
 }
 
 // Batch quote: up to 200 symbols per call, returns basic quote data
-async function batchQuote(symbols) {
-  const CHUNK = 180;
-  const results = {};
-  for (let i = 0; i < symbols.length; i += CHUNK) {
-    const chunk = symbols.slice(i, i + CHUNK);
-    try {
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.join(',')}&fields=symbol,shortName,longName,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekChangePercent,averageVolume3Month,regularMarketVolume`;
-      const data = await yfFetch(url);
-      (data?.quoteResponse?.result || []).forEach(q => { results[q.symbol] = q; });
-    } catch (e) {
-      console.warn(`  batchQuote chunk ${i}-${i+CHUNK} failed: ${e.message}`);
-    }
-    if (i + CHUNK < symbols.length) await DELAY(600);
-  }
-  return results;
-}
-
-// OHLCV: 6-month daily bars for a single symbol
+// OHLCV: daily bars for a single symbol (v8/finance/chart — no auth required)
 async function getOHLCV(symbol, range = '12mo') {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}&includePrePost=false`;
   const data = await yfFetch(url);
@@ -77,19 +60,6 @@ async function getOHLCV(symbol, range = '12mo') {
     volumes: oq.volume.filter(v => v != null),
     meta: result.meta,
   };
-}
-
-// Fetch ETF holdings from Yahoo (returns top 25 holdings symbols)
-async function fetchEtfHoldings(etfSymbol) {
-  try {
-    const url = `https://query2.finance.yahoo.com/v1/finance/quoteSummary/${etfSymbol}?modules=topHoldings`;
-    const data = await yfFetch(url);
-    const holdings = data?.quoteSummary?.result?.[0]?.topHoldings?.holdings || [];
-    return holdings.map(h => h.symbol).filter(Boolean);
-  } catch (e) {
-    console.warn(`  ETF holdings fetch failed for ${etfSymbol}: ${e.message}`);
-    return [];
-  }
 }
 
 // Fetch Yahoo predefined screener symbols
@@ -204,9 +174,6 @@ const TW_POOL = [
   '3054.TW','3055.TW','0050.TW','0056.TW','2002.TW','1301.TW','1303.TW',
 ];
 
-// ETF symbols whose holdings we fetch dynamically (covers mid + small cap momentum)
-const MOMENTUM_ETFS = ['MTUM', 'XMMO', 'DWAS', 'QMOM', 'VFMO'];
-
 // Known ETFs to exclude from stock scanning
 const ETF_EXCLUDE = new Set([
   'SPY','QQQ','IWM','DIA','VTI','VOO','VEA','VWO','EFA','EEM',
@@ -237,115 +204,92 @@ async function scanUS() {
   console.log('\n=== US RS Leader Scan ===');
   console.log(`Start: ${new Date().toISOString()}`);
 
-  // 1. Build universe: static pools + dynamic ETF holdings + screeners
+  // 1. Build universe: static pools + Yahoo screeners (no batch quote pre-filter —
+  //    Yahoo v7/quote requires browser crumb/cookies; v8/chart used for OHLCV is open)
   console.log('\n[1] Building universe...');
 
-  const [etfHoldings, screenerGainers, screenerSmallCap, screenerGrowth] = await Promise.allSettled([
-    Promise.all(MOMENTUM_ETFS.map(e => fetchEtfHoldings(e))).then(r => r.flat()),
+  // Screeners add today's momentum leaders (all cap sizes) on top of static pools
+  const [screenerGainers, screenerSmallCap, screenerGrowth] = await Promise.allSettled([
     fetchScreener('day_gainers', 50),
     fetchScreener('small_cap_gainers', 50),
     fetchScreener('growth_technology_stocks', 50),
   ]);
 
   const universe = new Set([...SP500, ...GROWTH_EXTENDED]);
+  [screenerGainers, screenerSmallCap, screenerGrowth].forEach(r => {
+    if (r.status === 'fulfilled') r.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
+  });
 
-  if (etfHoldings.status === 'fulfilled')
-    etfHoldings.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
-  if (screenerGainers.status === 'fulfilled')
-    screenerGainers.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
-  if (screenerSmallCap.status === 'fulfilled')
-    screenerSmallCap.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
-  if (screenerGrowth.status === 'fulfilled')
-    screenerGrowth.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
+  // Shuffle so every scan covers the full pool with different batching order
+  const allSymbols = [...universe].sort(() => Math.random() - 0.5);
+  console.log(`  Universe: ${allSymbols.length} unique stocks (SP500 + growth + screeners)`);
 
-  const allSymbols = [...universe];
-  console.log(`  Universe: ${allSymbols.length} unique stocks`);
-
-  // 2. Batch quote pre-filter: keep top 120 by 52W momentum
-  console.log('\n[2] Batch quote pre-filter...');
-  const quotes = await batchQuote(allSymbols);
-  const preFiltered = allSymbols
-    .map(s => ({ symbol: s, q: quotes[s] }))
-    .filter(({ q }) => q && (q.averageVolume3Month || 0) >= 150000 && (q.regularMarketPrice || 0) >= 2)
-    .sort((a, b) => (b.q.fiftyTwoWeekChangePercent || 0) - (a.q.fiftyTwoWeekChangePercent || 0))
-    .slice(0, 120)
-    .map(x => x.symbol);
-
-  console.log(`  Pre-filtered: ${allSymbols.length} → ${preFiltered.length}`);
-
-  // 3. Benchmark: SPY 12-month return
-  console.log('\n[3] Fetching SPY benchmark...');
+  // 2. Benchmark: SPY 12-month return (v8/chart — no auth needed)
+  console.log('\n[2] Fetching SPY benchmark...');
   let benchReturn = 0;
   try {
     const spy = await getOHLCV('SPY', '12mo');
     if (spy.closes.length >= 2) {
       const n = spy.closes.length;
-      // 12-1 month momentum: use close[0] to close[n-21] (skip last month)
-      const start = spy.closes[0];
-      const end = spy.closes[Math.max(0, n - 21)];
-      benchReturn = (end - start) / start * 100;
+      benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
     }
     console.log(`  SPY 12-1mo benchmark: ${benchReturn.toFixed(2)}%`);
   } catch (e) {
     console.warn(`  SPY fetch failed: ${e.message}`);
   }
 
-  // 4. Deep OHLCV scan (120 stocks, batches of 10)
-  console.log(`\n[4] Deep OHLCV scan (${preFiltered.length} stocks)...`);
+  // 3. Full OHLCV scan — no pre-filter needed server-side (no rate-limit pressure)
+  //    15 per batch, 500ms between batches → ~600 stocks in ~20 seconds
+  const BATCH_SIZE = 15;
+  const BATCH_DELAY = 500;
+  console.log(`\n[3] OHLCV scan (${allSymbols.length} stocks, batch=${BATCH_SIZE})...`);
   const results = [];
-  const BATCH = 10;
 
-  for (let i = 0; i < preFiltered.length; i += BATCH) {
-    const batch = preFiltered.slice(i, i + BATCH);
+  for (let i = 0; i < allSymbols.length; i += BATCH_SIZE) {
+    const batch = allSymbols.slice(i, i + BATCH_SIZE);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, volumes } = await getOHLCV(sym, '12mo');
+        const { closes, volumes, meta } = await getOHLCV(sym, '12mo');
         if (closes.length < 60) return null;
 
         const n = closes.length;
-        const price = closes[n - 1];
+        const price = meta.regularMarketPrice || closes[n - 1];
         const ma50 = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
         if (price < ma50) return null;
 
         const avgVol20 = volumes.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
         if (avgVol20 < 150000) return null;
 
-        // 12-1 month momentum (skip last month to avoid short-term reversal)
-        const startClose = closes[0];
-        const midClose = closes[Math.max(0, n - 21)]; // 1 month ago
-        const ret12_1 = (midClose - startClose) / startClose * 100;
+        // 12-1 month momentum: skip last ~1 month to avoid short-term reversal bias
+        const ret12_1 = (closes[Math.max(0, n - 21)] - closes[0]) / closes[0] * 100;
         const rs12_1 = ret12_1 - benchReturn;
 
-        // Recent 1-month return (signal for fresh breakout)
+        // Recent 1-month momentum (fresh breakout signal)
         const ret1m = (price - closes[Math.max(0, n - 21)]) / closes[Math.max(0, n - 21)] * 100;
 
         const avgVol5 = volumes.slice(-5).reduce((a, b) => a + (b || 0), 0) / 5;
         const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
-
         const changePct = n >= 2 ? (price - closes[n - 2]) / closes[n - 2] * 100 : 0;
 
-        const q = quotes[sym] || {};
         return {
           symbol: sym,
-          name: q.shortName || q.longName || sym,
-          price: q.regularMarketPrice || price,
-          changePct: q.regularMarketChangePercent || changePct,
-          ret12_1,
-          ret1m,
-          rs12_1,
+          name: meta.shortName || meta.longName || sym,
+          price: Math.round(price * 100) / 100,
+          changePct: Math.round(changePct * 100) / 100,
+          ret12_1: Math.round(ret12_1 * 100) / 100,
+          ret1m: Math.round(ret1m * 100) / 100,
+          rs12_1: Math.round(rs12_1 * 100) / 100,
           volExpand: Math.round(volExpand * 100) / 100,
           ma50: Math.round(ma50 * 100) / 100,
           avgVol20: Math.round(avgVol20),
-          fiftyTwoWeekChangePercent: q.fiftyTwoWeekChangePercent || 0,
         };
       } catch (e) { return null; }
     }));
 
     settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
-    process.stdout.write(`  ${Math.min(i + BATCH, preFiltered.length)}/${preFiltered.length} scanned (${results.length} passed)\r`);
+    process.stdout.write(`  ${Math.min(i + BATCH_SIZE, allSymbols.length)}/${allSymbols.length} (${results.length} passed)\r`);
 
-    // Respectful delay between batches to avoid hammering Yahoo
-    if (i + BATCH < preFiltered.length) await DELAY(800);
+    if (i + BATCH_SIZE < allSymbols.length) await DELAY(BATCH_DELAY);
   }
 
   console.log(`\n  Results: ${results.length} stocks passed filters`);
@@ -355,7 +299,7 @@ async function scanUS() {
     return;
   }
 
-  // 5. RS Rating + composite score
+  // 4. RS Rating + composite score
   calcRSRatings(results);
   results.forEach(r => {
     const volScore = Math.min(99, Math.round(r.volExpand * 33));
@@ -364,15 +308,15 @@ async function scanUS() {
   });
 
   results.sort((a, b) => b.compositeScore - a.compositeScore);
-  const top25 = results.slice(0, 25); // store top 25 (show 15, rest for watchlist)
+  const top25 = results.slice(0, 25);
 
-  // 6. Save
+  // 5. Save
   const output = {
     scannedAt: new Date().toISOString(),
     universeSize: allSymbols.length,
-    scannedCount: preFiltered.length,
+    scannedCount: allSymbols.length,
     passedCount: results.length,
-    benchmark: { symbol: 'SPY', ret12_1: benchReturn },
+    benchmark: { symbol: 'SPY', ret12_1: Math.round(benchReturn * 100) / 100 },
     leaders: top25,
   };
 
