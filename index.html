@@ -311,7 +311,7 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
- <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader</div>
+ <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場</span></div>
  <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
  </div>
  <div id="dash-rsleader-list"><div style="text-align:center;padding:20px;color:var(--muted)">前往掃描器取得最新排行</div></div>
@@ -7712,14 +7712,68 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
 function closeEntryModal() { const m = document.getElementById('entry-modal-overlay'); if (m) m.remove(); }
 
 // ============ RS LEADER SCANNER ============
+
+// Layer 0: Yahoo Finance predefined screeners — dynamic, full-market coverage (all cap sizes)
+async function fetchYahooScreener(scrId, count = 50) {
+  try {
+    const url = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=' + scrId + '&start=0&count=' + count + '&formatted=false';
+    const raw = await pFetch(url, false, 8000);
+    const data = JSON.parse(raw);
+    const quotes = (data?.finance?.result?.[0]?.quotes) || [];
+    return quotes.map(q => q.symbol).filter(s => s && s.length <= 5 && !/[./]/.test(s));
+  } catch(e) {
+    console.warn('[screener]', scrId, e.message);
+    return [];
+  }
+}
+
+// Build dynamic pool: Layer 0 (full-market screeners) ∪ SCAN_CURATED_US anchor
+// Covers large + mid + small cap explosive movers without hardcoding 3000+ tickers
+async function buildDynamicScanPool(onProgress) {
+  if (onProgress) onProgress('第一階段：全市場動態篩選中（大中小型股）…');
+
+  // 4 screeners in parallel covering different market segments
+  const [gainers, actives, smallCap, techGrowth] = await Promise.allSettled([
+    fetchYahooScreener('day_gainers', 50),      // top % gainers, all caps, vol > 1M
+    fetchYahooScreener('most_actives', 50),      // highest dollar volume (liquidity anchor)
+    fetchYahooScreener('small_cap_gainers', 50), // mid/small cap momentum
+    fetchYahooScreener('growth_technology_stocks', 50), // tech growth leaders
+  ]);
+
+  const dynamicSet = new Set();
+  [gainers, actives, smallCap, techGrowth].forEach(r => {
+    if (r.status === 'fulfilled') r.value.forEach(s => dynamicSet.add(s));
+  });
+  const dynamicCount = dynamicSet.size;
+
+  // Merge with curated base (quality anchors + sector breadth)
+  SCAN_CURATED_US.forEach(s => dynamicSet.add(s));
+
+  const pool = [...dynamicSet];
+  console.log('[buildDynamicScanPool] dynamic=' + dynamicCount + ' curated=' + SCAN_CURATED_US.length + ' total=' + pool.length);
+  return pool;
+}
+
 async function runRSLeaderScan() {
   if (window._rsLeaderRunning) return;
   window._rsLeaderRunning = true;
   const tableDiv = document.getElementById('scanner-table');
-  if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">動能領袖掃描中，約需 30–60 秒...</div>';
 
-  const pool = _scannerMarket === 'tw' ? getTwScanPool().slice(0, 40) : SCAN_CURATED_US;
-  const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+  const setMsg = msg => {
+    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:1.8">' + msg + '</div>';
+  };
+
+  let pool, bench;
+  if (_scannerMarket === 'tw') {
+    pool = getTwScanPool().slice(0, 40);
+    bench = '0050.TW';
+    setMsg('動能領袖掃描中，約需 30–60 秒…');
+  } else {
+    bench = 'SPY';
+    // Dynamic pool: full-market screeners (all cap sizes) + curated anchors
+    pool = await buildDynamicScanPool(setMsg);
+    setMsg('第二階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔候選股（大中小型股全覆蓋）…<br><span style="font-size:12px">約需 45–90 秒，請稍候</span>');
+  }
 
   // Get benchmark 6M return
   let spyReturn = 0;
@@ -7732,8 +7786,10 @@ async function runRSLeaderScan() {
   } catch(e) {}
 
   const results = [];
-  for (let i = 0; i < pool.length; i += 8) {
-    const batch = pool.slice(i, i + 8);
+  const BATCH = 10; // larger batches for bigger pool
+  let scanned = 0;
+  for (let i = 0; i < pool.length; i += BATCH) {
+    const batch = pool.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
         const chart = await yfChart(sym, '6mo', '1d', 8000);
@@ -7742,11 +7798,13 @@ async function runRSLeaderScan() {
         const vols = oq.volume.filter(v => v != null);
         if (closes.length < 50) return null;
         const price = chart.meta.regularMarketPrice || closes[closes.length-1];
+        // Liquidity filter: skip micro-caps with tiny average volume
+        const avgVol20 = vols.slice(-20).reduce((a,b)=>a+(b||0),0)/20;
+        if (_scannerMarket !== 'tw' && avgVol20 < 200000) return null;
         const ma50 = closes.length >= 50 ? closes.slice(-50).reduce((a,b)=>a+b,0)/50 : null;
-        if (!ma50 || price < ma50) return null; // filter: must be above MA50
+        if (!ma50 || price < ma50) return null; // must be above MA50
         const ret6m = (closes[closes.length-1] - closes[0]) / closes[0] * 100;
         const rs6m = ret6m - spyReturn;
-        const avgVol20 = vols.slice(-20).reduce((a,b)=>a+(b||0),0)/20;
         const avgVol5 = vols.slice(-5).reduce((a,b)=>a+(b||0),0)/5;
         const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
         const changePct = closes.length >= 2 ? (closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2] * 100 : 0;
@@ -7764,6 +7822,11 @@ async function runRSLeaderScan() {
       } catch(e) { return null; }
     }));
     settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
+    scanned += batch.length;
+    // Live progress update
+    const pct = Math.round(scanned / pool.length * 100);
+    const bar = '█'.repeat(Math.round(pct/5)) + '░'.repeat(20 - Math.round(pct/5));
+    setMsg('深度掃描中 ' + bar + ' ' + pct + '%<br><span style="font-size:12px;color:var(--muted)">已掃 ' + scanned + ' / ' + pool.length + ' 檔，找到 ' + results.length + ' 檔符合條件</span>');
   }
 
   if (results.length === 0) {
@@ -7839,9 +7902,14 @@ function renderRSLeaderResults(results) {
     '</tr>';
   }).join('');
 
+  const poolLabel = _scannerMarket === 'tw'
+    ? '台股精選池'
+    : '全市場動態池（大中小型股，Yahoo 即時篩選 + 精選錨定）';
   tableDiv.innerHTML =
-    '<div style="margin-bottom:12px;font-size:12px;color:var(--muted)">' +
-      '依綜合分數排列 — RS Rating 越高代表相對大盤動能越強 | 僅顯示 MA50 上方個股' +
+    '<div style="margin-bottom:12px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
+      '<span>依綜合分數排列 — RS Rating 越高代表相對大盤動能越強</span>' +
+      '<span style="padding:2px 8px;border-radius:4px;background:rgba(59,130,246,.1);color:var(--accent);font-size:11px">掃描池：' + poolLabel + '</span>' +
+      '<span style="margin-left:auto;opacity:.7">僅顯示 MA50 上方個股</span>' +
     '</div>' +
     '<div class="table-wrap">' +
       '<table class="rs-leader-table" style="width:100%;border-collapse:collapse">' +
