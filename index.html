@@ -148,7 +148,7 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .scan-mini-row { font-size:12px; padding:6px 0; }
 @media(max-width:700px) {
  .rs-leader-table .col-volume { display:none; }
- .rs-leader-table .col-rs6m { display:none; }
+ .rs-leader-table .col-disthi { display:none; }
 }
 /* ── 進場指引 Modal ── */
 .entry-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1001;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -7878,7 +7878,7 @@ async function overlayLivePrices(leaders) {
   try {
     const syms = leaders.map(l => l.symbol).join(',');
     const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms +
-      '&fields=symbol,regularMarketPrice,regularMarketChangePercent';
+      '&fields=symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekHigh,regularMarketVolume';
     const raw = await pFetch(url, false, 6000);
     const data = await raw.json();
     const map = {};
@@ -7888,6 +7888,10 @@ async function overlayLivePrices(leaders) {
       if (q) {
         l.price = q.regularMarketPrice || l.price;
         l.changePct = q.regularMarketChangePercent || l.changePct;
+        // fiftyTwoWeekHigh from Yahoo is more accurate than server-side 12mo high
+        if (q.fiftyTwoWeekHigh) l.high52w = q.fiftyTwoWeekHigh;
+        // today's actual volume for volume-confirm signal
+        if (q.regularMarketVolume) l.todayVol = q.regularMarketVolume;
         l._livePrice = true;
       }
     });
@@ -7967,11 +7971,11 @@ async function runRSLeaderScan() {
     setMsg('更新即時報價...');
     await overlayLivePrices(leaders);
 
-    // Cache for dashboard
-    window._rsLeaderCache = leaders.slice(0, 15);
-    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
+    // Cache all leaders for breakout filter; dashboard uses top 5
+    window._rsLeaderCache = leaders; // full list (up to 25)
+    renderDashRSLeader(leaders.slice(0, 5));
 
-    // Render with metadata banner
+    // Render with metadata banner (show top 15 in main view)
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
 
     // Non-blocking Reddit enrichment
@@ -8067,10 +8071,11 @@ async function runRSLeaderScan() {
   });
 
   results.sort((a, b) => b.compositeScore - a.compositeScore);
-  const top15 = results.slice(0, 15);
+  const top25 = results.slice(0, 25);
+  const top15 = top25.slice(0, 15);
 
-  window._rsLeaderCache = top15;
-  renderDashRSLeader(top15.slice(0, 5));
+  window._rsLeaderCache = top25; // full list for breakout filter
+  renderDashRSLeader(top25.slice(0, 5));
   renderRSLeaderResults(top15);
 
   // Non-blocking Reddit enrichment
@@ -8122,31 +8127,81 @@ function renderRSLeaderResults(results) {
   _renderRSLeaderTable(results, tableDiv, '');
 }
 
+// Signal badge logic: determine buy zone status for a leader
+function _getRSSignal(r) {
+  // Bear market override
+  const regime = window._marketRegime;
+  if (regime && regime.overall <= -2) {
+    return { emoji: '🔴', label: '市場偏弱', color: '#ef4444' };
+  }
+  const high52w = r.high52w;
+  if (!high52w || !r.price) return null;
+  const distPct = (r.price - high52w) / high52w * 100; // ≤ 0
+  // Volume: prefer today's actual volume, fall back to volExpand (5-day avg vs 20-day avg)
+  const volOk = r.todayVol
+    ? (r.todayVol / (r.avgVol20 || 1)) >= 1.5
+    : (r.volExpand || 0) >= 1.5;
+  if (distPct >= -5) {
+    return volOk
+      ? { emoji: '✅', label: '突破買進', color: '#22c55e' }
+      : { emoji: '📍', label: '近買點（等量能）', color: '#f59e0b' };
+  } else if (distPct >= -15) {
+    return { emoji: '👀', label: '整理中（觀察）', color: 'var(--muted)' };
+  } else {
+    return { emoji: '⏳', label: '離買點遠', color: 'var(--muted)' };
+  }
+}
+
 function _renderRSLeaderTable(results, tableDiv, prependHtml) {
   const f = (v, d=2) => (v == null ? 'N/A' : Number(v).toFixed(d));
   const pct = v => (v >= 0 ? '+' : '') + f(v, 1) + '%';
   const rows = results.map((r, i) => {
     const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
-    const rsMom = r.rs12_1 != null ? r.rs12_1 : (r.rs6m || 0); // server=rs12_1, browser=rs6m
-    const rsColor = rsMom >= 5 ? 'var(--green)' : rsMom >= 0 ? 'var(--yellow)' : 'var(--red)';
     const volColor = r.volExpand >= 1.5 ? 'var(--green)' : r.volExpand >= 1.0 ? 'var(--muted)' : 'var(--red)';
     const liveDot = r._livePrice ? '<span title="即時報價" style="color:var(--green);font-size:9px;margin-left:3px">●</span>' : '';
     const nameStr = r.name || r.symbol;
+
+    // Signal badge (buy zone status)
+    const sig = _getRSSignal(r);
+    const sigHtml = sig
+      ? '<div style="font-size:11px;margin-top:3px;color:' + sig.color + ';font-weight:600">' + sig.emoji + ' ' + sig.label + '</div>'
+      : '';
+
+    // Stop loss = price × 0.92 (8% stop)
+    const stopLoss = r.price ? (r.price * 0.92).toFixed(2) : null;
+    const stopHtml = stopLoss
+      ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">止損 $' + stopLoss + '</div>'
+      : '';
+
+    // Distance from 52W high column
+    const distFromHigh = (r.high52w && r.price)
+      ? (r.price - r.high52w) / r.high52w * 100
+      : null;
+    const distColor = distFromHigh == null ? 'var(--muted)'
+      : distFromHigh >= -5 ? 'var(--green)'
+      : distFromHigh >= -15 ? 'var(--yellow)'
+      : 'var(--red)';
+    const distCell = distFromHigh != null
+      ? '<div style="font-weight:600;color:' + distColor + '">' + (distFromHigh >= 0 ? '+' : '') + distFromHigh.toFixed(1) + '%</div><div style="font-size:10px;color:var(--muted)">距高點</div>'
+      : '<div style="font-size:11px;color:var(--muted)">—</div><div style="font-size:10px;color:var(--muted)">距高點</div>';
+
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
       '<td style="padding:10px 8px">' +
         '<div style="font-weight:700;font-size:15px">' + r.symbol + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
+        sigHtml +
       '</td>' +
       '<td style="padding:10px 8px;text-align:right">' +
         '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
         '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
+        stopHtml +
       '</td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:22px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.rsRating + '</div>' +
         '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
       '</td>' +
-      '<td class="col-rs6m" style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(rsMom) + '<div style="font-size:10px;color:var(--muted)">12-1月 vs 大盤</div></td>' +
+      '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
@@ -8170,7 +8225,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
             '<th style="padding:6px 8px;text-align:left">股票</th>' +
             '<th style="padding:6px 8px;text-align:right">現價</th>' +
             '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
-            '<th class="col-rs6m" style="padding:6px 8px;text-align:center">12-1月動能</th>' +
+            '<th class="col-disthi" style="padding:6px 8px;text-align:center">距高點</th>' +
             '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
             '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
             '<th style="padding:6px 8px;text-align:center">操作</th>' +
@@ -8179,6 +8234,78 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
     '</div>';
+}
+
+// ── 突破掃描 tab: filter RS Leader cache for actionable buy setups ──────────
+function _showBreakoutFilter() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+
+  // Need RS leader cache (populated after runRSLeaderScan fast path)
+  const cache = window._rsLeaderCache;
+  if (!cache || !cache.length) {
+    // No cache yet — run RS leader scan first, then come back
+    tableDiv.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+        '<div style="font-size:24px;margin-bottom:8px">⏳</div>' +
+        '<div>尚未載入動能領袖資料</div>' +
+        '<div style="font-size:12px;margin-top:4px">請先切換到「動能領袖」頁載入排行，再回到突破掃描</div>' +
+        '<button onclick="switchScanStrategy(\'rsleader\')" style="margin-top:16px;padding:8px 20px;border-radius:8px;' +
+          'background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px">' +
+          '前往載入動能領袖 →</button>' +
+      '</div>';
+    return;
+  }
+
+  // Filter: distFromHigh ≥ -15% (watching range or better) — stocks within striking distance
+  // Sort by distFromHigh descending (closest to high first)
+  const withDist = cache
+    .filter(r => r.high52w && r.price)
+    .map(r => {
+      const distPct = (r.price - r.high52w) / r.high52w * 100;
+      return { ...r, _distPct: distPct };
+    })
+    .filter(r => r._distPct >= -15)
+    .sort((a, b) => b._distPct - a._distPct);
+
+  // Bear market banner
+  const regime = window._marketRegime;
+  const bearBanner = (regime && regime.overall <= -2)
+    ? '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#ef4444;font-weight:600">🔴 市場環境偏弱 — 以下訊號均供參考，建議等待市場轉強後再進場</div>'
+    : '';
+
+  if (!withDist.length) {
+    tableDiv.innerHTML =
+      bearBanner +
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+        '<div style="font-size:28px;margin-bottom:8px">🔍</div>' +
+        '<div style="font-weight:600">目前無股票在買點區間</div>' +
+        '<div style="font-size:12px;margin-top:4px">動能領袖中目前沒有股票距高點在 15% 以內<br>繼續觀察，等待整理完成後的突破機會</div>' +
+      '</div>';
+    return;
+  }
+
+  // Count actionable signals
+  const breakoutCount = withDist.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '✅'; }).length;
+  const nearCount = withDist.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '📍'; }).length;
+
+  const summaryBanner =
+    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;' +
+    'background:rgba(34,197,94,.07);border-radius:8px;border:1px solid rgba(34,197,94,.18)">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;color:#22c55e;font-weight:600">🎯 突破買點篩選 — 距高點 ≤ 15% 的動能領袖</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' +
+          (breakoutCount ? '<span style="color:#22c55e">✅ 突破買進 ' + breakoutCount + ' 檔</span>　' : '') +
+          (nearCount ? '<span style="color:#f59e0b">📍 近買點 ' + nearCount + ' 檔</span>　' : '') +
+          '<span>共 ' + withDist.length + ' 檔在觀察範圍</span>' +
+        '</div>' +
+      '</div>' +
+      '<button onclick="switchScanStrategy(\'rsleader\')" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
+        'background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap">' +
+        '← 完整排行</button>' +
+    '</div>';
+
+  _renderRSLeaderTable(withDist, tableDiv, bearBanner + summaryBanner);
 }
 
 function switchScanStrategy(strat) {
@@ -8191,7 +8318,7 @@ function switchScanStrategy(strat) {
   if (strat === 'rsleader') {
     runRSLeaderScan();
   } else if (strat === 'breakout') {
-    runScan('schwartz');
+    _showBreakoutFilter();
   } else if (strat === 'custom') {
     // Show custom pool manager, clear scanner table with helpful prompt
     if (tableDiv) tableDiv.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">請在上方自訂清單中加入股票，然後選擇市場掃描</div>';

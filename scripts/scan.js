@@ -57,6 +57,7 @@ async function getOHLCV(symbol, range = '12mo') {
   const oq = result.indicators.quote[0];
   return {
     closes: oq.close.filter(v => v != null),
+    highs:  oq.high.filter(v => v != null),
     volumes: oq.volume.filter(v => v != null),
     meta: result.meta,
   };
@@ -249,7 +250,7 @@ async function scanUS() {
     const batch = allSymbols.slice(i, i + BATCH_SIZE);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, volumes, meta } = await getOHLCV(sym, '12mo');
+        const { closes, highs, volumes, meta } = await getOHLCV(sym, '12mo');
         if (closes.length < 60) return null;
 
         const n = closes.length;
@@ -271,6 +272,9 @@ async function scanUS() {
         const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
         const changePct = n >= 2 ? (price - closes[n - 2]) / closes[n - 2] * 100 : 0;
 
+        // 12-month high (for buy zone / distFromHigh signal)
+        const high52w = highs && highs.length > 0 ? Math.max(...highs) : null;
+
         return {
           symbol: sym,
           name: meta.shortName || meta.longName || sym,
@@ -282,6 +286,7 @@ async function scanUS() {
           volExpand: Math.round(volExpand * 100) / 100,
           ma50: Math.round(ma50 * 100) / 100,
           avgVol20: Math.round(avgVol20),
+          high52w: high52w != null ? Math.round(high52w * 100) / 100 : null,
         };
       } catch (e) { return null; }
     }));
