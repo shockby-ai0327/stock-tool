@@ -403,6 +403,8 @@ firebase.initializeApp(_fbConfig);
  </div>
  <!-- 大盤環境指示器 -->
  <div id="market-regime-banner" style="margin-bottom:14px"></div>
+ <!-- 掃描器專屬市場環境警告 -->
+ <div id="scan-regime-warning" style="display:none"></div>
  <!-- 自訂掃描清單管理器 -->
  <div id="custom-pool-manager" style="display:none;margin-bottom:14px">
    <div class="card" style="padding:14px">
@@ -426,8 +428,9 @@ firebase.initializeApp(_fbConfig);
  <button onclick="switchScannerMarket('custom')">自訂</button>
  </div>
  <div class="tab-bar" id="scanner-tabs">
- <button class="active" onclick="runScan('schwartz')">Schwartz 突破</button>
- <button onclick="runScan('steinhardt')">Steinhardt 動量</button>
+ <button class="active" id="scan-tab-rsleader" onclick="switchScanStrategy('rsleader')">動能領袖</button>
+ <button id="scan-tab-breakout" onclick="switchScanStrategy('breakout')">突破掃描</button>
+ <button id="scan-tab-custom" onclick="switchScanStrategy('custom')">自訂清單</button>
  <button onclick="showScanHistory()">歷史績效</button>
  </div>
  <div class="card" id="scanner-results">
@@ -805,7 +808,11 @@ function showPage(name) {
  if (name === 'market') { switchMarketTab('indices'); }
  if (name !== 'market') stopNewsAutoRefresh();
  if (name === 'portfolio') { renderJournal(); switchJournalTab(window._lastJournalTab || 'records'); }
- if (name === 'scanner') loadScanner();
+ if (name === 'scanner') {
+   if (!window._currentScanStrat) window._currentScanStrat = 'rsleader';
+   loadScanner();
+   try { updateScanRegimeWarning(); } catch(e) {}
+ }
  if (name === 'education' && _shouldRerender('education')) { renderEducation(); _markRendered('education'); }
  if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } }
 }
@@ -4565,7 +4572,7 @@ async function chartScanFallback(strategy, customPool) {
  const batch = pool.slice(i, i + 8);
  const settled = await Promise.allSettled(batch.map(async sym => {
  try {
- const chart = await yfChart(sym, '3mo', '1d');
+ const chart = await yfChart(sym, '6mo', '1d');
  const oq = chart.indicators.quote[0];
  const closes = oq.close.filter(v => v != null);
  const highs = oq.high.filter(v => v != null);
@@ -4634,6 +4641,22 @@ async function fetchFredMacro() {
     fetchFredSeries('FEDFUNDS').catch(() => null)
   ]);
   return { yieldSpread, fedFunds };
+}
+
+// ============ Fear & Greed Index ============
+const _fngCache = { data: null, ts: 0, TTL: 30 * 60 * 1000 };
+async function fetchFearAndGreed() {
+  if (_fngCache.data && Date.now() - _fngCache.ts < _fngCache.TTL) return _fngCache.data;
+  try {
+    const url = 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
+    const r = await pFetch(url);
+    const json = JSON.parse(r);
+    const score = Math.round(json.fear_and_greed?.score ?? 50);
+    const rating = json.fear_and_greed?.rating ?? 'neutral';
+    _fngCache.data = { score, rating };
+    _fngCache.ts = Date.now();
+    return _fngCache.data;
+  } catch(e) { return null; }
 }
 
 // ============ MARKET REGIME DETECTION ============
@@ -4786,6 +4809,7 @@ async function fetchMarketRegime() {
  }
  window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall: finalOverall, hmm: existingHmm || null };
  renderRegimeBanner();
+ try { updateScanRegimeWarning(); } catch(e) {}
  // FRED 殖利率曲線（非阻塞）
  fetchFredMacro().then(fred => {
    if (!window._marketRegime) return;
@@ -4866,6 +4890,16 @@ function calcRelativeStrength(stockCloses, benchCloses) {
  const benchReturn = (benchCloses[benchCloses.length - 1] / benchCloses[benchCloses.length - n]) - 1;
  const rs = (stockReturn - benchReturn) * 100; // in percentage points above/below benchmark
  return { rs, stockReturn: stockReturn * 100, benchReturn: benchReturn * 100 };
+}
+
+// Compute RS Rating (1-99 percentile) across a pool of results
+// results: array of objects each with a numeric `rs6m` property (6-month return vs benchmark)
+function calcRSRatings(results) {
+  const vals = results.map(r => r.rs6m ?? 0).sort((a, b) => a - b);
+  results.forEach(r => {
+    const rank = vals.filter(v => v < (r.rs6m ?? 0)).length;
+    r.rsRating = Math.round((rank / Math.max(vals.length - 1, 1)) * 98) + 1; // 1–99
+  });
 }
 
 // ============ APEWISDOM — Reddit 熱度 ============
@@ -5260,7 +5294,7 @@ async function runScan(strategy) {
  l = q._chartData.lows; v = q._chartData.vols;
  o = q._chartData.opens || [];
  } else {
- const chart = await yfChart(q.symbol, '3mo', '1d', 6000);
+ const chart = await yfChart(q.symbol, '6mo', '1d', 6000);
  const oq = chart.indicators.quote[0];
  c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
  l = oq.low.filter(x => x != null); v = oq.volume.filter(x => x != null);
@@ -5373,19 +5407,25 @@ function classifySignal(ta, quote, strategy, chartData) {
  const lows = chartData ? chartData.lows : [];
  // 必須有足夠歷史才計算
  if (highs.length < 21) return null;
+ // ── 3 HARD GATES (all must pass) ──
  // ① 真突破：今天收盤 > 前20日（不含今天）的最高點
  const prevHigh20 = Math.max(...highs.slice(-21, -1));
  const trueBreakout = price > prevHigh20;
  if (!trueBreakout) return null;
- // ② 強力收盤：收盤在今日振幅上 60% 以上（機構尾盤買進特徵）
+ // ② 量能確認：≥ 1.5 倍均量
+ if (volRatio < 1.5) return null;
+ // ③ 趨勢方向：價 > MA50
+ const ma50simple = closes.length >= 50 ? closes.slice(-50).reduce((a,b)=>a+b,0)/50 : null;
+ if (ma50simple && price < ma50simple) return null;
+ // ── Strength scoring (everything else) ──
+ // 強力收盤：收盤在今日振幅上 55% 以上（機構尾盤買進特徵）
  const dayHigh = highs[highs.length - 1];
  const dayLow = lows[lows.length - 1];
  const dayRange = dayHigh - dayLow;
  const closeStrength = dayRange > 0.001 ? (price - dayLow) / dayRange : 0.5;
  const strongClose = closeStrength >= 0.55;
- // ③ 量能：≥ 1.8 倍均量（Schwartz: volume confirms breakout）
  const volOk = volRatio >= 1.8;
- // ④ RSI 動能甜區（50-75 = 有動能但未超買）
+ // RSI 動能甜區（50-75 = 有動能但未超買）
  const rsiOk = ta.rsi >= 50 && ta.rsi <= 76;
  // ⑤ MACD 正向確認
  const macdOk = ta.hist > 0 && ta.macd > ta.signal;
@@ -5458,7 +5498,7 @@ function classifySignal(ta, quote, strategy, chartData) {
  const fundamentalProxy = gain3m > 8; // 3個月漲 >8%，代表基本面有支撐
  // MA60 上升：近 20 天均線是上升的
  const ma60now = ta.ma60;
- const ma60prev = closes.length >= 80 ? sma(closes.slice(0, -20), 60) : null;
+ const ma60prev = closes.length >= 100 ? sma(closes.slice(0, -20), 60) : null;
  const ma60rising = ma60now && ma60prev ? ma60now > ma60prev : false;
  // ⑦ 市場環境加減分
  const regime = window._marketRegime;
@@ -5562,7 +5602,9 @@ function renderScannerResults(results, strategy, usedFallback) {
    'Reddit #' + ape.rank + (ape.rankChange > 0 ? ' ↑' + ape.rankChange : ape.rankChange < 0 ? ' ↓' + Math.abs(ape.rankChange) : '') + '</div>'
  : '';
  html += '<tr>' +
- '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' + apeBadge + '</td>' +
+ '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' + apeBadge +
+ ' <button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + (r.price||0).toFixed(2) + ')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;margin-left:4px">加入持倉</button>' +
+ '</td>' +
  '<td style="font-size:12px">' + r.name + '</td>' +
  '<td>' + r.price.toFixed(2) + '</td>' +
  '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
@@ -5745,6 +5787,13 @@ function loadScanner() {
  _scannerTimer = setInterval(() => { if (_currentPage === 'scanner' && !window._scanRunning) runScan(_scannerStrategy); }, 180000);
  // Always refresh regime banner on scanner load
  fetchMarketRegime();
+ // Auto-trigger RS Leader scan on first visit if no results rendered yet
+ const tableDiv = document.getElementById('scanner-table');
+ if (tableDiv && !tableDiv.innerHTML.trim() && !window._rsLeaderRunning && (!_scannerResults || _scannerResults.length === 0)) {
+   if ((window._currentScanStrat || 'rsleader') === 'rsleader') {
+     setTimeout(() => runRSLeaderScan(), 100);
+   }
+ }
  // Load sector rotation (lazy — user must expand card)
  // Auto-load if body is already expanded
  const srBody = document.getElementById('sector-rotation-body');
@@ -7652,6 +7701,183 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
 function closeEntryModal() { const m = document.getElementById('entry-modal-overlay'); if (m) m.remove(); }
 
 // ── 掃描器一鍵掃描（Schwartz + Steinhardt 並排）
+// ============ RS LEADER SCANNER ============
+async function runRSLeaderScan() {
+  if (window._rsLeaderRunning) return;
+  window._rsLeaderRunning = true;
+  const tableDiv = document.getElementById('scanner-table');
+  if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">動能領袖掃描中，約需 30–60 秒...</div>';
+
+  const pool = _scannerMarket === 'tw' ? getTwScanPool().slice(0, 40) : SCAN_CURATED_US;
+  const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
+
+  // Get benchmark 6M return
+  let spyReturn = 0;
+  try {
+    const spyChart = await yfChart(bench, '6mo', '1d', 8000);
+    const spyCloses = spyChart.indicators.quote[0].close.filter(v => v != null);
+    if (spyCloses.length >= 2) {
+      spyReturn = (spyCloses[spyCloses.length-1] - spyCloses[0]) / spyCloses[0] * 100;
+    }
+  } catch(e) {}
+
+  const results = [];
+  for (let i = 0; i < pool.length; i += 8) {
+    const batch = pool.slice(i, i + 8);
+    const settled = await Promise.allSettled(batch.map(async sym => {
+      try {
+        const chart = await yfChart(sym, '6mo', '1d', 8000);
+        const oq = chart.indicators.quote[0];
+        const closes = oq.close.filter(v => v != null);
+        const vols = oq.volume.filter(v => v != null);
+        if (closes.length < 50) return null;
+        const price = chart.meta.regularMarketPrice || closes[closes.length-1];
+        const ma50 = closes.length >= 50 ? closes.slice(-50).reduce((a,b)=>a+b,0)/50 : null;
+        if (!ma50 || price < ma50) return null; // filter: must be above MA50
+        const ret6m = (closes[closes.length-1] - closes[0]) / closes[0] * 100;
+        const rs6m = ret6m - spyReturn;
+        const avgVol20 = vols.slice(-20).reduce((a,b)=>a+(b||0),0)/20;
+        const avgVol5 = vols.slice(-5).reduce((a,b)=>a+(b||0),0)/5;
+        const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
+        const changePct = closes.length >= 2 ? (closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2] * 100 : 0;
+        return {
+          symbol: sym,
+          name: chart.meta.shortName || sym,
+          price,
+          changePct,
+          ret6m,
+          rs6m,
+          volExpand,
+          ma50,
+          closes
+        };
+      } catch(e) { return null; }
+    }));
+    settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
+  }
+
+  if (results.length === 0) {
+    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">無法取得資料，請稍後再試</div>';
+    window._rsLeaderRunning = false;
+    return;
+  }
+
+  // Compute RS Ratings (percentile)
+  calcRSRatings(results);
+
+  // Compute composite scores
+  results.forEach(r => {
+    const volScore = Math.min(99, Math.round(r.volExpand * 33));
+    r.compositeScore = Math.round(r.rsRating * 0.50 + volScore * 0.30 + 50 * 0.20);
+  });
+
+  // Sort and take top 15
+  results.sort((a, b) => b.compositeScore - a.compositeScore);
+  const top15 = results.slice(0, 15);
+
+  // Render
+  renderRSLeaderResults(top15);
+  window._rsLeaderRunning = false;
+}
+
+function renderRSLeaderResults(results) {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+  const f = (v, d=2) => (v == null ? 'N/A' : Number(v).toFixed(d));
+  const pct = v => (v >= 0 ? '+' : '') + f(v, 1) + '%';
+  const rows = results.map((r, i) => {
+    const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
+    const rsColor = r.rs6m >= 5 ? 'var(--green)' : r.rs6m >= 0 ? 'var(--yellow)' : 'var(--red)';
+    const volColor = r.volExpand >= 1.5 ? 'var(--green)' : r.volExpand >= 1.0 ? 'var(--muted)' : 'var(--red)';
+    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' +
+      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
+      '<td style="padding:10px 8px">' +
+        '<div style="font-weight:700;font-size:15px">' + r.symbol + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + r.name + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:right">' +
+        '<div style="font-weight:600">$' + f(r.price) + '</div>' +
+        '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:' + scoreColor + '">' + r.rsRating + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(r.rs6m) + '<div style="font-size:10px;color:var(--muted)">6M vs 大盤</div></td>' +
+      '<td style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-size:18px;font-weight:800;color:' + scoreColor + '">' + r.compositeScore + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">綜合分</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + r.price.toFixed(2) + ')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer">加入持倉</button></td>' +
+    '</tr>';
+  }).join('');
+
+  tableDiv.innerHTML =
+    '<div style="margin-bottom:12px;font-size:12px;color:var(--muted)">' +
+      '依綜合分數排列 — RS Rating 越高代表相對大盤動能越強 | 僅顯示 MA50 上方個股' +
+    '</div>' +
+    '<div class="table-wrap">' +
+      '<table style="width:100%;border-collapse:collapse">' +
+        '<thead>' +
+          '<tr style="font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.1)">' +
+            '<th style="padding:6px 8px;text-align:left">排名</th>' +
+            '<th style="padding:6px 8px;text-align:left">股票</th>' +
+            '<th style="padding:6px 8px;text-align:right">現價</th>' +
+            '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
+            '<th style="padding:6px 8px;text-align:center">6M 相對強弱</th>' +
+            '<th style="padding:6px 8px;text-align:center">量能比</th>' +
+            '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
+            '<th style="padding:6px 8px;text-align:center">操作</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
+function switchScanStrategy(strat) {
+  ['rsleader','breakout','custom'].forEach(s => {
+    const btn = document.getElementById('scan-tab-' + s);
+    if (btn) btn.classList.toggle('active', s === strat);
+  });
+  window._currentScanStrat = strat;
+  if (strat === 'rsleader') runRSLeaderScan();
+  else if (strat === 'breakout') runScan('schwartz');
+  else if (typeof renderCustomScanUI === 'function') renderCustomScanUI();
+  else {
+    // Fallback: switch market to custom
+    if (typeof switchScannerMarket === 'function') switchScannerMarket('custom');
+  }
+}
+
+function updateScanRegimeWarning() {
+  const el = document.getElementById('scan-regime-warning');
+  if (!el) return;
+  const r = window._marketRegime;
+  if (!r) { el.style.display = 'none'; return; }
+  let html = '';
+  if (r.overall <= -2) {
+    html = '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="color:#ef4444;font-size:18px">⚠</span><div><div style="color:#ef4444;font-weight:600;font-size:13px">市場環境偏弱 — 掃描結果僅供參考</div><div style="color:var(--muted);font-size:12px;margin-top:2px">SPY 趨勢偏空 / VIX 偏高，建議等待市場環境改善再進場</div></div></div>';
+  } else if (r.overall <= -1) {
+    html = '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="color:#f59e0b;font-size:16px">⚡</span><div style="color:#f59e0b;font-size:12px;font-weight:500">市場震盪中，掃描信號需額外確認後再行動</div></div>';
+  }
+  el.innerHTML = html;
+  el.style.display = html ? 'block' : 'none';
+}
+
+function quickAddToPortfolio(symbol, price) {
+  showPage('portfolio');
+  setTimeout(() => {
+    const symEl = document.getElementById('j-ticker');
+    const priceEl = document.getElementById('j-price');
+    if (symEl) symEl.value = symbol;
+    if (priceEl) priceEl.value = (price != null ? Number(price).toFixed(2) : '');
+    const form = document.querySelector('.journal-form');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
 async function runFullScan() {
  const fullDiv = document.getElementById('fullscan-results');
  if (!fullDiv) return;
