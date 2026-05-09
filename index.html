@@ -262,7 +262,7 @@ firebase.initializeApp(_fbConfig);
  <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
  <div class="section-label" style="margin-bottom:0">突破候選 — Schwartz</div>
- <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>runScan('schwartz'),100)">完整掃描 →</button>
+ <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('breakout'),100)">完整掃描 →</button>
  </div>
  <div id="dash-schwartz-list"><div style="text-align:center;padding:20px;color:var(--muted)">等待掃描...</div></div>
  </div>
@@ -867,6 +867,13 @@ function switchIndustryTab(tab) {
 }
 
 // ============ STOCK ANALYSIS ============
+function showStock(symbol) {
+  const inp = document.getElementById('ticker-input');
+  if (inp) inp.value = symbol;
+  showPage('stock');
+  analyzeStock();
+}
+
 async function analyzeStock() {
  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase().replace(/[^A-Z0-9.\-^]/g, '');
  if (!ticker) return;
@@ -4817,6 +4824,15 @@ async function fetchMarketRegime() {
      window._marketRegime.fredWarning = true;
    }
    renderRegimeBanner();
+   try { updateScanRegimeWarning(); } catch(e) {}
+ }).catch(() => {});
+ // CNN Fear & Greed Index（非阻塞）
+ fetchFearAndGreed().then(fng => {
+   if (fng && window._marketRegime) {
+     window._marketRegime.fng = fng;
+     try { updateScanRegimeWarning(); } catch(e) {}
+     try { renderRegimeBanner(); } catch(e) {}
+   }
  }).catch(() => {});
  return window._marketRegime;
  } catch(e) {
@@ -5547,14 +5563,11 @@ function renderScannerResults(results, strategy, usedFallback) {
  const schwartzHint = strategy === 'schwartz'
    ? '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Schwartz 需要收盤突破 20 日高點，在大盤下跌日通常沒有符合標的。</div>'
    : '';
- const steinhardtHint = strategy === 'steinhardt'
-   ? '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Steinhardt 需要 EMA 多頭排列（8>21>60），大盤偏弱時多數個股 EMA 已翻空。</div>'
-   : '';
  tableDiv.innerHTML =
    '<div style="text-align:center;padding:30px;color:var(--muted)">' +
    '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">未找到符合條件的標的</div>' +
    '<div style="font-size:12px">策略：' + stratName + (usedFallback ? '　精選清單 ' + _fallbackPool.length + ' 檔' : '　SP500 全市場') + '</div>' +
-   schwartzHint + steinhardtHint + regimeHint +
+   schwartzHint + regimeHint +
    '<div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="runScan(\'' + strategy + '\')">重新掃描</button></div>' +
    '</div>';
  return;
@@ -5780,7 +5793,12 @@ function loadScanner() {
  renderWatchlist();
  if (_todayWatchlist.length > 0) startWatchlistRefresh();
  if (_scannerTimer) clearInterval(_scannerTimer);
- _scannerTimer = setInterval(() => { if (_currentPage === 'scanner' && !window._scanRunning) runScan(_scannerStrategy); }, 180000);
+ _scannerTimer = setInterval(() => {
+   if (_currentPage !== 'scanner') return;
+   const strat = window._currentScanStrat || 'rsleader';
+   if (strat === 'rsleader' && !window._rsLeaderRunning) runRSLeaderScan();
+   else if (strat === 'breakout' && !window._scanRunning) runScan('schwartz');
+ }, 180000);
  // Always refresh regime banner on scanner load
  fetchMarketRegime();
  // Auto-trigger RS Leader scan on first visit if no results rendered yet
@@ -7001,7 +7019,6 @@ function initGlossarySearch() {
 // 全域掃描快取（背景掃描，跳頁不中斷）
 const _scanCache = {
  schwartz: { results: [], ts: 0 },
- steinhardt: { results: [], ts: 0 },
  TTL: 5 * 60 * 1000 // 5 分鐘
 };
 // ── T交易精選：固定三檔 ──────────────────────────────────────────────────
@@ -7535,55 +7552,6 @@ function calcEntryGuide(ta, price, strategy, closes, highs) {
 
 // ── Steinhardt 基本面篩選（Variant Perception 核心）
 // 在技術面通過後，驗證公司財務體質：獲利、成長、資本效益、合理估值
-async function enrichSteinhardtFundamentals(candidates) {
- const top = candidates.slice(0, 10); // 最多 10 檔，避免過長等待
- const enriched = await Promise.all(top.map(async r => {
- try {
- const fund = await yfPageFundamentals(r.symbol);
- if (!fund) return { ...r, fundScore: 0, fundDetail: ['無法取得基本面資料'], fundLoaded: false };
- const sd = fund.summaryDetail || {}, ks = fund.defaultKeyStatistics || {}, fd = fund.financialData || {};
- const rv = v => v?.raw;
- const eps = rv(ks.trailingEps);
- const rg = rv(fd.revenueGrowth); // 0.15 = 15%
- const roe = rv(fd.returnOnEquity); // 0.20 = 20%
- const pe = rv(sd.trailingPE) || rv(sd.forwardPE);
- let fundScore = 0;
- const fundDetail = [];
- // 1. 公司獲利（Steinhardt 不做虧損股）
- if (eps != null && eps > 0) { fundScore++; fundDetail.push('EPS $' + eps.toFixed(2) + ' '); }
- else if (eps != null) { fundDetail.push('EPS $' + eps.toFixed(2) + ' 虧損'); }
- else { fundDetail.push('EPS 資料不足'); }
- // 2. 營收/獲利成長
- if (rg != null && rg > 0.05) { fundScore++; fundDetail.push('營收成長 +' + (rg*100).toFixed(1) + '% '); }
- else if (rg != null && rg > 0) { fundDetail.push('營收微增 +' + (rg*100).toFixed(1) + '%'); }
- else if (rg != null) { fundDetail.push('營收衰退 ' + (rg*100).toFixed(1) + '%'); }
- else { fundDetail.push('成長資料不足'); }
- // 3. 高資本回報率（Steinhardt 重視經營效率）
- if (roe != null && roe > 0.15) { fundScore++; fundDetail.push('ROE ' + (roe*100).toFixed(1) + '% '); }
- else if (roe != null && roe > 0) { fundDetail.push('ROE ' + (roe*100).toFixed(1) + '%'); }
- else if (roe != null) { fundDetail.push('ROE ' + (roe*100).toFixed(1) + '% '); }
- // 4. 估值合理（Variant Perception：市場誤判程度）
- if (pe != null && pe > 0 && pe < 35) { fundScore++; fundDetail.push('PE ' + pe.toFixed(1) + ' 合理 '); }
- else if (pe != null && pe >= 35 && pe < 60) { fundDetail.push('PE ' + pe.toFixed(1) + ' 偏高'); }
- else if (pe != null && pe >= 60) { fundDetail.push('PE ' + pe.toFixed(1) + ' 過高 '); }
- else if (pe != null && pe <= 0) { fundDetail.push('PE 負值(虧損)'); }
- // 5. PEG < 1.5（Variant Perception 核心：成長被低估）
- const peg = rv(ks.pegRatio);
- if (peg != null && peg > 0 && peg < 1.5) { fundScore++; fundDetail.push('PEG ' + peg.toFixed(2) + ' 成長低估'); }
- else if (peg != null && peg > 0) { fundDetail.push('PEG ' + peg.toFixed(2) + '（偏高）'); }
- // 6. 盈利加速（Forward PE < Trailing PE）— 不加分，僅作標註
- const fpe = rv(sd.forwardPE), tpe = rv(sd.trailingPE);
- if (fpe != null && tpe != null && fpe < tpe) { fundDetail.push('盈利加速 fPE' + fpe.toFixed(1) + '<tPE' + tpe.toFixed(1) + ' ↑'); }
- return { ...r, fundScore, fundDetail, fundLoaded: true };
- } catch(e) {
- return { ...r, fundScore: 0, fundDetail: ['基本面載入失敗'], fundLoaded: false };
- }
- }));
- // 以「技術強度 × 2 + 基本面分數」排序，讓兩者兼優的標的排最前
- enriched.sort((a, b) => (b.signalStrength * 2 + b.fundScore) - (a.signalStrength * 2 + a.fundScore));
- return enriched;
-}
-
 // ── 進場指引 Modal
 function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
  // 支援從 renderDashScanList 傳入 JSON 字串或物件
@@ -7619,7 +7587,7 @@ function showEntryGuide(symbol, strategy, quoteInfo, taInfo, closes, highs) {
  { ok: ta.hist > 0 && ta.macd > 0, label: 'MACD 正值且柱狀擴張' },
  { ok: ta.rsi >= 50 && ta.rsi <= 70, label: 'RSI ' + (ta.rsi || 0).toFixed(0) + '（在 50-70 動能區間）' },
  { ok: ta.ma5 > ta.ma20, label: '短期均線多頭（MA5 > MA20）' },
- // 基本面檢查（從 enrichSteinhardtFundamentals 結果讀取）
+ // 基本面檢查（如資料已附帶）
  { ok: (quoteInfo.fundScore || 0) >= 1, label: '公司獲利（EPS 正值）' + ((quoteInfo.fundDetail || []).find(d => d.includes('EPS')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('EPS')) : '') },
  { ok: (quoteInfo.fundScore || 0) >= 2, label: '營收成長 > 5%' + ((quoteInfo.fundDetail || []).find(d => d.includes('營收')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('營收')) : '') },
  { ok: (quoteInfo.fundScore || 0) >= 3, label: 'ROE > 15%（資本效益）' + ((quoteInfo.fundDetail || []).find(d => d.includes('ROE')) ? '：' + (quoteInfo.fundDetail || []).find(d => d.includes('ROE')) : '') }
@@ -7761,7 +7729,7 @@ async function runRSLeaderScan() {
   }
 
   if (results.length === 0) {
-    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">無法取得資料，請稍後再試</div>';
+    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:14px;margin-bottom:6px">目前無符合條件的動能領袖</div><div style="font-size:12px">所有候選股票皆位於 MA50 之下，可能反映整體市場偏弱。請等待市場環境改善或切換至其他策略。</div></div>';
     window._rsLeaderRunning = false;
     return;
   }
@@ -7797,7 +7765,7 @@ function renderRSLeaderResults(results) {
     const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
     const rsColor = r.rs6m >= 5 ? 'var(--green)' : r.rs6m >= 0 ? 'var(--yellow)' : 'var(--red)';
     const volColor = r.volExpand >= 1.5 ? 'var(--green)' : r.volExpand >= 1.0 ? 'var(--muted)' : 'var(--red)';
-    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' +
+    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
       '<td style="padding:10px 8px">' +
         '<div style="font-weight:700;font-size:15px">' + r.symbol + '</div>' +
@@ -7850,12 +7818,22 @@ function switchScanStrategy(strat) {
     if (btn) btn.classList.toggle('active', s === strat);
   });
   window._currentScanStrat = strat;
-  if (strat === 'rsleader') runRSLeaderScan();
-  else if (strat === 'breakout') runScan('schwartz');
-  else if (typeof renderCustomScanUI === 'function') renderCustomScanUI();
-  else {
-    // Fallback: switch market to custom
+  const tableDiv = document.getElementById('scanner-table');
+  if (strat === 'rsleader') {
+    runRSLeaderScan();
+  } else if (strat === 'breakout') {
+    runScan('schwartz');
+  } else if (strat === 'custom') {
+    // Show custom pool manager, clear scanner table with helpful prompt
+    if (tableDiv) tableDiv.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">請在上方自訂清單中加入股票，然後選擇市場掃描</div>';
+    // Switch market tab to custom (this will show the custom-pool-manager via switchScannerMarket)
     if (typeof switchScannerMarket === 'function') switchScannerMarket('custom');
+    // Scroll to custom pool manager
+    const cpSection = document.getElementById('custom-pool-manager');
+    if (cpSection) {
+      cpSection.style.display = '';
+      try { cpSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+    }
   }
 }
 
@@ -7864,11 +7842,18 @@ function updateScanRegimeWarning() {
   if (!el) return;
   const r = window._marketRegime;
   if (!r) { el.style.display = 'none'; return; }
+  const fng = r.fng;
+  const fngLabel = fng ? (fng.score<=25?'極度恐懼':fng.score<=45?'恐懼':fng.score<=55?'中性':fng.score<=75?'貪婪':'極度貪婪') : '';
+  const fngColor = fng ? (fng.score<=25?'var(--green)':fng.score>=75?'var(--red)':'var(--yellow)') : '';
+  const fngBadge = fng ? '<span style="margin-left:12px;padding:2px 8px;border-radius:4px;font-size:11px;background:rgba(255,255,255,.07);color:var(--muted)">恐貪指數 <b style="color:' + fngColor + '">' + fng.score + '</b> ' + fngLabel + '</span>' : '';
   let html = '';
   if (r.overall <= -2) {
-    html = '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="color:#ef4444;font-size:18px">⚠</span><div><div style="color:#ef4444;font-weight:600;font-size:13px">市場環境偏弱 — 掃描結果僅供參考</div><div style="color:var(--muted);font-size:12px;margin-top:2px">SPY 趨勢偏空 / VIX 偏高，建議等待市場環境改善再進場</div></div></div>';
+    html = '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="color:#ef4444;font-size:18px">⚠</span><div style="flex:1;min-width:0"><div style="color:#ef4444;font-weight:600;font-size:13px">市場環境偏弱 — 掃描結果僅供參考' + fngBadge + '</div><div style="color:var(--muted);font-size:12px;margin-top:2px">SPY 趨勢偏空 / VIX 偏高，建議等待市場環境改善再進場</div></div></div>';
   } else if (r.overall <= -1) {
-    html = '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="color:#f59e0b;font-size:16px">⚡</span><div style="color:#f59e0b;font-size:12px;font-weight:500">市場震盪中，掃描信號需額外確認後再行動</div></div>';
+    html = '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="color:#f59e0b;font-size:16px">⚡</span><div style="color:#f59e0b;font-size:12px;font-weight:500;flex:1;min-width:0">市場震盪中，掃描信號需額外確認後再行動' + fngBadge + '</div></div>';
+  } else if (fng) {
+    // Neutral/positive market: show small info row with just F&G
+    html = '<div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><span>市場環境正常</span>' + fngBadge + '</div>';
   }
   el.innerHTML = html;
   el.style.display = html ? 'block' : 'none';
