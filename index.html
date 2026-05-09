@@ -8,7 +8,7 @@
 <title>台美股智慧選股工具</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-:root{--bg:#0a0e17;--card:#131928;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316}
+:root{--bg:#0a0e17;--card:#161e2e;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .app{display:flex;height:100vh;flex-direction:row}
@@ -18,7 +18,7 @@ body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:v
 .sidebar nav{flex:1;padding:10px 0}
 .sidebar nav button{width:100%;padding:12px 20px;background:none;border:none;color:var(--muted);text-align:left;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;gap:10px}
 .sidebar nav button:hover{background:rgba(59,130,246,.1);color:var(--text)}
-.sidebar nav button.active{background:rgba(59,130,246,.15);color:var(--accent);border-right:3px solid var(--accent)}
+.sidebar nav button.active{background:rgba(59,130,246,.12);color:#fff;border-right:3px solid var(--accent)}
 .main{flex:1;overflow-y:auto;padding:24px}
 .page{display:none}.page.active{display:block}
 .search-box{display:flex;gap:12px;margin-bottom:24px}
@@ -26,8 +26,8 @@ body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:v
 .search-box input:focus{border-color:var(--accent)}
 .search-box button{padding:14px 28px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:15px;cursor:pointer;font-weight:600}
 .search-box button:hover{background:#2563eb}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
-.card h3{font-size:14px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.card{background:var(--card);border:1px solid var(--border);border-top:1px solid rgba(255,255,255,.05);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600}
 .stock-header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .stock-name{font-size:26px;font-weight:700}
 .stock-price{font-size:34px;font-weight:700}
@@ -69,8 +69,8 @@ button,.btn,.tab-bar button,.tf-btn,.mobile-nav button{min-height:44px}
 .signal.strong-buy{background:rgba(16,185,129,.3);color:var(--green)}
 .signal.strong-sell{background:rgba(239,68,68,.3);color:var(--red)}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
-th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:14px;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
 .journal-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;align-items:end}
 .journal-form .full{grid-column:1/-1}
 .form-group{display:flex;flex-direction:column;gap:4px}
@@ -131,9 +131,9 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 /* ── 全站固定免責聲明 bar ── */
 .disclaimer-bar{position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(10,14,23,.94);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:5px 20px;font-size:11px;color:var(--muted);text-align:center;pointer-events:none;line-height:1.4}
 /* ── Clean typography overrides ── */
-.card h3 { font-size:11px; color:var(--muted); margin-bottom:14px; text-transform:uppercase; letter-spacing:.8px; font-weight:600; }
+.card h3 { font-size:12px; color:var(--muted); margin-bottom:14px; text-transform:none; letter-spacing:0; font-weight:600; }
 .page > h2 { font-size:18px; font-weight:600; color:var(--text); margin-bottom:20px; letter-spacing:-.2px; }
-.section-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); font-weight:600; margin-bottom:8px; }
+.section-label { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); font-weight:600; margin-bottom:8px; }
 .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; }
 .status-dot.green { background:var(--green); }
 .status-dot.red { background:var(--red); }
@@ -141,10 +141,15 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase}
 /* Reduce visual noise on cards */
 .dash-kpi { padding:12px 14px; }
 .dash-kpi .val { font-size:20px; }
+.dash-kpi .val, .stock-price, .idx-value, .rec-box .rec-price { font-variant-numeric: tabular-nums; }
 /* Tab bar refinement */
 .tab-bar button { font-size:12px; padding:7px 14px; border-radius:6px; }
 /* Scan mini rows cleaner */
 .scan-mini-row { font-size:12px; padding:6px 0; }
+@media(max-width:700px) {
+ .rs-leader-table .col-volume { display:none; }
+ .rs-leader-table .col-rs6m { display:none; }
+}
 /* ── 進場指引 Modal ── */
 .entry-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1001;display:flex;align-items:center;justify-content:center;padding:16px}
 .entry-modal{background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;padding:24px}
@@ -237,7 +242,7 @@ firebase.initializeApp(_fbConfig);
  <button onclick="showPage('education')">教學</button>
  </div>
  <div class="main" style="padding-bottom:44px">
- <div id="page-dashboard" class="page">
+ <div id="page-dashboard" class="page active">
  <h2 style="margin-bottom:4px;font-size:20px;font-weight:600;letter-spacing:-.3px">今日市場總覽</h2>
  <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
  <div style="margin-bottom:20px">
@@ -257,6 +262,20 @@ firebase.initializeApp(_fbConfig);
  <div id="dash-premarket"></div>
  <!-- 持倉動態 -->
  <div id="dash-holdings"></div>
+
+ <!-- T交易精選 -->
+ <div class="card" style="margin-top:20px">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+ <div>
+ <div class="section-label" style="margin:0">短線精選 — MSFT / META / GOOGL</div>
+ <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔（MSFT・META・GOOGL）・每日更新進出區間・1-7天持倉週期</div>
+ </div>
+ <span id="t-review-badge"></span>
+ </div>
+ <div class="t-stock-grid" id="dash-t-list">
+ <div style="text-align:center;padding:20px;color:var(--muted);grid-column:1/-1">載入中...</div>
+ </div>
+ </div>
 
  <div class="dash-scan-grid">
  <div class="card">
@@ -278,31 +297,21 @@ firebase.initializeApp(_fbConfig);
  <button class="btn btn-primary" style="padding:10px 28px" onclick="renderDashboard(true)">重新整理</button>
  </div>
 
- <!-- T交易精選 -->
-
- <div class="card" style="margin-top:20px">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
- <div>
- <div class="section-label" style="margin:0">短線精選 — MSFT / META / GOOGL</div>
- <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔（MSFT・META・GOOGL）・每日更新進出區間・1-7天持倉週期</div>
- </div>
- <span id="t-review-badge"></span>
- </div>
- <div class="t-stock-grid" id="dash-t-list">
- <div style="text-align:center;padding:20px;color:var(--muted);grid-column:1/-1">載入中...</div>
- </div>
- </div>
-
  <!-- 國際新聞摘要 -->
- <div class="card" style="margin-top:20px">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+ <div class="card" id="dash-news-card" style="margin-top:20px">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0;cursor:pointer" onclick="toggleDashNews()">
  <div class="section-label" style="margin:0">財經要聞</div>
- <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="renderDashNews(true)">重新整理</button>
+ <div style="display:flex;align-items:center;gap:8px">
+ <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="event.stopPropagation();renderDashNews(true)">刷新</button>
+ <span id="dash-news-toggle-icon" style="color:var(--muted);font-size:12px">▼ 展開</span>
  </div>
+ </div>
+ <div id="dash-news-body" style="display:none;margin-top:12px">
  <div id="dash-news-list"><div style="text-align:center;padding:20px;color:var(--muted)">載入中...</div></div>
  </div>
  </div>
- <div id="page-stock" class="page active">
+ </div>
+ <div id="page-stock" class="page">
  <div class="search-box">
  <input id="ticker-input" placeholder="輸入代號（美股: AAPL｜台股: 2330.TW｜債券: TLT）" onkeydown="if(event.key==='Enter')analyzeStock()">
  <button onclick="analyzeStock()">分析</button>
@@ -319,6 +328,14 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div id="market-tab-indices">
  <div id="indices-content"></div>
+ <!-- 板塊輪動 moved from scanner -->
+ <div id="sector-rotation-card" style="margin-top:16px">
+ <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)" onclick="toggleSectorCard()">
+ <span style="font-weight:600;font-size:14px">板塊輪動</span>
+ <span id="sector-toggle-icon">▼</span>
+ </div>
+ <div id="sector-rotation-body" style="display:none;margin-top:8px"></div>
+ </div>
  </div>
  <div id="market-tab-sentiment" style="display:none">
  <div id="sentiment-content"></div>
@@ -352,7 +369,7 @@ firebase.initializeApp(_fbConfig);
  <button onclick="switchJournalTab('risk')">風控設定</button>
  </div>
  <div id="journal-tab-records">
- <div style="background:rgba(249,115,22,.12);border:1px solid var(--orange);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--orange);line-height:1.6">交易紀錄儲存於瀏覽器 localStorage，清除瀏覽器資料或更換裝置將導致紀錄遺失。建議定期手動備份重要資料。</div>
+ <div id="localstorage-notice" style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:12px"><span>資料儲存於本機瀏覽器。建議登入 Google 帳號以跨裝置同步，或定期匯出 CSV 備份。</span><button onclick="document.getElementById('localstorage-notice').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;flex-shrink:0">×</button></div>
  <div class="card">
  <h3>新增交易紀錄</h3>
  <div class="journal-form">
@@ -383,19 +400,10 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div id="page-scanner" class="page">
  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+ <div>
  <h2 style="margin:0">掃描器</h2>
+ <div style="font-size:12px;color:var(--muted);margin-top:3px">依動能排行找出當前市場最強個股</div>
  </div>
- <div style="display:flex;gap:8px;margin-bottom:12px">
- <input id="scanner-search-input" placeholder="直接搜尋個股..." style="flex:1;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){document.getElementById('ticker-input').value=this.value;showPage('stock');analyzeStock()}" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
- <button onclick="document.getElementById('ticker-input').value=document.getElementById('scanner-search-input').value;showPage('stock');analyzeStock()" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;cursor:pointer">搜尋</button>
- </div>
- <!-- 板塊輪動 -->
- <div id="sector-rotation-card" style="margin-bottom:14px">
- <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)" onclick="toggleSectorCard()">
- <span style="font-weight:600;font-size:14px">板塊輪動</span>
- <span id="sector-toggle-icon">▼</span>
- </div>
- <div id="sector-rotation-body" style="display:none;margin-top:8px"></div>
  </div>
  <!-- 大盤環境指示器 -->
  <div id="market-regime-banner" style="margin-bottom:14px"></div>
@@ -421,7 +429,7 @@ firebase.initializeApp(_fbConfig);
  <div class="tab-bar" id="scanner-market-tabs">
  <button class="active" onclick="switchScannerMarket('us')">美股</button>
  <button onclick="switchScannerMarket('tw')">台股</button>
- <button onclick="switchScannerMarket('custom')">自訂</button>
+ <button onclick="switchScannerMarket('custom')">自選池</button>
  </div>
  <div class="tab-bar" id="scanner-tabs">
  <button class="active" id="scan-tab-rsleader" onclick="switchScanStrategy('rsleader')">動能領袖</button>
@@ -4293,7 +4301,7 @@ function renderHeatmap(tab, results) {
 
 // ============ REAL-TIME REFRESH ============
 let _refreshTimer = null;
-let _currentPage = 'stock';
+let _currentPage = 'dashboard';
 let _lastAnalyzedTicker = null;
 
 function isMarketOpen() {
@@ -7794,13 +7802,13 @@ function renderRSLeaderResults(results) {
         '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
       '</td>' +
       '<td style="padding:10px 8px;text-align:center">' +
-        '<div style="font-size:20px;font-weight:800;color:' + scoreColor + '">' + r.rsRating + '</div>' +
+        '<div style="font-size:22px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.rsRating + '</div>' +
         '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
       '</td>' +
-      '<td style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(r.rs6m) + '<div style="font-size:10px;color:var(--muted)">6M vs 大盤</div></td>' +
-      '<td style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
+      '<td class="col-rs6m" style="padding:10px 8px;text-align:center;color:' + rsColor + ';font-weight:600">' + pct(r.rs6m) + '<div style="font-size:10px;color:var(--muted)">6M vs 大盤</div></td>' +
+      '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
       '<td style="padding:10px 8px;text-align:center">' +
-        '<div style="font-size:18px;font-weight:800;color:' + scoreColor + '">' + r.compositeScore + '</div>' +
+        '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
         '<div style="font-size:10px;color:var(--muted)">綜合分</div>' +
       '</td>' +
       '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + (r.price||0).toFixed(2) + ')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer">加入持倉</button></td>' +
@@ -7812,15 +7820,15 @@ function renderRSLeaderResults(results) {
       '依綜合分數排列 — RS Rating 越高代表相對大盤動能越強 | 僅顯示 MA50 上方個股' +
     '</div>' +
     '<div class="table-wrap">' +
-      '<table style="width:100%;border-collapse:collapse">' +
+      '<table class="rs-leader-table" style="width:100%;border-collapse:collapse">' +
         '<thead>' +
           '<tr style="font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.1)">' +
             '<th style="padding:6px 8px;text-align:left">排名</th>' +
             '<th style="padding:6px 8px;text-align:left">股票</th>' +
             '<th style="padding:6px 8px;text-align:right">現價</th>' +
             '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
-            '<th style="padding:6px 8px;text-align:center">6M 相對強弱</th>' +
-            '<th style="padding:6px 8px;text-align:center">量能比</th>' +
+            '<th class="col-rs6m" style="padding:6px 8px;text-align:center">6M 相對強弱</th>' +
+            '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
             '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
             '<th style="padding:6px 8px;text-align:center">操作</th>' +
           '</tr>' +
@@ -8093,6 +8101,15 @@ async function renderDashTTrading() {
 }
 
 // ── 首頁國際新聞摘要（10 分鐘快取）
+function toggleDashNews() {
+ const body = document.getElementById('dash-news-body');
+ const icon = document.getElementById('dash-news-toggle-icon');
+ if (!body) return;
+ const open = body.style.display !== 'none';
+ body.style.display = open ? 'none' : 'block';
+ if (icon) icon.textContent = open ? '▼ 展開' : '▲ 收起';
+ if (!open) renderDashNews(false);
+}
 let _dashNewsCache = { ts: 0, items: [] };
 async function renderDashNews(force) {
  const el = document.getElementById('dash-news-list');
@@ -8816,6 +8833,9 @@ document.getElementById('j-date').valueAsDate = new Date();
 // 非阻塞：載入匯率 + 套用幣別設定
 fetchFxRate().then(() => initCurrencyUI());
 startAutoRefresh();
+// Set initial nav active state
+document.querySelectorAll('.sidebar nav button').forEach((b,i) => b.classList.toggle('active', i===0));
+document.querySelectorAll('.mobile-nav button').forEach((b,i) => b.classList.toggle('active', i===0));
 // Firebase 初始化（帳號 + 雲端同步）
 initFirebase();
 </script>
