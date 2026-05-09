@@ -8127,6 +8127,184 @@ function renderRSLeaderResults(results) {
   _renderRSLeaderTable(results, tableDiv, '');
 }
 
+// ── Per-stock entry guide modal (answers A + C + D in one place) ────────────
+function showRSEntryGuide(symbol) {
+  const r = (window._rsLeaderCache || []).find(x => x.symbol === symbol);
+  if (!r) { showToast('找不到資料，請重新整理排行', 'warn'); return; }
+
+  const regime = window._marketRegime;
+  const sig = _getRSSignal(r);
+  const dist = r.high52w && r.price ? (r.price - r.high52w) / r.high52w * 100 : null;
+
+  // ── D: Market direction ──────────────────────────────────────────────────
+  let mColor, mEmoji, mLabel, mAction, mSizeNote;
+  if (!regime) {
+    mColor='var(--muted)'; mEmoji='⏳'; mLabel='市場資料讀取中'; mAction='稍後再查看'; mSizeNote='—';
+  } else if (regime.overall <= -2) {
+    mColor='#ef4444'; mEmoji='🔴'; mLabel='市場偏弱（空頭）'; mAction='建議空手觀望，不宜新開多單'; mSizeNote='0%（觀望）';
+  } else if (regime.overall <= -1) {
+    mColor='#f59e0b'; mEmoji='⚠️'; mLabel='市場震盪（偏弱）'; mAction='縮小倉位，只選最強訊號進場'; mSizeNote='正常倉位 50%';
+  } else if (regime.overall === 0) {
+    mColor='#f59e0b'; mEmoji='🟡'; mLabel='市場中性'; mAction='謹慎擇優，確認量能後再進場'; mSizeNote='正常倉位 75%';
+  } else {
+    mColor='#22c55e'; mEmoji='✅'; mLabel='市場環境良好'; mAction='可以正常倉位進場，動能策略勝率高'; mSizeNote='正常倉位（每筆風險 1-2%）';
+  }
+
+  // ── C: Why this stock ────────────────────────────────────────────────────
+  const reasons = [];
+  if (r.rsRating >= 95)      reasons.push('🏆 RS Rating <b>' + r.rsRating + '</b> — 全市場動能頂尖 ' + (100-r.rsRating) + '% 以內');
+  else if (r.rsRating >= 85) reasons.push('⭐ RS Rating <b>' + r.rsRating + '</b> — 動能遠超大盤');
+  else                       reasons.push('RS Rating ' + r.rsRating);
+
+  if (r.compositeScore >= 80)      reasons.push('🥇 綜合評分 <b>' + r.compositeScore + '</b> — 動能 + 量能雙強');
+  else if (r.compositeScore >= 65) reasons.push('綜合評分 ' + r.compositeScore + ' — 各項指標均衡');
+
+  if (r.volExpand >= 2.5)      reasons.push('💥 量能爆發 <b>' + r.volExpand + 'x</b> 均量 — 機構大量介入跡象');
+  else if (r.volExpand >= 1.5) reasons.push('📈 量能放大 <b>' + r.volExpand + 'x</b> 均量 — 突破有量能支撐');
+
+  if (dist != null && dist >= -2)       reasons.push('🆕 <b>突破52週新高</b> — 歷史解套壓力全數消除');
+  else if (dist != null && dist >= -8)  reasons.push('🎯 距52週高點僅 ' + Math.abs(dist).toFixed(1) + '% — 即將突破');
+
+  if (r.ret1m >= 30)      reasons.push('🚀 近一月動能 <b>+' + r.ret1m.toFixed(0) + '%</b> — 加速上漲');
+  else if (r.ret1m >= 15) reasons.push('月線動能 +' + r.ret1m.toFixed(0) + '%');
+
+  if (r.reddit) reasons.push('🔥 Reddit熱議 <b>#' + r.reddit.rank + '</b> — 散戶關注度高');
+
+  // ── A: Entry price & timing ──────────────────────────────────────────────
+  const stopPrice = r.price ? (r.price * 0.92).toFixed(2) : '—';
+  let entryOp, entryPrice, entryNote, entryGreen = false;
+
+  if (!sig || !r.high52w) {
+    entryOp = '等資料'; entryPrice = '—';
+    entryNote = '等待即時報價載入後（頁面出現綠點 ●）再查看';
+  } else if (sig.emoji === '🔴') {
+    entryOp = '暫勿進場'; entryPrice = '—';
+    entryNote = '市場偏弱：即使個股訊號良好，熊市中多單勝率顯著下降，建議等市場轉強';
+  } else if (sig.emoji === '✅') {
+    if (r.changePct > 10) {
+      entryOp = '等回測再進'; entryPrice = '$' + (r.price * 0.96).toFixed(2) + ' 附近';
+      entryNote = '今日已大漲 ' + r.changePct.toFixed(1) + '%，追高滑點大。等明日若在均價附近站穩再進場，不要在開盤 30 分鐘內追高';
+    } else {
+      entryOp = '可立即進場'; entryPrice = '$' + r.price.toFixed(2) + '（現價）'; entryGreen = true;
+      entryNote = '量能確認突破，現價進場合理。進場後只要收在止損線上就繼續持有';
+    }
+  } else if (sig.emoji === '📍') {
+    entryOp = '等放量確認'; entryPrice = '$' + r.price.toFixed(2) + '（放量後現價）';
+    entryNote = '價格已近高點，但今日量能 ' + r.volExpand.toFixed(2) + 'x 未達標準（需 ≥ 1.5x）。等盤中成交量放大再進，沒有量的突破很容易假突破';
+  } else if (sig.emoji === '👀') {
+    entryOp = '觀察等待'; entryPrice = '突破 $' + (r.high52w ? r.high52w.toFixed(2) : '—') + ' 後進';
+    entryNote = '目前距高點 ' + (dist != null ? Math.abs(dist).toFixed(1) : '—') + '%，正在整理。等股價突破52週新高且成交量放大再進場，不要在整理中進場';
+  } else {
+    entryOp = '勿追'; entryPrice = '加入觀察清單';
+    entryNote = '距高點 ' + (dist != null ? Math.abs(dist).toFixed(1) : '—') + '%，離買點較遠。這支股票強，但時機未到，加到觀察清單等待更好時機';
+  }
+
+  // ── Build modal ──────────────────────────────────────────────────────────
+  const regimeLine = regime
+    ? 'SPY vs 200MA: ' + (regime.spyVs200 != null ? (regime.spyVs200>0?'+':'') + regime.spyVs200.toFixed(1) + '%' : '—') +
+      (regime.vixNow != null ? ' · VIX: ' + regime.vixNow.toFixed(0) : '') +
+      (regime.hmm ? ' · HMM: ' + regime.hmm.stateName : '')
+    : '';
+
+  const old = document.getElementById('rs-entry-modal');
+  if (old) old.remove();
+
+  document.body.insertAdjacentHTML('beforeend',
+  '<div class="entry-modal-overlay" id="rs-entry-modal" onclick="if(event.target===this)this.remove()">' +
+  '<div class="entry-modal" style="max-width:520px" onclick="event.stopPropagation()">' +
+
+    // Header
+    '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px">' +
+      '<div style="flex:1">' +
+        '<div style="font-size:22px;font-weight:800">' + r.symbol + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (r.name||'') + '</div>' +
+        (sig ? '<div style="font-size:13px;margin-top:5px;font-weight:700;color:' + sig.color + '">' + sig.emoji + ' ' + sig.label + '</div>' : '') +
+      '</div>' +
+      '<button onclick="document.getElementById(\'rs-entry-modal\').remove()" ' +
+        'style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0">✕</button>' +
+    '</div>' +
+
+    // D: Market
+    '<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;margin-bottom:10px">' +
+      '<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px">D · 現在市場方向</div>' +
+      '<div style="font-size:14px;font-weight:700;color:' + mColor + '">' + mEmoji + ' ' + mLabel + '</div>' +
+      '<div style="font-size:12px;color:var(--text);margin-top:4px">' + mAction + '</div>' +
+      (regimeLine ? '<div style="font-size:11px;color:var(--muted);margin-top:5px">' + regimeLine + '</div>' : '') +
+    '</div>' +
+
+    // C: Why this stock
+    '<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;margin-bottom:10px">' +
+      '<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px">C · 為什麼選這支</div>' +
+      reasons.map((s,i) => '<div style="font-size:13px;padding:5px 0;' + (i<reasons.length-1?'border-bottom:1px solid rgba(255,255,255,.05)':'') + '">' + s + '</div>').join('') +
+      (dist != null ? '<div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)">52週高點 <b>$' + r.high52w.toFixed(2) + '</b> · 現價距高 ' + (dist>=0?'+':'') + dist.toFixed(1) + '%</div>' : '') +
+    '</div>' +
+
+    // A: Entry
+    '<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;margin-bottom:10px">' +
+      '<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px">A · 進場方式</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
+        '<div><div style="font-size:10px;color:var(--muted)">操作</div><div style="font-size:15px;font-weight:800;color:' + (entryGreen?'#22c55e':'var(--text)') + '">' + entryOp + '</div></div>' +
+        '<div><div style="font-size:10px;color:var(--muted)">參考進場價</div><div style="font-size:14px;font-weight:700">' + entryPrice + '</div></div>' +
+        '<div><div style="font-size:10px;color:var(--muted)">止損位</div><div style="font-size:15px;font-weight:800;color:#ef4444">$' + stopPrice + '</div></div>' +
+        '<div><div style="font-size:10px;color:var(--muted)">止損幅度</div><div style="font-size:14px;font-weight:700;color:#ef4444">−8%</div></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);background:rgba(0,0,0,.2);border-radius:6px;padding:9px 11px;line-height:1.6">' + entryNote + '</div>' +
+    '</div>' +
+
+    // Position size
+    '<div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:12px 14px;margin-bottom:16px">' +
+      '<div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">倉位計算公式</div>' +
+      '<div style="font-size:13px;color:var(--text)">進場金額 = <b>你能接受的最大虧損</b> ÷ 8%</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">例：願意虧 $1,000 → 進場 $12,500（即 $1,000 ÷ 8%）</div>' +
+      '<div style="font-size:11px;color:#818cf8;margin-top:6px">⬆ 目前市場建議：' + mSizeNote + '</div>' +
+    '</div>' +
+
+    // Footer buttons
+    '<div style="display:flex;gap:8px">' +
+      '<button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + (r.price||0).toFixed(2) + ');document.getElementById(\'rs-entry-modal\').remove()" ' +
+        'style="flex:1;padding:11px;border-radius:8px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px;font-weight:700">加入持倉</button>' +
+      '<button onclick="document.getElementById(\'rs-entry-modal\').remove()" ' +
+        'style="flex:1;padding:11px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:13px">關閉</button>' +
+    '</div>' +
+
+  '</div></div>'
+  );
+}
+
+// ── Market regime summary card for top of scanner results ────────────────────
+function _rsRegimeCard() {
+  const r = window._marketRegime;
+  if (!r) return '';
+  const configs = {
+    good:    { color:'#22c55e', bg:'rgba(34,197,94,.07)',   border:'rgba(34,197,94,.2)',   icon:'📈', label:'市場牛市', guide:'可積極進場，以正常倉位執行訊號' },
+    neutral: { color:'#f59e0b', bg:'rgba(245,158,11,.07)',  border:'rgba(245,158,11,.2)',  icon:'📊', label:'市場中性', guide:'謹慎擇優，優先選 ✅ 突破買進 且量能強的股票' },
+    caution: { color:'#f97316', bg:'rgba(249,115,22,.07)',  border:'rgba(249,115,22,.2)',  icon:'⚠️', label:'市場偏弱', guide:'縮小倉位至 50%，嚴格執行止損，不追高' },
+    bear:    { color:'#ef4444', bg:'rgba(239,68,68,.07)',   border:'rgba(239,68,68,.2)',   icon:'🔴', label:'市場偏空', guide:'建議空手觀望，即使有買點訊號也先跳過' },
+  };
+  const key = r.overall >= 1 ? 'good' : r.overall === 0 ? 'neutral' : r.overall >= -1 ? 'caution' : 'bear';
+  const c = configs[key];
+  const vixBadge = r.vixNow != null
+    ? '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--border)">'
+      + 'VIX ' + r.vixNow.toFixed(0)
+      + (r.vixLevel==='panic'?' 🔴 恐慌':r.vixLevel==='elevated'?' ⚠️ 偏高':' ✓')
+      + '</span>'
+    : '';
+  const spyBadge = r.spyVs200 != null
+    ? '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--border)">'
+      + 'SPY vs 200MA ' + (r.spyVs200>0?'+':'') + r.spyVs200.toFixed(1) + '%'
+      + '</span>'
+    : '';
+  return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;' +
+    'background:' + c.bg + ';border-radius:8px;border:1px solid ' + c.border + '">' +
+    '<div style="font-size:16px">' + c.icon + '</div>' +
+    '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13px;font-weight:700;color:' + c.color + '">' + c.label + '</div>' +
+      '<div style="font-size:12px;color:var(--text);margin-top:2px">' + c.guide + '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap">' + spyBadge + vixBadge + '</div>' +
+    '</div>';
+}
+
 // Signal badge logic: determine buy zone status for a leader
 function _getRSSignal(r) {
   // Bear market override
@@ -8207,12 +8385,13 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
         '<div style="font-size:10px;color:var(--muted)">綜合分</div>' +
       '</td>' +
-      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + (r.price||0).toFixed(2) + ')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer">加入持倉</button></td>' +
+      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;white-space:nowrap;font-weight:600">進場指引</button></td>' +
     '</tr>';
   }).join('');
 
   tableDiv.innerHTML =
     (prependHtml || '') +
+    _rsRegimeCard() +
     '<div style="margin-bottom:12px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
       '<span>依綜合分數排列 — RS Rating 越高代表相對大盤動能越強</span>' +
       '<span style="margin-left:auto;opacity:.7">僅顯示 MA50 上方個股</span>' +
@@ -8228,7 +8407,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
             '<th class="col-disthi" style="padding:6px 8px;text-align:center">距高點</th>' +
             '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
             '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
-            '<th style="padding:6px 8px;text-align:center">操作</th>' +
+            '<th style="padding:6px 8px;text-align:center">進場指引</th>' +
           '</tr>' +
         '</thead>' +
         '<tbody>' + rows + '</tbody>' +
