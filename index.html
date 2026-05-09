@@ -186,6 +186,25 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .btn-google:hover{background:#2563eb}
 .btn-signout{width:100%;padding:5px 8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:6px;color:var(--red);font-size:11px;cursor:pointer;margin-top:5px;transition:background .2s}
 .btn-signout:hover{background:rgba(239,68,68,.22)}
+
+/* ── Light mode ── */
+[data-theme="light"]{
+  --bg:#f0f4f8;--card:#ffffff;--border:#dde3ec;
+  --text:#1a2232;--muted:#5a6a82;
+  --accent:#2563eb;--green:#059669;--red:#dc2626;--yellow:#d97706;--orange:#ea580c;
+}
+[data-theme="light"] .disclaimer-bar{background:rgba(240,244,248,.96);border-top-color:#dde3ec}
+[data-theme="light"] .modal-overlay,[data-theme="light"] .entry-modal-overlay{background:rgba(15,23,42,.45)}
+[data-theme="light"] .skeleton{background:linear-gradient(90deg,#f0f4f8 25%,rgba(255,255,255,.9) 50%,#f0f4f8 75%);background-size:200% 100%}
+[data-theme="light"] .sidebar nav button.active{background:rgba(37,99,235,.1);color:var(--accent);border-right-color:var(--accent)}
+[data-theme="light"] .tab-bar button.active{background:var(--accent);color:#fff}
+[data-theme="light"] .spinner{border-color:#dde3ec;border-top-color:var(--accent)}
+[data-theme="light"] .news-item:hover{background:rgba(37,99,235,.04)}
+[data-theme="light"] .index-card:hover{background:rgba(37,99,235,.05)}
+
+/* Theme toggle button */
+.theme-toggle{width:100%;padding:9px 20px;background:none;border:none;border-top:1px solid var(--border);color:var(--muted);text-align:left;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:color .2s}
+.theme-toggle:hover{color:var(--text)}
 </style>
 </head>
 <!-- Firebase SDK (compat v10) -->
@@ -215,6 +234,10 @@ firebase.initializeApp(_fbConfig);
  <button onclick="showPage('market')">市場情報</button>
  <button onclick="showPage('education')">教學</button>
  </nav>
+ <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">
+   <span id="theme-icon" style="font-size:14px">☀</span>
+   <span id="theme-label">淺色模式</span>
+ </button>
  <!-- 帳號 / 雲端同步 -->
  <div class="auth-section">
  <div id="auth-login-section">
@@ -240,6 +263,7 @@ firebase.initializeApp(_fbConfig);
  <button onclick="showPage('portfolio')">持倉</button>
  <button onclick="showPage('market')">情報</button>
  <button onclick="showPage('education')">教學</button>
+ <button id="mobile-theme-btn" onclick="toggleTheme()" style="font-size:16px;padding:10px 12px">☀</button>
  </div>
  <div class="main" style="padding-bottom:44px">
  <div id="page-dashboard" class="page active">
@@ -8827,6 +8851,28 @@ function enrichScannerWithEarnings(earningsMap) {
  }
  });
 }
+
+// ============ THEME ============
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const isLight = theme === 'light';
+  const icon = isLight ? '🌙' : '☀';
+  const label = isLight ? '深色模式' : '淺色模式';
+  const iconEl = document.getElementById('theme-icon');
+  const labelEl = document.getElementById('theme-label');
+  const mobileBtn = document.getElementById('mobile-theme-btn');
+  if (iconEl) iconEl.textContent = icon;
+  if (labelEl) labelEl.textContent = label;
+  if (mobileBtn) mobileBtn.textContent = icon;
+}
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = isLight ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem('theme', next);
+}
+// Apply saved theme immediately
+(function(){ applyTheme(localStorage.getItem('theme') || 'dark'); })();
 
 // ============ INIT ============
 document.getElementById('j-date').valueAsDate = new Date();
