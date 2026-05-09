@@ -54,7 +54,7 @@ async function batchQuote(symbols) {
   for (let i = 0; i < symbols.length; i += CHUNK) {
     const chunk = symbols.slice(i, i + CHUNK);
     try {
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.join(',')}&fields=symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekChangePercent,averageVolume3Month,regularMarketVolume`;
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.join(',')}&fields=symbol,shortName,longName,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekChangePercent,averageVolume3Month,regularMarketVolume`;
       const data = await yfFetch(url);
       (data?.quoteResponse?.result || []).forEach(q => { results[q.symbol] = q; });
     } catch (e) {
@@ -327,13 +327,14 @@ async function scanUS() {
         const q = quotes[sym] || {};
         return {
           symbol: sym,
-          price,
+          name: q.shortName || q.longName || sym,
+          price: q.regularMarketPrice || price,
           changePct: q.regularMarketChangePercent || changePct,
           ret12_1,
           ret1m,
           rs12_1,
-          volExpand,
-          ma50,
+          volExpand: Math.round(volExpand * 100) / 100,
+          ma50: Math.round(ma50 * 100) / 100,
           avgVol20: Math.round(avgVol20),
           fiftyTwoWeekChangePercent: q.fiftyTwoWeekChangePercent || 0,
         };
@@ -417,7 +418,7 @@ async function scanTW() {
         const avgVol5 = volumes.slice(-5).reduce((a, b) => a + (b || 0), 0) / 5;
         const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
         const changePct = n >= 2 ? (price - closes[n-2]) / closes[n-2] * 100 : 0;
-        return { symbol: sym, price, changePct, ret12_1, rs12_1, volExpand, ma50, avgVol20 };
+        return { symbol: sym, name: sym, price, changePct, ret12_1, rs12_1, volExpand: Math.round(volExpand*100)/100, ma50: Math.round(ma50*100)/100, avgVol20: Math.round(avgVol20) };
       } catch (e) { return null; }
     }));
     settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });

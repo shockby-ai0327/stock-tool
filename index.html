@@ -9164,6 +9164,27 @@ function enrichScannerWithEarnings(earningsMap) {
  });
 }
 
+// ============ TOAST NOTIFICATION ============
+function showToast(msg, type) {
+  // Remove existing toast
+  const old = document.getElementById('_toast');
+  if (old) old.remove();
+
+  const el = document.createElement('div');
+  el.id = '_toast';
+  const bg = type === 'error' ? 'rgba(239,68,68,.95)' : type === 'warn' ? 'rgba(245,158,11,.95)' : 'rgba(16,185,129,.95)';
+  el.style.cssText = [
+    'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
+    'background:' + bg, 'color:#fff', 'padding:10px 20px', 'border-radius:8px',
+    'font-size:13px', 'font-weight:600', 'z-index:9999',
+    'box-shadow:0 4px 20px rgba(0,0,0,.4)', 'max-width:320px', 'text-align:center',
+    'transition:opacity .3s', 'pointer-events:none',
+  ].join(';');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
 // ============ THEME ============
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);

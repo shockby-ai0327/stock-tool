@@ -2,22 +2,22 @@ name: Stock RS Leader Scan
 
 on:
   # Auto-run: 3x per trading day (US ET: pre-market, midday, near close)
-  # Cron uses UTC — ET = UTC-4 (EDT)
+  # Cron uses UTC — EDT = UTC-4
   schedule:
-    - cron: '25 13 * * 1-5'   # 09:25 ET (pre-market prep)
-    - cron: '0  17 * * 1-5'   # 13:00 ET (midday refresh)
-    - cron: '30 19 * * 1-5'   # 15:30 ET (near close)
+    - cron: '25 13 * * 1-5'   # 09:25 ET pre-market
+    - cron: '0  17 * * 1-5'   # 13:00 ET midday
+    - cron: '30 19 * * 1-5'   # 15:30 ET near close
 
-  # Manual trigger from browser via GitHub API (on-demand rescan)
+  # On-demand trigger from browser button via GitHub API
   workflow_dispatch:
     inputs:
       market:
-        description: 'Market to scan (us / tw / all)'
+        description: 'Market to scan: us / tw / all'
         required: false
         default: 'all'
 
 permissions:
-  contents: write   # needed to commit scan results back to repo
+  contents: write   # write back scan results to data/
 
 jobs:
   scan:
@@ -28,35 +28,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: scripts/package.json
 
       - name: Install dependencies
-        run: |
-          cd scripts
-          npm install
+        run: npm install node-fetch
+        working-directory: scripts
 
       - name: Run US scan
         if: ${{ github.event.inputs.market != 'tw' }}
         run: node scripts/scan.js us
-        env:
-          GITHUB_SCAN: 'true'
 
       - name: Run TW scan
         if: ${{ github.event.inputs.market != 'us' }}
         run: node scripts/scan.js tw
-        env:
-          GITHUB_SCAN: 'true'
 
-      - name: Commit results
+      - name: Commit scan results
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/
-          # Only commit if there are changes
-          git diff --cached --quiet || git commit -m "chore: auto scan $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git add data/us_scan.json data/tw_scan.json
+          git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
