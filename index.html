@@ -4565,7 +4565,7 @@ async function fetchTWSEInstitutional() {
     // 嘗試今日，若市場未開盤改昨日
     const url = 'https://www.twse.com.tw/fund/T86?response=json&date=' + dateStr + '&selectType=ALLBUT0999';
     const raw = await pFetch(url); // use existing proxy function
-    const data = JSON.parse(raw);
+    const data = await raw.json();
     if (!data || data.stat !== 'OK') throw new Error('no data');
     // data.data: each row = [代號, 名稱, 外資買, 外資賣, 外資淨, 投信買, 投信賣, 投信淨, 自營買, 自營賣, 自營淨, 三大法人]
     const map = {};
@@ -4685,7 +4685,7 @@ async function fetchFearAndGreed() {
   try {
     const url = 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
     const r = await pFetch(url);
-    const json = JSON.parse(r);
+    const json = await r.json();
     const score = Math.round(json.fear_and_greed?.score ?? 50);
     const rating = json.fear_and_greed?.rating ?? 'neutral';
     _fngCache.data = { score, rating };
@@ -7812,7 +7812,7 @@ async function batchQuotePreFilter(symbols, topN = 65) {
         '&fields=symbol,regularMarketPrice,regularMarketChangePercent,' +
         'fiftyTwoWeekChangePercent,fiftyTwoWeekHighChangePercent,averageVolume3Month';
       const raw = await pFetch(url, false, 10000);
-      const data = JSON.parse(raw);
+      const data = await raw.json();
       const results = data?.quoteResponse?.result || [];
       allQuotes.push(...results);
     } catch(e) {
@@ -7880,7 +7880,7 @@ async function overlayLivePrices(leaders) {
     const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms +
       '&fields=symbol,regularMarketPrice,regularMarketChangePercent';
     const raw = await pFetch(url, false, 6000);
-    const data = JSON.parse(raw);
+    const data = await raw.json();
     const map = {};
     (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
     leaders.forEach(l => {
@@ -7952,6 +7952,8 @@ async function runRSLeaderScan() {
     if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
   };
 
+  try { // ← wraps BOTH fast + slow path — _rsLeaderRunning always resets
+
   // ── FAST PATH: try pre-computed JSON from GitHub Actions ──────────────
   setMsg('讀取伺服器預算排行...');
   const precomputed = await fetchPrecomputedScan(_scannerMarket);
@@ -7971,7 +7973,6 @@ async function runRSLeaderScan() {
 
     // Render with metadata banner
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
-    window._rsLeaderRunning = false;
 
     // Non-blocking Reddit enrichment
     if (_scannerMarket !== 'tw') {
@@ -7981,12 +7982,10 @@ async function runRSLeaderScan() {
         renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
       }).catch(() => {});
     }
-    return;
+    return; // finally still runs, releasing the lock
   }
 
   // ── SLOW PATH: browser-side scan (fallback when JSON not yet available) ──
-
-  try { // ← try/finally guarantees _rsLeaderRunning always resets
 
   let pool, bench;
   if (_scannerMarket === 'tw') {
