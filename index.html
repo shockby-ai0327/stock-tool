@@ -633,7 +633,7 @@ async function finnhubBatchPreScreen(symbols) {
 async function yfChart(ticker, range, interval, timeoutMs = 8000) {
  range = range || '6mo'; interval = interval || '1d';
  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
- const r = await pFetch(url, true, timeoutMs, 5 * 60 * 1000); // 5-minute cache for historical data
+ const r = await pFetch(url, true, timeoutMs, 30 * 60 * 1000); // 30-min cache: daily OHLCV doesn't change intraday
  const j = await r.json();
  if (!j.chart || !j.chart.result || !j.chart.result[0]) throw new Error('No data for ' + ticker);
  return j.chart.result[0];
@@ -7788,6 +7788,65 @@ async function buildDynamicScanPool(onProgress) {
   return pool;
 }
 
+// ---- Batch Quote Pre-Filter ----------------------------------------
+// Yahoo v7 batch quote: up to 200 symbols per call, returns 52W change +
+// volume in ~1 second. Use this to shrink pool BEFORE expensive OHLCV calls.
+// Result: 150 symbols → 2 API calls → top 65 → ~7 OHLCV batches (vs 15-20)
+const _batchQuoteCache = { data: null, ts: 0, TTL: 10 * 60 * 1000 }; // 10-min cache
+
+async function batchQuotePreFilter(symbols, topN = 65) {
+  // Check cache (keyed on sorted symbols fingerprint)
+  const fp = symbols.slice().sort().join(',');
+  if (_batchQuoteCache.data && _batchQuoteCache.fp === fp && Date.now() - _batchQuoteCache.ts < _batchQuoteCache.TTL) {
+    return _batchQuoteCache.data;
+  }
+
+  const CHUNK = 180; // safe under Yahoo's ~200 limit
+  const allQuotes = [];
+
+  for (let i = 0; i < symbols.length; i += CHUNK) {
+    const chunk = symbols.slice(i, i + CHUNK);
+    try {
+      const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' +
+        chunk.join(',') +
+        '&fields=symbol,regularMarketPrice,regularMarketChangePercent,' +
+        'fiftyTwoWeekChangePercent,fiftyTwoWeekHighChangePercent,averageVolume3Month';
+      const raw = await pFetch(url, false, 10000);
+      const data = JSON.parse(raw);
+      const results = data?.quoteResponse?.result || [];
+      allQuotes.push(...results);
+    } catch(e) {
+      console.warn('[batchQuotePreFilter] chunk failed:', e.message);
+      // On failure include all symbols from this chunk (don't drop them)
+      chunk.forEach(s => allQuotes.push({ symbol: s, fiftyTwoWeekChangePercent: 0, averageVolume3Month: 999999 }));
+    }
+    if (i + CHUNK < symbols.length) await delay(300); // small gap between chunks
+  }
+
+  // Score each symbol: 52W performance weighted by volume
+  const scored = allQuotes
+    .filter(q => q.symbol && !isEtfLike(q.symbol))
+    .map(q => ({
+      symbol: q.symbol,
+      w52chg: q.fiftyTwoWeekChangePercent || 0,
+      w52hichg: q.fiftyTwoWeekHighChangePercent || 0, // negative = near 52W high
+      vol3m: q.averageVolume3Month || 0,
+      price: q.regularMarketPrice || 0,
+    }))
+    .filter(q => q.vol3m >= 150000 && q.price >= 2) // min liquidity + price filter
+    .sort((a, b) => b.w52chg - a.w52chg); // sort by 52W momentum descending
+
+  // Take top N: these are the most likely RS leaders, worth deep OHLCV scan
+  const top = scored.slice(0, topN).map(q => q.symbol);
+
+  _batchQuoteCache.data = top;
+  _batchQuoteCache.fp = fp;
+  _batchQuoteCache.ts = Date.now();
+
+  console.log('[batchQuotePreFilter] ' + symbols.length + ' → ' + top.length + ' (filtered out ' + (symbols.length - top.length) + ')');
+  return top;
+}
+
 async function runRSLeaderScan() {
   if (window._rsLeaderRunning) return;
   window._rsLeaderRunning = true;
@@ -7806,10 +7865,19 @@ async function runRSLeaderScan() {
     setMsg('動能領袖掃描中，約需 30–60 秒…');
   } else {
     bench = 'SPY';
-    pool = await buildDynamicScanPool(setMsg);
+
+    // ── Stage 1: dynamic pool from Yahoo screeners (all cap sizes) ──
+    const rawPool = await buildDynamicScanPool(setMsg);
+
+    // ── Stage 2: batch quote pre-filter (2 API calls, ~1 sec) ──
+    // Shrinks pool from ~150 to top 65 by 52W momentum BEFORE expensive OHLCV calls.
+    // This is the key rate-limit mitigation: 150 OHLCV calls → ~7 batches.
+    setMsg('第二階段：批次報價預篩 ' + rawPool.length + ' 檔（1-2 秒）…<br><span style="font-size:12px">過濾低動能股，保留 52 週強勢候選</span>');
+    pool = await batchQuotePreFilter(rawPool, 65);
+
     const cacheAge = _screenerCache.ts ? Math.round((Date.now() - _screenerCache.ts) / 60000) : 0;
-    const cacheNote = cacheAge > 0 ? '（篩選池快取 ' + cacheAge + ' 分鐘前）' : '';
-    setMsg('第二階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔候選股 ' + cacheNote + '<br><span style="font-size:12px">約需 45–70 秒，請稍候</span>');
+    const cacheNote = cacheAge > 1 ? ' · 篩選池快取 ' + cacheAge + ' 分' : '';
+    setMsg('第三階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔 52W 強勢股' + cacheNote + '<br><span style="font-size:12px">約需 30–45 秒，請稍候</span>');
   }
 
   // Benchmark 6M return
