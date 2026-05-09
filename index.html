@@ -7713,14 +7713,38 @@ function closeEntryModal() { const m = document.getElementById('entry-modal-over
 
 // ============ RS LEADER SCANNER ============
 
+// Known ETF prefixes / patterns to exclude from stock scans
+const ETF_EXCLUDE = new Set([
+  'SPY','QQQ','IWM','DIA','VTI','VOO','VEA','VWO','EFA','EEM','GLD','SLV','USO','UNG',
+  'XLK','XLF','XLV','XLE','XLI','XLY','XLP','XLB','XLU','XLRE','XLC',
+  'ARKK','ARKG','ARKF','ARKQ','ARKX','ARKW','ARKB',
+  'TQQQ','SQQQ','UPRO','SPXU','UVXY','SVXY','VXX','VIXY',
+  'TLT','IEF','SHY','AGG','BND','LQD','HYG','JNK',
+  'GDX','GDXJ','SIL','REMX','COPX','URNM','CPER',
+  'KWEB','MCHI','FXI','EWZ','EWJ','EWG','EWU',
+  'IBIT','FBTC','GBTC','BITB','ETHE','FETH',
+  'SOXS','SOXL','LABU','LABD','FNGU','FNGD','MIDU','MIDZ',
+]);
+function isEtfLike(sym) {
+  if (ETF_EXCLUDE.has(sym)) return true;
+  // Leveraged/inverse ETFs often end in L/S/U/D or have 4-5 chars starting with known patterns
+  if (/^(PRO|SHO|ULT|SCR|MIC|SMA)/i.test(sym) && sym.length >= 4) return true;
+  return false;
+}
+
+// Screener result cache: 15-minute TTL so repeated scans don't hammer Yahoo
+const _screenerCache = { data: null, ts: 0, TTL: 15 * 60 * 1000 };
+
 // Layer 0: Yahoo Finance predefined screeners — dynamic, full-market coverage (all cap sizes)
 async function fetchYahooScreener(scrId, count = 50) {
   try {
     const url = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=' + scrId + '&start=0&count=' + count + '&formatted=false';
-    const raw = await pFetch(url, false, 8000);
+    const raw = await pFetch(url, false, 10000);
     const data = JSON.parse(raw);
     const quotes = (data?.finance?.result?.[0]?.quotes) || [];
-    return quotes.map(q => q.symbol).filter(s => s && s.length <= 5 && !/[./]/.test(s));
+    return quotes
+      .map(q => q.symbol)
+      .filter(s => s && s.length <= 5 && !/[./]/.test(s) && !isEtfLike(s));
   } catch(e) {
     console.warn('[screener]', scrId, e.message);
     return [];
@@ -7728,15 +7752,21 @@ async function fetchYahooScreener(scrId, count = 50) {
 }
 
 // Build dynamic pool: Layer 0 (full-market screeners) ∪ SCAN_CURATED_US anchor
-// Covers large + mid + small cap explosive movers without hardcoding 3000+ tickers
+// Results cached 15 min to avoid rate-limiting Yahoo on repeated scans
 async function buildDynamicScanPool(onProgress) {
-  if (onProgress) onProgress('第一階段：全市場動態篩選中（大中小型股）…');
+  // Serve from cache if fresh
+  if (_screenerCache.data && Date.now() - _screenerCache.ts < _screenerCache.TTL) {
+    console.log('[buildDynamicScanPool] cache hit, pool=' + _screenerCache.data.length);
+    return _screenerCache.data;
+  }
 
-  // 4 screeners in parallel covering different market segments
+  if (onProgress) onProgress('第一階段：從全市場即時篩選候選股（大中小型全覆蓋）…<br><span style="font-size:12px;color:var(--muted)">抓取 Yahoo Finance 四大篩選器</span>');
+
+  // 4 screeners in parallel — each covers a different market segment
   const [gainers, actives, smallCap, techGrowth] = await Promise.allSettled([
-    fetchYahooScreener('day_gainers', 50),      // top % gainers, all caps, vol > 1M
-    fetchYahooScreener('most_actives', 50),      // highest dollar volume (liquidity anchor)
-    fetchYahooScreener('small_cap_gainers', 50), // mid/small cap momentum
+    fetchYahooScreener('day_gainers', 50),           // top % gainers all caps, vol > 1M
+    fetchYahooScreener('most_actives', 50),           // highest dollar volume
+    fetchYahooScreener('small_cap_gainers', 50),      // small/mid cap momentum
     fetchYahooScreener('growth_technology_stocks', 50), // tech growth leaders
   ]);
 
@@ -7746,11 +7776,15 @@ async function buildDynamicScanPool(onProgress) {
   });
   const dynamicCount = dynamicSet.size;
 
-  // Merge with curated base (quality anchors + sector breadth)
-  SCAN_CURATED_US.forEach(s => dynamicSet.add(s));
+  // Merge with curated base (sector breadth anchor + fallback if screeners fail)
+  SCAN_CURATED_US.forEach(s => { if (!isEtfLike(s)) dynamicSet.add(s); });
 
   const pool = [...dynamicSet];
   console.log('[buildDynamicScanPool] dynamic=' + dynamicCount + ' curated=' + SCAN_CURATED_US.length + ' total=' + pool.length);
+
+  // Cache result
+  _screenerCache.data = pool;
+  _screenerCache.ts = Date.now();
   return pool;
 }
 
@@ -7760,8 +7794,10 @@ async function runRSLeaderScan() {
   const tableDiv = document.getElementById('scanner-table');
 
   const setMsg = msg => {
-    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:1.8">' + msg + '</div>';
+    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
   };
+
+  try { // ← try/finally guarantees _rsLeaderRunning always resets
 
   let pool, bench;
   if (_scannerMarket === 'tw') {
@@ -7770,23 +7806,22 @@ async function runRSLeaderScan() {
     setMsg('動能領袖掃描中，約需 30–60 秒…');
   } else {
     bench = 'SPY';
-    // Dynamic pool: full-market screeners (all cap sizes) + curated anchors
     pool = await buildDynamicScanPool(setMsg);
-    setMsg('第二階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔候選股（大中小型股全覆蓋）…<br><span style="font-size:12px">約需 45–90 秒，請稍候</span>');
+    const cacheAge = _screenerCache.ts ? Math.round((Date.now() - _screenerCache.ts) / 60000) : 0;
+    const cacheNote = cacheAge > 0 ? '（篩選池快取 ' + cacheAge + ' 分鐘前）' : '';
+    setMsg('第二階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔候選股 ' + cacheNote + '<br><span style="font-size:12px">約需 45–70 秒，請稍候</span>');
   }
 
-  // Get benchmark 6M return
+  // Benchmark 6M return
   let spyReturn = 0;
   try {
     const spyChart = await yfChart(bench, '6mo', '1d', 8000);
     const spyCloses = spyChart.indicators.quote[0].close.filter(v => v != null);
-    if (spyCloses.length >= 2) {
-      spyReturn = (spyCloses[spyCloses.length-1] - spyCloses[0]) / spyCloses[0] * 100;
-    }
+    if (spyCloses.length >= 2) spyReturn = (spyCloses[spyCloses.length-1] - spyCloses[0]) / spyCloses[0] * 100;
   } catch(e) {}
 
   const results = [];
-  const BATCH = 10; // larger batches for bigger pool
+  const BATCH = 10;
   let scanned = 0;
   for (let i = 0; i < pool.length; i += BATCH) {
     const batch = pool.slice(i, i + BATCH);
@@ -7798,74 +7833,60 @@ async function runRSLeaderScan() {
         const vols = oq.volume.filter(v => v != null);
         if (closes.length < 50) return null;
         const price = chart.meta.regularMarketPrice || closes[closes.length-1];
-        // Liquidity filter: skip micro-caps with tiny average volume
         const avgVol20 = vols.slice(-20).reduce((a,b)=>a+(b||0),0)/20;
+        // Liquidity filter: skip micro-caps / thinly-traded names
         if (_scannerMarket !== 'tw' && avgVol20 < 200000) return null;
-        const ma50 = closes.length >= 50 ? closes.slice(-50).reduce((a,b)=>a+b,0)/50 : null;
-        if (!ma50 || price < ma50) return null; // must be above MA50
+        const ma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
+        if (price < ma50) return null; // must be above MA50
         const ret6m = (closes[closes.length-1] - closes[0]) / closes[0] * 100;
         const rs6m = ret6m - spyReturn;
         const avgVol5 = vols.slice(-5).reduce((a,b)=>a+(b||0),0)/5;
         const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
         const changePct = closes.length >= 2 ? (closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2] * 100 : 0;
-        return {
-          symbol: sym,
-          name: chart.meta.shortName || sym,
-          price,
-          changePct,
-          ret6m,
-          rs6m,
-          volExpand,
-          ma50,
-          closes
-        };
+        return { symbol: sym, name: chart.meta.shortName || sym, price, changePct, ret6m, rs6m, volExpand, ma50, closes };
       } catch(e) { return null; }
     }));
     settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
     scanned += batch.length;
-    // Live progress update
     const pct = Math.round(scanned / pool.length * 100);
-    const bar = '█'.repeat(Math.round(pct/5)) + '░'.repeat(20 - Math.round(pct/5));
-    setMsg('深度掃描中 ' + bar + ' ' + pct + '%<br><span style="font-size:12px;color:var(--muted)">已掃 ' + scanned + ' / ' + pool.length + ' 檔，找到 ' + results.length + ' 檔符合條件</span>');
+    const filled = Math.round(pct / 5);
+    const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
+    setMsg(bar + ' ' + pct + '%<br><span style="font-size:12px;color:var(--muted)">已掃 ' + scanned + ' / ' + pool.length + ' 檔 · 符合條件 ' + results.length + ' 檔</span>');
   }
 
   if (results.length === 0) {
-    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:14px;margin-bottom:6px">目前無符合條件的動能領袖</div><div style="font-size:12px">所有候選股票皆位於 MA50 之下，可能反映整體市場偏弱。請等待市場環境改善或切換至其他策略。</div></div>';
-    window._rsLeaderRunning = false;
-    return;
+    setMsg('<div style="font-size:14px;margin-bottom:6px">目前無符合條件的動能領袖</div><div style="font-size:12px">所有候選股皆位於 MA50 之下，市場可能整體偏弱。請等待市場環境改善或切換至其他策略。</div>');
+    return; // finally will reset flag
   }
 
-  // Compute RS Ratings (percentile)
+  // RS Rating percentile rank across full scanned universe
   calcRSRatings(results);
 
-  // Compute composite scores
+  // Composite score: RS 50% + Volume expansion 30% + momentum tilt 20%
   results.forEach(r => {
     const volScore = Math.min(99, Math.round(r.volExpand * 33));
-    r.compositeScore = Math.round(r.rsRating * 0.50 + volScore * 0.30 + 50 * 0.20);
+    const momScore = Math.min(99, Math.max(1, Math.round(50 + r.rs6m * 0.8))); // rs6m → 0-99 tilt
+    r.compositeScore = Math.round(r.rsRating * 0.50 + volScore * 0.30 + momScore * 0.20);
   });
 
-  // Sort and take top 15
   results.sort((a, b) => b.compositeScore - a.compositeScore);
   const top15 = results.slice(0, 15);
 
-  // Cache for dashboard display
   window._rsLeaderCache = top15;
   renderDashRSLeader(top15.slice(0, 5));
-
-  // Render scanner table
   renderRSLeaderResults(top15);
-  window._rsLeaderRunning = false;
 
-  // Non-blocking: enrich with ApeWisdom Reddit data
+  // Non-blocking Reddit enrichment
   if (_scannerMarket !== 'tw') {
     fetchApeWisdom().then(apeMap => {
       if (!apeMap || !Object.keys(apeMap).length) return;
-      top15.forEach(r => {
-        const ape = apeMap[r.symbol];
-        if (ape) r.reddit = ape;
-      });
-      renderRSLeaderResults(top15); // re-render with badges
+      top15.forEach(r => { const a = apeMap[r.symbol]; if (a) r.reddit = a; });
+      renderRSLeaderResults(top15);
     }).catch(() => {});
+  }
+
+  } finally {
+    window._rsLeaderRunning = false; // always unlock, even if exception thrown
   }
 }
 
