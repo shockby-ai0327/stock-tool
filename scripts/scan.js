@@ -290,15 +290,33 @@ async function scanUS() {
   const allSymbols = [...universe].sort(() => Math.random() - 0.5);
   console.log(`  Universe: ${allSymbols.length} symbols`);
 
-  // 2. SPY benchmark
-  console.log('\n[2] Fetching SPY benchmark...');
+  // 2. SPY + sector benchmarks
+  console.log('\n[2] Fetching benchmarks...');
   let benchReturn = 0;
+  const sectorBenchmarks = {}; // sym → ret12_1
+
+  const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU'];
   try {
     const spy = await getOHLCV('SPY', '12mo');
     const n = spy.closes.length;
     benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
     console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}%`);
   } catch (e) { console.warn(`  SPY failed: ${e.message}`); }
+
+  // Fetch sector ETF returns for relative sector RS (non-blocking, best-effort)
+  try {
+    const sectorResults = await Promise.allSettled(
+      SECTOR_ETFS_SCAN.map(async sym => {
+        const { closes } = await getOHLCV(sym, '12mo');
+        const n = closes.length;
+        return { sym, ret: (closes[Math.max(0, n - 21)] - closes[0]) / closes[0] * 100 };
+      })
+    );
+    sectorResults.forEach(r => {
+      if (r.status === 'fulfilled') sectorBenchmarks[r.value.sym] = r.value.ret;
+    });
+    console.log(`  Sector benchmarks loaded: ${Object.keys(sectorBenchmarks).length}`);
+  } catch(e) { console.warn('  Sector benchmarks failed:', e.message); }
 
   // 3. Scan all symbols
   const BATCH = 15, BATCH_DELAY = 500;
@@ -334,6 +352,23 @@ async function scanUS() {
 
         if (!isLeader && !isDiscovery) return null;
 
+        // Assign sector ETF based on symbol → sector map (best-effort)
+        const SECTOR_MAP = {
+          SMH:'SMH',IGV:'IGV',XLK:'XLK',
+          NVDA:'SMH',AMD:'SMH',AVGO:'SMH',QCOM:'SMH',MU:'SMH',AMAT:'SMH',LRCX:'SMH',
+          KLAC:'SMH',ADI:'SMH',MRVL:'SMH',CRDO:'SMH',ALAB:'SMH',ACLS:'SMH',
+          ORCL:'IGV',CRM:'IGV',NOW:'IGV',WDAY:'IGV',SNOW:'IGV',DDOG:'IGV',
+          NET:'IGV',MDB:'IGV',CRWD:'IGV',PANW:'IGV',ZS:'IGV',PLTR:'IGV',
+          RKLB:'XAR',ASTS:'XAR',AXON:'XAR',LDOS:'XAR',KTOS:'XAR',
+          COIN:'XLF',HOOD:'XLF',AFRM:'XLF',UPST:'XLF',SQ:'XLF',
+          RXRX:'IBB',MRNA:'IBB',BEAM:'IBB',CRSP:'IBB',NTLA:'IBB',
+          MSTR:'SMH',HUT:'XLF',CIFR:'XLF',MARA:'XLF',RIOT:'XLF',
+          GLW:'XLK',COHR:'XLK',LITE:'XLK',LASR:'XLK',AAOI:'XLK',
+        };
+        const sectorEtf = SECTOR_MAP[sym] || null;
+        const sectorRet = sectorEtf && sectorBenchmarks[sectorEtf] != null ? sectorBenchmarks[sectorEtf] : null;
+        const sectorRS  = sectorRet != null ? round2(m.ret12_1 - sectorRet) : null;
+
         const base = {
           symbol: sym,
           name: meta.shortName || meta.longName || sym,
@@ -344,6 +379,8 @@ async function scanUS() {
           ret6m:      round2(m.ret6m),
           ret12_1:    round2(m.ret12_1),
           rs12_1:     round2(m.rs12_1),
+          sectorEtf,
+          sectorRS,
           accel:      round2(m.accel),
           volExpand:  round2(m.volExpand),
           volTrend:   round2(m.volTrend),

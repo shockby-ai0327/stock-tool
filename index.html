@@ -459,8 +459,10 @@ firebase.initializeApp(_fbConfig);
  <button class="active" id="scan-tab-rsleader"  onclick="switchScanStrategy('rsleader')">動能領袖</button>
  <button id="scan-tab-discover" onclick="switchScanStrategy('discover')">加速發現</button>
  <button id="scan-tab-buyzone"  onclick="switchScanStrategy('buyzone')">今日買點</button>
+ <button id="scan-tab-sector"   onclick="switchScanStrategy('sector')">板塊雷達</button>
  <button onclick="showScanHistory()">歷史績效</button>
  </div>
+ <div id="market-thermo-container"></div>
  <div class="card" id="scanner-results">
  <h3>掃描結果</h3>
  <div id="scanner-table"></div>
@@ -7636,6 +7638,177 @@ async function _savePat() {
   if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
 }
 
+// ── 財報日警示 (Earnings Date Warning) ──────────────────────────────────────
+// Fetches next earnings date for a symbol from Yahoo Finance calendarEvents.
+// Results are cached in _earningsCache for the session.
+
+const _earningsCache = {};
+
+async function _fetchEarningsDate(symbol) {
+  if (symbol in _earningsCache) return _earningsCache[symbol];
+  try {
+    const url = 'https://query1.finance.yahoo.com/v11/finance/quoteSummary/' + symbol +
+                '?modules=calendarEvents&corsDomain=finance.yahoo.com';
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const dates = data?.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate;
+    if (!dates || !dates.length) { _earningsCache[symbol] = null; return null; }
+    // Pick the soonest future date
+    const now = Date.now();
+    const future = dates.map(d => new Date(d.raw * 1000)).filter(d => d.getTime() > now - 86400000);
+    const next = future.sort((a, b) => a - b)[0] || null;
+    _earningsCache[symbol] = next;
+    return next;
+  } catch(e) {
+    _earningsCache[symbol] = null;
+    return null;
+  }
+}
+
+// Enrich an array of stock rows with earnings dates (non-blocking, batch)
+async function _enrichWithEarnings(rows) {
+  if (!rows || !rows.length) return;
+  // Fetch up to 10 at once, stagger to avoid rate limiting
+  const batches = [];
+  for (let i = 0; i < rows.length; i += 5) batches.push(rows.slice(i, i + 5));
+  for (const batch of batches) {
+    await Promise.allSettled(batch.map(async r => {
+      r._earningsDate = await _fetchEarningsDate(r.symbol);
+    }));
+    await new Promise(res => setTimeout(res, 300));
+  }
+}
+
+// Returns {daysAway, label, color, urgent} for a given earnings Date object
+function _earningsInfo(date) {
+  if (!date) return null;
+  const days = Math.round((date.getTime() - Date.now()) / 86400000);
+  if (days < -7) return null; // already passed
+  const label = days < 0 ? '已公布' : days === 0 ? '今日財報！' : '財報 ' + days + '天';
+  const urgent = days >= 0 && days <= 3;
+  const color  = days <= 1 ? '#ef4444' : days <= 7 ? '#f59e0b' : 'var(--muted)';
+  return { days, label, color, urgent };
+}
+
+// ── 市場體溫計 (Market Thermometer) ─────────────────────────────────────────
+// Fetches RSP, SMH, QQQ, XLU, XLV to gauge market breadth + sector health.
+// Renders a compact 2×2 grid above the scanner table.
+
+let _thermoCache = null;
+let _thermoTs    = 0;
+
+async function _fetchMarketThermo() {
+  if (_thermoCache && Date.now() - _thermoTs < 5 * 60 * 1000) return _thermoCache;
+  try {
+    const syms = 'RSP,SPY,SMH,QQQ,XLU,XLV';
+    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=symbol,regularMarketChangePercent';
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const map = {};
+    (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q.regularMarketChangePercent || 0; });
+
+    const rspPct = map['RSP'] || 0, spyPct = map['SPY'] || 0;
+    const smhPct = map['SMH'] || 0, qqqPct = map['QQQ'] || 0;
+    const xluPct = map['XLU'] || 0, xlvPct = map['XLV'] || 0;
+
+    // Leader health from cache (how many are above their 50-day MA)
+    const leaders = window._rsLeaderCache || [];
+    const abv50 = leaders.filter(r => r.price && r.ma50 && r.price > r.ma50).length;
+
+    _thermoCache = {
+      rspVsSpy:  rspPct - spyPct,       // >0 = broad participation
+      smhVsQqq:  smhPct - qqqPct,       // >0 = semis leading
+      defVsGrowth: ((xluPct + xlvPct) / 2) - qqqPct, // >0 = defensive rotation
+      leaderAbv50: abv50, leaderTotal: leaders.length,
+      leaderPct:  leaders.length > 0 ? abv50 / leaders.length * 100 : null,
+      raw: { rspPct, spyPct, smhPct, qqqPct, xluPct, xlvPct },
+    };
+    _thermoTs = Date.now();
+    return _thermoCache;
+  } catch(e) {
+    console.warn('[thermo]', e.message);
+    return null;
+  }
+}
+
+async function _renderMarketThermo() {
+  const el = document.getElementById('market-thermo-container');
+  if (!el) return;
+
+  const t = await _fetchMarketThermo();
+  if (!t) { el.innerHTML = ''; return; }
+
+  // Score each dimension: 'good' | 'warn' | 'bad'
+  const sc = (val, good, warn) => val >= good ? 'good' : val >= warn ? 'warn' : 'bad';
+  const breadthSc = sc(t.rspVsSpy,   0.1,  -0.5);
+  const semiSc    = sc(t.smhVsQqq,   0.3,  -1.0);
+  const leaderSc  = t.leaderPct == null ? 'warn' : sc(t.leaderPct, 70, 50);
+  const defSc     = sc(-t.defVsGrowth, 0, -1.0); // inverted: defensive > growth is bad
+
+  const scores  = [breadthSc, semiSc, leaderSc, defSc];
+  const badCnt  = scores.filter(s => s === 'bad').length;
+  const warnCnt = scores.filter(s => s === 'warn').length;
+
+  let oLabel, oColor, oBg, oBorder;
+  if (badCnt >= 3) {
+    oLabel='🔴 熊市警戒'; oColor='#ef4444'; oBg='rgba(239,68,68,.1)'; oBorder='rgba(239,68,68,.35)';
+    if (window._marketRegime) window._marketRegime.thermoWarning = true;
+  } else if (badCnt >= 2 || warnCnt >= 3) {
+    oLabel='⚠️ 注意轉向'; oColor='#f59e0b'; oBg='rgba(245,158,11,.08)'; oBorder='rgba(245,158,11,.3)';
+  } else if (warnCnt >= 2) {
+    oLabel='🟡 謹慎觀察'; oColor='#eab308'; oBg='rgba(234,179,8,.07)'; oBorder='rgba(234,179,8,.28)';
+  } else {
+    oLabel='🟢 牛市健康'; oColor='#22c55e'; oBg='rgba(34,197,94,.08)'; oBorder='rgba(34,197,94,.3)';
+  }
+
+  const col  = s => s==='good'?'#22c55e':s==='warn'?'#f59e0b':'#ef4444';
+  const ico  = s => s==='good'?'✅':s==='warn'?'⚠️':'🔴';
+  const fp   = v => (v>=0?'+':'')+v.toFixed(2)+'%';
+  const now  = new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+
+  el.innerHTML =
+    '<div style="padding:10px 12px;background:'+oBg+';border:1px solid '+oBorder+';border-radius:8px;margin-bottom:12px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+        '<div style="font-size:13px;font-weight:700;color:'+oColor+'">'+oLabel+'</div>' +
+        '<div style="font-size:10px;color:var(--muted)">市場體溫計 · '+now+'</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">' +
+
+        // 廣度
+        '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px">' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">市場廣度 RSP vs SPY</div>' +
+          '<div style="font-size:13px;font-weight:700;color:'+col(breadthSc)+'">'+ico(breadthSc)+' '+fp(t.rspVsSpy)+'</div>' +
+          '<div style="font-size:10px;color:var(--muted)">'+(breadthSc==='good'?'廣泛上漲，健康':breadthSc==='warn'?'廣度輕微弱化':'市值集中，危險')+'</div>' +
+        '</div>' +
+
+        // 半導體
+        '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px">' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">AI板塊 SMH vs QQQ</div>' +
+          '<div style="font-size:13px;font-weight:700;color:'+col(semiSc)+'">'+ico(semiSc)+' '+fp(t.smhVsQqq)+'</div>' +
+          '<div style="font-size:10px;color:var(--muted)">'+(semiSc==='good'?'半導體領漲':semiSc==='warn'?'半導體持平':'半導體落後警示')+'</div>' +
+        '</div>' +
+
+        // 領袖健康
+        '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px">' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">領袖股健康度</div>' +
+          '<div style="font-size:13px;font-weight:700;color:'+col(leaderSc)+'">'+ico(leaderSc)+' '+
+            (t.leaderPct!=null?t.leaderAbv50+'/'+t.leaderTotal+' 在50MA上':'—')+'</div>' +
+          '<div style="font-size:10px;color:var(--muted)">'+(leaderSc==='good'?'動能持續':leaderSc==='warn'?'部分轉弱中':'多數破位危險')+'</div>' +
+        '</div>' +
+
+        // 防禦輪動
+        '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px">' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">防禦輪動 XLU+XLV vs QQQ</div>' +
+          '<div style="font-size:13px;font-weight:700;color:'+col(defSc)+'">'+ico(defSc)+' '+fp(t.defVsGrowth)+'</div>' +
+          '<div style="font-size:10px;color:var(--muted)">'+(defSc==='good'?'無避險資金流入':defSc==='warn'?'輕度防禦傾向':'資金逃往防禦！')+'</div>' +
+        '</div>' +
+
+      '</div>' +
+    '</div>';
+}
+
 // ── Push Notification helpers ────────────────────────────────────────────────
 // Uses the browser Notification API (no service worker needed).
 // Permission is requested on first click of 🔔 button; remembered by the browser.
@@ -7963,6 +8136,13 @@ async function runRSLeaderScan() {
     // Start live 60s price monitor for intraday use
     _startLiveMonitor();
 
+    // Non-blocking: market thermometer + earnings enrichment
+    _renderMarketThermo().catch(() => {});
+    _enrichWithEarnings(leaders.slice(0, 15)).then(() => {
+      // Re-render table to show earnings badges
+      renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+    }).catch(() => {});
+
     // Non-blocking Reddit enrichment
     if (_scannerMarket !== 'tw') {
       fetchApeWisdom().then(apeMap => {
@@ -8244,6 +8424,35 @@ function showRSEntryGuide(symbol) {
       '<div style="font-size:12px;color:var(--muted);background:rgba(0,0,0,.2);border-radius:6px;padding:9px 11px;line-height:1.6">' + entryNote + '</div>' +
     '</div>' +
 
+    // Earnings warning (if within 14 days)
+    (() => {
+      const eInfo = r._earningsDate ? _earningsInfo(r._earningsDate) : null;
+      if (!eInfo || eInfo.days > 14 || eInfo.days < 0) return '';
+      const urgentStyle = eInfo.urgent
+        ? 'background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);'
+        : 'background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);';
+      return '<div style="'+urgentStyle+'border-radius:8px;padding:12px 14px;margin-bottom:10px">' +
+        '<div style="font-size:12px;font-weight:700;color:'+eInfo.color+'">📅 '+eInfo.label+'</div>' +
+        '<div style="font-size:12px;color:var(--text);margin-top:4px">' +
+          (eInfo.urgent
+            ? '⚠️ <b>財報即將公布</b>，建議本次跳過或大幅縮減倉位。財報前後波動極大，勝率難以評估。'
+            : '財報在 '+eInfo.days+' 天後，可考慮在財報前減倉至一半，等財報後確認再加碼。') +
+        '</div>' +
+      '</div>';
+    })() +
+
+    // sectorRS indicator
+    (r.sectorEtf && r.sectorRS != null
+      ? '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">' +
+          '<div><div style="font-size:10px;color:var(--muted)">板塊相對強度</div>' +
+          '<div style="font-size:14px;font-weight:700;color:'+(r.sectorRS>0?'#22c55e':'#ef4444')+'">' +
+            (r.sectorRS>0?'+':'')+r.sectorRS.toFixed(1)+'% vs '+r.sectorEtf+'</div></div>' +
+          '<div style="font-size:11px;color:var(--muted);flex:1">' +
+            (r.sectorRS>10?'遠超板塊平均，板塊內龍頭':r.sectorRS>0?'優於板塊平均':'落後板塊，注意是否換股') +
+          '</div>' +
+        '</div>'
+      : '') +
+
     // Position size
     '<div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);border-radius:8px;padding:12px 14px;margin-bottom:16px">' +
       '<div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">倉位計算公式</div>' +
@@ -8308,16 +8517,32 @@ function _getRSSignal(r) {
   }
   const high52w = r.high52w;
   if (!high52w || !r.price) return null;
-  const distPct = (r.price - high52w) / high52w * 100; // ≤ 0
-  // Volume: prefer today's actual volume, fall back to volExpand (5-day avg vs 20-day avg)
+  const distPct = (r.price - high52w) / high52w * 100;
+
+  // Volume confirmation (prefer today's real volume if available)
   const volOk = r.todayVol
     ? (r.todayVol / (r.avgVol20 || 1)) >= 1.5
     : (r.volExpand || 0) >= 1.5;
+
+  // Bull market upgrade: momentum acceleration + 3-month high breakout as 2nd entry trigger
+  // accelOk = momentum not decelerating (or unknown)
+  // break3m = price near or above 3-month high (second chance entry in sustained uptrend)
+  const accelOk  = r.accel == null || r.accel >= 1.0;
+  const break3m  = r.high3m && r.price >= r.high3m * 0.99;
+
   if (distPct >= -5) {
-    return volOk
-      ? { emoji: '✅', label: '突破買進', color: '#22c55e' }
-      : { emoji: '📍', label: '近買點（等量能）', color: '#f59e0b' };
+    if (volOk && accelOk) {
+      return { emoji: '✅', label: '突破買進', color: '#22c55e' };
+    } else if (volOk && !accelOk) {
+      return { emoji: '📍', label: '近買點（動能放緩）', color: '#f59e0b' };
+    } else {
+      return { emoji: '📍', label: '近買點（等量能）', color: '#f59e0b' };
+    }
   } else if (distPct >= -15) {
+    // In bull market: if price breaking 3-month high with volume, treat as secondary entry
+    if (break3m && volOk && accelOk) {
+      return { emoji: '✅', label: '3月高點突破', color: '#22c55e' };
+    }
     return { emoji: '👀', label: '整理中（觀察）', color: 'var(--muted)' };
   } else {
     return { emoji: '⏳', label: '離買點遠', color: 'var(--muted)' };
@@ -8361,12 +8586,20 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       ? '<div style="font-weight:600;color:' + distColor + '">' + (distFromHigh >= 0 ? '+' : '') + distFromHigh.toFixed(1) + '%</div><div style="font-size:10px;color:var(--muted)">距高點</div>'
       : '<div style="font-size:11px;color:var(--muted)">—</div><div style="font-size:10px;color:var(--muted)">距高點</div>';
 
+    // Earnings badge
+    const eInfo = r._earningsDate ? _earningsInfo(r._earningsDate) : null;
+    const earnHtml = eInfo
+      ? '<div style="font-size:10px;margin-top:2px;color:'+eInfo.color+';font-weight:600">' +
+          (eInfo.urgent ? '⚠️ ' : '📅 ') + eInfo.label +
+        '</div>'
+      : '';
+
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
       '<td style="padding:10px 8px">' +
         '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
-        sigHtml +
+        sigHtml + earnHtml +
       '</td>' +
       '<td style="padding:10px 8px;text-align:right">' +
         '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
@@ -8701,15 +8934,149 @@ function _showBuyZoneTab() {
     '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
+// ── 板塊雷達 (Sector Rotation Radar) ────────────────────────────────────────
+const SECTOR_ETFS = [
+  { sym:'SMH',  name:'半導體',    group:'growth' },
+  { sym:'IGV',  name:'AI軟體',    group:'growth' },
+  { sym:'XLK',  name:'科技',      group:'growth' },
+  { sym:'XLC',  name:'通訊服務',  group:'growth' },
+  { sym:'XLY',  name:'非必需消費',group:'growth' },
+  { sym:'XLI',  name:'工業',      group:'neutral' },
+  { sym:'XLF',  name:'金融',      group:'neutral' },
+  { sym:'XLB',  name:'材料',      group:'neutral' },
+  { sym:'XLE',  name:'能源',      group:'neutral' },
+  { sym:'IBB',  name:'生技',      group:'neutral' },
+  { sym:'XAR',  name:'太空國防',  group:'growth' },
+  { sym:'GDX',  name:'礦業黃金',  group:'defensive' },
+  { sym:'XLV',  name:'醫療保健',  group:'defensive' },
+  { sym:'XLP',  name:'必需消費',  group:'defensive' },
+  { sym:'XLRE', name:'房地產',    group:'defensive' },
+  { sym:'XLU',  name:'公用事業',  group:'defensive' },
+];
+
+let _sectorCache = null;
+let _sectorTs    = 0;
+
+async function _fetchSectorData() {
+  if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
+  const syms = SECTOR_ETFS.map(e => e.sym).join(',');
+  const FIELDS = 'symbol,regularMarketChangePercent,regularMarketPrice,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent';
+  try {
+    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const map = {};
+    (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
+    _sectorCache = SECTOR_ETFS.map(e => {
+      const q = map[e.sym] || {};
+      return {
+        ...e,
+        price:      q.regularMarketPrice || 0,
+        changePct:  q.regularMarketChangePercent || 0,
+        distHigh:   q.fiftyTwoWeekHighChangePercent ? q.fiftyTwoWeekHighChangePercent * 100 : null,
+      };
+    });
+    _sectorTs = Date.now();
+    return _sectorCache;
+  } catch(e) {
+    console.warn('[sector]', e.message);
+    return null;
+  }
+}
+
+async function _showSectorRadarTab() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+  tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">載入板塊資料...</div>';
+
+  const sectors = await _fetchSectorData();
+  if (!sectors) {
+    tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red)">板塊資料載入失敗，請稍後再試</div>';
+    return;
+  }
+
+  // Sort by today's change (hot to cold)
+  const sorted = [...sectors].sort((a, b) => b.changePct - a.changePct);
+  const now = new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+  const max = Math.max(...sorted.map(s => Math.abs(s.changePct)), 0.01);
+
+  const groupColor = g => g==='growth'?'#6366f1':g==='neutral'?'#22c55e':'#6b7280';
+  const groupLabel = g => g==='growth'?'成長':g==='neutral'?'均衡':'防禦';
+
+  // Detect rotation signals
+  const growthAvg    = sorted.filter(s=>s.group==='growth').reduce((a,s)=>a+s.changePct,0) / sorted.filter(s=>s.group==='growth').length;
+  const defensiveAvg = sorted.filter(s=>s.group==='defensive').reduce((a,s)=>a+s.changePct,0) / sorted.filter(s=>s.group==='defensive').length;
+  const rotationDiff = growthAvg - defensiveAvg;
+  let rotationLabel, rotationColor;
+  if (rotationDiff > 1.5) {
+    rotationLabel = '🚀 成長主導 — 牛市動能強'; rotationColor = '#22c55e';
+  } else if (rotationDiff > 0) {
+    rotationLabel = '🟢 成長略優 — 多頭偏好'; rotationColor = '#86efac';
+  } else if (rotationDiff > -1) {
+    rotationLabel = '🟡 板塊均衡 — 觀察中'; rotationColor = '#f59e0b';
+  } else {
+    rotationLabel = '⚠️ 防禦主導 — 注意風險'; rotationColor = '#ef4444';
+  }
+
+  const rows = sorted.map((s, i) => {
+    const pct = s.changePct;
+    const barW = Math.round(Math.abs(pct) / max * 100);
+    const barColor = pct >= 0 ? 'rgba(34,197,94,.7)' : 'rgba(239,68,68,.7)';
+    const rankMedal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'';
+    const distCell = s.distHigh != null
+      ? '<span style="font-size:11px;color:'+(s.distHigh>=-5?'#22c55e':s.distHigh>=-15?'#f59e0b':'var(--muted)')+'">'+
+        (s.distHigh>=0?'+':'')+s.distHigh.toFixed(1)+'%</span>'
+      : '—';
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">' +
+      '<td style="padding:10px 8px;font-size:13px;font-weight:700;color:var(--muted);width:40px">'+rankMedal+'</td>' +
+      '<td style="padding:10px 8px">' +
+        '<div style="font-weight:700;font-size:14px">'+s.name+'</div>' +
+        '<div style="font-size:10px;margin-top:2px;padding:1px 6px;border-radius:4px;display:inline-block;background:rgba(255,255,255,.06);color:'+groupColor(s.group)+'">'+groupLabel(s.group)+'</div>' +
+        '<span style="font-size:10px;color:var(--muted);margin-left:6px">'+s.sym+'</span>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:right;font-weight:700;font-size:14px;color:'+(pct>=0?'#22c55e':'#ef4444')+'">' +
+        (pct>=0?'+':'')+pct.toFixed(2)+'%' +
+      '</td>' +
+      '<td style="padding:10px 16px 10px 8px;min-width:120px">' +
+        '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden">' +
+          '<div style="height:100%;width:'+barW+'%;background:'+barColor+';border-radius:4px;transition:width .4s"></div>' +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center;font-size:12px;color:var(--muted)">距高點<br>'+distCell+'</td>' +
+    '</tr>';
+  }).join('');
+
+  tableDiv.innerHTML =
+    '<div style="padding:10px 12px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:700;color:'+rotationColor+'">'+rotationLabel+'</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">成長板塊 <b style="color:#22c55e">'+growthAvg.toFixed(2)+'%</b> vs 防禦板塊 <b style="color:#6b7280">'+defensiveAvg.toFixed(2)+'%</b></div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted)">今日漲跌 · '+now+'</div>' +
+    '</div>' +
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+      '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+        '<th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--muted);font-weight:500">排名</th>' +
+        '<th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--muted);font-weight:500">板塊 ETF</th>' +
+        '<th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--muted);font-weight:500">今日</th>' +
+        '<th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--muted);font-weight:500">強弱圖</th>' +
+        '<th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--muted);font-weight:500">位置</th>' +
+      '</tr></thead>' +
+      '<tbody>'+rows+'</tbody>' +
+    '</table></div>';
+}
+
 function switchScanStrategy(strat) {
-  ['rsleader','discover','buyzone'].forEach(s => {
+  ['rsleader','discover','buyzone','sector'].forEach(s => {
     const btn = document.getElementById('scan-tab-' + s);
     if (btn) btn.classList.toggle('active', s === strat);
   });
   window._currentScanStrat = strat;
-  if (strat === 'rsleader')  { runRSLeaderScan(); }
+  if (strat === 'rsleader')      { runRSLeaderScan(); }
   else if (strat === 'discover') { _showDiscoveryTab(); }
   else if (strat === 'buyzone')  { _showBuyZoneTab(); }
+  else if (strat === 'sector')   { _showSectorRadarTab(); }
 }
 
 function updateScanRegimeWarning() {
