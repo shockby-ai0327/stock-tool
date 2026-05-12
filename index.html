@@ -7636,6 +7636,65 @@ async function _savePat() {
   if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
 }
 
+// ── Push Notification helpers ────────────────────────────────────────────────
+// Uses the browser Notification API (no service worker needed).
+// Permission is requested on first click of 🔔 button; remembered by the browser.
+
+function _notifPermission() {
+  return typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+}
+
+async function _initPushNotifications() {
+  if (typeof Notification === 'undefined') {
+    showToast('此瀏覽器不支援通知功能', 'warn'); return;
+  }
+  if (Notification.permission === 'granted') {
+    showToast('🔔 買點通知已開啟！切換視窗後仍會彈出警示', 'success');
+    _updateNotifBtn();
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    showToast('通知已被封鎖，請在瀏覽器設定中允許此網站發送通知', 'error'); return;
+  }
+  const result = await Notification.requestPermission();
+  if (result === 'granted') {
+    showToast('🔔 買點通知已開啟！', 'success');
+    // Test notification
+    new Notification('✅ 通知測試', { body: '買點警示將以此方式彈出。', icon: '' });
+  } else {
+    showToast('通知權限被拒，無法發送警示', 'warn');
+  }
+  _updateNotifBtn();
+}
+
+function _sendPushNotification(title, body, tag) {
+  if (_notifPermission() !== 'granted') return;
+  if (document.visibilityState === 'visible') return; // only when tab is hidden
+  try { new Notification(title, { body, tag, icon: '', requireInteraction: true }); } catch(e) {}
+}
+
+function _updateNotifBtn() {
+  const btn = document.getElementById('notif-toggle-btn');
+  if (!btn) return;
+  const p = _notifPermission();
+  if (p === 'granted') {
+    btn.textContent = '🔔 通知開啟';
+    btn.style.color = '#22c55e';
+    btn.style.borderColor = 'rgba(34,197,94,.4)';
+    btn.style.background = 'rgba(34,197,94,.12)';
+  } else if (p === 'denied') {
+    btn.textContent = '🔕 通知已封鎖';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'rgba(255,255,255,.04)';
+  } else {
+    btn.textContent = '🔔 開啟通知';
+    btn.style.color = '#f59e0b';
+    btn.style.borderColor = 'rgba(245,158,11,.4)';
+    btn.style.background = 'rgba(245,158,11,.08)';
+  }
+}
+
 // ⚡ 重新掃描 — always runs immediately in browser, no token needed.
 // Skips fast-path JSON cache and forces a fresh browser OHLCV scan.
 // GitHub Actions continues to run on schedule (3×/day) for the full universe.
@@ -7765,6 +7824,11 @@ async function _refreshLivePrices() {
     // Only alert on transitions INTO buy zone
     if (oldEmoji && newEmoji === '✅' && oldEmoji !== '✅') {
       showToast('🚨 ' + r.symbol + ' 突破買點！量能確認，可進場', 'success');
+      _sendPushNotification(
+        '🚨 ' + r.symbol + ' 突破買點！',
+        '量能確認 · 距高點 ' + (r.high52w && r.price ? ((r.price-r.high52w)/r.high52w*100).toFixed(1)+'%' : '') + ' · 可考慮進場',
+        'buy-' + r.symbol
+      );
       // Flash the row if visible
       const rows = document.querySelectorAll('.rs-leader-table tbody tr');
       rows.forEach(row => {
@@ -7776,6 +7840,11 @@ async function _refreshLivePrices() {
       });
     } else if (oldEmoji && newEmoji === '📍' && oldEmoji !== '📍' && oldEmoji !== '✅') {
       showToast('📍 ' + r.symbol + ' 進入買點區（等量能）');
+      _sendPushNotification(
+        '📍 ' + r.symbol + ' 接近買點',
+        '進入 52 週高點 15% 區間，尚待量能確認',
+        'watch-' + r.symbol
+      );
     }
   });
 
@@ -7845,6 +7914,8 @@ function _startLiveMonitor() {
   };
 
   _liveMonitorTimer = setInterval(refreshNow, _isMarketHours() ? 60000 : 300000);
+  // Sync notification button state
+  setTimeout(_updateNotifBtn, 100);
 }
 
 function _stopLiveMonitor() {
@@ -8028,6 +8099,7 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
       '</div>' +
       '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
         '<span id="live-countdown" style="font-size:11px;color:var(--muted)"></span>' +
+        '<button id="notif-toggle-btn" onclick="_initPushNotifications()" title="開啟買點推播通知（視窗切換到其他頁面時彈出）" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.4);color:#f59e0b;background:rgba(245,158,11,.08);cursor:pointer;white-space:nowrap">🔔 開啟通知</button>' +
         '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
         'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
         '⚡ 重新掃描</button>' +
