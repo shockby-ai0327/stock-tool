@@ -7899,25 +7899,95 @@ async function overlayLivePrices(leaders) {
   return leaders;
 }
 
-// Trigger a fresh GitHub Actions scan (requires PAT stored in localStorage)
+// Show PAT setup modal (one-time only, saved to localStorage forever after)
+function showPatSetupModal(onSuccess) {
+  const existing = document.getElementById('pat-setup-modal');
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML('beforeend',
+    '<div id="pat-setup-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">' +
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:460px;padding:24px" onclick="event.stopPropagation()">' +
+      '<div style="font-size:18px;font-weight:800;margin-bottom:6px">🔑 設定 GitHub Token</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">' +
+        '只需設定一次，之後按鈕可隨時觸發掃描。<br>' +
+        'Token 儲存在你的瀏覽器本機，不會上傳。' +
+      '</div>' +
+
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;background:rgba(255,255,255,.04);border-radius:8px;padding:12px;line-height:1.8">' +
+        '① 前往 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:#818cf8">github.com/settings/tokens</a><br>' +
+        '② Token name 隨便填，Expiration 選 No expiration<br>' +
+        '③ Repository access → Only select repositories → 選 <b>stock-tool</b><br>' +
+        '④ Permissions → Actions → <b>Read and write</b><br>' +
+        '⑤ 按 Generate token，複製後貼到下方' +
+      '</div>' +
+
+      '<input id="pat-input" type="password" placeholder="github_pat_..." ' +
+        'style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);font-size:13px;margin-bottom:12px;outline:none" />' +
+
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="_savePat()" style="flex:1;padding:11px;border-radius:8px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px;font-weight:700">儲存並立即掃描</button>' +
+        '<button onclick="document.getElementById(\'pat-setup-modal\').remove()" style="padding:11px 18px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:13px">取消</button>' +
+      '</div>' +
+      '<div id="pat-error" style="font-size:12px;color:#ef4444;margin-top:8px;display:none"></div>' +
+    '</div></div>'
+  );
+
+  // Store callback so _savePat can call it
+  window._patSuccessCallback = onSuccess;
+  setTimeout(() => { const el = document.getElementById('pat-input'); if(el) el.focus(); }, 100);
+}
+
+async function _savePat() {
+  const input = document.getElementById('pat-input');
+  const errEl = document.getElementById('pat-error');
+  const token = (input ? input.value : '').trim();
+  if (!token) { if(errEl){errEl.textContent='請貼上 Token';errEl.style.display='';} return; }
+
+  // Quick validation — ping GitHub API
+  if(errEl){errEl.textContent='驗證中...';errEl.style.display='';}
+  try {
+    const res = await fetch('https://api.github.com/repos/shockby-ai0327/stock-tool/actions/workflows', {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if (res.status === 401) { errEl.textContent='❌ Token 無效，請重新產生'; return; }
+    if (res.status === 403) { errEl.textContent='❌ Token 缺少 Actions 權限，請重新設定'; return; }
+  } catch(e) { errEl.textContent='❌ 網路錯誤：' + e.message; return; }
+
+  localStorage.setItem('gh_pat', token);
+  const modal = document.getElementById('pat-setup-modal');
+  if (modal) modal.remove();
+  showToast('✅ Token 已儲存，正在觸發掃描...');
+  if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
+}
+
+// Trigger a fresh GitHub Actions scan
+// If no PAT → show one-time setup modal. After that, button works instantly forever.
 async function triggerGithubScan() {
-  const token = localStorage.getItem('gh_pat');
-  if (!token) {
-    const t = prompt('請輸入 GitHub Personal Access Token（需要 workflow 權限）：');
-    if (!t) return;
-    localStorage.setItem('gh_pat', t);
-  }
   const pat = localStorage.getItem('gh_pat');
+  if (!pat) {
+    showPatSetupModal(() => triggerGithubScan());
+    return;
+  }
+  await _doGithubDispatch(pat);
+}
+
+async function _doGithubDispatch(pat) {
+  // Show spinner on the button
+  const btns = document.querySelectorAll('[data-rescan-btn]');
+  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 觸發中...'; });
+
   try {
     const r = await fetch('https://api.github.com/repos/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml/dispatches', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ ref: 'main', inputs: { market: _scannerMarket === 'tw' ? 'tw' : 'us' } }),
     });
+
     if (r.status === 204) {
-      showToast('✅ 掃描任務已觸發，約 3-5 分鐘後自動更新結果');
+      showToast('🚀 掃描已觸發！約 3–5 分鐘後自動更新');
+      btns.forEach(b => { b.textContent = '⏳ 掃描中...'; });
+
       const triggerTime = Date.now();
-      // Poll every 30s for up to 8 min; detect NEW data by scannedAt > triggerTime
       let polls = 0;
       const pollId = setInterval(async () => {
         polls++;
@@ -7929,20 +7999,30 @@ async function triggerGithubScan() {
           const scannedMs = data.scannedAt ? new Date(data.scannedAt).getTime() : 0;
           if (scannedMs > triggerTime && data.leaders && data.leaders.length > 0) {
             clearInterval(pollId);
-            showToast('🎉 掃描完成！' + data.leaders.length + ' 檔更新');
+            showToast('🎉 掃描完成！結果已更新');
+            btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
             window._rsLeaderRunning = false;
             runRSLeaderScan();
           }
         } catch(e) {}
-        if (polls >= 16) { clearInterval(pollId); showToast('⏱ 等待逾時，請稍後手動重整', 'warn'); }
+        if (polls >= 16) {
+          clearInterval(pollId);
+          btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
+          showToast('⏱ 等待逾時，請稍後手動重整', 'warn');
+        }
       }, 30000);
+
     } else if (r.status === 401) {
       localStorage.removeItem('gh_pat');
-      showToast('❌ Token 無效，請重試', 'error');
+      btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
+      showToast('❌ Token 已失效，需重新設定', 'error');
+      showPatSetupModal(() => triggerGithubScan());
     } else {
+      btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
       showToast('❌ 觸發失敗 HTTP ' + r.status, 'error');
     }
   } catch(e) {
+    btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
     showToast('❌ 網路錯誤：' + e.message, 'error');
   }
 }
@@ -8112,7 +8192,7 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
         '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 更新於 ' + scanTime + ' · ' + freshLabel + '</div>' +
       '</div>' +
-      '<button onclick="triggerGithubScan()" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
+      '<button data-rescan-btn onclick="triggerGithubScan()" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
       'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
       '⚡ 重新掃描</button>' +
     '</div>';
