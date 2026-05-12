@@ -245,8 +245,10 @@ function calcMetrics(closes, highs, volumes, meta, benchReturn) {
 
   // Acceleration: compare recent monthly pace vs 3-month monthly avg
   // accel > 1.2 → accelerating; accel < 0.8 → decelerating
-  const accel = (ret3m != null && ret3m !== 0)
-    ? ret1m / (ret3m / 3)
+  // Guard: require |ret3m| >= 3 to avoid division-near-zero blowup (e.g. flat-then-pop stocks)
+  // Cap: clamp to [-3, 5] so one wild month can't produce accel=21
+  const accel = (ret3m != null && Math.abs(ret3m) >= 3)
+    ? Math.min(5, Math.max(-3, ret1m / (ret3m / 3)))
     : null;
 
   // Volume expansion
@@ -352,19 +354,58 @@ async function scanUS() {
 
         if (!isLeader && !isDiscovery) return null;
 
-        // Assign sector ETF based on symbol → sector map (best-effort)
+        // Assign sector ETF based on symbol → sector map (best-effort, ~120 tickers)
         const SECTOR_MAP = {
-          SMH:'SMH',IGV:'IGV',XLK:'XLK',
+          // ── Semiconductors → SMH ──────────────────────────────────────────
           NVDA:'SMH',AMD:'SMH',AVGO:'SMH',QCOM:'SMH',MU:'SMH',AMAT:'SMH',LRCX:'SMH',
-          KLAC:'SMH',ADI:'SMH',MRVL:'SMH',CRDO:'SMH',ALAB:'SMH',ACLS:'SMH',
+          KLAC:'SMH',ADI:'SMH',MRVL:'SMH',CRDO:'SMH',ALAB:'SMH',ACLS:'SMH',NVTS:'SMH',
+          MPWR:'SMH',WOLF:'SMH',ON:'SMH',SWKS:'SMH',MCHP:'SMH',TXN:'SMH',INTC:'SMH',
+          SMTC:'SMH',AMBA:'SMH',CRUS:'SMH',SLAB:'SMH',SITM:'SMH',DIOD:'SMH',
+          AXTI:'SMH',KLIC:'SMH',COHU:'SMH',UCTT:'SMH',ICHR:'SMH',ASYS:'SMH',
+          POWI:'SMH',MTSI:'SMH',ALGM:'SMH',LASR:'SMH',AAOI:'SMH',IIVI:'SMH',
+          // ── Software → IGV ────────────────────────────────────────────────
           ORCL:'IGV',CRM:'IGV',NOW:'IGV',WDAY:'IGV',SNOW:'IGV',DDOG:'IGV',
           NET:'IGV',MDB:'IGV',CRWD:'IGV',PANW:'IGV',ZS:'IGV',PLTR:'IGV',
-          RKLB:'XAR',ASTS:'XAR',AXON:'XAR',LDOS:'XAR',KTOS:'XAR',
+          HUBS:'IGV',VEEV:'IGV',TEAM:'IGV',GTLB:'IGV',S:'IGV',SMAR:'IGV',
+          BILL:'IGV',FRSH:'IGV',DOCN:'IGV',DOCUSIGN:'IGV',
+          // ── Photonics/Fiber/Telecom Equip → XLK ──────────────────────────
+          GLW:'XLK',COHR:'XLK',LITE:'XLK',JNPR:'XLK',CIEN:'XLK',INFN:'XLK',
+          VIAV:'XLK',CALX:'XLK',GILT:'XLK',ADTM:'XLK',NPKI:'XLK',FN:'XLK',
+          // ── Comms / Media → XLC ──────────────────────────────────────────
+          META:'XLC',GOOGL:'XLC',GOOG:'XLC',NFLX:'XLC',DIS:'XLC',PARA:'XLC',
+          WBD:'XLC',SNAP:'XLC',PINS:'XLC',RDDT:'XLC',SPOT:'XLC',EA:'XLC',
+          // ── Defense / Aerospace → XAR ─────────────────────────────────────
+          RKLB:'XAR',ASTS:'XAR',AXON:'XAR',LDOS:'XAR',KTOS:'XAR',LHX:'XAR',
+          NOC:'XAR',RTX:'XAR',LMT:'XAR',GD:'XAR',HEI:'XAR',TDG:'XAR',
+          BKSY:'XAR',PL:'XAR',SPIR:'XAR',ATRO:'XAR',
+          // ── Financials (incl. crypto/fintech) → XLF ───────────────────────
           COIN:'XLF',HOOD:'XLF',AFRM:'XLF',UPST:'XLF',SQ:'XLF',
-          RXRX:'IBB',MRNA:'IBB',BEAM:'IBB',CRSP:'IBB',NTLA:'IBB',
-          MSTR:'SMH',HUT:'XLF',CIFR:'XLF',MARA:'XLF',RIOT:'XLF',
-          GLW:'XLK',COHR:'XLK',LITE:'XLK',LASR:'XLK',AAOI:'XLK',
+          HUT:'XLF',CIFR:'XLF',MARA:'XLF',RIOT:'XLF',IREN:'XLF',CLSK:'XLF',
+          BTBT:'XLF',WULF:'XLF',BTDR:'XLF',CORZ:'XLF',NBTB:'XLF',
+          GS:'XLF',JPM:'XLF',MS:'XLF',BAC:'XLF',WFC:'XLF',C:'XLF',
+          V:'XLF',MA:'XLF',AXP:'XLF',PYPL:'XLF',NU:'XLF',
+          // ── Biotech / Pharma → IBB ────────────────────────────────────────
+          RXRX:'IBB',MRNA:'IBB',BEAM:'IBB',CRSP:'IBB',NTLA:'IBB',EDIT:'IBB',
+          ALLO:'IBB',FATE:'IBB',SANA:'IBB',VERV:'IBB',ARKG:'IBB',CAPR:'IBB',
+          MGNX:'IBB',STTK:'IBB',ATRA:'IBB',ARQT:'IBB',IMVT:'IBB',
+          // ── General Healthcare → XLV ──────────────────────────────────────
+          ISRG:'XLV',TMO:'XLV',ABT:'XLV',MDT:'XLV',SYK:'XLV',EW:'XLV',
+          DXCM:'XLV',ALGN:'XLV',PODD:'XLV',INSP:'XLV',NVCR:'XLV',PACS:'XLV',
+          // ── Energy / Mining / Materials → XLE / XLB / GDX ────────────────
+          XOM:'XLE',CVX:'XLE',COP:'XLE',EOG:'XLE',SLB:'XLE',HAL:'XLE',
+          NRGV:'XLE',FLNC:'XLE',FSLR:'XLE',ENPH:'XLE',SEDG:'XLE',
+          HL:'GDX',EXK:'GDX',HYMC:'GDX',AG:'GDX',WPM:'GDX',AEM:'GDX',
+          GPRE:'XLB',ALB:'XLB',MP:'XLB',NEM:'GDX',GOLD:'GDX',
+          // ── Consumer Discretionary → XLY ──────────────────────────────────
+          AMZN:'XLY',TSLA:'XLY',NKE:'XLY',PTON:'XLY',LULU:'XLY',
+          RH:'XLY',W:'XLY',WRBY:'XLY',DECK:'XLY',ONON:'XLY',
+          // ── Industrials → XLI ─────────────────────────────────────────────
+          GE:'XLI',CAT:'XLI',HON:'XLI',DE:'XLI',UPS:'XLI',FDX:'XLI',
+          BW:'XLI',LQDA:'XLI',EVC:'XLI',
+          // ── Storage / Memory / Misc HW → SMH ─────────────────────────────
+          MSTR:'SMH',WDC:'SMH',STX:'SMH',SNDK:'SMH',
         };
+        // Static map covers ~120 popular tickers; unmapped stocks get null
         const sectorEtf = SECTOR_MAP[sym] || null;
         const sectorRet = sectorEtf && sectorBenchmarks[sectorEtf] != null ? sectorBenchmarks[sectorEtf] : null;
         const sectorRS  = sectorRet != null ? round2(m.ret12_1 - sectorRet) : null;

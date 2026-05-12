@@ -163,8 +163,6 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .dash-kpi .label{font-size:11px;color:var(--muted);margin-bottom:4px}
 .dash-kpi .val{font-size:22px;font-weight:700;line-height:1.1}
 .dash-kpi .chg{font-size:12px;margin-top:3px}
-.dash-scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:640px){.dash-scan-grid{grid-template-columns:1fr}}
 .scan-mini-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px}
 .scan-mini-row:last-child{border-bottom:none}
 .t-stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -6291,7 +6289,6 @@ function initGlossarySearch() {
 
 // 全域掃描快取（背景掃描，跳頁不中斷）
 const _scanCache = {
- schwartz: { results: [], ts: 0 },
  TTL: 5 * 60 * 1000 // 5 分鐘
 };
 // ── T交易精選：固定三檔 ──────────────────────────────────────────────────
@@ -6489,9 +6486,9 @@ async function renderDashboard(forceRescan) {
 
  // 4. 觸發掃描（自動，快取 5 分鐘）
  quickDashboardScan(forceRescan);
- // 5. 盤前/盤後市場預測卡片：立即顯示骨架，數據到了再填入
+ // 5. 盤前/盤後市場預測卡片：立即顯示骨架（首次或強制刷新時）
  const _preEl = document.getElementById('dash-premarket');
- if (_preEl && !_preEl.innerHTML.trim()) {
+ if (_preEl && (!_preEl.innerHTML.trim() || forceRescan)) {
  _preEl.innerHTML = '<div class="card" style="margin-bottom:16px">' +
  '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
  '<span style="font-weight:700;font-size:14px"> 今日市場預測</span>' +
@@ -6822,13 +6819,33 @@ async function renderDashHoldings() {
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
 async function quickDashboardScan(force) {
- // 顯示 RS Leader 快取（如果有）
  const rsEl = document.getElementById('dash-rsleader-list');
+
+ // If already cached from scanner tab, use that immediately
  if (window._rsLeaderCache && window._rsLeaderCache.length) {
    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
- } else if (rsEl) {
-   rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
+   return;
  }
+
+ // Otherwise silently fetch the precomputed GitHub JSON and fill the card
+ if (rsEl) rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px"><div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px"></div>載入排行中...</div>';
+ try {
+   const precomputed = await fetchPrecomputedScan('us');
+   if (precomputed && precomputed.data && precomputed.data.leaders && precomputed.data.leaders.length) {
+     const leaders = precomputed.data.leaders;
+     // Overlay live prices in background (don't block render)
+     overlayLivePrices(leaders.slice(0, 5)).then(() => {
+       renderDashRSLeader(leaders.slice(0, 5));
+     }).catch(() => {});
+     // Show immediately with static prices while live prices load
+     window._rsLeaderCache = leaders;
+     renderDashRSLeader(leaders.slice(0, 5));
+     return;
+   }
+ } catch(e) {}
+
+ // Fallback: prompt user to visit scanner
+ if (rsEl) rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
 }
 
 function renderDashRSLeader(results) {
@@ -6879,8 +6896,7 @@ function renderDashScanList(strategy, results, sortBy) {
  window._lastScanResults[strategy] = results;
  el.innerHTML = sortBar + sorted.map(r => {
  const up = (r.changePct || 0) >= 0;
- const maxSt = strategy === 'schwartz' ? 7 : 8;
- const filled = Math.min(r.signalStrength || 0, maxSt);
+ const filled = Math.min(r.signalStrength || 0, 8);
  const stars = '★'.repeat(filled) + '☆'.repeat(Math.max(0, 5 - filled));
  const key = r.symbol + '_' + strategy;
  const fundBadge = strategy === 'steinhardt' && r.fundLoaded != null
@@ -7182,7 +7198,7 @@ async function batchQuotePreFilter(symbols, topN = 65) {
 // ── Pre-computed scan JSON (from GitHub Actions) ──────────────────────────
 // Raw URL pattern for this repo's data directory
 const GH_RAW = 'https://raw.githubusercontent.com/shockby-ai0327/stock-tool/main/data/';
-const SCAN_JSON_MAX_AGE_MS = 8 * 60 * 60 * 1000; // treat JSON stale after 8h (3 auto-runs/day covers this)
+const SCAN_JSON_MAX_AGE_MS = 15 * 60 * 60 * 1000; // treat JSON stale after 15h (3 auto-runs/day, max gap ~8h)
 
 async function fetchPrecomputedScan(market) {
   try {
@@ -8727,6 +8743,12 @@ async function _showSectorRadarTab() {
   const sectors = await _fetchSectorData();
   if (!sectors) {
     tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red)">板塊資料載入失敗，請稍後再試</div>';
+    return;
+  }
+  // Check if all ETFs failed (all zeros) — show a clear error instead of misleading 0.00%
+  const allFailed = sectors.every(s => s._failed);
+  if (allFailed) {
+    tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--yellow)">⚠ 無法取得板塊 ETF 報價（可能是 Yahoo Finance 速率限制）<br><button onclick="_sectorCache=null;_showSectorRadarTab()" style="margin-top:12px;padding:8px 20px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b;cursor:pointer;font-size:13px">重試</button></div>';
     return;
   }
 
