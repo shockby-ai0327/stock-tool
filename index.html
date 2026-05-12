@@ -301,21 +301,12 @@ firebase.initializeApp(_fbConfig);
  </div>
  </div>
 
- <div class="dash-scan-grid">
- <div class="card">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
- <div class="section-label" style="margin-bottom:0">突破候選 — Schwartz</div>
- <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('discover'),100)">完整掃描 →</button>
- </div>
- <div id="dash-schwartz-list"><div style="text-align:center;padding:20px;color:var(--muted)">等待掃描...</div></div>
- </div>
  <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
  <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場</span></div>
  <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
  </div>
  <div id="dash-rsleader-list"><div style="text-align:center;padding:20px;color:var(--muted)">前往掃描器取得最新排行</div></div>
- </div>
  </div>
  <div style="text-align:center;margin-top:20px">
  <button class="btn btn-primary" style="padding:10px 28px" onclick="renderDashboard(true)">重新整理</button>
@@ -6523,36 +6514,76 @@ async function renderDashboard(forceRescan) {
 function getHardcodedEvents() {
  // FOMC meeting decision dates (Fed announces rate decision)
  const fomc = [
- '2025-01-29','2025-03-19','2025-05-07','2025-06-18',
- '2025-07-30','2025-09-17','2025-10-29','2025-12-10',
- '2026-01-28','2026-03-18','2026-05-06','2026-06-17',
- '2026-07-29','2026-09-16','2026-10-28','2026-12-09',
- ].map(d => ({ date: d, icon: 'Fed', label: 'Fed 利率決策（FOMC）', type: 'fomc', impact: 'high' }));
+ { date:'2025-01-29', summary:'Fed 維持利率不變（4.25-4.5%），鮑威爾強調不急於降息，需更多通膨降溫證據。市場小跌後回穩。' },
+ { date:'2025-03-19', summary:'Fed 維持利率 4.25-4.5%，下調 GDP 預測、上調通膨預測，呈現停滯性通膨隱憂。市場波動加劇。' },
+ { date:'2025-05-07', summary:'Fed 維持利率不變，鮑威爾表示關稅帶來通膨與就業雙重風險，暫不降息。科技股先跌後反彈。' },
+ { date:'2025-06-18' },
+ { date:'2025-07-30' },
+ { date:'2025-09-17' },
+ { date:'2025-10-29' },
+ { date:'2025-12-10' },
+ { date:'2026-01-28' },
+ { date:'2026-03-18' },
+ { date:'2026-05-06' },
+ { date:'2026-06-17' },
+ { date:'2026-07-29' },
+ { date:'2026-09-16' },
+ { date:'2026-10-28' },
+ { date:'2026-12-09' },
+ ].map(e => ({ ...e, icon: 'Fed', label: 'Fed 利率決策（FOMC）', type: 'fomc', impact: 'high' }));
 
- // US CPI releases (approximate 2nd week of each month; adjust based on BLS schedule)
+ // US CPI releases
  const cpi = [
- '2025-01-15','2025-02-12','2025-03-12','2025-04-10',
- '2025-05-13','2025-06-11','2025-07-11','2025-08-12',
- '2025-09-10','2025-10-14','2025-11-13','2025-12-10',
- '2026-01-14','2026-02-11','2026-03-11','2026-04-10',
- '2026-05-12','2026-06-10','2026-07-14','2026-08-12',
- '2026-09-09','2026-10-14','2026-11-12','2026-12-09',
- ].map(d => ({ date: d, icon: 'CPI', label: '美國 CPI 通膨數據', type: 'cpi', impact: 'high' }));
+ { date:'2025-01-15', summary:'CPI 年增 2.9%，核心 CPI 3.2%，略高於預期。市場降息預期降溫，10年期公債殖利率上升。' },
+ { date:'2025-02-12', summary:'CPI 年增 3.0%，高於預期 2.9%，通膨再度回溫。Fed 降息時程再延後，科技股受壓。' },
+ { date:'2025-03-12', summary:'CPI 年增 2.8%，低於前值，通膨小幅降溫。但關稅效應尚未充分反映，市場謹慎樂觀。' },
+ { date:'2025-04-10', summary:'CPI 年增 2.4%，優於預期，通膨持續降溫。S&P 500 大漲 1.8%，降息預期升溫。' },
+ { date:'2025-05-13' },
+ { date:'2025-06-11' },
+ { date:'2025-07-11' },
+ { date:'2025-08-12' },
+ { date:'2025-09-10' },
+ { date:'2025-10-14' },
+ { date:'2025-11-13' },
+ { date:'2025-12-10' },
+ { date:'2026-01-14' },
+ { date:'2026-02-11' },
+ { date:'2026-03-11' },
+ { date:'2026-04-10' },
+ { date:'2026-05-12' },
+ { date:'2026-06-10' },
+ { date:'2026-07-14' },
+ { date:'2026-08-12' },
+ ].map(e => ({ ...e, icon: 'CPI', label: '美國 CPI 通膨數據', type: 'cpi', impact: 'high' }));
 
- // US NFP (Non-Farm Payrolls) — first Friday of each month
+ // US NFP (Non-Farm Payrolls)
  const nfp = [
- '2025-01-10','2025-02-07','2025-03-07','2025-04-04',
- '2025-05-02','2025-06-06','2025-07-03','2025-08-01',
- '2025-09-05','2025-10-03','2025-11-07','2025-12-05',
- '2026-01-09','2026-02-06','2026-03-06','2026-04-03',
- '2026-05-01','2026-06-05','2026-07-02','2026-08-07',
- '2026-09-04','2026-10-02','2026-11-06','2026-12-04',
- ].map(d => ({ date: d, icon: 'NFP', label: '美國非農就業（NFP）', type: 'nfp', impact: 'high' }));
+ { date:'2025-01-10', summary:'新增就業 25.6萬，遠超預期 16萬。就業市場強勁，Fed 降息壓力進一步降低。' },
+ { date:'2025-02-07', summary:'新增就業 14.3萬，低於預期 17萬。失業率降至 4.0%，市場反應平淡。' },
+ { date:'2025-03-07', summary:'新增就業 15.1萬，略低預期，聯邦雇員裁員開始顯現。市場擔憂 DOGE 削減對就業的衝擊。' },
+ { date:'2025-04-04', summary:'新增就業 22.8萬，大幅優於預期 14萬。關稅恐慌中就業數據報喜，市場短暫反彈。' },
+ { date:'2025-05-02', summary:'新增就業 17.7萬，略優於預期。失業率 4.2%，就業市場仍具韌性，降息預期維持 2 次。' },
+ { date:'2025-06-06' },
+ { date:'2025-07-03' },
+ { date:'2025-08-01' },
+ { date:'2025-09-05' },
+ { date:'2025-10-03' },
+ { date:'2025-11-07' },
+ { date:'2025-12-05' },
+ { date:'2026-01-09' },
+ { date:'2026-02-06' },
+ { date:'2026-03-06' },
+ { date:'2026-04-03' },
+ { date:'2026-05-01' },
+ { date:'2026-06-05' },
+ { date:'2026-07-02' },
+ { date:'2026-08-07' },
+ ].map(e => ({ ...e, icon: 'NFP', label: '美國非農就業（NFP）', type: 'nfp', impact: 'high' }));
 
- // Earnings seasons — key "peak week" start dates (when major banks report)
+ // Earnings seasons
  const earnings = [
- { date:'2025-01-13', label:'Q4 2024 財報季開始（JPMorgan、Wells Fargo）' },
- { date:'2025-04-11', label:'Q1 2025 財報季開始（銀行股打頭陣）' },
+ { date:'2025-01-13', label:'Q4 2024 財報季開始（JPMorgan、Wells Fargo）', summary:'銀行股帶頭，JPM 創歷史新高。AI 資本支出主題持續，科技股財報預期拉高。' },
+ { date:'2025-04-11', label:'Q1 2025 財報季開始（銀行股打頭陣）', summary:'整體 EPS 成長約 12%，AI 龍頭（NVDA、META、AMZN）超預期。但管理層對關稅前景保守，指引普遍保守。' },
  { date:'2025-07-11', label:'Q2 2025 財報季開始' },
  { date:'2025-10-10', label:'Q3 2025 財報季開始' },
  { date:'2026-01-12', label:'Q4 2025 財報季開始' },
@@ -6561,13 +6592,87 @@ function getHardcodedEvents() {
  { date:'2026-10-12', label:'Q3 2026 財報季開始' },
  ].map(e => ({ ...e, icon: 'EPS', type: 'earnings', impact: 'medium' }));
 
- // Notable US-China trade / geopolitical events (hardcoded major known events)
+ // Geopolitical / macro events
  const geopolitical = [
- { date:'2025-05-12', label:'美中日內瓦貿易談判', icon:'', type:'geopolitical', impact:'high' },
- { date:'2025-07-09', label:'美國關稅暫緩期限（90 天）', icon:'', type:'geopolitical', impact:'high' },
+ {
+ date:'2025-04-02',
+ label:'美國「解放日」關稅宣布',
+ icon:'',
+ type:'geopolitical',
+ impact:'high',
+ summary:'川普宣布對全球徵收 10% 基礎關稅，對主要國家另加對等關稅（中國 34%、歐盟 20%、越南 46%）。S&P 500 單週暴跌 10%，創 2020 年以來最大跌幅。VIX 飆至 52。'
+ },
+ {
+ date:'2025-04-09',
+ label:'美國宣布 90 天關稅暫緩（中國除外）',
+ icon:'',
+ type:'geopolitical',
+ impact:'high',
+ summary:'川普宣布對中國以外國家暫緩 90 天對等關稅，僅維持 10% 基礎稅率。S&P 500 單日狂漲 9.5%，那斯達克創史上最大單日漲幅。美中關稅同日升至 145% vs 125%。'
+ },
+ {
+ date:'2025-05-08',
+ label:'美英貿易框架協議簽署',
+ icon:'',
+ type:'geopolitical',
+ impact:'medium',
+ summary:'美英達成初步貿易框架：英國汽車關稅降至 10%（配額 10 萬輛），鋼鐵鋁關稅豁免。英鎊升值，市場視為談判範本，歐盟等更大協議期待升溫。'
+ },
+ {
+ date:'2025-05-12',
+ label:'美中日內瓦貿易談判',
+ icon:'',
+ type:'geopolitical',
+ impact:'high',
+ summary:'美中達成 90 天貿易停火協議：美國對中關稅從 145% 降至 30%，中國對美關稅從 125% 降至 10%。S&P 500 大漲逾 3%，費城半導體指數飆漲 6%+，中概股跳空大漲。市場重新定價「關稅最壞情況已過」。'
+ },
+ {
+ date:'2025-07-09',
+ label:'90 天關稅暫緩期限截止',
+ icon:'',
+ type:'geopolitical',
+ impact:'high'
+ },
+ {
+ date:'2025-08-21',
+ label:'Jackson Hole 央行年會',
+ icon:'Fed',
+ type:'geopolitical',
+ impact:'high'
+ },
+ {
+ date:'2025-09-01',
+ label:'美中 90 天貿易協議到期（潛在重啟談判）',
+ icon:'',
+ type:'geopolitical',
+ impact:'high'
+ },
  ];
 
- return [...fomc, ...cpi, ...nfp, ...earnings, ...geopolitical];
+ // PCE data (Fed's preferred inflation gauge)
+ const pce = [
+ { date:'2025-02-28', summary:'核心 PCE 年增 2.6%，月增 0.3%，通膨仍有黏性。' },
+ { date:'2025-03-28', summary:'核心 PCE 年增 2.8%，高於預期，引發市場對停滯性通膨的擔憂。' },
+ { date:'2025-04-30', summary:'核心 PCE 年增 2.6%，持平預期。關稅效應尚未完全傳遞至物價。' },
+ { date:'2025-05-30' },
+ { date:'2025-06-27' },
+ { date:'2025-07-31' },
+ { date:'2025-08-29' },
+ { date:'2025-09-26' },
+ { date:'2025-10-31' },
+ { date:'2025-11-26' },
+ { date:'2025-12-19' },
+ ].map(e => ({ ...e, icon: 'PCE', label: '美國 PCE 通膨數據', type: 'pce', impact: 'high' }));
+
+ // GDP releases
+ const gdp = [
+ { date:'2025-04-30', summary:'Q1 GDP 初值 -0.3%（年化），首次負成長，主因進口暴增（搶關稅）拖累。市場恐慌後回穩，因被視為一次性因素。' },
+ { date:'2025-07-30' },
+ { date:'2025-10-30' },
+ { date:'2026-01-29' },
+ ].map(e => ({ ...e, icon: 'GDP', label: '美國 GDP 初值', type: 'gdp', impact: 'high' }));
+
+ return [...fomc, ...cpi, ...nfp, ...earnings, ...geopolitical, ...pce, ...gdp];
 }
 
 async function renderUpcomingEvents() {
@@ -6580,9 +6685,8 @@ async function renderUpcomingEvents() {
 
  let dynamicEvents = [];
  if (!cached) {
- // Try Finnhub economic calendar (next 45 days)
  try {
- if (FINNHUB_KEY) {
+ if (typeof FINNHUB_KEY !== 'undefined' && FINNHUB_KEY) {
  const today = new Date(), to = new Date(today); to.setDate(to.getDate() + 45);
  const fmt = d => d.toISOString().slice(0,10);
  const resp = await fetch('https://finnhub.io/api/v1/calendar/economic?from=' + fmt(today) + '&to=' + fmt(to) + '&token=' + FINNHUB_KEY);
@@ -6594,11 +6698,11 @@ async function renderUpcomingEvents() {
  );
  dynamicEvents = highImpact.slice(0, 20).map(e => {
  let icon = '', type = 'economic';
- if (/fomc|fed|interest rate/i.test(e.event)) { icon = ''; type = 'fomc'; }
- else if (/nonfarm|payroll|employment/i.test(e.event)) { icon = ''; type = 'nfp'; }
- else if (/cpi|inflation|consumer price/i.test(e.event)) { icon = ''; type = 'cpi'; }
- else if (/gdp/i.test(e.event)) { icon = ''; type = 'gdp'; }
- else if (/pce/i.test(e.event)) { icon = ''; type = 'pce'; }
+ if (/fomc|fed|interest rate/i.test(e.event)) { icon = 'Fed'; type = 'fomc'; }
+ else if (/nonfarm|payroll|employment/i.test(e.event)) { icon = 'NFP'; type = 'nfp'; }
+ else if (/cpi|inflation|consumer price/i.test(e.event)) { icon = 'CPI'; type = 'cpi'; }
+ else if (/gdp/i.test(e.event)) { icon = 'GDP'; type = 'gdp'; }
+ else if (/pce/i.test(e.event)) { icon = 'PCE'; type = 'pce'; }
  return { date: e.time, icon, label: e.event, type, impact: 'high', source: 'live' };
  });
  sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), items: dynamicEvents }));
@@ -6614,26 +6718,30 @@ async function renderUpcomingEvents() {
  const today = new Date(); today.setHours(0,0,0,0);
  const allEvents = [...hardcoded, ...dynamicEvents];
 
- // If we have dynamic FOMC/CPI/NFP data, prefer it over hardcoded for same date ±2 days
  const deduped = [];
  const seen = new Set();
  allEvents.forEach(e => {
- const d = new Date(e.date + 'T00:00:00'); // parse as local
+ const d = new Date(e.date + 'T00:00:00');
  const key = e.type + ':' + e.date;
- // Skip if dynamic already covers this type+week
  if (e.source !== 'live' && dynamicEvents.some(d2 => d2.type === e.type && Math.abs(new Date(d2.date) - new Date(e.date)) < 4 * 86400000)) return;
  if (!seen.has(key)) { seen.add(key); deduped.push({ ...e, dateObj: d }); }
  });
 
- // Filter: today - 1 day to +90 days, sort by date
+ // Split into upcoming (today onwards) and past events with summaries
  const horizon = new Date(today); horizon.setDate(horizon.getDate() + 90);
- const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
- const upcoming = deduped
- .filter(e => e.dateObj >= yesterday && e.dateObj <= horizon)
- .sort((a, b) => a.dateObj - b.dateObj)
- .slice(0, 8); // show max 8
+ const pastWindow = new Date(today); pastWindow.setDate(pastWindow.getDate() - 30);
 
- if (!upcoming.length) {
+ const upcoming = deduped
+ .filter(e => e.dateObj >= today && e.dateObj <= horizon)
+ .sort((a, b) => a.dateObj - b.dateObj)
+ .slice(0, 8);
+
+ const pastWithSummary = deduped
+ .filter(e => e.dateObj < today && e.dateObj >= pastWindow && e.summary)
+ .sort((a, b) => b.dateObj - a.dateObj)
+ .slice(0, 4);
+
+ if (!upcoming.length && !pastWithSummary.length) {
  el.innerHTML = '<div style="color:var(--muted);font-size:11px">近期無重大事件</div>';
  return;
  }
@@ -6641,10 +6749,10 @@ async function renderUpcomingEvents() {
  const diffDays = d => Math.round((d - today) / 86400000);
  const fmtDate = d => (d.getMonth()+1) + '/' + d.getDate();
 
- el.innerHTML = upcoming.map(ev => {
+ const renderRow = (ev, isPast) => {
  const diff = diffDays(ev.dateObj);
  let diffLabel, diffColor;
- if (diff < 0) { diffLabel = Math.abs(diff) + ' 天前'; diffColor = 'var(--muted)'; }
+ if (isPast) { diffLabel = Math.abs(diff) + ' 天前'; diffColor = 'var(--muted)'; }
  else if (diff === 0) { diffLabel = '今天'; diffColor = 'var(--red)'; }
  else if (diff === 1) { diffLabel = '明天'; diffColor = 'var(--orange)'; }
  else if (diff <= 3) { diffLabel = diff + ' 天後'; diffColor = 'var(--orange)'; }
@@ -6652,17 +6760,32 @@ async function renderUpcomingEvents() {
  else { diffLabel = diff + ' 天後'; diffColor = 'var(--muted)'; }
 
  const impactDot = ev.impact === 'high'
- ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:4px;vertical-align:middle"></span>'
- : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--yellow);margin-right:4px;vertical-align:middle"></span>';
+ ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:4px;vertical-align:middle;flex-shrink:0"></span>'
+ : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--yellow);margin-right:4px;vertical-align:middle;flex-shrink:0"></span>';
 
- return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+ const summaryHtml = ev.summary
+ ? '<div style="margin-top:4px;padding:6px 8px;background:rgba(255,255,255,.03);border-left:2px solid var(--accent);border-radius:0 4px 4px 0;font-size:10px;color:var(--muted);line-height:1.5">' + ev.summary + '</div>'
+ : '';
+
+ return '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+ '<div style="display:flex;align-items:center;gap:8px">' +
  '<div style="min-width:32px;font-size:11px;color:var(--muted);white-space:nowrap">' + fmtDate(ev.dateObj) + '</div>' +
- '<div style="min-width:36px;padding:2px 5px;background:rgba(59,130,246,.12);border-radius:4px;font-size:9px;font-weight:700;color:var(--accent);text-align:center;letter-spacing:.3px">' + ev.icon + '</div>' +
- '<div style="flex:1;font-size:11px;color:var(--text);line-height:1.4">' + impactDot + ev.label + '</div>' +
+ '<div style="min-width:36px;padding:2px 5px;background:rgba(59,130,246,.12);border-radius:4px;font-size:9px;font-weight:700;color:var(--accent);text-align:center;letter-spacing:.3px">' + (ev.icon||'') + '</div>' +
+ '<div style="flex:1;font-size:11px;color:' + (isPast?'var(--muted)':'var(--text)') + ';line-height:1.4">' + impactDot + (ev.label||'') + '</div>' +
  '<div style="min-width:46px;text-align:right;font-size:11px;font-weight:600;color:' + diffColor + ';white-space:nowrap">' + diffLabel + '</div>' +
+ '</div>' + summaryHtml +
  '</div>';
- }).join('') +
- '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-align:right"> 高影響　 中影響</div>';
+ };
+
+ let html = upcoming.map(ev => renderRow(ev, false)).join('');
+
+ if (pastWithSummary.length) {
+ html += '<div style="margin-top:10px;margin-bottom:6px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px"> 事件回顧</div>';
+ html += pastWithSummary.map(ev => renderRow(ev, true)).join('');
+ }
+
+ html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-align:right"> 高影響　 中影響</div>';
+ el.innerHTML = html;
 }
 
 async function renderDashHoldings() {
@@ -6699,47 +6822,12 @@ async function renderDashHoldings() {
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
 async function quickDashboardScan(force) {
- window._scanAbort = false; // clear any stale cancel flag from scanner page
- const now = Date.now();
- const needRescan = force || (now - _scanCache.schwartz.ts > _scanCache.TTL);
-
  // 顯示 RS Leader 快取（如果有）
  const rsEl = document.getElementById('dash-rsleader-list');
  if (window._rsLeaderCache && window._rsLeaderCache.length) {
    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
  } else if (rsEl) {
    rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
- }
-
- if (!needRescan) {
-   renderDashScanList('schwartz', _scanCache.schwartz.results);
-   return;
- }
-
- const swEl = document.getElementById('dash-schwartz-list');
- if (swEl) swEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;font-size:12px">掃描中...</p></div>';
-
- try {
- const quotes = await chartScanFallback('schwartz');
- const schResults = [];
- for (const q of quotes) {
-   if (!q || !q._chartData) continue;
-   const { closes: c, highs: h, lows: l, vols: v } = q._chartData;
-   if (c.length < 20) continue;
-   try {
-     const ta = technicalAnalysis(c, h, l, v, q.regularMarketPrice);
-     const sw = classifySignal(ta, q, 'schwartz', { closes: c, highs: h, lows: l });
-     const benchClosesD = window._benchmarkCloses['SPY'] || [];
-     const rsDataD = calcRelativeStrength(c, benchClosesD);
-     const rsD = rsDataD ? rsDataD.rs : null;
-     if (sw) schResults.push({ ...q, ta, closes: c, highs: h, lows: l, signal: sw.name, signalStrength: sw.strength, signalDetail: sw.detail, strategy: 'schwartz', price: q.regularMarketPrice, changePct: q.regularMarketChangePercent || 0, name: q.shortName || q.symbol, rs: rsD });
-   } catch(e) {}
- }
- schResults.sort((a,b) => b.signalStrength - a.signalStrength);
- _scanCache.schwartz = { results: schResults.slice(0, 5), ts: Date.now() };
- renderDashScanList('schwartz', _scanCache.schwartz.results);
- } catch(e) {
-   if (swEl) swEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:12px">掃描失敗，請重新整理</div>';
  }
 }
 
