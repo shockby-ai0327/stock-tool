@@ -842,7 +842,7 @@ function showPage(name) {
    try { updateScanRegimeWarning(); } catch(e) {}
  }
  if (name === 'education' && _shouldRerender('education')) { renderEducation(); _markRendered('education'); }
- if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } }
+ if (name !== 'scanner') { if (_scannerTimer) { clearInterval(_scannerTimer); _scannerTimer = null; } _stopLiveMonitor(); }
 }
 
 // Tab switchers for merged pages
@@ -5834,9 +5834,11 @@ function loadScanner() {
  _scannerTimer = setInterval(() => {
    if (_currentPage !== 'scanner') return;
    const strat = window._currentScanStrat || 'rsleader';
-   if (strat === 'rsleader' && !window._rsLeaderRunning) runRSLeaderScan();
-   else if (strat === 'breakout' && !window._scanRunning) runScan('schwartz');
+   // For non-rsleader tabs, keep the old 3-min full scan
+   if (strat === 'breakout' && !window._scanRunning) runScan('schwartz');
  }, 180000);
+ // RS Leader tab: start 60s live price monitor instead of full re-scan
+ _startLiveMonitor();
  // Always refresh regime banner on scanner load
  fetchMarketRegime();
  // Auto-trigger RS Leader scan on first visit if no results rendered yet
@@ -8032,6 +8034,143 @@ async function _doGithubDispatch(pat) {
   }
 }
 
+// ── Live Monitor: 60-second price + signal refresh for RS Leader watchlist ───
+// Answers the user's real intraday need: "has anything entered the buy zone?"
+// No full rescan — just overlays fresh prices on the 15-25 cached leaders.
+
+let _liveMonitorTimer = null;
+let _countdownTimer   = null;
+let _liveCountdownSec = 60;
+let _prevSignals      = {}; // symbol → last signal emoji, for change detection
+
+function _isMarketHours() {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 6=Sat
+  if (day === 0 || day === 6) return false;
+  // ET: UTC-4 (EDT) or UTC-5 (EST). Use UTC-4 as approximation for May–Nov
+  const etHour = now.getUTCHours() - 4;
+  const etMin  = now.getUTCMinutes();
+  const etTotal = etHour * 60 + etMin;
+  return etTotal >= 9 * 60 + 25 && etTotal <= 16 * 60 + 5;
+}
+
+function _updateCountdownDisplay(sec) {
+  const el = document.getElementById('live-countdown');
+  if (!el) return;
+  el.textContent = '下次更新 ' + sec + 's';
+  el.style.color = sec <= 10 ? '#22c55e' : 'var(--muted)';
+}
+
+async function _refreshLivePrices() {
+  const cache = window._rsLeaderCache;
+  if (!cache || !cache.length) return;
+  if (window._currentScanStrat !== 'rsleader') return;
+  if (_currentPage !== 'scanner') return;
+
+  // Save previous signals for change detection
+  const prevSigs = Object.assign({}, _prevSignals);
+
+  try {
+    await overlayLivePrices(cache);
+  } catch(e) { return; }
+
+  // Detect signal changes → notify user
+  cache.forEach(r => {
+    const sig = _getRSSignal(r);
+    const newEmoji = sig ? sig.emoji : null;
+    const oldEmoji = prevSigs[r.symbol];
+    _prevSignals[r.symbol] = newEmoji;
+
+    // Only alert on transitions INTO buy zone
+    if (oldEmoji && newEmoji === '✅' && oldEmoji !== '✅') {
+      showToast('🚨 ' + r.symbol + ' 突破買點！量能確認，可進場', 'success');
+      // Flash the row if visible
+      const rows = document.querySelectorAll('.rs-leader-table tbody tr');
+      rows.forEach(row => {
+        if (row.textContent.includes(r.symbol)) {
+          row.style.transition = 'background .3s';
+          row.style.background = 'rgba(34,197,94,.18)';
+          setTimeout(() => { row.style.background = ''; }, 3000);
+        }
+      });
+    } else if (oldEmoji && newEmoji === '📍' && oldEmoji !== '📍' && oldEmoji !== '✅') {
+      showToast('📍 ' + r.symbol + ' 進入買點區（等量能）');
+    }
+  });
+
+  // Re-render table with fresh signals (fast — no network, just HTML rebuild)
+  const tableDiv = document.getElementById('scanner-table');
+  if (tableDiv) {
+    // Keep the existing prependHtml (banner) — just refresh tbody
+    const tbody = tableDiv.querySelector('tbody');
+    if (tbody) {
+      const f = (v,d=2) => v==null?'N/A':Number(v).toFixed(d);
+      const pct = v => (v>=0?'+':'')+f(v,1)+'%';
+      tbody.innerHTML = cache.slice(0, 15).map((r, i) => {
+        const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
+        const volColor = r.volExpand >= 1.5 ? 'var(--green)' : r.volExpand >= 1.0 ? 'var(--muted)' : 'var(--red)';
+        const liveDot = r._livePrice ? '<span style="color:var(--green);font-size:9px;margin-left:3px">●</span>' : '';
+        const sig = _getRSSignal(r);
+        const sigHtml = sig ? '<div style="font-size:11px;margin-top:3px;color:' + sig.color + ';font-weight:600">' + sig.emoji + ' ' + sig.label + '</div>' : '';
+        const stopLoss = r.price ? (r.price * 0.92).toFixed(2) : null;
+        const stopHtml = stopLoss ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">止損 $' + stopLoss + '</div>' : '';
+        const distFromHigh = (r.high52w && r.price) ? (r.price - r.high52w) / r.high52w * 100 : null;
+        const distColor = distFromHigh == null ? 'var(--muted)' : distFromHigh >= -5 ? 'var(--green)' : distFromHigh >= -15 ? 'var(--yellow)' : 'var(--red)';
+        const distCell = distFromHigh != null
+          ? '<div style="font-weight:600;color:' + distColor + '">' + (distFromHigh>=0?'+':'') + distFromHigh.toFixed(1) + '%</div><div style="font-size:10px;color:var(--muted)">距高點</div>'
+          : '<div style="font-size:11px;color:var(--muted)">—</div><div style="font-size:10px;color:var(--muted)">距高點</div>';
+        const redditBadge = r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + '</span>' : '';
+        return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
+          '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
+          '<td style="padding:10px 8px"><div style="font-weight:700;font-size:15px">' + r.symbol + redditBadge + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + (r.name||r.symbol) + '</div>' + sigHtml + '</td>' +
+          '<td style="padding:10px 8px;text-align:right"><div style="font-weight:600">$' + f(r.price) + liveDot + '</div><div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' + stopHtml + '</td>' +
+          '<td style="padding:10px 8px;text-align:center"><div style="font-size:22px;font-weight:800;color:' + scoreColor + '">' + r.rsRating + '</div><div style="font-size:10px;color:var(--muted)">RS Rating</div></td>' +
+          '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
+          '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
+          '<td style="padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:800;color:' + scoreColor + '">' + r.compositeScore + '</div><div style="font-size:10px;color:var(--muted)">綜合分</div></td>' +
+          '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;font-weight:600">進場指引</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+  }
+}
+
+function _startLiveMonitor() {
+  _stopLiveMonitor();
+  if (!window._rsLeaderCache || !window._rsLeaderCache.length) return;
+
+  // Initialize previous signals
+  _prevSignals = {};
+  (window._rsLeaderCache || []).forEach(r => {
+    const sig = _getRSSignal(r);
+    _prevSignals[r.symbol] = sig ? sig.emoji : null;
+  });
+
+  _liveCountdownSec = 60;
+
+  // 1-second countdown ticker
+  _countdownTimer = setInterval(() => {
+    if (_currentPage !== 'scanner' || window._currentScanStrat !== 'rsleader') return;
+    _liveCountdownSec--;
+    if (_liveCountdownSec < 0) _liveCountdownSec = 60;
+    _updateCountdownDisplay(_liveCountdownSec);
+  }, 1000);
+
+  // 60-second live refresh (market hours: always; off-hours: every 5 min)
+  const refreshNow = () => {
+    if (_currentPage !== 'scanner' || window._currentScanStrat !== 'rsleader') return;
+    _liveCountdownSec = 60;
+    _refreshLivePrices();
+  };
+
+  _liveMonitorTimer = setInterval(refreshNow, _isMarketHours() ? 60000 : 300000);
+}
+
+function _stopLiveMonitor() {
+  if (_liveMonitorTimer) { clearInterval(_liveMonitorTimer); _liveMonitorTimer = null; }
+  if (_countdownTimer)   { clearInterval(_countdownTimer);   _countdownTimer   = null; }
+}
+
 async function runRSLeaderScan() {
   if (window._rsLeaderRunning) return;
   window._rsLeaderRunning = true;
@@ -8062,6 +8201,9 @@ async function runRSLeaderScan() {
 
     // Render with metadata banner (show top 15 in main view)
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+
+    // Start live 60s price monitor for intraday use
+    _startLiveMonitor();
 
     // Non-blocking Reddit enrichment
     if (_scannerMarket !== 'tw') {
@@ -8197,7 +8339,8 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
         '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 更新於 ' + scanTime + ' · ' + freshLabel + '</div>' +
       '</div>' +
-      '<div style="display:flex;gap:6px;flex-shrink:0">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
+        '<span id="live-countdown" style="font-size:11px;color:var(--muted)"></span>' +
         '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
         'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
         '⚡ 重新掃描</button>' +
