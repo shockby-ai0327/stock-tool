@@ -460,7 +460,6 @@ firebase.initializeApp(_fbConfig);
  <button id="scan-tab-discover" onclick="switchScanStrategy('discover')">加速發現</button>
  <button id="scan-tab-buyzone"  onclick="switchScanStrategy('buyzone')">今日買點</button>
  <button id="scan-tab-sector"   onclick="switchScanStrategy('sector')">板塊雷達</button>
- <button onclick="showScanHistory()">歷史績效</button>
  </div>
  <div id="market-thermo-container"></div>
  <div class="card" id="scanner-results">
@@ -861,19 +860,6 @@ function switchMarketTab(tab) {
  if (tab === 'industry') { if (_shouldRerender('industry-global')) { loadIndustry('global'); _markRendered('industry-global'); } }
 }
 
-function switchIndicesTab(tab) {
- document.querySelectorAll('#indices-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['indices','sentiment'].indexOf(tab)));
- const ic = document.getElementById('indices-content');
- const sc = document.getElementById('sentiment-content');
- if (!ic || !sc) return;
- if (tab === 'indices') {
- ic.style.display = ''; sc.style.display = 'none';
- if (_shouldRerender('indices')) { loadIndices(); _markRendered('indices'); }
- } else {
- ic.style.display = 'none'; sc.style.display = '';
- if (_shouldRerender('sentiment')) { loadSentiment(); _markRendered('sentiment'); }
- }
-}
 
 function switchJournalTab(tab) {
  window._lastJournalTab = tab; // remember for next visit
@@ -3185,25 +3171,6 @@ function _showMindsetModal(analyzed, totalWithNotes) {
  document.body.appendChild(ov);
 }
 
-function exportJournalCSV() {
- const j = getJ();
- if (!j.length) { alert('尚無交易紀錄'); return; }
- const headers = ['日期','代號','動作','價格','數量','金額','手續費','實收實付','策略','停損','備註'];
- const rows = j.map(r => [
-   r.date, r.ticker, r.action === 'buy' ? '買入' : '賣出',
-   r.price, r.qty, (r.price * r.qty).toFixed(2),
-   r.commission != null ? r.commission.toFixed(2) : '',
-   r.net != null ? r.net.toFixed(2) : '',
-   r.strategy || '', r.stop || '', (r.notes || '').replace(/,/g, '，')
- ]);
- const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
- const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
- const url = URL.createObjectURL(blob);
- const a = document.createElement('a'); a.href = url;
- a.download = '交易日誌_' + new Date().toISOString().slice(0,10) + '.csv';
- a.click(); URL.revokeObjectURL(url);
-}
-
 function renderJournal() {
  const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
@@ -4330,19 +4297,6 @@ let _refreshTimer = null;
 let _currentPage = 'dashboard';
 let _lastAnalyzedTicker = null;
 
-function isMarketOpen() {
- const now = new Date();
- const utcH = now.getUTCHours(), utcM = now.getUTCMinutes();
- const utcMin = utcH * 60 + utcM;
- // US market: 9:30-16:00 ET = 13:30-20:00 UTC (winter) / 13:30-20:00 UTC
- const usOpen = utcMin >= 13 * 60 + 30 && utcMin < 20 * 60;
- // TW market: 9:00-13:30 = 1:00-5:30 UTC
- const twOpen = utcMin >= 1 * 60 && utcMin < 5 * 60 + 30;
- // Futures/crypto trade almost 24h
- const day = now.getDay();
- const weekday = day >= 1 && day <= 5;
- return (usOpen && weekday) || (twOpen && weekday) || true; // always allow refresh for futures/crypto
-}
 
 let _refreshing = false;
 function startAutoRefresh() {
@@ -4587,18 +4541,6 @@ async function fetchTWSEInstitutional() {
   }
 }
 
-// 計算連買連賣天數 (positive = 連買N天, negative = 連賣N天)
-function calcInstStreak(history) {
-  if (!history || !history.length) return 0;
-  const dir = history[0] > 0 ? 1 : history[0] < 0 ? -1 : 0;
-  if (!dir) return 0;
-  let streak = 0;
-  for (const v of history) {
-    if ((dir > 0 && v > 0) || (dir < 0 && v < 0)) streak++;
-    else break;
-  }
-  return dir * streak;
-}
 
 // chartScanFallback：直接用 yfChart 拉精選池，同時取得完整 OHLCV + 技術指標所需資料
 // Cloudflare Worker 作為主要 proxy，速度穩定
@@ -5070,118 +5012,6 @@ function renderEdgarCard(data) {
   return html;
 }
 
-// ============ SCAN HISTORY + PERFORMANCE TRACKING ============
-function saveScanToHistory(results, strategy, market) {
- if (!results || !results.length) return;
- const today = new Date().toISOString().slice(0, 10);
- const key = today + '_' + strategy + '_' + market;
- const history = JSON.parse(localStorage.getItem('scan-history') || '[]');
- // One record per day+strategy+market combo
- if (history.find(h => h.key === key)) return;
- history.push({
- key, date: today, strategy, market,
- picks: results.slice(0, 10).map(r => ({
- symbol: r.symbol, price: r.price, strength: r.signalStrength, rs: r.rs || null
- }))
- });
- if (history.length > 120) history.splice(0, history.length - 120);
- localStorage.setItem('scan-history', JSON.stringify(history));
-}
-
-async function enrichScanHistory() {
- // Called lazily: for each history record, check if 7+ days old and fetch current price
- const history = JSON.parse(localStorage.getItem('scan-history') || '[]');
- const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
- const needsResult = history.filter(h => h.date <= sevenDaysAgo && !h.result);
- if (!needsResult.length) return;
- for (const rec of needsResult.slice(0, 5)) { // max 5 at once
- const results = await Promise.allSettled(rec.picks.map(async p => {
- try {
- const chart = await yfChart(p.symbol, '1mo', '1d', 5000);
- const closes = chart.indicators.quote[0].close.filter(v => v != null);
- const curPrice = closes[closes.length - 1];
- const returnPct = ((curPrice - p.price) / p.price) * 100;
- return { symbol: p.symbol, entryPrice: p.price, curPrice, returnPct };
- } catch { return null; }
- }));
- rec.result = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
- const wins = rec.result.filter(r => r.returnPct > 0).length;
- rec.winRate = rec.result.length ? (wins / rec.result.length * 100).toFixed(0) : null;
- rec.avgReturn = rec.result.length ? (rec.result.reduce((s, r) => s + r.returnPct, 0) / rec.result.length).toFixed(2) : null;
- }
- localStorage.setItem('scan-history', JSON.stringify(history));
-}
-
-function showScanHistory() {
- const tableDiv = document.getElementById('scanner-table');
- document.querySelectorAll('#scanner-tabs button').forEach((b, i) => b.classList.toggle('active', i === 2));
- const history = JSON.parse(localStorage.getItem('scan-history') || '[]').slice().reverse();
- if (!history.length) {
- tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px"></div><p>尚無掃描記錄。<br>執行掃描後系統會自動記錄，7天後自動計算績效。</p></div>';
- return;
- }
- // Aggregate win rate by strategy
- const stratStats = {};
- history.forEach(h => {
- if (!h.result) return;
- const k = h.strategy;
- if (!stratStats[k]) stratStats[k] = { wins: 0, total: 0, totalReturn: 0 };
- h.result.forEach(r => {
- stratStats[k].total++;
- if (r.returnPct > 0) stratStats[k].wins++;
- stratStats[k].totalReturn += r.returnPct;
- });
- });
- let summaryHtml = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">';
- ['schwartz','steinhardt'].forEach(strat => {
- const s = stratStats[strat];
- const label = strat === 'schwartz' ? ' Schwartz' : ' Steinhardt';
- if (s && s.total > 0) {
- const wr = (s.wins / s.total * 100).toFixed(0);
- const avgRet = (s.totalReturn / s.total).toFixed(2);
- const color = parseFloat(avgRet) > 0 ? 'var(--green)' : 'var(--red)';
- summaryHtml += '<div style="padding:12px 16px;background:var(--card);border-radius:10px;border:1px solid var(--border);min-width:160px">' +
- '<div style="font-size:12px;color:var(--muted)">' + label + ' 歷史績效</div>' +
- '<div style="font-size:20px;font-weight:700;color:' + color + ';margin:4px 0">' + (parseFloat(avgRet) > 0 ? '+' : '') + avgRet + '%</div>' +
- '<div style="font-size:11px;color:var(--muted)">勝率 ' + wr + '% · ' + s.total + ' 筆</div></div>';
- } else {
- summaryHtml += '<div style="padding:12px 16px;background:var(--card);border-radius:10px;border:1px solid var(--border);min-width:160px;opacity:.5">' +
- '<div style="font-size:12px;color:var(--muted)">' + label + ' 歷史績效</div>' +
- '<div style="font-size:13px;color:var(--muted);margin-top:6px">7天後自動追蹤</div></div>';
- }
- });
- summaryHtml += '</div>';
- let html = summaryHtml + '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">顯示最近 ' + history.length + ' 次掃描記錄（7 天後自動計算績效）</div>';
- html += '<div class="table-wrap"><table><thead><tr><th>日期</th><th>策略</th><th>市場</th><th>選股</th><th>7日勝率</th><th>7日平均報酬</th></tr></thead><tbody>';
- history.slice(0, 30).forEach(h => {
- const pickList = h.picks.map(p =>
- '<span style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + p.symbol + '\';showPage(\'stock\');analyzeStock()">' + p.symbol + '</span>'
- ).join(' · ');
- const stratLabel = h.strategy === 'schwartz' ? ' Schwartz' : ' Steinhardt';
- let resultCell = '<span style="color:var(--muted);font-size:11px">待追蹤</span>';
- if (h.result) {
- const avgRet = parseFloat(h.avgReturn);
- const color = avgRet > 0 ? 'var(--green)' : 'var(--red)';
- resultCell = '<span style="color:' + color + ';font-weight:600">' + (avgRet > 0 ? '+' : '') + h.avgReturn + '%</span>';
- }
- html += '<tr>' +
- '<td style="font-size:12px;color:var(--muted)">' + h.date + '</td>' +
- '<td>' + stratLabel + '</td>' +
- '<td style="font-size:12px">' + (h.market === 'us' ? '美股' : '台股') + '</td>' +
- '<td style="font-size:12px">' + pickList + '</td>' +
- '<td>' + (h.winRate ? h.winRate + '%' : '<span style="color:var(--muted);font-size:11px">待追蹤</span>') + '</td>' +
- '<td>' + resultCell + '</td></tr>';
- });
- html += '</tbody></table></div>';
- html += '<div style="margin-top:12px;text-align:right"><button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="if(confirm(\'清除所有歷史紀錄？\')){localStorage.removeItem(\'scan-history\');showScanHistory()}">清除歷史</button></div>';
- tableDiv.innerHTML = html;
- // Async: enrich old records with performance data, then re-render without recursion
- enrichScanHistory().then(() => {
- const history2 = JSON.parse(localStorage.getItem('scan-history') || '[]');
- // Only re-render if data actually changed (avoid no-op flicker)
- if (history2.some(h => h.enriched)) showScanHistory();
- });
-}
 
 function renderCustomPoolTags() {
   const el = document.getElementById('custom-pool-tags');
@@ -5246,23 +5076,8 @@ function switchScannerMarket(market) {
   // Re-run whichever strategy tab is currently active
   const strat = window._currentScanStrat || 'rsleader';
   if (strat === 'rsleader') runRSLeaderScan();
-  // old breakout tab removed
 }
 
-function cancelScan() { window._scanAbort = true; } // legacy no-op
-
-
-function addToWatchlist(symbol) {
- if (_todayWatchlist.length >= 15) { alert('今日標的最多 15 檔，請先移除不需要的'); return; }
- if (_todayWatchlist.some(w => w.symbol === symbol)) return;
- const result = _scannerResults.find(r => r.symbol === symbol);
- const price = result ? result.price : 0;
- const atr = (result?.ta?.atr) || (price * 0.02);
- const autoStop = price > 0 ? parseFloat((price - 1.5 * atr).toFixed(2)) : null;
- const autoEntry = price > 0 ? price : null;
- _todayWatchlist.push({ symbol, name: result ? result.name : symbol, addedPrice: price, entryPrice: autoEntry, stopPrice: autoStop, atr: parseFloat(atr.toFixed(4)), strategy: _scannerStrategy, signal: result ? result.signal : '', alerts: [] });
- saveTodayWatchlist(); renderWatchlist(); renderScannerResults(_scannerResults, _scannerStrategy, false); startWatchlistRefresh();
-}
 function removeFromWatchlist(symbol) {
  _todayWatchlist = _todayWatchlist.filter(w => w.symbol !== symbol);
  saveTodayWatchlist(); renderWatchlist();
@@ -5390,8 +5205,6 @@ function loadScanner() {
  _scannerTimer = setInterval(() => {
    if (_currentPage !== 'scanner') return;
    const strat = window._currentScanStrat || 'rsleader';
-   // For non-rsleader tabs, keep the old 3-min full scan
-   // old breakout scan removed
  }, 180000);
  // RS Leader tab: start 60s live price monitor instead of full re-scan
  _startLiveMonitor();
@@ -5538,133 +5351,6 @@ function showStrategy(type) {
  document.getElementById('strategy-detail').innerHTML = html;
 }
 
-// ============ JOURNAL ANALYSIS ============
-function renderJournalAnalysis(trades, stats, rawJ) {
- if (trades.length < 2) return '';
- const SL = { value:'價值投資', swing:'波段交易', day:'當沖', other:'其他', momentum:'動量突破', catalyst:'題材帶動', pullback:'回檔反彈', gapgo:'跳空追擊', meanrev:'均值回歸' };
- // Sample size warning
- let sampleWarn = '';
- if (trades.length < 10) {
- sampleWarn = '<div style="padding:10px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:12px;color:var(--yellow);margin-bottom:12px"> 目前僅有 '+trades.length+' 筆已結算交易。統計分析需要至少 20-30 筆才具有顯著意義，目前結論僅供參考方向。</div>';
- }
- const hd = t => Math.floor((new Date(t.sellDate) - new Date(t.buyDate)) / 86400000);
- const winT = trades.filter(t => t.isWin), lossT = trades.filter(t => !t.isWin);
- const avgWH = winT.length ? winT.reduce((s,t)=>s+hd(t),0)/winT.length : 0;
- const avgLH = lossT.length ? lossT.reduce((s,t)=>s+hd(t),0)/lossT.length : 0;
- // Strategy breakdown (≥2 trades)
- const sm = {};
- trades.forEach(t => {
- const k = t.strategy||'other';
- if (!sm[k]) sm[k] = { wins:0, total:0, pnl:0 };
- sm[k].total++; if (t.isWin) sm[k].wins++; sm[k].pnl += t.pnlPct;
- });
- const sl = Object.entries(sm).filter(([,v])=>v.total>=2).sort((a,b)=>(b[1].wins/b[1].total)-(a[1].wins/a[1].total));
- const best = sl[0], worst = sl[sl.length-1];
-
- const ins = [];
- const add = (icon,type,text) => ins.push({icon,type,text});
-
- // Overall verdict
- if (stats.profitFactor >= 1.5 && stats.winRate >= 50)
- add('','good','整體績效良好：勝率 '+stats.winRate.toFixed(0)+'%、利潤因子 '+stats.profitFactor.toFixed(2)+'，屬穩定獲利型交易者。繼續維持現有紀律。');
- else if (stats.profitFactor < 1)
- add('','bad','利潤因子 '+stats.profitFactor.toFixed(2)+' 低於 1，長期持續此模式將虧損。最常見原因：停損過晚、停利過早。建議優先修正出場紀律再增加交易頻率。');
- else
- add('','info','勝率 '+stats.winRate.toFixed(0)+'%、利潤因子 '+stats.profitFactor.toFixed(2)+'，績效中等。改善方向：讓獲利跑更遠（提升盈虧比）或提高進場篩選標準（提升勝率）。');
-
- // Holding period pattern
- if (winT.length && lossT.length) {
- if (avgLH > avgWH * 1.5)
- add('⏱','bad','虧損單平均持有 '+avgLH.toFixed(0)+' 天，比獲利單（'+avgWH.toFixed(0)+' 天）長 '+((avgLH/Math.max(avgWH,1)-1)*100).toFixed(0)+'%。「剪掉獲利、讓虧損奔跑」是侵蝕帳戶的核心問題。建議：買入當天就設好硬性停損，觸及就執行，不討論。');
- else if (avgWH > avgLH * 1.2)
- add('','good','獲利單持有 '+avgWH.toFixed(0)+' 天 > 虧損單 '+avgLH.toFixed(0)+' 天，有效執行「快速停損、讓獲利奔跑」原則，這是正確的交易習慣，持續保持。');
- }
-
- // Strategy insight (require ≥5 trades for meaningful insight)
- if (best && best[1].total >= 5)
- add('','good','你在「'+(SL[best[0]]||best[0])+'」策略勝率最高（'+((best[1].wins/best[1].total)*100).toFixed(0)+'%，共 '+best[1].total+' 筆）。建議集中資源在此策略，減少不擅長的類型。');
- if (worst && best && worst[0]!==best[0] && worst[1].total >= 5)
- add('','warn','「'+(SL[worst[0]]||worst[0])+'」策略勝率最低（'+((worst[1].wins/worst[1].total)*100).toFixed(0)+'%，共 '+worst[1].total+' 筆）。建議暫停此類交易，重新定義進場條件後再嘗試。');
-
- // Win rate
- if (stats.winRate >= 60)
- add('','good','選股勝率 '+stats.winRate.toFixed(0)+'% 優秀。現在重點在於提升單筆盈虧比：目前平均獲利 +'+stats.avgWin.toFixed(1)+'%，若能提升到 '+( stats.avgWin * 1.5 ).toFixed(1)+'%，整體報酬將大幅提升。');
- else if (stats.winRate < 40)
- add('','warn','勝率 '+stats.winRate.toFixed(0)+'% 偏低，逾 6 成進場時機有誤差。建議提高進場門檻：等技術信號更明確（RSI 回落至支撐、MACD 翻多確認）再進場，寧可少做不做錯。');
-
- // Consecutive losses
- if (stats.maxConsecLosses >= 4)
- add('','bad','歷史最大連虧 '+stats.maxConsecLosses+' 次。當連虧達 3 次時，建議暫停交易 1-2 天冷靜覆盤，避免「報復性交易」加速虧損。');
-
- // Kelly criterion
- if (stats.avgWin > 0 && stats.avgLoss > 0) {
- const b = stats.avgWin / stats.avgLoss;
- const q = 1 - stats.winRate / 100;
- const kelly = Math.max(0, stats.winRate/100 - q/b);
- const halfK = Math.min(kelly/2, 0.25);
- if (halfK > 0.01)
- add('','info','根據歷史勝率（'+stats.winRate.toFixed(0)+'%）與盈虧比（'+b.toFixed(2)+'），Half Kelly 建議單筆部位約總資金 '+(halfK*100).toFixed(0)+'%。若以 1% 停損法，建議同時最多持有約 '+Math.max(1,Math.round(0.01/Math.max(halfK*stats.avgLoss/100,0.001)))+' 個部位。（此計算需 30+ 筆交易才具統計意義）');
- }
-
- const C = {good:'var(--green)',warn:'var(--yellow)',bad:'var(--red)',info:'var(--accent)'};
- const BG= {good:'rgba(16,185,129,.07)',warn:'rgba(245,158,11,.07)',bad:'rgba(239,68,68,.07)',info:'rgba(59,130,246,.07)'};
- const BD= {good:'rgba(16,185,129,.25)',warn:'rgba(245,158,11,.25)',bad:'rgba(239,68,68,.25)',info:'rgba(59,130,246,.25)'};
- // Item 14: Mindset trend
- let mindsetTrendHtml = '';
- try {
- const mhist = JSON.parse(localStorage.getItem('mindset-history')||'[]');
- if (mhist.length >= 3) {
- const last3 = mhist.slice(-3);
- const trend = last3.map(h => h.score.toFixed(1)).join(' → ');
- const lastScore = last3[last3.length-1].score, firstScore = last3[0].score;
- const trendLabel = lastScore > firstScore + 0.5 ? ' ↑改善中' : lastScore < firstScore - 0.5 ? ' ↓需關注' : ' →穩定';
- const trendColor = lastScore > firstScore + 0.5 ? 'var(--green)' : lastScore < firstScore - 0.5 ? 'var(--red)' : 'var(--muted)';
- mindsetTrendHtml = '<div style="margin-top:10px;padding:8px 12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px;font-size:12px">' +
- ' 思維品質趨勢（近3次分析）：<span style="color:'+trendColor+';font-weight:600">'+trend+trendLabel+'</span></div>';
- }
- } catch(e) {}
- return '<div class="card" style="margin-bottom:16px">' +
- '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
- '<h3 style="margin:0">AI 交易教練分析</h3>' +
- '<span style="font-size:11px;color:var(--muted)">基於 '+trades.length+' 筆已結算交易</span></div>' +
- sampleWarn +
- '<div style="display:flex;flex-direction:column;gap:8px">' +
- ins.map(i =>
- '<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:'+BG[i.type]+';border:1px solid '+BD[i.type]+';border-radius:8px">' +
- '<span style="font-size:18px;flex-shrink:0;line-height:1.5">'+i.icon+'</span>' +
- '<div style="font-size:13px;line-height:1.75;color:var(--text)">'+i.text+'</div></div>'
- ).join('') +
- '</div>' + mindsetTrendHtml + '</div>';
-}
-
-function statCard(label, value, color) {
- const colorVar = color === 'green' ? 'var(--green)' : color === 'red' ? 'var(--red)' : 'var(--yellow)';
- return '<div class="card" style="text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + label + '</div><div style="font-size:28px;font-weight:700;color:' + colorVar + '">' + value + '</div></div>';
-}
-
-function pairTrades(journal) {
- const buys = {}, trades = [];
- const sorted = [...journal].sort((a, b) => new Date(a.date) - new Date(b.date));
- sorted.forEach(e => {
- if (e.action === 'buy') {
- if (!buys[e.ticker]) buys[e.ticker] = [];
- buys[e.ticker].push({ ...e, remainQty: e.qty });
- }
- if (e.action === 'sell' && buys[e.ticker] && buys[e.ticker].length > 0) {
- let sellRemain = e.qty;
- while (sellRemain > 0 && buys[e.ticker].length > 0) {
- const buy = buys[e.ticker][0];
- const matched = Math.min(buy.remainQty, sellRemain);
- const pnlPct = ((e.price - buy.price) / buy.price) * 100;
- trades.push({ ticker: e.ticker, buyDate: buy.date, sellDate: e.date, buyPrice: buy.price, sellPrice: e.price, qty: matched, pnlPct, pnlAmt: (e.price - buy.price) * matched, strategy: buy.strategy || 'other', isWin: pnlPct > 0 });
- buy.remainQty -= matched;
- sellRemain -= matched;
- if (buy.remainQty <= 0) buys[e.ticker].shift();
- }
- }
- });
- return trades;
-}
 
 // ============ EDUCATION ============
 function renderEducation() {
@@ -8647,76 +8333,6 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
 }
 
 // ── 突破掃描 tab: filter RS Leader cache for actionable buy setups ──────────
-function _showBreakoutFilter() {
-  const tableDiv = document.getElementById('scanner-table');
-  if (!tableDiv) return;
-
-  // Need RS leader cache (populated after runRSLeaderScan fast path)
-  const cache = window._rsLeaderCache;
-  if (!cache || !cache.length) {
-    // No cache yet — run RS leader scan first, then come back
-    tableDiv.innerHTML =
-      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
-        '<div style="font-size:24px;margin-bottom:8px">⏳</div>' +
-        '<div>尚未載入動能領袖資料</div>' +
-        '<div style="font-size:12px;margin-top:4px">請先切換到「動能領袖」頁載入排行，再回到突破掃描</div>' +
-        '<button onclick="switchScanStrategy(\'rsleader\')" style="margin-top:16px;padding:8px 20px;border-radius:8px;' +
-          'background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px">' +
-          '前往載入動能領袖 →</button>' +
-      '</div>';
-    return;
-  }
-
-  // Filter: distFromHigh ≥ -15% (watching range or better) — stocks within striking distance
-  // Sort by distFromHigh descending (closest to high first)
-  const withDist = cache
-    .filter(r => r.high52w && r.price)
-    .map(r => {
-      const distPct = (r.price - r.high52w) / r.high52w * 100;
-      return { ...r, _distPct: distPct };
-    })
-    .filter(r => r._distPct >= -15)
-    .sort((a, b) => b._distPct - a._distPct);
-
-  // Bear market banner
-  const regime = window._marketRegime;
-  const bearBanner = (regime && regime.overall <= -2)
-    ? '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#ef4444;font-weight:600">🔴 市場環境偏弱 — 以下訊號均供參考，建議等待市場轉強後再進場</div>'
-    : '';
-
-  if (!withDist.length) {
-    tableDiv.innerHTML =
-      bearBanner +
-      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
-        '<div style="font-size:28px;margin-bottom:8px">🔍</div>' +
-        '<div style="font-weight:600">目前無股票在買點區間</div>' +
-        '<div style="font-size:12px;margin-top:4px">動能領袖中目前沒有股票距高點在 15% 以內<br>繼續觀察，等待整理完成後的突破機會</div>' +
-      '</div>';
-    return;
-  }
-
-  // Count actionable signals
-  const breakoutCount = withDist.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '✅'; }).length;
-  const nearCount = withDist.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '📍'; }).length;
-
-  const summaryBanner =
-    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;' +
-    'background:rgba(34,197,94,.07);border-radius:8px;border:1px solid rgba(34,197,94,.18)">' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:12px;color:#22c55e;font-weight:600">🎯 突破買點篩選 — 距高點 ≤ 15% 的動能領袖</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' +
-          (breakoutCount ? '<span style="color:#22c55e">✅ 突破買進 ' + breakoutCount + ' 檔</span>　' : '') +
-          (nearCount ? '<span style="color:#f59e0b">📍 近買點 ' + nearCount + ' 檔</span>　' : '') +
-          '<span>共 ' + withDist.length + ' 檔在觀察範圍</span>' +
-        '</div>' +
-      '</div>' +
-      '<button onclick="switchScanStrategy(\'rsleader\')" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
-        'background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap">' +
-        '← 完整排行</button>' +
-    '</div>';
-
-  _renderRSLeaderTable(withDist, tableDiv, bearBanner + summaryBanner);
-}
 
 // ── 加速發現 tab ─────────────────────────────────────────────────────────────
 function _showDiscoveryTab() {
@@ -9964,16 +9580,6 @@ function dailyToWeekly(closes, highs, lows) {
  return { wc, wh, wl };
 }
 
-function calcWeeklyTrend(closes, highs, lows) {
- const { wc } = dailyToWeekly(closes, highs, lows);
- if (wc.length < 20) return 'neutral';
- const wma10 = wc.slice(-10).reduce((a,b)=>a+b,0) / 10;
- const wma20 = wc.slice(-20).reduce((a,b)=>a+b,0) / 20;
- const lastWC = wc[wc.length - 1];
- if (lastWC > wma10 && wma10 > wma20) return 'bull';
- if (lastWC < wma10 && wma10 < wma20) return 'bear';
- return 'neutral';
-}
 
 // ============ FEATURE E: EARNINGS CALENDAR ============
 window._earningsCache = null;
@@ -10016,33 +9622,6 @@ async function fetchEarningsCalendar(tickers, market) {
  } catch(e) { return {}; }
 }
 
-function enrichScannerWithEarnings(earningsMap) {
- const rows = document.querySelectorAll('#scanner-table tbody tr');
- const today = new Date();
- rows.forEach(row => {
- const firstTd = row.querySelector('td');
- if (!firstTd) return;
- const ticker = (firstTd.querySelector('b') || firstTd).textContent.trim().toUpperCase();
- if (!earningsMap[ticker]) return;
- const earnDate = new Date(earningsMap[ticker]);
- const daysUntil = Math.round((earnDate - today) / 86400000);
- if (daysUntil < 0 || daysUntil > 7) return;
- const mm = (earnDate.getMonth() + 1).toString().padStart(2,'0');
- const dd = earnDate.getDate().toString().padStart(2,'0');
- const urgentColor = daysUntil <= 3 ? 'rgba(239,68,68,.9)' : 'rgba(249,115,22,.9)';
- const badge = '<span style="display:inline-block;margin-left:4px;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' + urgentColor + ';color:#fff"> 財報 ' + mm + '/' + dd + '</span>';
- firstTd.innerHTML = firstTd.innerHTML + badge;
- // If within 3 days, add grey star note
- if (daysUntil <= 3) {
- const starTds = row.querySelectorAll('td');
- starTds.forEach(td => {
- if (td.style && td.textContent.includes('')) {
- td.innerHTML += '<span style="font-size:9px;color:var(--muted)"> -1</span>';
- }
- });
- }
- });
-}
 
 // ============ TOAST NOTIFICATION ============
 function showToast(msg, type) {
