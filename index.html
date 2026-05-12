@@ -8576,34 +8576,46 @@ let _sectorTs    = 0;
 async function _fetchSectorData() {
   if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
 
-  // Reuse the proven overlayLivePrices fallback chain (query1→query2→v8/chart).
-  // Treat each sector ETF as a minimal "leader" object so we can call it directly.
-  const fakeLeaders = SECTOR_ETFS.map(e => ({ symbol: e.sym, avgVol20: 1 }));
-  try {
-    await overlayLivePrices(fakeLeaders);
-  } catch(e) {
-    console.warn('[sector] overlayLivePrices failed:', e.message);
-    return null;
+  // Use v8/finance/chart directly — no auth/cookies needed, works without crumb
+  // Fetch in batches of 4 with small delays to avoid rate limits
+  const results = [];
+  const BATCH = 4;
+  for (let i = 0; i < SECTOR_ETFS.length; i += BATCH) {
+    const batch = SECTOR_ETFS.slice(i, i + BATCH);
+    const settled = await Promise.allSettled(batch.map(async e => {
+      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
+        e.sym + '?interval=1d&range=2d&includePrePost=false';
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error(e.sym + ' HTTP ' + res.status);
+      const d = await res.json();
+      const meta = d?.chart?.result?.[0]?.meta;
+      if (!meta) throw new Error(e.sym + ' no meta');
+      const price     = meta.regularMarketPrice || 0;
+      const prevClose = meta.chartPreviousClose || meta.previousClose || price;
+      const high52w   = meta.fiftyTwoWeekHigh   || 0;
+      return {
+        ...e,
+        price,
+        changePct: prevClose ? (price - prevClose) / prevClose * 100 : 0,
+        distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
+      };
+    }));
+    settled.forEach((s, j) => {
+      if (s.status === 'fulfilled') results.push(s.value);
+      else console.warn('[sector]', batch[j].sym, s.reason?.message || s.reason);
+    });
+    if (i + BATCH < SECTOR_ETFS.length) await new Promise(r => setTimeout(r, 300));
   }
 
-  // Map results back — overlayLivePrices writes price, changePct, high52w onto each object
-  const priceMap = {};
-  fakeLeaders.forEach(l => { priceMap[l.symbol] = l; });
+  if (!results.length) return null;
 
-  const hasData = fakeLeaders.some(l => l.price && l.price > 0);
-  if (!hasData) return null;
-
-  _sectorCache = SECTOR_ETFS.map(e => {
-    const l = priceMap[e.sym] || {};
-    const price   = l.price   || 0;
-    const high52w = l.high52w || 0;
-    return {
-      ...e,
-      price,
-      changePct: l.changePct || 0,
-      distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
-    };
+  // Fill in any missing ETFs with zero data so the table always renders fully
+  const got = new Set(results.map(r => r.sym));
+  SECTOR_ETFS.forEach(e => {
+    if (!got.has(e.sym)) results.push({ ...e, price: 0, changePct: 0, distHigh: null });
   });
+
+  _sectorCache = results;
   _sectorTs = Date.now();
   return _sectorCache;
 }
