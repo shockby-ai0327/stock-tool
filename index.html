@@ -7960,12 +7960,16 @@ async function _savePat() {
   if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
 }
 
-// Trigger a fresh GitHub Actions scan
-// If no PAT → show one-time setup modal. After that, button works instantly forever.
+// Trigger a fresh scan.
+// If PAT stored → use GitHub Actions (server-side, ~3 min, full 600-stock universe).
+// If no PAT     → run browser-side scan immediately (no prompts, no interruptions).
 async function triggerGithubScan() {
   const pat = localStorage.getItem('gh_pat');
   if (!pat) {
-    showPatSetupModal(() => triggerGithubScan());
+    // Silent fallback: browser scan, zero prompts
+    showToast('⚡ 即時瀏覽器掃描中（可在設定儲存 Token 改用伺服器掃描）');
+    window._rsLeaderRunning = false;
+    runRSLeaderScan();
     return;
   }
   await _doGithubDispatch(pat);
@@ -8015,8 +8019,9 @@ async function _doGithubDispatch(pat) {
     } else if (r.status === 401) {
       localStorage.removeItem('gh_pat');
       btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-      showToast('❌ Token 已失效，需重新設定', 'error');
-      showPatSetupModal(() => triggerGithubScan());
+      showToast('Token 已失效，改用瀏覽器掃描', 'warn');
+      window._rsLeaderRunning = false;
+      runRSLeaderScan();
     } else {
       btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
       showToast('❌ 觸發失敗 HTTP ' + r.status, 'error');
@@ -8192,9 +8197,13 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
         '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 更新於 ' + scanTime + ' · ' + freshLabel + '</div>' +
       '</div>' +
-      '<button data-rescan-btn onclick="triggerGithubScan()" style="flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:6px;' +
-      'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
-      '⚡ 重新掃描</button>' +
+      '<div style="display:flex;gap:6px;flex-shrink:0">' +
+        '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
+        'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
+        '⚡ 重新掃描</button>' +
+        '<button onclick="showPatSetupModal(()=>{})" title="設定 GitHub Token（可選）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
+        'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">⚙️</button>' +
+      '</div>' +
     '</div>';
 
   // Reuse table render with banner prepended
