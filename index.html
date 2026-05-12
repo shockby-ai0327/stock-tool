@@ -8576,45 +8576,56 @@ let _sectorTs    = 0;
 async function _fetchSectorData() {
   if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
 
-  // Use v8/finance/chart directly — no auth/cookies needed, works without crumb
-  // Fetch in batches of 4 with small delays to avoid rate limits
+  // v8/finance/chart — no auth needed. Use range=5d so we always get data
+  // even on weekends/holidays/after-hours (Yahoo returns last available bars).
+  const fetchOne = async (sym) => {
+    for (const host of ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']) {
+      try {
+        const url = 'https://' + host + '/v8/finance/chart/' + sym +
+          '?interval=1d&range=5d&includePrePost=false';
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const d = await res.json();
+        const result = d?.chart?.result?.[0];
+        if (!result) throw new Error('no result');
+        const meta   = result.meta;
+        const closes = (result.indicators?.quote?.[0]?.close || []).filter(v => v != null);
+        const price     = meta.regularMarketPrice || closes[closes.length - 1] || 0;
+        const prevClose = meta.chartPreviousClose || closes[closes.length - 2] || price;
+        const high52w   = meta.fiftyTwoWeekHigh || 0;
+        return {
+          price,
+          changePct: prevClose ? (price - prevClose) / prevClose * 100 : 0,
+          distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
+        };
+      } catch(e) {
+        console.warn('[sector]', sym, host, e.message);
+      }
+    }
+    return null; // both hosts failed
+  };
+
+  // Fetch all ETFs sequentially in small batches
   const results = [];
   const BATCH = 4;
   for (let i = 0; i < SECTOR_ETFS.length; i += BATCH) {
     const batch = SECTOR_ETFS.slice(i, i + BATCH);
-    const settled = await Promise.allSettled(batch.map(async e => {
-      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
-        e.sym + '?interval=1d&range=2d&includePrePost=false';
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) throw new Error(e.sym + ' HTTP ' + res.status);
-      const d = await res.json();
-      const meta = d?.chart?.result?.[0]?.meta;
-      if (!meta) throw new Error(e.sym + ' no meta');
-      const price     = meta.regularMarketPrice || 0;
-      const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-      const high52w   = meta.fiftyTwoWeekHigh   || 0;
-      return {
-        ...e,
-        price,
-        changePct: prevClose ? (price - prevClose) / prevClose * 100 : 0,
-        distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
-      };
-    }));
+    const settled = await Promise.allSettled(batch.map(e => fetchOne(e.sym)));
     settled.forEach((s, j) => {
-      if (s.status === 'fulfilled') results.push(s.value);
-      else console.warn('[sector]', batch[j].sym, s.reason?.message || s.reason);
+      const e = batch[j];
+      const data = s.status === 'fulfilled' ? s.value : null;
+      results.push({
+        ...e,
+        price:     data?.price     ?? 0,
+        changePct: data?.changePct ?? 0,
+        distHigh:  data?.distHigh  ?? null,
+        _failed:   !data,
+      });
     });
-    if (i + BATCH < SECTOR_ETFS.length) await new Promise(r => setTimeout(r, 300));
+    if (i + BATCH < SECTOR_ETFS.length) await new Promise(r => setTimeout(r, 250));
   }
 
-  if (!results.length) return null;
-
-  // Fill in any missing ETFs with zero data so the table always renders fully
-  const got = new Set(results.map(r => r.sym));
-  SECTOR_ETFS.forEach(e => {
-    if (!got.has(e.sym)) results.push({ ...e, price: 0, changePct: 0, distHigh: null });
-  });
-
+  // Always return results (even with zeros) so the tab renders rather than failing
   _sectorCache = results;
   _sectorTs = Date.now();
   return _sectorCache;
