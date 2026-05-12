@@ -7874,30 +7874,150 @@ async function fetchPrecomputedScan(market) {
   }
 }
 
-// Overlay live prices onto pre-computed leaders (only 15 calls vs 120+)
-async function overlayLivePrices(leaders) {
-  if (!leaders || !leaders.length) return leaders;
+// ── Price cache: survive Yahoo outages ──────────────────────────────────────
+// On every successful fetch we snapshot prices to sessionStorage.
+// If all sources fail we restore the last good snapshot and mark data as stale.
+
+const PRICE_CACHE_KEY = 'rs_price_cache';
+
+function _savePriceCache(leaders) {
   try {
-    const syms = leaders.map(l => l.symbol).join(',');
-    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms +
-      '&fields=symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekHigh,regularMarketVolume';
-    const raw = await pFetch(url, false, 6000);
-    const data = await raw.json();
-    const map = {};
-    (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
+    const snap = { ts: Date.now(), prices: {} };
     leaders.forEach(l => {
-      const q = map[l.symbol];
-      if (q) {
-        l.price = q.regularMarketPrice || l.price;
-        l.changePct = q.regularMarketChangePercent || l.changePct;
-        // fiftyTwoWeekHigh from Yahoo is more accurate than server-side 12mo high
-        if (q.fiftyTwoWeekHigh) l.high52w = q.fiftyTwoWeekHigh;
-        // today's actual volume for volume-confirm signal
-        if (q.regularMarketVolume) l.todayVol = q.regularMarketVolume;
-        l._livePrice = true;
+      snap.prices[l.symbol] = {
+        price: l.price, changePct: l.changePct,
+        high52w: l.high52w, todayVol: l.todayVol
+      };
+    });
+    sessionStorage.setItem(PRICE_CACHE_KEY, JSON.stringify(snap));
+  } catch(e) {}
+}
+
+function _restorePriceCache(leaders) {
+  try {
+    const raw = sessionStorage.getItem(PRICE_CACHE_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    const ageS = Math.round((Date.now() - snap.ts) / 1000);
+    let restored = 0;
+    leaders.forEach(l => {
+      const c = snap.prices[l.symbol];
+      if (c) {
+        if (c.price)    l.price    = c.price;
+        if (c.changePct !== undefined) l.changePct = c.changePct;
+        if (c.high52w)  l.high52w  = c.high52w;
+        if (c.todayVol) l.todayVol = c.todayVol;
+        l._livePrice  = false;
+        l._cacheAge   = ageS;
+        restored++;
       }
     });
-  } catch(e) { console.warn('[overlayLivePrices]', e.message); }
+    if (restored > 0) {
+      // Show age badge next to countdown
+      const el = document.getElementById('live-countdown');
+      if (el) el.textContent = '⚠ 使用 ' + ageS + 's 前資料（Yahoo 暫時中斷）';
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Apply quote map from Yahoo response onto leaders array
+function _applyQuoteMap(leaders, map) {
+  leaders.forEach(l => {
+    const q = map[l.symbol];
+    if (!q) return;
+    if (q.regularMarketPrice)        l.price    = q.regularMarketPrice;
+    if (q.regularMarketChangePercent !== undefined) l.changePct = q.regularMarketChangePercent;
+    if (q.fiftyTwoWeekHigh)          l.high52w  = q.fiftyTwoWeekHigh;
+    if (q.regularMarketVolume)       l.todayVol = q.regularMarketVolume;
+    l._livePrice = true;
+    l._cacheAge  = 0;
+  });
+}
+
+// Fallback C: v8/finance/chart — no cookies needed, works 100% of the time
+// Slower (1 call/symbol) but completely auth-free
+async function _overlayViaV8Chart(leaders) {
+  const FIELDS = 'regularMarketPrice,regularMarketChangePercent,regularMarketVolume,fiftyTwoWeekHigh';
+  // Fetch in small parallel batches to stay polite
+  const BATCH = 5;
+  for (let i = 0; i < leaders.length; i += BATCH) {
+    const batch = leaders.slice(i, i + BATCH);
+    await Promise.allSettled(batch.map(async l => {
+      try {
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
+          encodeURIComponent(l.symbol) + '?interval=1d&range=1d&includePrePost=false';
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (!meta) return;
+        if (meta.regularMarketPrice)        l.price    = meta.regularMarketPrice;
+        if (meta.chartPreviousClose && meta.regularMarketPrice) {
+          l.changePct = (meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose * 100;
+        }
+        if (meta.regularMarketVolume)  l.todayVol  = meta.regularMarketVolume;
+        if (meta.fiftyTwoWeekHigh)     l.high52w   = meta.fiftyTwoWeekHigh;
+        l._livePrice = true; l._cacheAge = 0;
+      } catch(e) {}
+    }));
+    if (i + BATCH < leaders.length) await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+// ── Main overlay entry point — 3-layer fallback chain ───────────────────────
+async function overlayLivePrices(leaders) {
+  if (!leaders || !leaders.length) return leaders;
+
+  const syms = leaders.map(l => l.symbol).join(',');
+  const FIELDS = 'symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekHigh,regularMarketVolume';
+
+  // Layer 1: Yahoo v7 via query1 (fastest — batched, browser cookies)
+  try {
+    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      const map = {};
+      (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
+      if (Object.keys(map).length > 0) {
+        _applyQuoteMap(leaders, map);
+        _savePriceCache(leaders);
+        return leaders;
+      }
+    }
+  } catch(e) { console.warn('[overlay] query1 v7 failed:', e.message); }
+
+  // Layer 2: Yahoo v7 via query2 (different CDN, often works when query1 is rate-limited)
+  try {
+    const url = 'https://query2.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      const map = {};
+      (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
+      if (Object.keys(map).length > 0) {
+        _applyQuoteMap(leaders, map);
+        _savePriceCache(leaders);
+        return leaders;
+      }
+    }
+  } catch(e) { console.warn('[overlay] query2 v7 failed:', e.message); }
+
+  // Layer 3: Yahoo v8/chart — no auth, no cookies, completely reliable
+  console.warn('[overlay] falling back to v8/chart (no-auth)');
+  try {
+    await _overlayViaV8Chart(leaders);
+    if (leaders.some(l => l._livePrice)) {
+      _savePriceCache(leaders);
+      return leaders;
+    }
+  } catch(e) { console.warn('[overlay] v8/chart failed:', e.message); }
+
+  // All sources failed — restore last known good prices from sessionStorage
+  console.warn('[overlay] all sources failed — restoring cache');
+  _restorePriceCache(leaders);
   return leaders;
 }
 
@@ -7962,18 +8082,25 @@ async function _savePat() {
   if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
 }
 
-// Trigger a fresh scan.
-// If PAT stored → use GitHub Actions (server-side, ~3 min, full 600-stock universe).
-// If no PAT     → run browser-side scan immediately (no prompts, no interruptions).
+// ⚡ 重新掃描 — always runs immediately in browser, no token needed.
+// Skips fast-path JSON cache and forces a fresh browser OHLCV scan.
+// GitHub Actions continues to run on schedule (3×/day) for the full universe.
 async function triggerGithubScan() {
-  const pat = localStorage.getItem('gh_pat');
-  if (!pat) {
-    // Silent fallback: browser scan, zero prompts
-    showToast('⚡ 即時瀏覽器掃描中（可在設定儲存 Token 改用伺服器掃描）');
-    window._rsLeaderRunning = false;
-    runRSLeaderScan();
+  if (window._rsLeaderRunning) {
+    showToast('掃描進行中，請稍候...', 'warn');
     return;
   }
+  showToast('⚡ 開始即時掃描（約 30-60 秒）');
+  // Force skip fast-path so we run a fresh browser scan
+  window._rsLeaderForceSlowPath = true;
+  window._rsLeaderRunning = false;
+  runRSLeaderScan();
+}
+
+// GitHub Actions dispatch — called only from ⚙️ settings or explicit advanced use
+async function triggerGithubActionsDispatch() {
+  const pat = localStorage.getItem('gh_pat');
+  if (!pat) { showPatSetupModal(() => triggerGithubActionsDispatch()); return; }
   await _doGithubDispatch(pat);
 }
 
@@ -8183,8 +8310,12 @@ async function runRSLeaderScan() {
   try { // ← wraps BOTH fast + slow path — _rsLeaderRunning always resets
 
   // ── FAST PATH: try pre-computed JSON from GitHub Actions ──────────────
-  setMsg('讀取伺服器預算排行...');
-  const precomputed = await fetchPrecomputedScan(_scannerMarket);
+  // Skipped when user hits ⚡ 重新掃描 (force fresh browser scan)
+  const forceSlowPath = window._rsLeaderForceSlowPath;
+  window._rsLeaderForceSlowPath = false;
+
+  setMsg(forceSlowPath ? '⚡ 即時掃描中，請稍候（約 30-60 秒）...' : '讀取伺服器預算排行...');
+  const precomputed = forceSlowPath ? null : await fetchPrecomputedScan(_scannerMarket);
 
   if (precomputed && precomputed.data && precomputed.data.leaders.length > 0) {
     const { data, stale } = precomputed;
@@ -8344,8 +8475,8 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
         '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
         'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
         '⚡ 重新掃描</button>' +
-        '<button onclick="showPatSetupModal(()=>{})" title="設定 GitHub Token（可選）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
-        'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">⚙️</button>' +
+        '<button onclick="triggerGithubActionsDispatch()" title="觸發 GitHub Actions 完整掃描（需設定 Token）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
+        'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">☁️</button>' +
       '</div>' +
     '</div>';
 
