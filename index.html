@@ -8576,29 +8576,62 @@ let _sectorTs    = 0;
 async function _fetchSectorData() {
   if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
   const syms = SECTOR_ETFS.map(e => e.sym).join(',');
-  const FIELDS = 'symbol,regularMarketChangePercent,regularMarketPrice,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent';
-  try {
-    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
+  const FIELDS = 'symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekHigh';
+
+  const _tryFetch = async (host) => {
+    const url = 'https://' + host + '/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
     const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const map = {};
-    (data?.quoteResponse?.result || []).forEach(q => { map[q.symbol] = q; });
-    _sectorCache = SECTOR_ETFS.map(e => {
-      const q = map[e.sym] || {};
-      return {
-        ...e,
-        price:      q.regularMarketPrice || 0,
-        changePct:  q.regularMarketChangePercent || 0,
-        distHigh:   q.fiftyTwoWeekHighChangePercent ? q.fiftyTwoWeekHighChangePercent * 100 : null,
-      };
-    });
-    _sectorTs = Date.now();
-    return _sectorCache;
-  } catch(e) {
-    console.warn('[sector]', e.message);
-    return null;
+    const results = data?.quoteResponse?.result || [];
+    if (!results.length) throw new Error('empty');
+    return results;
+  };
+
+  let quotes = null;
+  for (const host of ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']) {
+    try { quotes = await _tryFetch(host); break; } catch(e) { console.warn('[sector] ' + host + ':', e.message); }
   }
+
+  // Last resort: individual v8/chart for today's change only
+  if (!quotes) {
+    try {
+      const spot = await Promise.allSettled(SECTOR_ETFS.map(async e => {
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + e.sym + '?interval=1d&range=5d';
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const d = await res.json();
+        const r = d?.chart?.result?.[0];
+        if (!r) throw new Error('no data');
+        const closes = r.indicators.quote[0].close.filter(v => v != null);
+        const price = closes[closes.length - 1];
+        const prev  = closes[closes.length - 2] || price;
+        const changePct = (price - prev) / prev * 100;
+        const high52w = r.meta.fiftyTwoWeekHigh || null;
+        return { symbol: e.sym, regularMarketPrice: price, regularMarketChangePercent: changePct, fiftyTwoWeekHigh: high52w };
+      }));
+      quotes = spot.filter(s => s.status === 'fulfilled').map(s => s.value);
+    } catch(e) { console.warn('[sector] v8 fallback failed:', e.message); return null; }
+  }
+
+  if (!quotes || !quotes.length) return null;
+
+  const map = {};
+  quotes.forEach(q => { map[q.symbol] = q; });
+
+  _sectorCache = SECTOR_ETFS.map(e => {
+    const q = map[e.sym] || {};
+    const price   = q.regularMarketPrice || 0;
+    const high52w = q.fiftyTwoWeekHigh   || 0;
+    return {
+      ...e,
+      price,
+      changePct: q.regularMarketChangePercent || 0,
+      distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
+    };
+  });
+  _sectorTs = Date.now();
+  return _sectorCache;
 }
 
 async function _showSectorRadarTab() {
