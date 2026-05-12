@@ -7227,6 +7227,7 @@ async function fetchPrecomputedScan(market) {
 const PRICE_CACHE_KEY = 'rs_price_cache';
 
 function _savePriceCache(leaders) {
+  window._lastLiveRefreshAt = Date.now();
   try {
     const snap = { ts: Date.now(), prices: {} };
     leaders.forEach(l => {
@@ -7658,19 +7659,87 @@ function _updateNotifBtn() {
   }
 }
 
-// ⚡ 重新掃描 — always runs immediately in browser, no token needed.
-// Skips fast-path JSON cache and forces a fresh browser OHLCV scan.
-// GitHub Actions continues to run on schedule (3×/day) for the full universe.
+// ⚡ 重新整理 — force-reload GitHub JSON + live prices + rank-diff display.
+// Reliable during market hours (no Yahoo rate-limit issues from browser scan).
 async function triggerGithubScan() {
   if (window._rsLeaderRunning) {
-    showToast('掃描進行中，請稍候...', 'warn');
+    showToast('更新進行中，請稍候...', 'warn');
     return;
   }
-  showToast('⚡ 開始即時掃描（約 30-60 秒）');
-  // Force skip fast-path so we run a fresh browser scan
-  window._rsLeaderForceSlowPath = true;
-  window._rsLeaderRunning = false;
-  runRSLeaderScan();
+  window._rsLeaderRunning = true;
+
+  // Snapshot previous ranking for diff display
+  const prevSymbols = (window._rsLeaderCache || []).map(r => r.symbol);
+
+  // Update button states
+  const btns = document.querySelectorAll('[data-rescan-btn]');
+  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 更新中...'; });
+
+  const tableDiv = document.getElementById('scanner-table');
+  const setMsg = msg => {
+    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
+  };
+
+  try {
+    setMsg('重新拉取伺服器排行...');
+    // Force cache-bust: bypass any in-memory / CDN cache
+    const market = _scannerMarket || 'us';
+    const file = market === 'tw' ? 'tw_scan.json' : 'us_scan.json';
+    const res = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.leaders || !data.leaders.length) throw new Error('empty response');
+
+    const leaders = data.leaders;
+    const ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
+    const stale  = ageMin > 15 * 60;
+
+    setMsg('更新即時報價...');
+    await overlayLivePrices(leaders);
+
+    window._rsDiscoveryCache = data.discoveries || [];
+    if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
+
+    // ── Rank-change diff ───────────────────────────────────────────────────
+    const currTop = leaders.slice(0, 15).map(r => r.symbol);
+    const diff = {};
+    currTop.forEach((sym, i) => {
+      const prevRank = prevSymbols.indexOf(sym);
+      diff[sym] = { prev: prevRank === -1 ? null : prevRank + 1, curr: i + 1 };
+    });
+    window._rsDiff = diff;
+
+    window._rsLeaderCache = leaders;
+    renderDashRSLeader(leaders.slice(0, 5));
+
+    // Summary toast
+    const newEntries = currTop.filter(s => prevSymbols.length > 0 && !prevSymbols.includes(s));
+    const bigMovers  = currTop.filter(s => diff[s] && diff[s].prev && Math.abs(diff[s].prev - diff[s].curr) >= 3);
+    const changeDesc = prevSymbols.length === 0
+      ? '首次載入'
+      : newEntries.length > 0 ? '🆕 新上榜：' + newEntries.slice(0, 3).join('、')
+      : bigMovers.length > 0  ? '大幅移動 ' + bigMovers.length + ' 檔'
+      : '排名穩定，報價已更新';
+    showToast('✅ 已更新 · ' + changeDesc);
+
+    renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+    _startLiveMonitor();
+    _renderMarketThermo().catch(() => {});
+    _enrichWithEarnings(leaders.slice(0, 15)).then(() => {
+      renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+    }).catch(() => {});
+
+  } catch(e) {
+    showToast('❌ 更新失敗：' + e.message, 'error');
+    // Restore previous view
+    if (window._rsLeaderCache && window._rsLeaderCache.length) {
+      renderRSLeaderResultsPrecomputed(window._rsLeaderCache.slice(0, 15),
+        { scannedAt: new Date(Date.now() - 60000).toISOString(), universeSize: null }, 0, true);
+    }
+  } finally {
+    window._rsLeaderRunning = false;
+    btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新整理'; });
+  }
 }
 
 // GitHub Actions dispatch — called only from ⚙️ settings or explicit advanced use
@@ -7917,6 +7986,7 @@ async function runRSLeaderScan() {
     // Cache leaders + discoveries; overlay live prices on discoveries too
     window._rsLeaderCache    = leaders;
     window._rsDiscoveryCache = data.discoveries || [];
+    window._rsDiff = null; // clear diff on fresh load (not a manual refresh)
     if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
     renderDashRSLeader(leaders.slice(0, 5));
 
@@ -8057,23 +8127,27 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
     : '預算排行';
   const freshLabel = stale
     ? '<span style="color:var(--yellow)">⚠ 資料較舊（' + ageMin + ' 分鐘前）</span>'
-    : '<span style="color:var(--green)">● 伺服器掃描（' + ageMin + ' 分鐘前）</span>';
+    : '<span style="color:var(--green)">● 伺服器掃描（' + (ageMin < 2 ? '剛更新' : ageMin + ' 分鐘前') + '）</span>';
   const scanTime = meta.scannedAt ? new Date(meta.scannedAt).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'}) : '';
+  const liveRefreshedAt = window._lastLiveRefreshAt
+    ? ' · 報價刷新 ' + new Date(window._lastLiveRefreshAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})
+    : '';
 
   const banner =
     '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;' +
     'background:rgba(59,130,246,.08);border-radius:8px;border:1px solid rgba(59,130,246,.2)">' +
       '<div style="flex:1;min-width:0">' +
         '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 更新於 ' + scanTime + ' · ' + freshLabel + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 掃描 ' + scanTime + liveRefreshedAt + ' · ' + freshLabel + '</div>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
         '<span id="live-countdown" style="font-size:11px;color:var(--muted)"></span>' +
         '<button id="notif-toggle-btn" onclick="_initPushNotifications()" title="開啟買點推播通知（視窗切換到其他頁面時彈出）" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.4);color:#f59e0b;background:rgba(245,158,11,.08);cursor:pointer;white-space:nowrap">🔔 開啟通知</button>' +
         '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
-        'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap">' +
-        '⚡ 重新掃描</button>' +
-        '<button onclick="triggerGithubActionsDispatch()" title="觸發 GitHub Actions 完整掃描（需設定 Token）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
+        'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap" ' +
+        'title="重新拉取伺服器最新排行 + 更新即時報價（秒速完成）">' +
+        '⚡ 重新整理</button>' +
+        '<button onclick="triggerGithubActionsDispatch()" title="觸發 GitHub Actions 完整重新掃描全市場（需設定 Token）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
         'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">☁️</button>' +
       '</div>' +
     '</div>';
@@ -8384,8 +8458,21 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         '</div>'
       : '';
 
+    // Rank-diff badge (↑3 / ↓2 / 🆕)
+    const diffData = window._rsDiff && window._rsDiff[r.symbol];
+    let rankBadge = '';
+    if (diffData) {
+      if (diffData.prev === null) {
+        rankBadge = '<span style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(99,102,241,.2);color:#818cf8;font-weight:700">🆕</span>';
+      } else {
+        const delta = diffData.prev - diffData.curr; // positive = moved up
+        if (delta >= 2)      rankBadge = '<span style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(34,197,94,.15);color:#22c55e;font-weight:700">↑' + delta + '</span>';
+        else if (delta <= -2) rankBadge = '<span style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;font-weight:700">↓' + Math.abs(delta) + '</span>';
+      }
+    }
+
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
-      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
+      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
         '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
