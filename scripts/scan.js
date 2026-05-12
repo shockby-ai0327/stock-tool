@@ -1,13 +1,15 @@
 /**
- * scan.js — Server-side RS Leader Scanner
- * Runs in GitHub Actions, saves results to ../data/us_scan.json + tw_scan.json
+ * scan.js — Server-side RS Leader + Acceleration Discovery Scanner
+ * Runs in GitHub Actions 3×/day, saves to ../data/us_scan.json + tw_scan.json
  *
- * Universe: S&P 500 + Russell 1000 Growth + Momentum ETF holdings (MTUM/XMMO/DWAS/QMOM)
- * ~1000–1200 unique tickers, covering large + mid + small cap growth/momentum stocks
+ * TWO output arrays per scan:
+ *   leaders[]     — Confirmed momentum leaders (12-1mo RS, top 25)
+ *   discoveries[] — Acceleration candidates (3-mo momentum + accel, top 15)
  *
- * Algorithm: IBD-style RS Rating (percentile rank of 12-1 month momentum vs benchmark)
- * Filters: price > MA50, avg volume > 200k, 12-1mo return > 0
- * Score: rsRating×50% + volExpand×30% + momentumTilt×20%
+ * leaders:     IBD-style 12-1 month RS Rating vs benchmark
+ * discoveries: Stocks with ≥30% 3-month return + accelerating momentum
+ *              (recent 1-month pace > 3-month avg pace × 1.2)
+ *              Sorted by acceleration score, excludes leader list duplicates
  */
 
 import fetch from 'node-fetch';
@@ -47,8 +49,7 @@ async function yfFetch(url, retries = 3) {
   }
 }
 
-// Batch quote: up to 200 symbols per call, returns basic quote data
-// OHLCV: daily bars for a single symbol (v8/finance/chart — no auth required)
+// OHLCV via v8/finance/chart — no auth required
 async function getOHLCV(symbol, range = '12mo') {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}&includePrePost=false`;
   const data = await yfFetch(url);
@@ -56,14 +57,13 @@ async function getOHLCV(symbol, range = '12mo') {
   if (!result) throw new Error('no data');
   const oq = result.indicators.quote[0];
   return {
-    closes: oq.close.filter(v => v != null),
-    highs:  oq.high.filter(v => v != null),
+    closes:  oq.close.filter(v => v != null),
+    highs:   oq.high.filter(v => v != null),
     volumes: oq.volume.filter(v => v != null),
-    meta: result.meta,
+    meta:    result.meta,
   };
 }
 
-// Fetch Yahoo predefined screener symbols
 async function fetchScreener(scrId, count = 50) {
   try {
     const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=${scrId}&start=0&count=${count}&formatted=false`;
@@ -78,7 +78,6 @@ async function fetchScreener(scrId, count = 50) {
 
 // ── Stock universe ──────────────────────────────────────────────────────────
 
-// S&P 500 core (full 503-ticker list, split into groups for readability)
 const SP500 = [
   // Information Technology
   'AAPL','MSFT','NVDA','AVGO','ORCL','CRM','AMD','QCOM','TXN','INTC',
@@ -88,79 +87,105 @@ const SP500 = [
   'SMCI','GLW','TEL','APH','TDY','KEYS','TRMB','FFIV','JNPR','NTAP',
   // Communication Services
   'META','GOOGL','GOOG','NFLX','DIS','CMCSA','T','VZ','TMUS','CHTR',
-  'TTWO','EA','ATVI','WBD','PARA','LYV','OMC','IPG','FOXA','FOX',
+  'TTWO','EA','WBD','PARA','LYV','OMC','IPG','FOXA','FOX',
   // Consumer Discretionary
   'AMZN','TSLA','HD','MCD','NKE','SBUX','TJX','LOW','BKNG','MAR',
   'HLT','ABNB','RCL','CCL','NCLH','YUM','CMG','DRI','QSR','WYNN',
-  'LVS','MGM','PENN','EXPE','LYFT','UBER','ETSY','EBAY','RVTY','RL',
-  'PVH','TPR','VFC','HBI','LB','GPS','ANF','AEO','URBN','BBWI',
-  'APTV','BWA','LEA','MGA','LKQ','AZO','ORLY','AAP','KMX','AN',
-  'GPC','POOL','SHW','WHR','NVR','PHM','DHI','LEN','TOL','MDC',
+  'LVS','MGM','EXPE','UBER','ETSY','EBAY','RL','PVH','TPR','AZO',
+  'ORLY','KMX','GPC','POOL','NVR','PHM','DHI','LEN','TOL',
   // Consumer Staples
   'WMT','COST','PG','KO','PEP','PM','MO','MDLZ','CL','GIS',
-  'K','CPB','HRL','SJM','CAG','MKC','KHC','STZ','BF-B','TAP',
-  'EL','COTY','CHD','CLX','KMB','PG','AVP','REYN',
+  'K','CPB','HRL','CAG','MKC','KHC','STZ','EL','CHD','CLX','KMB',
   // Health Care
   'LLY','JNJ','UNH','ABBV','MRK','TMO','ABT','DHR','BMY','AMGN',
   'GILD','VRTX','REGN','ISRG','BSX','MDT','EW','SYK','ZBH','BAX',
-  'BDX','HOLX','IDXX','IQV','IQVIA','A','WAT','MTD','PKI','PODD',
-  'DXCM','ALGN','PENN','RMD','INSP','NVCR','EXAS','GH','NVAX','MRNA',
-  'PFE','CVS','CI','HUM','ELV','CNC','MOH','HCA','THC','UHS',
+  'BDX','HOLX','IDXX','IQV','DXCM','ALGN','EXAS','MRNA','PFE',
+  'CVS','CI','HUM','ELV','CNC','MOH','HCA','THC','UHS',
   // Financials
-  'BRK-B','JPM','BAC','WFC','GS','MS','C','AXP','BLK','SCHW',
-  'COF','DFS','SYF','AIG','MET','PRU','AFL','ALL','TRV','CB',
-  'AJG','MMC','AON','WTW','BX','KKR','APO','CG','ARES','BAM',
-  'V','MA','PYPL','FI','FIS','GPN','FISV','WEX','EVTC','COOP',
-  'USB','PNC','TFC','FITB','RF','HBAN','KEY','MTB','NTRS','STT',
-  'SIVB','SBNY','WAL','PACW','FHN','ZION','CFG','ALLY','SLM',
+  'JPM','BAC','WFC','GS','MS','C','AXP','BLK','SCHW','COF',
+  'DFS','SYF','MET','PRU','AFL','ALL','TRV','CB','AJG','MMC',
+  'AON','BX','KKR','APO','CG','ARES','V','MA','PYPL','FI',
+  'FIS','GPN','FISV','USB','PNC','TFC','FITB','RF','HBAN','KEY',
+  'MTB','NTRS','STT','ALLY','SLM',
   // Energy
-  'XOM','CVX','COP','EOG','PXD','DVN','FANG','MPC','VLO','PSX',
-  'HES','OXY','SLB','HAL','BKR','NOV','FTI','HP','RIG','VAL',
-  'CTRA','APA','MRO','SM','MTDR','VTLE','CRGY','PR','MGY','CHRD',
+  'XOM','CVX','COP','EOG','DVN','MPC','VLO','PSX','HES','OXY',
+  'SLB','HAL','BKR','CTRA','APA','MRO','SM','MTDR','VTLE','MGY',
   // Industrials
   'CAT','DE','HON','GE','RTX','LMT','NOC','GD','BA','TDG',
-  'HWM','HII','L3H','LDOS','SAIC','CSX','UNP','NSC','CP','CNI',
-  'UPS','FDX','XPO','ODFL','SAIA','JBHT','CHRW','EXPD','GXO','REXR',
-  'MMM','EMR','ETN','ROK','PH','AME','FAST','GWW','MSC','WSO',
-  'CARR','OTIS','TT','JCI','LYTS','AOS','IR','XYL','TRMB','GNRC',
+  'HWM','HII','LDOS','SAIC','CSX','UNP','NSC','UPS','FDX','XPO',
+  'ODFL','SAIA','JBHT','CHRW','EXPD','MMM','EMR','ETN','ROK','PH',
+  'AME','FAST','GWW','CARR','OTIS','TT','JCI','AOS','IR','XYL','GNRC',
   // Materials
-  'LIN','APD','ECL','PPG','SHW','FCX','NEM','GOLD','AA','X',
-  'NUE','STLD','RS','ATI','CF','MOS','NTR','FMC','ALB','LTHM',
+  'LIN','APD','ECL','PPG','SHW','FCX','NEM','GOLD','AA','NUE',
+  'STLD','CF','MOS','ALB',
   // Real Estate
-  'AMT','PLD','EQIX','CCI','SBAC','DLR','PSA','EQR','AVB','UDR',
-  'CPT','ESS','MAA','NNN','O','VICI','GLPI','PEAK','WELL','VTR',
+  'AMT','PLD','EQIX','CCI','SBAC','DLR','PSA','EQR','AVB','O','VICI',
   // Utilities
-  'NEE','DUK','SO','AEP','EXC','SRE','XEL','D','ETR','FE',
-  'WEC','ES','DTE','CNP','NI','AES','ATO','LNT','EVRG','OGE',
-].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
+  'NEE','DUK','SO','AEP','EXC','SRE','XEL','D','ETR','WEC','DTE',
+].filter((v, i, a) => a.indexOf(v) === i);
 
-// High-growth / momentum stocks NOT in S&P 500 (small/mid cap explosives)
+// Confirmed momentum + growth names beyond S&P 500
 const GROWTH_EXTENDED = [
-  // Recent momentum leaders & emerging growth
-  'PLTR','RKLB','IONQ','RGTI','QBTS','ARQQ','BTDR',
-  'ARM','HOOD','COIN','MSTR','MARA','RIOT','HUT','CIFR',
-  'SMCI','AXON','CELH','DUOL','CRDO','ALAB','ASST',
-  'ASTS','LUNR','RDW','SPCE','ACHR','JOBY','LILM','EVTL',
-  'SHOP','DKNG','RBLX','U','SNAP','PINS','BMBL','MTCH',
-  'AFRM','UPST','SOFI','LC','OPEN','OPFI','DAVE',
-  'GLBE','SEMR','MELI','NU','PDD','SE','GRAB','BABA',
-  'TSM','ASML','LSCC','ALGM','ACLS','PLAB','DIOD',
-  'WOLF','LAZR','LIDR','OUST','AEYE','MVIS','INVZ',
-  'RXRX','SEER','ZYMERGEN','BEAM','EDIT','CRSP','NTLA','VERV',
-  'DOCS','HIMS','ACCD','PHR','NVCR','RXDX','KRTX','IMVT',
-  'TMDX','IRTC','INSP','SILK','ATRC','SWAV','NARI','NVST',
-  'SITE','STAG','TRNO','COLD','IIPR','LAND','PINE',
-  'GTLB','DOMO','BRZE','AMPL','SPLT','FRSH','SPRK',
-  'ESTC','SUMO','APPN','PEGA','ALTR','BOX','DOCN','FSLY',
-  'HALO','PRCT','IOVA','XNCR','FATE','BLUE','FOLD','IMCR',
-  'CLOV','ONEM','TDOC','AMWL','OPRX','TALK','MTTR','LMND',
+  // AI infrastructure & chips
+  'PLTR','ARM','CRDO','ALAB','NVDA','SMCI',
+  // Quantum computing
+  'IONQ','RGTI','QBTS','ARQQ',
+  // Space & defense tech
+  'RKLB','ASTS','LUNR','RDW','BKSY','PL',
+  // Crypto / digital assets
+  'COIN','MSTR','MARA','RIOT','HUT','CIFR','CLSK',
+  // AI software & SaaS
+  'AXON','DUOL','GTLB','DDOG','NET','SNOW','MDB','BRZE','AMPL',
+  'DOCN','ESTC','APPN','PEGA','BOX','FSLY',
+  // Fintech
+  'HOOD','AFRM','UPST','SOFI','NU','GLBE','SEMR',
+  // Biotech / healthtech
+  'HIMS','RXRX','DOCS','EXAS','ACCD','NVCR',
+  'TMDX','IRTC','INSP','SILK','ATRC','SWAV','NARI',
+  'BEAM','CRSP','EDIT','NTLA','VERV','FOLD','IMCR',
+  // EV / autonomous
+  'ACHR','JOBY','OUST','LAZR',
+  // Emerging growth
+  'MELI','PDD','SE','TSM','ASML','LSCC','WOLF',
+  'CELH','DKNG','RBLX',
+  // Energy transition
+  'FLNC','NRGV','GPRE','LASR',
 ];
+
+// Early-stage / acceleration discovery pool — AI era emerging names
+// Shorter-history stocks, recent IPOs, sector inflection plays
+const DISCOVERY_POOL = [
+  // AI agents & infrastructure
+  'SOUN','BBAI','IREN','CORZ','WULF','BTBT','RIOT','MARA',
+  'AI','AIXI','AISP','AITX',
+  // Robotics & automation
+  'NVTS','VNET','AMBA','CEVA','XPERI',
+  // Semiconductor equipment & materials
+  'ACLS','PLAB','DIOD','ALGM','LSCC','FORM','ONTO','UCTT','KLIC',
+  // Defense AI
+  'KTOS','RCAT','AVAV','HII','LDOS',
+  // Nuclear / energy AI
+  'SMR','OKLO','NNE','LEU','UUUU','CCJ',
+  // Biotech acceleration
+  'RXRX','STTK','MBX','IBRX','IMVT','KRTX',
+  // Satellite & connectivity
+  'ASTS','RKLB','PL','BKSY','LLAP',
+  // Financial AI
+  'AFRM','UPST','DAVE','OPFI',
+  // Industrial AI
+  'FLNC','NRGV','OUST','RBOT',
+  // Consumer AI
+  'DUOL','HIMS','DOCS',
+  // Misc emerging
+  'MSTR','CIFR','HUT','CLSK','WULF','CORZ',
+  'LASR','GLW','STX','WDC','SNDK',
+].filter((v, i, a) => a.indexOf(v) === i);
 
 // TW scan pool
 const TW_POOL = [
   '2330.TW','2317.TW','2454.TW','2382.TW','2308.TW','2303.TW','2412.TW',
   '2881.TW','2882.TW','2884.TW','2885.TW','2886.TW','2887.TW','2888.TW',
-  '2891.TW','2892.TW','2301.TW','2302.TW','2303.TW','2311.TW','2313.TW',
+  '2891.TW','2892.TW','2301.TW','2302.TW','2311.TW','2313.TW',
   '2324.TW','2325.TW','2327.TW','2328.TW','2337.TW','2338.TW','2340.TW',
   '2344.TW','2347.TW','2352.TW','2353.TW','2354.TW','2355.TW','2356.TW',
   '2357.TW','2359.TW','2360.TW','2362.TW','2363.TW','2364.TW','2365.TW',
@@ -175,7 +200,6 @@ const TW_POOL = [
   '3054.TW','3055.TW','0050.TW','0056.TW','2002.TW','1301.TW','1303.TW',
 ];
 
-// Known ETFs to exclude from stock scanning
 const ETF_EXCLUDE = new Set([
   'SPY','QQQ','IWM','DIA','VTI','VOO','VEA','VWO','EFA','EEM',
   'GLD','SLV','USO','XLK','XLF','XLV','XLE','XLI','XLY','XLP',
@@ -188,7 +212,7 @@ function isEtf(sym) {
   return ETF_EXCLUDE.has(sym) || (/^(PRO|SHO|ULT|SCR)/i.test(sym) && sym.length >= 4);
 }
 
-// ── RS Rating calculation ───────────────────────────────────────────────────
+// ── RS Rating ───────────────────────────────────────────────────────────────
 
 function calcRSRatings(stocks) {
   const values = stocks.map(s => s.rs12_1);
@@ -199,154 +223,210 @@ function calcRSRatings(stocks) {
   });
 }
 
-// ── Main scan logic ─────────────────────────────────────────────────────────
+// ── Core stock metrics from OHLCV data ─────────────────────────────────────
+
+function calcMetrics(closes, highs, volumes, meta, benchReturn) {
+  const n = closes.length;
+  const price = meta.regularMarketPrice || closes[n - 1];
+  const ma50  = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
+  const avgVol20 = volumes.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
+  const avgVol40 = volumes.slice(-40).reduce((a, b) => a + (b || 0), 0) / 40;
+  const avgVol5  = volumes.slice(-5).reduce((a,  b) => a + (b || 0), 0) / 5;
+
+  // Momentum at multiple lookbacks
+  const idx1m  = Math.max(0, n - 21);
+  const idx3m  = Math.max(0, n - 63);
+  const idx6m  = Math.max(0, n - 126);
+
+  const ret1m  = (price - closes[idx1m])  / closes[idx1m]  * 100;
+  const ret3m  = closes.length > 63  ? (price - closes[idx3m])  / closes[idx3m]  * 100 : null;
+  const ret6m  = closes.length > 126 ? (price - closes[idx6m])  / closes[idx6m]  * 100 : null;
+  const ret12_1 = (closes[idx1m] - closes[0]) / closes[0] * 100; // 12-1mo (skip last month)
+
+  // Acceleration: compare recent monthly pace vs 3-month monthly avg
+  // accel > 1.2 → accelerating; accel < 0.8 → decelerating
+  const accel = (ret3m != null && ret3m !== 0)
+    ? ret1m / (ret3m / 3)
+    : null;
+
+  // Volume expansion
+  const volExpand  = avgVol20 > 0 ? avgVol5  / avgVol20 : 1;
+  const volTrend   = avgVol40 > 0 ? avgVol20 / avgVol40 : 1; // is recent volume growing?
+
+  const changePct = n >= 2 ? (price - closes[n - 2]) / closes[n - 2] * 100 : 0;
+  const high52w   = highs.length > 0 ? Math.max(...highs) : null;
+  const high3m    = highs.length > 63 ? Math.max(...highs.slice(-63)) : (highs.length > 0 ? Math.max(...highs) : null);
+
+  return {
+    price, ma50, avgVol20, avgVol5,
+    ret1m, ret3m, ret6m, ret12_1,
+    rs12_1: ret12_1 - benchReturn,
+    accel, volExpand, volTrend,
+    changePct, high52w, high3m,
+  };
+}
+
+function round2(v) { return v != null ? Math.round(v * 100) / 100 : null; }
+
+// ── US Scan ─────────────────────────────────────────────────────────────────
 
 async function scanUS() {
-  console.log('\n=== US RS Leader Scan ===');
+  console.log('\n=== US RS Leader + Discovery Scan ===');
   console.log(`Start: ${new Date().toISOString()}`);
 
-  // 1. Build universe: static pools + Yahoo screeners (no batch quote pre-filter —
-  //    Yahoo v7/quote requires browser crumb/cookies; v8/chart used for OHLCV is open)
+  // 1. Build universe
   console.log('\n[1] Building universe...');
-
-  // Screeners add today's momentum leaders (all cap sizes) on top of static pools
-  const [screenerGainers, screenerSmallCap, screenerGrowth] = await Promise.allSettled([
+  const [r1, r2, r3] = await Promise.allSettled([
     fetchScreener('day_gainers', 50),
     fetchScreener('small_cap_gainers', 50),
     fetchScreener('growth_technology_stocks', 50),
   ]);
 
-  const universe = new Set([...SP500, ...GROWTH_EXTENDED]);
-  [screenerGainers, screenerSmallCap, screenerGrowth].forEach(r => {
+  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL]);
+  [r1, r2, r3].forEach(r => {
     if (r.status === 'fulfilled') r.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
   });
 
-  // Shuffle so every scan covers the full pool with different batching order
   const allSymbols = [...universe].sort(() => Math.random() - 0.5);
-  console.log(`  Universe: ${allSymbols.length} unique stocks (SP500 + growth + screeners)`);
+  console.log(`  Universe: ${allSymbols.length} symbols`);
 
-  // 2. Benchmark: SPY 12-month return (v8/chart — no auth needed)
+  // 2. SPY benchmark
   console.log('\n[2] Fetching SPY benchmark...');
   let benchReturn = 0;
   try {
     const spy = await getOHLCV('SPY', '12mo');
-    if (spy.closes.length >= 2) {
-      const n = spy.closes.length;
-      benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
-    }
-    console.log(`  SPY 12-1mo benchmark: ${benchReturn.toFixed(2)}%`);
-  } catch (e) {
-    console.warn(`  SPY fetch failed: ${e.message}`);
-  }
+    const n = spy.closes.length;
+    benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
+    console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}%`);
+  } catch (e) { console.warn(`  SPY failed: ${e.message}`); }
 
-  // 3. Full OHLCV scan — no pre-filter needed server-side (no rate-limit pressure)
-  //    15 per batch, 500ms between batches → ~600 stocks in ~20 seconds
-  const BATCH_SIZE = 15;
-  const BATCH_DELAY = 500;
-  console.log(`\n[3] OHLCV scan (${allSymbols.length} stocks, batch=${BATCH_SIZE})...`);
-  const results = [];
+  // 3. Scan all symbols
+  const BATCH = 15, BATCH_DELAY = 500;
+  console.log(`\n[3] Scanning ${allSymbols.length} symbols (batch=${BATCH})...`);
 
-  for (let i = 0; i < allSymbols.length; i += BATCH_SIZE) {
-    const batch = allSymbols.slice(i, i + BATCH_SIZE);
+  const leaders   = [];  // confirmed momentum (12-1mo RS)
+  const discoCand = [];  // acceleration discovery (3-mo accel)
+
+  for (let i = 0; i < allSymbols.length; i += BATCH) {
+    const batch = allSymbols.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
         const { closes, highs, volumes, meta } = await getOHLCV(sym, '12mo');
+        // Need at least 3 months of data; leaders need 12mo
         if (closes.length < 60) return null;
 
-        const n = closes.length;
-        const price = meta.regularMarketPrice || closes[n - 1];
-        const ma50 = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
-        if (price < ma50) return null;
+        const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
 
-        const avgVol20 = volumes.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
-        if (avgVol20 < 150000) return null;
+        // ── Leader filter (12-1mo confirmed momentum) ──
+        const isLeader = closes.length >= 200
+          && m.price >= m.ma50
+          && m.avgVol20 >= 150000
+          && m.ret12_1 > 0;
 
-        // 12-1 month momentum: skip last ~1 month to avoid short-term reversal bias
-        const ret12_1 = (closes[Math.max(0, n - 21)] - closes[0]) / closes[0] * 100;
-        const rs12_1 = ret12_1 - benchReturn;
+        // ── Discovery filter (3-mo acceleration) ──
+        const isDiscovery = m.ret3m != null
+          && m.ret3m >= 25               // strong 3-month return
+          && m.accel != null
+          && m.accel >= 1.15             // recent month accelerating vs 3-mo avg
+          && m.volExpand >= 1.3          // volume expanding
+          && m.volTrend >= 0.9           // volume trend not declining
+          && m.avgVol20 >= 100000;       // minimum liquidity
 
-        // Recent 1-month momentum (fresh breakout signal)
-        const ret1m = (price - closes[Math.max(0, n - 21)]) / closes[Math.max(0, n - 21)] * 100;
+        if (!isLeader && !isDiscovery) return null;
 
-        const avgVol5 = volumes.slice(-5).reduce((a, b) => a + (b || 0), 0) / 5;
-        const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
-        const changePct = n >= 2 ? (price - closes[n - 2]) / closes[n - 2] * 100 : 0;
-
-        // 12-month high (for buy zone / distFromHigh signal)
-        const high52w = highs && highs.length > 0 ? Math.max(...highs) : null;
-
-        return {
+        const base = {
           symbol: sym,
           name: meta.shortName || meta.longName || sym,
-          price: Math.round(price * 100) / 100,
-          changePct: Math.round(changePct * 100) / 100,
-          ret12_1: Math.round(ret12_1 * 100) / 100,
-          ret1m: Math.round(ret1m * 100) / 100,
-          rs12_1: Math.round(rs12_1 * 100) / 100,
-          volExpand: Math.round(volExpand * 100) / 100,
-          ma50: Math.round(ma50 * 100) / 100,
-          avgVol20: Math.round(avgVol20),
-          high52w: high52w != null ? Math.round(high52w * 100) / 100 : null,
+          price:      round2(m.price),
+          changePct:  round2(m.changePct),
+          ret1m:      round2(m.ret1m),
+          ret3m:      round2(m.ret3m),
+          ret6m:      round2(m.ret6m),
+          ret12_1:    round2(m.ret12_1),
+          rs12_1:     round2(m.rs12_1),
+          accel:      round2(m.accel),
+          volExpand:  round2(m.volExpand),
+          volTrend:   round2(m.volTrend),
+          ma50:       round2(m.ma50),
+          avgVol20:   Math.round(m.avgVol20),
+          high52w:    round2(m.high52w),
+          high3m:     round2(m.high3m),
+          isLeader,
+          isDiscovery,
         };
+        return base;
       } catch (e) { return null; }
     }));
 
-    settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
-    process.stdout.write(`  ${Math.min(i + BATCH_SIZE, allSymbols.length)}/${allSymbols.length} (${results.length} passed)\r`);
+    settled.forEach(s => {
+      if (s.status !== 'fulfilled' || !s.value) return;
+      const v = s.value;
+      if (v.isLeader)    leaders.push(v);
+      if (v.isDiscovery) discoCand.push(v);
+    });
 
-    if (i + BATCH_SIZE < allSymbols.length) await DELAY(BATCH_DELAY);
+    process.stdout.write(`  ${Math.min(i + BATCH, allSymbols.length)}/${allSymbols.length} (L:${leaders.length} D:${discoCand.length})\r`);
+    if (i + BATCH < allSymbols.length) await DELAY(BATCH_DELAY);
   }
 
-  console.log(`\n  Results: ${results.length} stocks passed filters`);
+  console.log(`\n  Leaders: ${leaders.length} | Discovery candidates: ${discoCand.length}`);
+  if (leaders.length === 0) { console.error('No leaders — aborting'); return; }
 
-  if (results.length === 0) {
-    console.error('No results — aborting save');
-    return;
-  }
-
-  // 4. RS Rating + composite score
-  calcRSRatings(results);
-  results.forEach(r => {
+  // 4. Score leaders (RS Rating + composite)
+  calcRSRatings(leaders);
+  leaders.forEach(r => {
     const volScore = Math.min(99, Math.round(r.volExpand * 33));
     const momScore = Math.min(99, Math.max(1, Math.round(50 + r.rs12_1 * 0.6)));
-    r.compositeScore = Math.round(r.rsRating * 0.50 + volScore * 0.30 + momScore * 0.20);
+    // Acceleration bonus: accelerating leaders get +3 to composite
+    const accelBonus = r.accel != null ? (r.accel >= 1.2 ? 3 : r.accel < 0.8 ? -3 : 0) : 0;
+    r.compositeScore = Math.min(99, Math.round(r.rsRating * 0.50 + volScore * 0.30 + momScore * 0.20) + accelBonus);
   });
+  leaders.sort((a, b) => b.compositeScore - a.compositeScore);
 
-  results.sort((a, b) => b.compositeScore - a.compositeScore);
-  const top25 = results.slice(0, 25);
+  // 5. Score discovery candidates
+  const leaderSyms = new Set(leaders.slice(0, 25).map(r => r.symbol));
+  const discoveries = discoCand
+    .filter(r => !leaderSyms.has(r.symbol)) // no duplicates with leaders
+    .map(r => {
+      // Discovery score: acceleration × vol expansion × 3-month return
+      r.discoScore = Math.round(
+        (Math.min(r.accel, 3) / 3) * 40 +        // acceleration (40%)
+        (Math.min(r.volExpand, 3) / 3) * 30 +     // volume expansion (30%)
+        (Math.min(r.ret3m, 100) / 100) * 30       // 3-month return (30%)
+      );
+      return r;
+    })
+    .sort((a, b) => b.discoScore - a.discoScore)
+    .slice(0, 15);
 
-  // 5. Save
+  // 6. Save
   const output = {
-    scannedAt: new Date().toISOString(),
+    scannedAt:    new Date().toISOString(),
     universeSize: allSymbols.length,
     scannedCount: allSymbols.length,
-    passedCount: results.length,
-    benchmark: { symbol: 'SPY', ret12_1: Math.round(benchReturn * 100) / 100 },
-    leaders: top25,
+    passedCount:  leaders.length + discoCand.length,
+    benchmark:    { symbol: 'SPY', ret12_1: round2(benchReturn) },
+    leaders:      leaders.slice(0, 25),
+    discoveries,
   };
 
-  const outPath = join(DATA_DIR, 'us_scan.json');
-  writeFileSync(outPath, JSON.stringify(output, null, 2));
-  console.log(`\n[5] Saved → data/us_scan.json (${top25.length} leaders)`);
+  writeFileSync(join(DATA_DIR, 'us_scan.json'), JSON.stringify(output, null, 2));
+  console.log(`\n[6] Saved → us_scan.json (${output.leaders.length} leaders, ${discoveries.length} discoveries)`);
   console.log(`End: ${new Date().toISOString()}\n`);
 }
 
+// ── TW Scan ─────────────────────────────────────────────────────────────────
+
 async function scanTW() {
   console.log('\n=== TW RS Leader Scan ===');
-  console.log(`Start: ${new Date().toISOString()}`);
 
-  // Benchmark: 0050.TW
   let benchReturn = 0;
   try {
     const bench = await getOHLCV('0050.TW', '12mo');
     const n = bench.closes.length;
-    if (n >= 2) {
-      benchReturn = (bench.closes[Math.max(0, n-21)] - bench.closes[0]) / bench.closes[0] * 100;
-    }
-    console.log(`  0050.TW 12-1mo benchmark: ${benchReturn.toFixed(2)}%`);
-  } catch (e) {
-    console.warn('  0050.TW fetch failed:', e.message);
-  }
+    benchReturn = (bench.closes[Math.max(0, n - 21)] - bench.closes[0]) / bench.closes[0] * 100;
+    console.log(`  0050.TW 12-1mo: ${benchReturn.toFixed(2)}%`);
+  } catch (e) { console.warn('  0050.TW failed:', e.message); }
 
   const results = [];
   const BATCH = 8;
@@ -355,19 +435,19 @@ async function scanTW() {
     const batch = TW_POOL.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, volumes } = await getOHLCV(sym, '12mo');
-        if (closes.length < 50) return null;
-        const n = closes.length;
-        const price = closes[n - 1];
-        const ma50 = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
-        if (price < ma50) return null;
-        const avgVol20 = volumes.slice(-20).reduce((a, b) => a + (b || 0), 0) / 20;
-        const ret12_1 = (closes[Math.max(0, n-21)] - closes[0]) / closes[0] * 100;
-        const rs12_1 = ret12_1 - benchReturn;
-        const avgVol5 = volumes.slice(-5).reduce((a, b) => a + (b || 0), 0) / 5;
-        const volExpand = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
-        const changePct = n >= 2 ? (price - closes[n-2]) / closes[n-2] * 100 : 0;
-        return { symbol: sym, name: sym, price, changePct, ret12_1, rs12_1, volExpand: Math.round(volExpand*100)/100, ma50: Math.round(ma50*100)/100, avgVol20: Math.round(avgVol20) };
+        const { closes, highs, volumes, meta } = await getOHLCV(sym, '12mo');
+        if (closes.length < 60) return null;
+        const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
+        if (m.price < m.ma50 || m.ret12_1 <= 0) return null;
+        return {
+          symbol: sym, name: meta.shortName || sym,
+          price: round2(m.price), changePct: round2(m.changePct),
+          ret1m: round2(m.ret1m), ret3m: round2(m.ret3m),
+          ret12_1: round2(m.ret12_1), rs12_1: round2(m.rs12_1),
+          accel: round2(m.accel), volExpand: round2(m.volExpand),
+          ma50: round2(m.ma50), avgVol20: Math.round(m.avgVol20),
+          high52w: round2(m.high52w), high3m: round2(m.high3m),
+        };
       } catch (e) { return null; }
     }));
     settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
@@ -382,20 +462,19 @@ async function scanTW() {
   });
   results.sort((a, b) => b.compositeScore - a.compositeScore);
 
-  const output = {
-    scannedAt: new Date().toISOString(),
-    universeSize: TW_POOL.length,
-    scannedCount: TW_POOL.length,
-    passedCount: results.length,
-    benchmark: { symbol: '0050.TW', ret12_1: benchReturn },
-    leaders: results.slice(0, 25),
-  };
+  const twLeaders = results.slice(0, 25);
+  const twDiscos  = results.filter((r, i) => i >= 25 && r.accel != null && r.accel >= 1.15 && r.ret3m != null && r.ret3m >= 15).slice(0, 10);
 
-  writeFileSync(join(DATA_DIR, 'tw_scan.json'), JSON.stringify(output, null, 2));
-  console.log(`Saved → data/tw_scan.json (${output.leaders.length} leaders)`);
+  writeFileSync(join(DATA_DIR, 'tw_scan.json'), JSON.stringify({
+    scannedAt: new Date().toISOString(),
+    universeSize: TW_POOL.length, scannedCount: TW_POOL.length, passedCount: results.length,
+    benchmark: { symbol: '0050.TW', ret12_1: round2(benchReturn) },
+    leaders: twLeaders, discoveries: twDiscos,
+  }, null, 2));
+  console.log(`Saved → tw_scan.json (${twLeaders.length} leaders, ${twDiscos.length} discoveries)`);
 }
 
-// ── Entry point ─────────────────────────────────────────────────────────────
+// ── Entry ────────────────────────────────────────────────────────────────────
 
 const market = process.argv[2] || 'all';
 if (market === 'us' || market === 'all') await scanUS();

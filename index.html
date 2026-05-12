@@ -305,7 +305,7 @@ firebase.initializeApp(_fbConfig);
  <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
  <div class="section-label" style="margin-bottom:0">突破候選 — Schwartz</div>
- <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('breakout'),100)">完整掃描 →</button>
+ <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('discover'),100)">完整掃描 →</button>
  </div>
  <div id="dash-schwartz-list"><div style="text-align:center;padding:20px;color:var(--muted)">等待掃描...</div></div>
  </div>
@@ -456,9 +456,9 @@ firebase.initializeApp(_fbConfig);
  <button onclick="switchScannerMarket('custom')">自選池</button>
  </div>
  <div class="tab-bar" id="scanner-tabs">
- <button class="active" id="scan-tab-rsleader" onclick="switchScanStrategy('rsleader')">動能領袖</button>
- <button id="scan-tab-breakout" onclick="switchScanStrategy('breakout')">突破掃描</button>
- <button id="scan-tab-custom" onclick="switchScanStrategy('custom')">自訂清單</button>
+ <button class="active" id="scan-tab-rsleader"  onclick="switchScanStrategy('rsleader')">動能領袖</button>
+ <button id="scan-tab-discover" onclick="switchScanStrategy('discover')">加速發現</button>
+ <button id="scan-tab-buyzone"  onclick="switchScanStrategy('buyzone')">今日買點</button>
  <button onclick="showScanHistory()">歷史績效</button>
  </div>
  <div class="card" id="scanner-results">
@@ -5244,457 +5244,11 @@ function switchScannerMarket(market) {
   // Re-run whichever strategy tab is currently active
   const strat = window._currentScanStrat || 'rsleader';
   if (strat === 'rsleader') runRSLeaderScan();
-  else if (strat === 'breakout') runScan('schwartz');
+  // old breakout tab removed
 }
 
-function cancelScan() { window._scanAbort = true; }
+function cancelScan() { window._scanAbort = true; } // legacy no-op
 
-async function runScan(strategy) {
- if (window._scanRunning) return; // prevent concurrent scans
- window._scanRunning = true;
- window._scanAbort = false;
- _scannerStrategy = strategy;
- // Sync strategy tab active state
- const tabMap = { schwartz: 'breakout', steinhardt: 'breakout' };
- const activeTab = tabMap[strategy] || strategy;
- ['rsleader','breakout','custom'].forEach(s => {
-   const btn = document.getElementById('scan-tab-' + s);
-   if (btn) btn.classList.toggle('active', s === activeTab);
- });
- const tableDiv = document.getElementById('scanner-table');
- const cancelBtn = document.getElementById('scan-cancel-btn');
- const setProgress = (msg) => {
- tableDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px;color:var(--muted);font-size:13px">' + msg + '</p></div>';
- };
- if (cancelBtn) cancelBtn.style.display = 'inline-block';
-
- // Overall 90-second scan timeout
- let _scanAborted = false;
- const _scanTimer = setTimeout(() => { _scanAborted = true; }, 90000);
-
- try {
- // ── Stage 0: market regime + benchmark closes (async, non-blocking) ─────
- setProgress('⓪ 大盤環境偵測中...');
- fetchMarketRegime(); // fires async, renders banner when done; don't await to avoid blocking
-
- // ── Stage 1: batch pre-screen ──────────────────────────────────────────
- setProgress('① 取得報價中（Yahoo Finance）...');
- let quotes = [];
- let usedFallback = false;
-
- if (_scannerMarket === 'custom') {
-   if (!_scannerCustomPool.length) {
-     tableDiv.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">自訂清單為空，請先加入標的。</div>';
-     window._scanRunning = false;
-     return;
-   }
-   usedFallback = true;
-   setProgress('② 自訂清單模式（' + _scannerCustomPool.length + ' 檔）...');
-   quotes = await chartScanFallback(strategy, _scannerCustomPool);
- } else if (_scannerMarket === 'us') {
- // Try Yahoo spark with 12-second hard timeout
- try {
- quotes = await Promise.race([
- batchQuote(SP500_TICKERS),
- delay(12000).then(() => { throw new Error('spark timeout'); })
- ]);
- } catch(e) { quotes = []; }
-
- if (quotes.length < 15) {
- // Spark failed/timed-out → Finnhub direct quotes (CORS, no proxy needed)
- usedFallback = true;
- setProgress('② Finnhub 報價中（' + SCAN_CURATED_US.length + ' 檔精選池）...');
- quotes = await finnhubBatchPreScreen(SCAN_CURATED_US);
- }
- } else {
- // Taiwan market: use yfChart fallback (no Finnhub for TW stocks)
- usedFallback = true;
- setProgress('② 台股模式（逐檔掃描）...');
- quotes = await chartScanFallback(strategy);
- }
-
- if (_scanAborted) throw new Error('掃描超時（90秒），請重試');
-
- // ── Stage 2: pre-filter → top 15 candidates ────────────────────────────
- const preFiltered = preFilterByStrategy(quotes, strategy);
- const top15 = preFiltered.slice(0, 15);
-
- if (top15.length === 0) {
- renderScannerResults([], strategy, usedFallback);
- window._scanRunning = false;
- return;
- }
-
- // ── Stage 3: fetch OHLCV + technical analysis (all 15 concurrently, 25s cap) ────
- let _scanDone = 0;
- setProgress('③ 技術分析中（0 / ' + top15.length + ' 檔）...');
-
- // Each yfChart call uses pFetch with 6s timeout; cap entire stage at 25s
- const _yfStageDone = { v: false };
- const _yfStageTimeout = new Promise(resolve => setTimeout(() => { _yfStageDone.v = true; resolve([]); }, 25000));
-
- const _yfStageWork = Promise.allSettled(
- top15.map(async q => {
- if (_yfStageDone.v) return null;
- if (window._scanAbort) { setProgress('掃描已取消'); return null; }
- try {
- let c, h, l, v, o;
- if (q._chartData) {
- c = q._chartData.closes; h = q._chartData.highs;
- l = q._chartData.lows; v = q._chartData.vols;
- o = q._chartData.opens || [];
- } else {
- const chart = await yfChart(q.symbol, '6mo', '1d', 6000);
- const oq = chart.indicators.quote[0];
- c = oq.close.filter(x => x != null); h = oq.high.filter(x => x != null);
- l = oq.low.filter(x => x != null); v = oq.volume.filter(x => x != null);
- o = (oq.open || []).filter(x => x != null);
- if (!q.regularMarketVolume || q.regularMarketVolume === 0) {
- q.regularMarketVolume = v[v.length - 1] || 0;
- q.averageDailyVolume3Month = v.slice(-20).reduce((a, b) => a + (b || 0), 0) / (Math.min(v.length, 20) || 1);
- }
- }
- if (c.length < 20) return null;
- const price = q.regularMarketPrice;
- const ta = technicalAnalysis(c, h, l, v, price);
- const signal = classifySignal(ta, q, strategy, { closes: c, highs: h, lows: l });
- _scanDone++; setProgress('③ 技術分析中（' + _scanDone + ' / ' + top15.length + ' 檔完成）...');
- if (!signal) return null;
- // Append K-line pattern tags to signalDetail (max 2)
- const patternTags = [...detectCandlePatterns(c, h, l, o), ...detectChartPatterns(c, h, l)]
- .slice(0, 2)
- .map(p => (p.t==='b' ? '▲ ' : p.t==='s' ? '▼ ' : '◆ ') + p.n);
- // Relative Strength vs benchmark
- const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
- const benchCloses = window._benchmarkCloses[bench] || [];
- const rsData = calcRelativeStrength(c, benchCloses);
- const rs = rsData ? rsData.rs : null; // RS in percentage points vs benchmark
-
- return {
- symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
- price, changePct: q.regularMarketChangePercent || 0,
- volume: q.regularMarketVolume || 0, avgVolume: q.averageDailyVolume3Month || 0,
- volRatio: (q.averageDailyVolume3Month > 0) ? (q.regularMarketVolume / q.averageDailyVolume3Month) : 1,
- signal: signal.name, signalStrength: signal.strength,
- signalDetail: [...(signal.detail || []), ...patternTags],
- weeklyTrend: signal.weeklyTrend || 'neutral',
- ta, closes: c, highs: h, lows: l, rs
- };
- } catch(e) { return null; }
- })
- );
-
- const batchResults = await Promise.race([_yfStageWork, _yfStageTimeout]);
- const results = Array.isArray(batchResults)
- ? batchResults.filter(r => r && r.status === 'fulfilled' && r.value).map(r => r.value)
- : [];
- results.sort((a, b) => b.signalStrength - a.signalStrength);
- _scannerResults = results;
- // Save to history (async, non-blocking)
- saveScanToHistory(results, strategy, _scannerMarket);
- // ApeWisdom Reddit 熱度 — 非阻塞，US 市場才抓
- if (_scannerMarket === 'us') {
- fetchApeWisdom().then(apeMap => {
- _scannerResults.forEach(r => { if (apeMap[r.symbol]) r.reddit = apeMap[r.symbol]; });
- renderScannerResults(_scannerResults, strategy, usedFallback);
- }).catch(() => {});
- }
- renderScannerResults(results, strategy, usedFallback);
- // 台股三大法人 — 非阻塞
- if (_scannerMarket === 'tw') {
-   fetchTWSEInstitutional().then(instMap => {
-     _scannerResults.forEach(r => {
-       const sym = r.symbol.replace('.TW', '');
-       if (instMap[sym]) r.institutional = instMap[sym];
-     });
-     renderScannerResults(_scannerResults, strategy, usedFallback);
-   }).catch(() => {});
- }
- // Earnings enrichment (Feature E) — non-blocking
- if (_scannerMarket === 'us') {
- fetchEarningsCalendar(results.map(r => r.symbol), 'us').then(earningsMap => {
- enrichScannerWithEarnings(earningsMap);
- }).catch(() => {});
- }
- } catch (e) {
- tableDiv.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">掃描失敗：' + e.message + '<br><button class="btn btn-primary" style="margin-top:12px" onclick="runScan(\'' + strategy + '\')">重試</button></div>';
- } finally {
- clearTimeout(_scanTimer);
- const cb = document.getElementById('scan-cancel-btn'); if (cb) cb.style.display = 'none';
- window._scanAbort = false;
- window._scanRunning = false;
- }
-}
-
-function preFilterByStrategy(quotes, strategy) {
- return quotes.filter(q => {
- if (!q || !q.regularMarketPrice) return false;
- const pct = q.regularMarketChangePercent || 0;
- const vol = q.regularMarketVolume || 0;
- const avgVol = q.averageDailyVolume3Month || 1;
- const volRatio = vol / avgVol;
- const hasVolume = vol > 0 && avgVol > 1; // spark batchQuote 不含量，等 yfChart 補
- switch (strategy) {
- case 'schwartz': return pct > 0.5 && (!hasVolume || volRatio > 1.2);
- case 'steinhardt': return pct >= 0;
- default: return true;
- }
- }).sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0));
-}
-
-function classifySignal(ta, quote, strategy, chartData) {
- const pct = quote.regularMarketChangePercent || 0;
- const price = quote.regularMarketPrice || 0;
- const volRatio = (quote.regularMarketVolume || 0) / (quote.averageDailyVolume3Month || 1);
- switch (strategy) {
-
- // ── Marty Schwartz 突破策略（修正版）────────────────────────────
- // 核心：真突破 = 收盤 > 前20日高點（非「接近」）+ 量 ≥ 1.8x + 強力收盤 + RSI 50-75 + MACD 正
- // + 相對大盤跑贏（RS > 0）
- case 'schwartz': {
- const closes = chartData ? chartData.closes : [];
- const highs = chartData ? chartData.highs : [];
- const lows = chartData ? chartData.lows : [];
- // 必須有足夠歷史才計算
- if (highs.length < 21) return null;
- // ── 3 HARD GATES (all must pass) ──
- // ① 真突破：今天收盤 > 前20日（不含今天）的最高點
- const prevHigh20 = Math.max(...highs.slice(-21, -1));
- const trueBreakout = price > prevHigh20;
- if (!trueBreakout) return null;
- // ② 量能確認：≥ 1.5 倍均量
- if (volRatio < 1.5) return null;
- // ③ 趨勢方向：價 > MA50
- const ma50simple = closes.length >= 50 ? closes.slice(-50).reduce((a,b)=>a+b,0)/50 : null;
- if (ma50simple && price < ma50simple) return null;
- // ── Strength scoring (everything else) ──
- // 強力收盤：收盤在今日振幅上 55% 以上（機構尾盤買進特徵）
- const dayHigh = highs[highs.length - 1];
- const dayLow = lows[lows.length - 1];
- const dayRange = dayHigh - dayLow;
- const closeStrength = dayRange > 0.001 ? (price - dayLow) / dayRange : 0.5;
- const strongClose = closeStrength >= 0.55;
- const volOk = volRatio >= 1.8;
- // RSI 動能甜區（50-75 = 有動能但未超買）
- const rsiOk = ta.rsi >= 50 && ta.rsi <= 76;
- // ⑤ MACD 正向確認
- const macdOk = ta.hist > 0 && ta.macd > ta.signal;
- // ⑥ KD 多頭
- const kdOk = ta.kd.k > ta.kd.d && ta.kd.k > 50;
- // ⑦ 相對大盤跑贏（RS）—— Schwartz 只買強中之強
- const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
- const benchCloses = window._benchmarkCloses[bench] || [];
- const rsData = calcRelativeStrength(closes, benchCloses);
- const rsOk = rsData ? rsData.rs > 0 : true; // positive RS vs benchmark
- // 市場環境加減分
- const regime = window._marketRegime;
- const regimeBonus = regime ? (regime.overall >= 2 ? 1 : regime.overall <= -2 ? -1 : 0) : 0;
- // 計算強度（最高 7 星）
- let strength = 1; // 真突破本身
- const detail = [];
- if (strongClose) { strength++; detail.push('強力收盤 ' + (closeStrength * 100).toFixed(0) + '%'); }
- else detail.push('收盤位置 ' + (closeStrength * 100).toFixed(0) + '%');
- if (volOk) { strength++; detail.push('量 ' + volRatio.toFixed(1) + 'x'); }
- else detail.push('量 ' + volRatio.toFixed(1) + 'x');
- if (rsiOk) { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + ''); }
- else detail.push('RSI ' + ta.rsi.toFixed(0));
- if (macdOk) { strength++; detail.push('MACD'); }
- if (kdOk) { strength++; detail.push('KD'); }
- if (rsData) detail.push('RS ' + (rsData.rs > 0 ? '+' : '') + rsData.rs.toFixed(1) + '%' + (rsOk ? '' : ''));
- if (!rsOk) strength = Math.max(1, strength - 1); // 跑輸大盤降一星
- strength = Math.max(1, Math.min(7, strength + regimeBonus));
- // Weekly trend check (Feature D)
- const weeklyTrendSch = chartData ? calcWeeklyTrend(closes, highs, lows) : 'neutral';
- if (weeklyTrendSch === 'bear') { strength = Math.max(1, strength - 1); detail.push('週線空頭'); }
- else if (weeklyTrendSch === 'bull') { strength = Math.min(8, strength + 1); detail.push('週線多頭'); }
- // Sector check (Feature C) — quote.symbol used to match top sectors
- if (window._topSectors && quote.symbol) {
- // Map stock to a sector ETF (rough heuristic for US tech/etc.)
- // For now just check if the symbol itself is in top sectors (handles ETF-level scans)
- if (window._topSectors.includes(quote.symbol)) { strength = Math.min(8, strength + 1); detail.push('Sector'); }
- }
- return { name: 'Schwartz 突破', strength, detail, weeklyTrend: weeklyTrendSch };
- }
-
- // ── Michael Steinhardt 動量策略（Variant Perception 完整版）────
- // 核心：EMA多頭排列 + MACD擴張 + RSI 50-70 + 相對強弱 + 基本面驗證
- // Steinhardt: 「市場對一家公司的理解與現實有落差，才是機會所在」
- case 'steinhardt': {
- const closes = chartData ? chartData.closes : [];
- const ema8 = ta.ema8;
- const ema21 = ta.ema21;
- const ema60 = ta.ma60;
- // ① 必要條件：EMA 多頭排列（機構資金流入的核心特徵）
- if (!ema8 || !ema21 || !ema60 || !(ema8 > ema21 && ema21 > ema60)) return null;
- const priceAboveEma = price > ema8;
- // ② MACD 擴張（動能加速中）
- const macdExpand = ta.hist > 0 && ta.macd > 0;
- // ③ RSI 動能甜區
- const rsiOk = ta.rsi >= 50 && ta.rsi <= 72;
- // ④ 短期趨勢確認
- const trendStrong = ta.ma5 > ta.ma20;
- // ⑤ 相對強弱 vs 大盤
- const bench = _scannerMarket === 'tw' ? '0050.TW' : 'SPY';
- const benchCloses = window._benchmarkCloses[bench] || [];
- const rsData = calcRelativeStrength(closes, benchCloses);
- const rsOk = rsData ? rsData.rs > 2 : true; // 跑贏大盤 2% 以上才算真動量
- // ⑥ 基本面代理指標（scanner 無法即時抓 fundamentals，用技術面代理）
- // Steinhardt Variant Perception 特徵：
- // - 股價趨勢持續向上 ≥ 3個月（MA60 上升斜率）
- // - 近 3 個月漲幅 > 10%（獲利中的公司才有這樣的持續動能）
- const n = closes.length;
- const price3mAgo = closes[Math.max(0, n - 63)]; // ~3 months back
- const gain3m = price3mAgo > 0 ? ((price - price3mAgo) / price3mAgo) * 100 : 0;
- const fundamentalProxy = gain3m > 8; // 3個月漲 >8%，代表基本面有支撐
- // MA60 上升：近 20 天均線是上升的
- const ma60now = ta.ma60;
- const ma60prev = closes.length >= 100 ? sma(closes.slice(0, -20), 60) : null;
- const ma60rising = ma60now && ma60prev ? ma60now > ma60prev : false;
- // ⑦ 市場環境加減分
- const regime = window._marketRegime;
- const regimeBonus = regime ? (regime.overall >= 2 ? 1 : regime.overall <= -2 ? -1 : 0) : 0;
- // 計算強度
- let strength = 2; // EMA 多排本身值 2 星
- const detail = ['EMA多排'];
- if (priceAboveEma) { strength++; detail.push('價>EMA8'); }
- if (macdExpand) { strength++; detail.push('MACD擴張'); }
- if (rsiOk) { strength++; detail.push('RSI ' + ta.rsi.toFixed(0) + ''); }
- if (trendStrong) detail.push('短線多頭');
- if (ma60rising) { strength++; detail.push('MA60↑'); }
- if (fundamentalProxy) detail.push('3M+' + gain3m.toFixed(0) + '%');
- if (rsData) {
- detail.push('RS ' + (rsData.rs > 0 ? '+' : '') + rsData.rs.toFixed(1) + '%' + (rsOk ? '' : ''));
- if (rsOk) strength++;
- else strength = Math.max(2, strength - 1);
- }
- if (!fundamentalProxy) strength = Math.max(2, strength - 1); // 基本面代理不過關降星
- strength = Math.max(1, Math.min(8, strength + regimeBonus));
- // Weekly trend check (Feature D)
- const weeklyTrendSt = chartData ? calcWeeklyTrend(closes, highs, lows) : 'neutral';
- if (weeklyTrendSt === 'bear') { strength = Math.max(1, strength - 1); detail.push('週線空頭'); }
- else if (weeklyTrendSt === 'bull') { strength = Math.min(9, strength + 1); detail.push('週線多頭'); }
- return { name: 'Steinhardt 動量', strength, detail, weeklyTrend: weeklyTrendSt };
- }
-
- }
- return null;
-}
-
-function renderScannerResults(results, strategy, usedFallback) {
- const tableDiv = document.getElementById('scanner-table');
- const strategyNames = {
- schwartz: 'Schwartz 突破', steinhardt: 'Steinhardt 動量'
- };
- const roleDescriptions = {
- schwartz: '修正版 Marty Schwartz：收盤真突破20日高點 × 強力收盤（振幅上55%+）× 量能確認(≥1.8x) × RSI 50-76 × MACD正向 × 相對大盤跑贏（RS>0）。停損：突破線下 1ATR。目標：2-3ATR。',
- steinhardt: '完整 Steinhardt Variant Perception：EMA8>21>60多排 × MACD擴張 × RSI 50-72 × 相對大盤跑贏(RS>+2%) × MA60上升斜率 × 3個月漲幅>8%（基本面代理）。移動停損跟隨 EMA21。'
- };
- const stratName = strategyNames[strategy] || strategy;
- if (!results.length) {
- const _fallbackPool = _scannerMarket === 'tw' ? (typeof SCAN_CURATED_TW !== 'undefined' ? SCAN_CURATED_TW : []) : SCAN_CURATED_US;
- const regime = window._marketRegime;
- const regimeHint = regime
-   ? (regime.overall <= -1
-       ? '<div style="margin-top:10px;font-size:12px;color:var(--orange)">目前大盤環境偏弱（' + (regime.bench||'SPY') + ' vs 200MA: ' + (regime.spyVs200 ? regime.spyVs200.toFixed(1)+'%' : '—') + '），符合條件的個股較少屬正常現象。建議等待大盤站回均線後再掃描。</div>'
-       : '')
-   : '';
- const schwartzHint = strategy === 'schwartz'
-   ? '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Schwartz 需要收盤突破 20 日高點，在大盤下跌日通常沒有符合標的。</div>'
-   : '';
- tableDiv.innerHTML =
-   '<div style="text-align:center;padding:30px;color:var(--muted)">' +
-   '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">未找到符合條件的標的</div>' +
-   '<div style="font-size:12px">策略：' + stratName + (usedFallback ? '　精選清單 ' + _fallbackPool.length + ' 檔' : '　SP500 全市場') + '</div>' +
-   schwartzHint + regimeHint +
-   '<div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="runScan(\'' + strategy + '\')">重新掃描</button></div>' +
-   '</div>';
- return;
- }
- let html = '';
- // 角色說明 banner（Schwartz/Steinhardt 專屬）
- if (roleDescriptions[strategy]) {
- html += '<div style="background:rgba(59,130,246,.1);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:12px;color:var(--muted);margin-bottom:12px">' +
- '' + roleDescriptions[strategy] + '</div>';
- }
- const _srcPool = _scannerMarket === 'tw' ? (typeof SCAN_CURATED_TW !== 'undefined' ? SCAN_CURATED_TW : []) : SCAN_CURATED_US;
- const sourceNote = usedFallback ? ' <small style="color:var(--muted)">(精選清單 ' + _srcPool.length + ' 檔)</small>' : '';
- html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">找到 <b style="color:var(--text)">' + results.length + '</b> 檔符合「' + stratName + '」的股票' + sourceNote + '</div>';
- // Market regime warning
- const regime = window._marketRegime;
- if (regime && regime.overall <= -2) {
- html += '<div style="padding:10px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:12px">' +
- ' <b>空頭環境警告</b>：大盤深跌200MA(' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + ')' +
- (regime.vixNow ? '，VIX=' + regime.vixNow.toFixed(0) + '恐慌升高' : '') +
- '。以下訊號歷史勝率大幅降低，建議<b>縮倉或觀望</b>，嚴格執行停損。</div>';
- } else if (regime && regime.overall === -1) {
- html += '<div style="padding:10px 14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:8px;font-size:12px;color:var(--orange);margin-bottom:12px">' +
- '[注意]（' + (regime.bench || 'SPY') + ' vs 200MA: ' + (regime.spyVs200 ? regime.spyVs200.toFixed(1) + '%' : '—') + '）。僅操作強度 + 以上的標的，縮小倉位。</div>';
- }
- const isRole = strategy === 'schwartz' || strategy === 'steinhardt';
- html += '<div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>現價</th><th>漲跌%</th><th>量比</th>';
- if (isRole) html += '<th>指標確認</th><th>RS vs大盤</th>';
- if (_scannerMarket === 'tw') html += '<th>法人</th>';
- html += '<th>強度</th><th>RSI</th><th>操作</th></tr></thead><tbody>';
- results.forEach(r => {
- const up = r.changePct >= 0;
- const stars = '★'.repeat(Math.min(r.signalStrength, 5)) + '☆'.repeat(Math.max(0, 5 - r.signalStrength));
- const inWatchlist = _todayWatchlist.some(w => w.symbol === r.symbol);
- const detailHtml = (r.signalDetail && r.signalDetail.length)
- ? r.signalDetail.map(d => '<span class="tag" style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(59,130,246,.12);color:var(--accent)">' + d + '</span>').join('')
- : '<span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + r.signal + '</span>';
- // Reddit badge
- const ape = r.reddit;
- const apeBadge = ape
- ? '<div style="margin-top:2px;font-size:10px;color:' + (ape.rankChange >= 5 ? 'var(--orange)' : 'var(--muted)') + '">' +
-   'Reddit #' + ape.rank + (ape.rankChange > 0 ? ' ↑' + ape.rankChange : ape.rankChange < 0 ? ' ↓' + Math.abs(ape.rankChange) : '') + '</div>'
- : '';
- html += '<tr>' +
- '<td><b style="cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + r.symbol + '\';showPage(\'stock\');analyzeStock()">' + r.symbol + '</b>' + apeBadge +
- ' <button onclick="event.stopPropagation();quickAddToPortfolio(\'' + r.symbol + '\',' + (r.price||0).toFixed(2) + ')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;margin-left:4px">加入持倉</button>' +
- '</td>' +
- '<td style="font-size:12px">' + r.name + '</td>' +
- '<td>' + r.price.toFixed(2) + '</td>' +
- '<td style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (up ? '+' : '') + r.changePct.toFixed(2) + '%</td>' +
- '<td>' + r.volRatio.toFixed(1) + 'x</td>';
- if (isRole) {
- const wtBadge = r.weeklyTrend === 'bull'
- ? '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(16,185,129,.15);color:var(--green);border-radius:3px"> 週多</span>'
- : r.weeklyTrend === 'bear'
- ? '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(239,68,68,.12);color:var(--red);border-radius:3px"> 週空</span>'
- : '<span style="font-size:10px;padding:2px 5px;margin:1px;background:rgba(255,255,255,.06);color:var(--muted);border-radius:3px"> 週中</span>';
- html += '<td>' + detailHtml + wtBadge + '</td>';
- // RS vs 大盤
- const rsVal = r.rs;
- const rsColor = rsVal == null ? 'var(--muted)' : rsVal >= 3 ? 'var(--green)' : rsVal >= 0 ? 'var(--yellow)' : 'var(--red)';
- const rsLabel = rsVal == null ? '—' : (rsVal > 0 ? '+' : '') + rsVal.toFixed(1) + '%';
- html += '<td style="color:' + rsColor + ';font-weight:600">' + rsLabel + '</td>';
- }
- // 台股法人欄位
- if (_scannerMarket === 'tw') {
-   const inst = r.institutional;
-   if (inst) {
-     const fColor = inst.foreign > 0 ? 'var(--green)' : inst.foreign < 0 ? 'var(--red)' : 'var(--muted)';
-     const fStr = inst.foreign > 0 ? '+' + (inst.foreign/1000).toFixed(0) + 'K' : (inst.foreign/1000).toFixed(0) + 'K';
-     html += '<td style="font-size:11px"><span style="color:' + fColor + '">外資 ' + fStr + '</span>' +
-       (inst.trust !== 0 ? '<br><span style="color:' + (inst.trust > 0 ? 'var(--green)' : 'var(--red)') + ';font-size:10px">投信 ' + (inst.trust > 0 ? '+' : '') + (inst.trust/1000).toFixed(0) + 'K</span>' : '') +
-       '</td>';
-   } else {
-     html += '<td style="color:var(--muted);font-size:11px">—</td>';
-   }
- }
- // 進場指引按鈕（Schwartz/Steinhardt 專屬）
- let entryBtn = '';
- if (isRole) {
- _storeEntry(r.symbol, strategy, { ...r, strategy });
- entryBtn = '<button class="btn btn-primary btn-sm" style="margin-left:4px" onclick="showEntryGuideByKey(\'' + r.symbol + '_' + strategy + '\')"> 進場</button>';
- }
- html += '<td style="color:var(--yellow)">' + stars + '</td>' +
- '<td>' + r.ta.rsi.toFixed(0) + '</td>' +
- '<td style="white-space:nowrap">' + (inWatchlist ? '<span style="color:var(--green)"> 已加入</span>' : '<button class="btn btn-primary btn-sm" onclick="addToWatchlist(\'' + r.symbol + '\')">+ 加入</button>') + entryBtn + '</td></tr>';
- });
- html += '</tbody></table></div>';
- tableDiv.innerHTML = html;
-}
 
 function addToWatchlist(symbol) {
  if (_todayWatchlist.length >= 15) { alert('今日標的最多 15 檔，請先移除不需要的'); return; }
@@ -5835,7 +5389,7 @@ function loadScanner() {
    if (_currentPage !== 'scanner') return;
    const strat = window._currentScanStrat || 'rsleader';
    // For non-rsleader tabs, keep the old 3-min full scan
-   if (strat === 'breakout' && !window._scanRunning) runScan('schwartz');
+   // old breakout scan removed
  }, 180000);
  // RS Leader tab: start 60s live price monitor instead of full re-scan
  _startLiveMonitor();
@@ -8326,8 +7880,10 @@ async function runRSLeaderScan() {
     setMsg('更新即時報價...');
     await overlayLivePrices(leaders);
 
-    // Cache all leaders for breakout filter; dashboard uses top 5
-    window._rsLeaderCache = leaders; // full list (up to 25)
+    // Cache leaders + discoveries; overlay live prices on discoveries too
+    window._rsLeaderCache    = leaders;
+    window._rsDiscoveryCache = data.discoveries || [];
+    if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
     renderDashRSLeader(leaders.slice(0, 5));
 
     // Render with metadata banner (show top 15 in main view)
@@ -8492,7 +8048,9 @@ function renderRSLeaderResults(results) {
 
 // ── Per-stock entry guide modal (answers A + C + D in one place) ────────────
 function showRSEntryGuide(symbol) {
-  const r = (window._rsLeaderCache || []).find(x => x.symbol === symbol);
+  const r = (window._rsLeaderCache || []).find(x => x.symbol === symbol)
+         || (window._rsDiscoveryCache || []).find(x => x.symbol === symbol);
+  const isDiscovery = !!(window._rsDiscoveryCache || []).find(x => x.symbol === symbol);
   if (!r) { showToast('找不到資料，請重新整理排行', 'warn'); return; }
 
   const regime = window._marketRegime;
@@ -8620,6 +8178,7 @@ function showRSEntryGuide(symbol) {
       '<div style="font-size:13px;color:var(--text)">進場金額 = <b>你能接受的最大虧損</b> ÷ 8%</div>' +
       '<div style="font-size:11px;color:var(--muted);margin-top:4px">例：願意虧 $1,000 → 進場 $12,500（即 $1,000 ÷ 8%）</div>' +
       '<div style="font-size:11px;color:#818cf8;margin-top:6px">⬆ 目前市場建議：' + mSizeNote + '</div>' +
+      (isDiscovery ? '<div style="font-size:11px;color:#a855f7;margin-top:5px;font-weight:600">⚠ 加速發現標的：動能尚未確立，建議倉位減半</div>' : '') +
     '</div>' +
 
     // Footer buttons
@@ -8708,6 +8267,10 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       ? '<div style="font-size:11px;margin-top:3px;color:' + sig.color + ';font-weight:600">' + sig.emoji + ' ' + sig.label + '</div>'
       : '';
 
+    // Acceleration indicator (🔥 = accelerating, ⚠️ = decelerating)
+    const accelEmoji = r.accel == null ? '' : r.accel >= 1.5 ? ' 🔥🔥' : r.accel >= 1.2 ? ' 🔥' : r.accel < 0.8 ? ' ⚠️' : '';
+    const accelTitle = r.accel == null ? '' : ' title="動能加速度 ' + r.accel.toFixed(2) + 'x"';
+
     // Stop loss = price × 0.92 (8% stop)
     const stopLoss = r.price ? (r.price * 0.92).toFixed(2) : null;
     const stopHtml = stopLoss
@@ -8729,7 +8292,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div style="font-weight:700;font-size:15px">' + r.symbol + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
         sigHtml +
       '</td>' +
@@ -8850,29 +8413,231 @@ function _showBreakoutFilter() {
   _renderRSLeaderTable(withDist, tableDiv, bearBanner + summaryBanner);
 }
 
+// ── 加速發現 tab ─────────────────────────────────────────────────────────────
+function _showDiscoveryTab() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+  const disco = window._rsDiscoveryCache;
+  if (!disco || !disco.length) {
+    tableDiv.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+      '<div style="font-size:28px;margin-bottom:8px">🔭</div>' +
+      '<div style="font-weight:600;margin-bottom:4px">尚未載入加速發現資料</div>' +
+      '<div style="font-size:12px">請先切換到「動能領袖」載入最新掃描結果</div>' +
+      '<button onclick="switchScanStrategy(\'rsleader\')" style="margin-top:16px;padding:8px 20px;border-radius:8px;' +
+        'background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px">' +
+        '前往載入 →</button></div>';
+    return;
+  }
+
+  const regime = window._marketRegime;
+  const bearBanner = (regime && regime.overall <= -2)
+    ? '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#ef4444;font-weight:600">🔴 市場偏弱 — 加速發現標的波動較大，建議縮小倉位或觀望</div>'
+    : '';
+
+  const headerBanner =
+    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;' +
+    'background:rgba(168,85,247,.07);border-radius:8px;border:1px solid rgba(168,85,247,.2)">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;color:#a855f7;font-weight:700">🔭 加速發現 — 動能正在加速的早期爆發標的</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' +
+          '3 個月漲幅 ≥ 25% · 近 1 月加速 · 量能擴張 · 不與動能領袖重複 · <b style="color:#f59e0b">建議倉位減半</b>' +
+        '</div>' +
+      '</div>' +
+      '<button onclick="switchScanStrategy(\'rsleader\')" style="flex-shrink:0;font-size:11px;padding:5px 10px;border-radius:6px;' +
+        'background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer">← 動能領袖</button>' +
+    '</div>';
+
+  _renderDiscoveryTable(disco, tableDiv, bearBanner + headerBanner);
+}
+
+function _renderDiscoveryTable(items, tableDiv, prependHtml) {
+  const f = (v, d=2) => v == null ? '—' : Number(v).toFixed(d);
+  const pct = v => v == null ? '—' : (v >= 0 ? '+' : '') + f(v, 1) + '%';
+
+  const rows = items.map((r, i) => {
+    const accel = r.accel;
+    const accelEmoji = accel == null ? '' : accel >= 1.5 ? '🔥🔥' : accel >= 1.2 ? '🔥' : accel >= 1.0 ? '→' : '⚠️';
+    const accelColor = accel == null ? 'var(--muted)' : accel >= 1.2 ? '#a855f7' : accel >= 1.0 ? 'var(--muted)' : '#f59e0b';
+    const accelLabel = accel == null ? '—' : (accel >= 1.5 ? '急速加速' : accel >= 1.2 ? '加速中' : accel >= 1.0 ? '持平' : '放緩');
+
+    const volColor = (r.volExpand||0) >= 1.5 ? 'var(--green)' : 'var(--muted)';
+    const liveDot  = r._livePrice ? '<span style="color:var(--green);font-size:9px;margin-left:3px">●</span>' : '';
+    const sig      = _getRSSignal(r);
+    const sigHtml  = sig ? '<div style="font-size:11px;margin-top:2px;color:' + sig.color + ';font-weight:600">' + sig.emoji + ' ' + sig.label + '</div>' : '';
+    const stopLoss = r.price ? (r.price * 0.92).toFixed(2) : null;
+
+    // Risk warning: discovery = higher risk, suggest half position
+    const riskTag = '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(168,85,247,.12);color:#a855f7;margin-left:6px">早期 ½倉</span>';
+
+    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showRSEntryGuide(\'' + r.symbol + '\')">' +
+      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
+      '<td style="padding:10px 8px">' +
+        '<div style="font-weight:700;font-size:15px">' + r.symbol + riskTag + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + (r.name||r.symbol) + '</div>' +
+        sigHtml +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:right">' +
+        '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
+        '<div style="font-size:12px;color:' + ((r.changePct||0)>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
+        (stopLoss ? '<div style="font-size:10px;color:var(--muted)">止損 $' + stopLoss + '</div>' : '') +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:' + accelColor + '">' + accelEmoji + '</div>' +
+        '<div style="font-size:11px;font-weight:600;color:' + accelColor + '">' + accelLabel + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + (accel != null ? accel.toFixed(2) + 'x' : '—') + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:700;color:#a855f7">' + pct(r.ret3m) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">3個月</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:700;color:' + ((r.ret1m||0)>=0?'var(--green)':'var(--red)') + '">' + pct(r.ret1m) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">近1月</div>' +
+      '</td>' +
+      '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能比</div></td>' +
+      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);color:#a855f7;cursor:pointer;font-weight:600">進場指引</button></td>' +
+    '</tr>';
+  }).join('');
+
+  tableDiv.innerHTML = (prependHtml || '') +
+    _rsRegimeCard() +
+    '<div class="table-wrap">' +
+    '<table class="rs-leader-table" style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.1)">' +
+      '<th style="padding:6px 8px;text-align:left">排名</th>' +
+      '<th style="padding:6px 8px;text-align:left">股票</th>' +
+      '<th style="padding:6px 8px;text-align:right">現價</th>' +
+      '<th style="padding:6px 8px;text-align:center">加速度</th>' +
+      '<th style="padding:6px 8px;text-align:center">3月漲幅</th>' +
+      '<th style="padding:6px 8px;text-align:center">近1月</th>' +
+      '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
+      '<th style="padding:6px 8px;text-align:center">進場指引</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
+}
+
+// ── 今日買點 tab — merge leaders + discoveries filtered to buy zone ──────────
+function _showBuyZoneTab() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+
+  const leaders = window._rsLeaderCache || [];
+  const disco   = window._rsDiscoveryCache || [];
+
+  if (!leaders.length && !disco.length) {
+    tableDiv.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+      '<div style="font-size:28px;margin-bottom:8px">🎯</div>' +
+      '<div style="font-weight:600">請先載入動能領袖</div>' +
+      '<button onclick="switchScanStrategy(\'rsleader\')" style="margin-top:16px;padding:8px 20px;border-radius:8px;' +
+        'background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px">' +
+        '前往載入 →</button></div>';
+    return;
+  }
+
+  // Tag source and compute distFromHigh
+  const tagged = [
+    ...leaders.map(r => ({ ...r, _src: 'leader' })),
+    ...disco.map(r => ({ ...r, _src: 'disco' })),
+  ]
+    .filter(r => r.high52w && r.price)
+    .map(r => ({ ...r, _dist: (r.price - r.high52w) / r.high52w * 100 }))
+    .filter(r => r._dist >= -15)
+    .sort((a, b) => b._dist - a._dist);
+
+  const regime = window._marketRegime;
+  const bearBanner = (regime && regime.overall <= -2)
+    ? '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#ef4444;font-weight:600">🔴 市場偏弱 — 以下訊號均供參考，建議觀望</div>'
+    : '';
+
+  if (!tagged.length) {
+    tableDiv.innerHTML = bearBanner +
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+      '<div style="font-size:28px">🔍</div><div style="margin-top:8px">目前無股票在距高點 15% 以內</div>' +
+      '<div style="font-size:12px">繼續觀察，等待整理完成後的突破機會</div></div>';
+    return;
+  }
+
+  const breakoutCount = tagged.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '✅'; }).length;
+  const nearCount     = tagged.filter(r => { const s = _getRSSignal(r); return s && s.emoji === '📍'; }).length;
+  const leaderCount   = tagged.filter(r => r._src === 'leader').length;
+  const discoCount    = tagged.filter(r => r._src === 'disco').length;
+
+  const summaryBanner =
+    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;' +
+    'background:rgba(34,197,94,.07);border-radius:8px;border:1px solid rgba(34,197,94,.18)">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;color:#22c55e;font-weight:700">🎯 今日買點清單 — 距高點 ≤ 15% 的強勢標的</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' +
+          (breakoutCount ? '<span style="color:#22c55e">✅ 突破買進 ' + breakoutCount + ' 檔</span>　' : '') +
+          (nearCount ? '<span style="color:#f59e0b">📍 近買點 ' + nearCount + ' 檔</span>　' : '') +
+          '<span style="color:#6366f1">領袖 ' + leaderCount + '</span>　<span style="color:#a855f7">發現 ' + discoCount + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  // Render using leader table but inject source badge
+  const f = (v, d=2) => v == null ? '—' : Number(v).toFixed(d);
+  const pct = v => v == null ? '—' : (v >= 0 ? '+' : '') + f(v, 1) + '%';
+
+  const rows = tagged.map((r, i) => {
+    const srcBadge = r._src === 'disco'
+      ? '<span style="font-size:10px;margin-left:5px;padding:1px 6px;border-radius:10px;background:rgba(168,85,247,.12);color:#a855f7">發現</span>'
+      : '<span style="font-size:10px;margin-left:5px;padding:1px 6px;border-radius:10px;background:rgba(99,102,241,.12);color:#818cf8">領袖</span>';
+    const sig      = _getRSSignal(r);
+    const sigHtml  = sig ? '<div style="font-size:11px;margin-top:2px;color:' + sig.color + ';font-weight:600">' + sig.emoji + ' ' + sig.label + '</div>' : '';
+    const distColor = r._dist >= -5 ? 'var(--green)' : r._dist >= -10 ? 'var(--yellow)' : 'var(--red)';
+    const liveDot   = r._livePrice ? '<span style="color:var(--green);font-size:9px;margin-left:3px">●</span>' : '';
+    const stopLoss  = r.price ? (r.price * 0.92).toFixed(2) : null;
+    const accelEmoji = r.accel == null ? '' : r.accel >= 1.5 ? '🔥' : r.accel >= 1.2 ? '↑' : '';
+
+    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showRSEntryGuide(\'' + r.symbol + '\')">' +
+      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
+      '<td style="padding:10px 8px">' +
+        '<div style="font-weight:700;font-size:15px">' + r.symbol + srcBadge + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + (r.name||r.symbol) + '</div>' +
+        sigHtml +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:right">' +
+        '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
+        '<div style="font-size:12px;color:' + ((r.changePct||0)>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
+        (stopLoss ? '<div style="font-size:10px;color:var(--muted)">止損 $' + stopLoss + '</div>' : '') +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:700;color:' + distColor + '">' + (r._dist >= 0 ? '+' : '') + r._dist.toFixed(1) + '%</div>' +
+        '<div style="font-size:10px;color:var(--muted)">距高點</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:600;color:#a855f7">' + accelEmoji + ' ' + (r.accel != null ? r.accel.toFixed(2) + 'x' : '—') + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">加速度</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center"><div style="font-weight:600">' + pct(r.ret3m || r.ret12_1) + '</div><div style="font-size:10px;color:var(--muted)">' + (r.ret3m != null ? '3月' : '12月') + '</div></td>' +
+      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;font-weight:600">進場指引</button></td>' +
+    '</tr>';
+  }).join('');
+
+  tableDiv.innerHTML = bearBanner + summaryBanner + _rsRegimeCard() +
+    '<div class="table-wrap"><table class="rs-leader-table" style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.1)">' +
+      '<th style="padding:6px 8px">排名</th><th style="padding:6px 8px">股票</th>' +
+      '<th style="padding:6px 8px;text-align:right">現價</th>' +
+      '<th style="padding:6px 8px;text-align:center">距高點</th>' +
+      '<th style="padding:6px 8px;text-align:center">加速度</th>' +
+      '<th style="padding:6px 8px;text-align:center">動能</th>' +
+      '<th style="padding:6px 8px;text-align:center">進場指引</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
 function switchScanStrategy(strat) {
-  ['rsleader','breakout','custom'].forEach(s => {
+  ['rsleader','discover','buyzone'].forEach(s => {
     const btn = document.getElementById('scan-tab-' + s);
     if (btn) btn.classList.toggle('active', s === strat);
   });
   window._currentScanStrat = strat;
-  const tableDiv = document.getElementById('scanner-table');
-  if (strat === 'rsleader') {
-    runRSLeaderScan();
-  } else if (strat === 'breakout') {
-    _showBreakoutFilter();
-  } else if (strat === 'custom') {
-    // Show custom pool manager, clear scanner table with helpful prompt
-    if (tableDiv) tableDiv.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">請在上方自訂清單中加入股票，然後選擇市場掃描</div>';
-    // Switch market tab to custom (this will show the custom-pool-manager via switchScannerMarket)
-    if (typeof switchScannerMarket === 'function') switchScannerMarket('custom');
-    // Scroll to custom pool manager
-    const cpSection = document.getElementById('custom-pool-manager');
-    if (cpSection) {
-      cpSection.style.display = '';
-      try { cpSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
-    }
-  }
+  if (strat === 'rsleader')  { runRSLeaderScan(); }
+  else if (strat === 'discover') { _showDiscoveryTab(); }
+  else if (strat === 'buyzone')  { _showBuyZoneTab(); }
 }
 
 function updateScanRegimeWarning() {
