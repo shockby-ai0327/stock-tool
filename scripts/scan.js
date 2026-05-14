@@ -41,12 +41,60 @@ function saveJSON(filename, data) {
 
 // ── Yahoo Finance helpers ───────────────────────────────────────────────────
 
+// Modern Chrome UA — required by some Yahoo endpoints since 2023.
+const YF_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// In-memory cookie jar + crumb. Yahoo's quoteSummary v10 requires a session
+// cookie (set by hitting fc.yahoo.com first) and a "crumb" token (fetched from
+// /v1/test/getcrumb). Without both, requests come back HTTP 401.
+const yfSession = { cookie: '', crumb: '' };
+
+async function yfInitSession() {
+  // Hit a Yahoo property to obtain the A1/A1S cookie. fc.yahoo.com is a
+  // beacon endpoint that reliably sets it; finance.yahoo.com also works.
+  try {
+    const seedRes = await fetch('https://fc.yahoo.com/', {
+      headers: { 'User-Agent': YF_UA, 'Accept': '*/*' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(10000),
+    });
+    const setCookie = seedRes.headers.raw?.()['set-cookie'] || seedRes.headers.get('set-cookie');
+    const cookies = Array.isArray(setCookie) ? setCookie : (setCookie ? [setCookie] : []);
+    yfSession.cookie = cookies.map(c => c.split(';')[0]).join('; ');
+  } catch (e) {
+    // Fall back to bare cookie — crumb may not work but other endpoints will.
+    yfSession.cookie = '';
+  }
+
+  // Fetch crumb token. Requires the cookie set above.
+  try {
+    const crumbRes = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
+      headers: {
+        'User-Agent': YF_UA,
+        'Accept': '*/*',
+        'Cookie': yfSession.cookie,
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (crumbRes.ok) {
+      const text = (await crumbRes.text()).trim();
+      // Crumb is a short token (~11 chars), not an HTML error page.
+      if (text && text.length < 40 && !text.startsWith('<')) {
+        yfSession.crumb = text;
+      }
+    }
+  } catch (e) { /* leave crumb empty, quoteSummary calls will fail gracefully */ }
+
+  console.log(`  YF session: cookie=${yfSession.cookie ? 'set' : 'missing'} crumb=${yfSession.crumb ? 'set' : 'missing'}`);
+}
+
 async function yfFetch(url, retries = 3) {
   const headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+    'User-Agent': YF_UA,
     'Accept': 'application/json',
     'Accept-Language': 'en-US,en;q=0.9',
   };
+  if (yfSession.cookie) headers['Cookie'] = yfSession.cookie;
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, { headers, signal: AbortSignal.timeout(12000) });
@@ -63,6 +111,13 @@ async function yfFetch(url, retries = 3) {
       await DELAY(1500 * (i + 1));
     }
   }
+}
+
+// Add the crumb to quoteSummary URLs. Other endpoints (chart, screener) do not
+// require a crumb.
+function withCrumb(url) {
+  if (!yfSession.crumb) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'crumb=' + encodeURIComponent(yfSession.crumb);
 }
 
 // OHLCV via v8/finance/chart — no auth required
@@ -157,7 +212,7 @@ const INDUSTRY_TO_ETF = {
 };
 
 async function getSectorInfo(symbol) {
-  const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=assetProfile,summaryProfile`;
+  const url = withCrumb(`https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=assetProfile,summaryProfile`);
   const data = await yfFetch(url);
   const profile = data?.quoteSummary?.result?.[0]?.assetProfile
                || data?.quoteSummary?.result?.[0]?.summaryProfile;
@@ -192,6 +247,104 @@ async function lookupSectorWithCache(symbol, cache) {
     // Negative cache for 1 day so we don't hammer Yahoo on broken tickers.
     cache[symbol] = { sector: null, industry: null, etf: null, cachedAt: now - ONE_YEAR_MS + 24 * 60 * 60 * 1000 };
     return { sector: null, industry: null, etf: null };
+  }
+}
+
+// ── Quote summary (earnings, short, analyst) with 24h cache ────────────────
+// Single endpoint returns 5 modules. Used only for tickers that PASS the leader
+// or discovery filter — otherwise we'd hit Yahoo for the entire universe.
+async function getQuoteSummary(symbol) {
+  const modules = 'calendarEvents,defaultKeyStatistics,upgradeDowngradeHistory,recommendationTrend,earningsHistory';
+  const url = withCrumb(`https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${modules}`);
+  const data = await yfFetch(url);
+  return data?.quoteSummary?.result?.[0] || null;
+}
+
+// Pull out the small set of fields we care about. Be defensive — many small
+// caps have no analyst coverage, no short interest, etc. Optional chaining
+// everywhere; never throw on missing fields.
+function extractQuoteFields(summary) {
+  if (!summary) return null;
+
+  // ── Earnings date / days-to-earnings ──
+  const earningsDates = summary.calendarEvents?.earnings?.earningsDate;
+  const earningsRaw = Array.isArray(earningsDates) && earningsDates.length > 0
+    ? (earningsDates[0]?.raw ?? earningsDates[0])
+    : null;
+  const earningsDate = (typeof earningsRaw === 'number' && earningsRaw > 0) ? earningsRaw : null;
+  const daysToEarnings = (earningsDate != null)
+    ? Math.round((earningsDate * 1000 - Date.now()) / (24 * 60 * 60 * 1000))
+    : null;
+
+  // ── Short interest ──
+  const keyStats = summary.defaultKeyStatistics || {};
+  const shortPctOfFloat = keyStats.shortPercentOfFloat?.raw ?? keyStats.shortPercentOfFloat ?? null;
+  const shortRatio      = keyStats.shortRatio?.raw         ?? keyStats.shortRatio         ?? null;
+
+  // ── Upgrades / downgrades in past 30 days ──
+  const history = summary.upgradeDowngradeHistory?.history || [];
+  const cutoffSec = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+  const recentUpgrades = [];
+  const recentDowngrades = [];
+  for (const entry of history) {
+    const epoch = entry.epochGradeDate?.raw ?? entry.epochGradeDate ?? 0;
+    if (epoch < cutoffSec) continue;
+    const action = (entry.action || '').toLowerCase();
+    const item = {
+      firm:     entry.firm     || null,
+      action:   entry.action   || null,
+      toGrade:  entry.toGrade  || null,
+      fromGrade: entry.fromGrade || null,
+      date:     epoch || null,
+    };
+    if (action === 'up'   && recentUpgrades.length   < 3) recentUpgrades.push(item);
+    if (action === 'down' && recentDowngrades.length < 3) recentDowngrades.push(item);
+  }
+
+  // ── Earnings surprise history (last 4 quarters) ──
+  const earningsHist = summary.earningsHistory?.history || [];
+  const surpriseHistory = earningsHist.slice(-4).map(q => ({
+    qtr:         q.quarter?.fmt || q.period || null,
+    actual:      q.epsActual?.raw   ?? q.epsActual   ?? null,
+    estimate:    q.epsEstimate?.raw ?? q.epsEstimate ?? null,
+    surprisePct: q.surprisePercent?.raw ?? q.surprisePercent ?? null,
+  }));
+
+  // ── Recommendation trend (latest) ──
+  const trend = summary.recommendationTrend?.trend?.[0];
+  const recommendation = trend ? {
+    strongBuy:  trend.strongBuy  ?? null,
+    buy:        trend.buy        ?? null,
+    hold:       trend.hold       ?? null,
+    sell:       trend.sell       ?? null,
+    strongSell: trend.strongSell ?? null,
+  } : null;
+
+  return {
+    earningsDate, daysToEarnings,
+    shortPctOfFloat, shortRatio,
+    recentUpgrades, recentDowngrades,
+    surpriseHistory, recommendation,
+  };
+}
+
+// Cached fetch of quote summary fields. `cache` mutated in place.
+async function lookupQuoteWithCache(symbol, cache) {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const hit = cache[symbol];
+  if (hit && hit.cachedAt && (now - hit.cachedAt) < ONE_DAY_MS) {
+    return hit.data || null;
+  }
+  try {
+    const summary = await getQuoteSummary(symbol);
+    const data = extractQuoteFields(summary);
+    cache[symbol] = { data, cachedAt: now };
+    return data;
+  } catch (e) {
+    // Negative-cache for 6h to avoid hammering broken tickers
+    cache[symbol] = { data: null, cachedAt: now - ONE_DAY_MS + 6 * 60 * 60 * 1000 };
+    return null;
   }
 }
 
@@ -521,6 +674,9 @@ async function scanUS() {
   console.log('\n=== US RS Leader + Discovery Scan ===');
   console.log(`Start: ${new Date().toISOString()}`);
 
+  // 0. Initialize Yahoo session (cookie + crumb) — required for quoteSummary v10
+  await yfInitSession();
+
   // 1. Build universe
   console.log('\n[1] Building universe...');
 
@@ -734,12 +890,13 @@ async function scanUS() {
   // Apply sector info to records (compute sectorRS using cached benchmarks)
   const applySector = (r) => {
     const info = sectorCache[r.symbol];
-    if (!info) return;
-    r.sector   = info.sector;
-    r.industry = info.industry;
-    r.sectorEtf = info.etf;
-    const benchRet = info.etf && sectorBenchmarks[info.etf] != null ? sectorBenchmarks[info.etf] : null;
-    r.sectorRS = (benchRet != null && r._ret12_1Raw != null) ? round2(r._ret12_1Raw - benchRet) : null;
+    if (info) {
+      r.sector    = info.sector;
+      r.industry  = info.industry;
+      r.sectorEtf = info.etf;
+      const benchRet = info.etf && sectorBenchmarks[info.etf] != null ? sectorBenchmarks[info.etf] : null;
+      r.sectorRS = (benchRet != null && r._ret12_1Raw != null) ? round2(r._ret12_1Raw - benchRet) : null;
+    }
     delete r._ret12_1Raw;
   };
   leaders.forEach(applySector);
@@ -749,6 +906,58 @@ async function scanUS() {
   const sectorCoverageD = discoCand.filter(r => r.sectorEtf).length;
   console.log(`  sector cache: ${sectorCacheHits} hits, ${sectorFetches} fetches`);
   console.log(`  coverage: leaders ${sectorCoverageL}/${leaders.length} (${Math.round(100*sectorCoverageL/Math.max(1,leaders.length))}%) · discovery ${sectorCoverageD}/${discoCand.length}`);
+
+  // 3c. Enrich each passing ticker with earnings / short / analyst data.
+  // Cached in data/quote_cache.json for 24h. Only fetched for leaders+discovery
+  // (~200-400 tickers, vs the full ~1500 universe).
+  console.log('\n[3c] Fetching earnings / short / analyst data...');
+  const quoteCache = loadJSON('quote_cache.json', {});
+  const quoteTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  let quoteCacheHits = 0, quoteFetches = 0;
+
+  const QUOTE_BATCH = 5, QUOTE_DELAY = 400;
+  const quoteResults = {}; // sym → extracted fields
+  for (let i = 0; i < quoteTargets.length; i += QUOTE_BATCH) {
+    const batch = quoteTargets.slice(i, i + QUOTE_BATCH);
+    await Promise.all(batch.map(async sym => {
+      const fresh = quoteCache[sym]
+        && quoteCache[sym].cachedAt
+        && (Date.now() - quoteCache[sym].cachedAt) < 24 * 60 * 60 * 1000;
+      if (fresh) quoteCacheHits += 1; else quoteFetches += 1;
+      quoteResults[sym] = await lookupQuoteWithCache(sym, quoteCache);
+    }));
+    if (i + QUOTE_BATCH < quoteTargets.length) await DELAY(QUOTE_DELAY);
+  }
+  saveJSON('quote_cache.json', quoteCache);
+
+  const applyQuote = (r) => {
+    const q = quoteResults[r.symbol];
+    if (!q) {
+      r.earningsDate     = null;
+      r.daysToEarnings   = null;
+      r.shortPctOfFloat  = null;
+      r.shortRatio       = null;
+      r.recentUpgrades   = [];
+      r.recentDowngrades = [];
+      r.surpriseHistory  = [];
+      r.recommendation   = null;
+      return;
+    }
+    r.earningsDate     = q.earningsDate;
+    r.daysToEarnings   = q.daysToEarnings;
+    r.shortPctOfFloat  = q.shortPctOfFloat;
+    r.shortRatio       = q.shortRatio;
+    r.recentUpgrades   = q.recentUpgrades   || [];
+    r.recentDowngrades = q.recentDowngrades || [];
+    r.surpriseHistory  = q.surpriseHistory  || [];
+    r.recommendation   = q.recommendation   || null;
+  };
+  leaders.forEach(applyQuote);
+  discoCand.forEach(applyQuote);
+
+  const earningsCoverageL = leaders.filter(r => r.daysToEarnings != null).length;
+  console.log(`  quote cache: ${quoteCacheHits} hits, ${quoteFetches} fetches`);
+  console.log(`  earnings coverage: leaders ${earningsCoverageL}/${leaders.length} (${Math.round(100*earningsCoverageL/Math.max(1,leaders.length))}%)`);
 
   // 4. Score leaders (RS Rating + composite)
   calcRSRatings(leaders);
