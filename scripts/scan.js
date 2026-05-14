@@ -13,7 +13,7 @@
  */
 
 import fetch from 'node-fetch';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -22,6 +22,22 @@ const DATA_DIR = join(__dirname, '..', 'data');
 mkdirSync(DATA_DIR, { recursive: true });
 
 const DELAY = ms => new Promise(r => setTimeout(r, ms));
+
+// ── JSON file helpers (defensive: missing/corrupt → empty default) ──────────
+function loadJSON(filename, fallback) {
+  const path = join(DATA_DIR, filename);
+  if (!existsSync(path)) return fallback;
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (e) {
+    console.warn(`  load ${filename} failed: ${e.message} — using fallback`);
+    return fallback;
+  }
+}
+
+function saveJSON(filename, data) {
+  writeFileSync(join(DATA_DIR, filename), JSON.stringify(data, null, 2));
+}
 
 // ── Yahoo Finance helpers ───────────────────────────────────────────────────
 
@@ -187,6 +203,120 @@ const GROWTH_EXTENDED = [
   'FLNC','NRGV','GPRE','LASR',
 ];
 
+// Russell-style mid/small cap extension — adds breadth across all sectors so the
+// universe can comfortably exceed 1500 unique tickers (plan acceptance target).
+// Curated from common Russell 1000/2000 components + popular themes; ETFs filtered
+// by isEtf() at the universe build step.
+const RUSSELL_EXTENDED = [
+  // ── Tech (mid/small cap) ───────────────────────────────────────────────
+  'TSEM','CRUS','SLAB','MPWR','SWKS','MCHP','ON','POWI','SITM','MTSI',
+  'AAOI','LITE','COHR','CIEN','INFN','VIAV','CALX','EXTR','NTGR','NETI',
+  'AUDC','CSCO','ANET','HPQ','PSTG','NTAP','WDC','STX','SNDK','SMART',
+  'SANM','BHE','FLEX','JBL','CLS','PLXS','TTMI','VSAT','VIAV','OSIS',
+  'POWL','BMI','WDC','SMCI','HPE','DELL','HPQ','LOGI','ZBRA','ROP',
+  'TYL','PTC','ANSS','MANH','PRGS','GWRE','SPSC','NTNX','RBLX','DASH',
+  'TWLO','ZM','RNG','FIVN','CFLT','PD','WIX','SHOP','SQSP','GDDY',
+  'BKNG','CHWY','OPCH','GLBE','SE','MELI','PDD','BABA','JD','NTES',
+  'BIDU','TME','BILI','VIPS','HUYA','DOYU','EH','XPEV','NIO','LI',
+  'ZK','XPEV','RIVN','LCID','FFIE','GOEV','NKLA','MULN','HYZN','PSNY',
+  'MMYT','TOUR','TRIP','EXPE','ABNB','UBER','LYFT','DASH','GRAB','BIRD',
+  'PLNT','VFC','UAA','UA','LULU','RL','PVH','TPR','CPRI','CRI',
+  // ── Healthcare/Biotech mid/small cap ──────────────────────────────────
+  'IRTC','NVRO','SILK','ATRC','SWAV','NARI','PEN','SHC','TMDX','INSP',
+  'NVCR','PACS','LBPH','MIRA','SAVA','AXSM','VYNE','VRDN','CRNX','CTLT',
+  'LEGN','PCVX','RVMD','ITCI','MGNX','XBI','XPH','LABU','LABD',
+  'SRPT','ARWR','IONS','ALNY','BMRN','UTHR','EXEL','INCY','VRTX','REGN',
+  'BIIB','MRNA','BNTX','NVAX','OCGN','VBIV','IDYA','ATAI','CMPS','MNMD',
+  'HUMA','LFMD','HIMS','TDOC','AMWL','LMND','EHTH','HQY','EVH','OPK',
+  'PRTA','CCXI','RYTM','VKTX','VRNA','ANIK','CRMD','HRMY','PHAT','XENE',
+  'KRTX','IBRX','RNA','FOLD','IMCR','MEDP','IQV','CRL','RGEN','ICLR',
+  // ── Financials (mid/small cap, fintech, regional banks) ───────────────
+  'HOOD','SOFI','LC','UPST','AFRM','PYPL','SQ','ALLY','SYF','DFS',
+  'NU','BBAR','BMA','PAGS','STNE','XYF','HMHC','GLBE','CWAN','TOST',
+  'BILL','MQ','ML','OPRT','MGI','EVRI','SNEX','LPLA','VRTS','ARES',
+  'BAM','BX','KKR','APO','BLK','TROW','BEN','LM','IVZ','AMG',
+  'CG','OWL','GLOB','MITT','MFA','NLY','AGNC','PFC','PRT','TWO',
+  'MTG','RDN','TYBT','CACC','SLM','SOFI','NAVI','NMR','MS','SF',
+  'JEF','RJF','MS','VIRT','CME','ICE','NDAQ','CBOE','MKTX','TW',
+  // ── Industrials/Defense (mid/small cap) ──────────────────────────────
+  'GD','LMT','RTX','BA','NOC','LHX','TDG','HEI','HII','TXT',
+  'ATI','HWM','BWXT','CW','MOG','WWD','POWL','VMI','MWA','VLTO',
+  'ENS','GTLS','CHX','FTV','EME','PWR','PRIM','MTZ','GVA','STRL',
+  'NVT','HUBB','AYI','LFUS','REZI','TT','CARR','OTIS','JCI','JBT',
+  'LECO','IEX','XYL','GGG','NDSN','SPX','WTS','AOS','RBC','BCO',
+  'WTRG','AWR','SJW','CWT','MSEX','SBS','PNR','BMI','BAH','LDOS',
+  'CACI','SAIC','MAXR','PSN','VVX','TGI','AIR','AAON','MTW','TEX',
+  // ── Energy (mid/small cap) ────────────────────────────────────────────
+  'RIG','NE','VAL','TDW','HP','PTEN','NBR','LBRT','PUMP','RES',
+  'WHD','CHRD','PR','CRGY','MGY','GPOR','SBOW','VTLE','REPX','BTU',
+  'AR','SWN','RRC','EQT','CTRA','MTDR','SM','APA','MUR','CHRD',
+  'PBR','PBRA','XEC','OAS','BCEI','BRY','CRC','DEN','EGY','ESTE',
+  'CHK','OVV','MPC','VLO','PSX','HFC','DK','TRGP','ENB','ET',
+  'EPD','MMP','MPLX','OKE','WMB','KMI','PAA','PAGP','SUN','USAC',
+  // ── Materials/Mining ──────────────────────────────────────────────────
+  'CLF','X','MT','RS','STLD','NUE','CMC','WOR','TKR','CRS',
+  'AA','CENX','KALU','HAYN','ATI','PKX','SCCO','TECK','VALE','BHP',
+  'RIO','WPM','PAAS','AG','HL','EXK','SVM','MUX','GATO','NEM',
+  'AEM','GOLD','FNV','SAND','OR','RGLD','KGC','BTG','EGO','AU',
+  'NGD','OGN','SBSW','MP','UEC','URG','URA','LEU','UUUU','DNN',
+  'CCJ','NXE','LTBR','ASPN','MAGN','SMR','OKLO','NNE','BWXT','VST',
+  // ── Consumer Discretionary (mid/small) ────────────────────────────────
+  'DKS','HIBB','BOOT','GES','BURL','ROST','ULTA','SBH','SIG','TJX',
+  'BBY','GME','BBWI','VSCO','AEO','URBN','ZUMZ','EXPR','CATO','TLYS',
+  'KMX','CVNA','AN','ABG','GPI','LAD','PAG','SAH','RUSHA','RUSHB',
+  'CWH','LCII','THO','WGO','PII','BRP','MBUU','HZO','MCFT','LCII',
+  'YETI','VFC','HBI','OXM','CRI','GIII','PLBY','MOV','FOSL','HBI',
+  'GPS','LEVI','ANF','GIL','UAA','UA','LULU','PVH','RL','TPR',
+  'WSM','RH','LZB','FND','HVT','MLHR','LEG','TPX','SNBR','PRPL',
+  // ── Consumer Staples (mid/small) ──────────────────────────────────────
+  'POST','THS','LANC','BGS','UTZ','SMPL','SIMPS','HAIN','TWNK','FLO',
+  'CALM','VITL','VFF','SAM','TAP','BUD','DEO','STZ',
+  'KO','PEP','MNST','CELH','FIZZ','PRMW','COKE','KDP','TPB','TPCA',
+  // ── Real Estate (mid/small REITs) ────────────────────────────────────
+  'O','SPG','REG','FRT','KIM','BRX','MAC','NNN','EPRT','ADC',
+  'STAG','PLD','EXR','LSI','CUBE','PSA','NSA','UHAL','REXR','EGP',
+  'PEAK','VTR','WELL','OHI','CTRE','SBRA','NHI','LTC','BFS','UMH',
+  'INVH','SUI','ELS','AMH','MAA','CPT','EQR','AVB','UDR','ESS',
+  'HST','PEB','RHP','RLJ','SHO','APLE','XHR','BHR','DRH','SVC',
+  'SLG','VNO','BXP','HIW','KRC','PDM','BDN','HPP','CUZ','ARE',
+  'AMT','CCI','SBAC','DLR','EQIX','IRM','SRC','EXR','VICI','GLPI',
+  // ── Utilities ─────────────────────────────────────────────────────────
+  'NEE','SO','DUK','AEP','D','EXC','SRE','XEL','WEC','ED',
+  'EIX','PCG','PEG','ETR','ES','FE','CMS','DTE','LNT','AEE',
+  'EVRG','AWK','PNW','NRG','VST','OGE','NJR','POR','BKH','IDA',
+  // ── Other small caps & themes (clean energy, growth) ──────────────────
+  'ENPH','SEDG','FSLR','RUN','ARRY','SHLS','SPWR','NOVA','MAXN','SOL',
+  'BE','PLUG','BLDP','FCEL','BLNK','CHPT','EVGO','WBX','TPIC','FREY',
+  'QS','LCID','RIVN','FFIE','XPEV','NIO','LI','LAZR','OUST','VLD',
+  'INVZ','MVST','MITK','PSFE','AEYE','VLN','UMC','HIMX','OSPN','VRA',
+  'CAMP','TRIP','GOLF','EAT','BJRI','CAKE','TXRH','PLAY','PZZA','DENN',
+  'WEN','JACK','SHAK','WING','CMG','BROS','PTLO','GO','SG','CAVA',
+  'BIRD','UPWK','FVRR','ANGI','TRUP','RVLV','MNRO','LOVE','OLPX','BIRK',
+  'BFLY','VYGR','RXST','ITOS','TRDA','RYTM','TLSI','AGEN','AKBA','ALEC',
+  'ASND','AMRX','ALPN','ANNX','APLD','BBIO','BMEA','CABA','CARM','CCCC',
+  'CDMO','CDXS','CGEM','CGTX','CHRS','CMPO','CMRX','CMTL','CMPX','CNTA',
+  'COGT','CPRX','CRDF','CRMD','CTKB','CTMX','CYTK','DAWN','DCTH','DNLI',
+  'DRRX','DSP','DVAX','DYN','EDIT','ELAN','ELOX','ELYM','ENTA','ESPR',
+  'ETON','EVLO','EYE','FBIO','FENC','GDYN','GERN','GLPG','GMAB','GRTX',
+  'GTHX','HALO','HOLX','HRTX','HTBX','ICVX','IDYA','IMMR','INMB','INDV',
+  'INVA','IONS','IPHA','IRMD','IRWD','JANX','KALA','KIDS','KOD','KPTI',
+  'KROS','KRYS','KURA','LFST','LGND','LIAN','LIN','LMNL','LPCN','LQDA',
+  'LRMR','LYEL','MGNX','MIST','MLAB','MNKD','MNOV','MRSN','MRVI','MYO',
+  'NBTX','NGNE','NKTR','NRIX','NTLA','NUVB','NVAX','NVCT','NVST','NVTA',
+  'OCUL','OCX','OMER','OMI','ONCY','OPRX','OPRT','ORIC','OSCR','PCRX',
+  'PDSB','PHAR','PHIO','PLRX','PMVP','PRTH','PTCT','PTGX','PYXS','RCEL',
+  'RCKT','RCUS','RDUS','RGNX','RGS','RIGL','RLAY','RLMD','RNAZ','RPRX',
+  'RVPH','RWLK','RYTM','SAGE','SBET','SCPH','SCYX','SDGR','SEEL','SENS',
+  'SGRY','SHCR','SIBN','SIGA','SLNO','SLP','SMMT','SNDX','SNGX','SNSE',
+  'SONN','SPRO','SPRY','SQNS','SRRA','SRTS','SRTY','STIM','STOK','SUPN',
+  'SVMK','SWTX','TARS','TBPH','TCDA','TCMD','TECH','TELA','TGTX','THRX',
+  'TLIS','TMCI','TNGX','TPST','TRDA','TRVI','TSHA','TVTX','TYRA','UEC',
+  'UPLD','URGN','UTMD','VAPO','VBLT','VCEL','VECT','VERA','VERV','VG',
+  'VINP','VIVK','VKTX','VOR','VRDN','VRPX','VSTM','VTAK','VTGN','VTRS',
+  'VTYX','VVOS','WAVS','WBA','WTM','WVE','XBIT','XENE','XERS','XFOR',
+  'XGN','XOMA','XRX','YMAB','YRCW','ZCMD','ZIM','ZIVO','ZLAB','ZNTL',
+];
+
 // Early-stage / acceleration discovery pool — AI era emerging names
 // Shorter-history stocks, recent IPOs, sector inflection plays
 const DISCOVERY_POOL = [
@@ -313,16 +443,79 @@ async function scanUS() {
 
   // 1. Build universe
   console.log('\n[1] Building universe...');
-  const [r1, r2, r3] = await Promise.allSettled([
-    fetchScreener('day_gainers', 50),
-    fetchScreener('small_cap_gainers', 50),
-    fetchScreener('growth_technology_stocks', 50),
-  ]);
 
-  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL]);
-  [r1, r2, r3].forEach(r => {
-    if (r.status === 'fulfilled') r.value.filter(s => !isEtf(s)).forEach(s => universe.add(s));
+  // Yahoo predefined screeners — broader coverage. Some may 404; fetchScreener returns [] on failure.
+  const SCREENER_IDS = [
+    'day_gainers',
+    'small_cap_gainers',
+    'growth_technology_stocks',
+    'most_actives',
+    'undervalued_growth_stocks',
+    'aggressive_small_caps',
+    'undervalued_large_caps',
+  ];
+
+  const screenerResults = await Promise.allSettled(
+    SCREENER_IDS.map(id => fetchScreener(id, 100))
+  );
+
+  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL, ...RUSSELL_EXTENDED]);
+  // Track which screener(s) surfaced each ticker so we can save to memory below.
+  const todaySources = new Map(); // ticker → Set<screenerId>
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  screenerResults.forEach((r, idx) => {
+    const id = SCREENER_IDS[idx];
+    if (r.status === 'fulfilled') {
+      const syms = r.value.filter(s => !isEtf(s));
+      console.log(`  screener[${id}]: ${syms.length} symbols`);
+      syms.forEach(s => {
+        universe.add(s);
+        if (!todaySources.has(s)) todaySources.set(s, new Set());
+        todaySources.get(s).add(id);
+      });
+    } else {
+      console.warn(`  screener[${id}]: failed (${r.reason?.message || 'unknown'})`);
+    }
   });
+
+  // ── Universe memory: tickers seen in any screener over the past 30 days ──
+  // Allows discovery of stocks that briefly showed up in a screener (e.g., one-day
+  // gainer) but haven't appeared since — they may still be early-momentum names.
+  const memory = loadJSON('universe_memory.json', { tickers: {} });
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  // Add/update today's screener tickers in memory
+  todaySources.forEach((sources, ticker) => {
+    const existing = memory.tickers[ticker];
+    if (existing) {
+      existing.lastSeen = todayISO;
+      const merged = new Set([...(existing.sources || []), ...sources]);
+      existing.sources = [...merged];
+    } else {
+      memory.tickers[ticker] = {
+        firstSeen: todayISO,
+        lastSeen:  todayISO,
+        sources:   [...sources],
+      };
+    }
+  });
+
+  // Drop entries not seen in 30+ days; surviving entries enrich the universe
+  let droppedCount = 0;
+  for (const [ticker, entry] of Object.entries(memory.tickers)) {
+    const lastSeenMs = Date.parse(entry.lastSeen);
+    if (Number.isFinite(lastSeenMs) && (now - lastSeenMs) > THIRTY_DAYS_MS) {
+      delete memory.tickers[ticker];
+      droppedCount += 1;
+    } else if (!isEtf(ticker)) {
+      universe.add(ticker);
+    }
+  }
+
+  saveJSON('universe_memory.json', memory);
+  console.log(`  memory: ${Object.keys(memory.tickers).length} tickers retained (dropped ${droppedCount} >30d)`);
 
   const allSymbols = [...universe].sort(() => Math.random() - 0.5);
   console.log(`  Universe: ${allSymbols.length} symbols`);
