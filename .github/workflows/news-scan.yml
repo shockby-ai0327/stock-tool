@@ -1,0 +1,52 @@
+name: News Sentiment Scan
+
+on:
+  # Auto-run after every successful stock scan completes
+  workflow_run:
+    workflows: ["Stock RS Leader Scan"]
+    types: [completed]
+
+  # On-demand trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write   # write back news_sentiment.json
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Only run when the triggering scan succeeded (or manual)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout (latest — scan just committed)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install node-fetch
+        working-directory: scripts
+
+      - name: Run news sentiment scan
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/news_scan.js
+
+      - name: Commit news sentiment
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/news_sentiment.json ] && git add data/news_sentiment.json || true
+          git diff --cached --quiet || git commit -m "news: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash || true
+          git push
