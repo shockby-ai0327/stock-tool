@@ -22,7 +22,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -49,6 +49,10 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Stage scan outputs + caches/memory created by Wave 1 (auto-created on first run)
           git add data/us_scan.json data/tw_scan.json
+          [ -f data/sector_cache.json ]    && git add data/sector_cache.json    || true
+          [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true
+          [ -f data/universe_memory.json ] && git add data/universe_memory.json || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
