@@ -761,7 +761,7 @@ async function scanUS() {
   let benchReturn = 0;
   const sectorBenchmarks = {}; // sym → ret12_1
 
-  const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU'];
+  const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN'];
   try {
     const spy = await getOHLCV('SPY', '12mo');
     const n = spy.closes.length;
