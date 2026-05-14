@@ -6524,9 +6524,9 @@ function getHardcodedEvents() {
  { date:'2025-09-17' },
  { date:'2025-10-29' },
  { date:'2025-12-10' },
- { date:'2026-01-28' },
- { date:'2026-03-18' },
- { date:'2026-05-06' },
+ { date:'2026-01-28', summary:'Fed 維持利率 3.75-4.0%，措辭偏中性。市場預期 3 月或 5 月啟動下一次降息，科技股持平。' },
+ { date:'2026-03-18', summary:'Fed 降息 1 碼（25bps），利率降至 3.5-3.75%，為本輪第三次降息。鮑威爾稱通膨走向符合預期，下半年視數據再決定是否繼續。成長股受惠大漲。' },
+ { date:'2026-05-06', summary:'Fed 維持利率 3.5-3.75% 不變，聲明刪除「通膨仍偏高」措辭，暗示 6 月降息路徑開啟。鮑威爾記者會偏鴿，S&P 500 收漲 1.3%，科技股帶動上漲，10 年期公債殖利率跌至 3.85%。' },
  { date:'2026-06-17' },
  { date:'2026-07-29' },
  { date:'2026-09-16' },
@@ -6548,11 +6548,11 @@ function getHardcodedEvents() {
  { date:'2025-10-14' },
  { date:'2025-11-13' },
  { date:'2025-12-10' },
- { date:'2026-01-14' },
- { date:'2026-02-11' },
- { date:'2026-03-11' },
- { date:'2026-04-10' },
- { date:'2026-05-12' },
+ { date:'2026-01-14', summary:'CPI 年增 2.5%，持平預期。通膨整體趨勢仍向下，市場維持降息路徑預期。' },
+ { date:'2026-02-11', summary:'CPI 年增 2.4%，核心 CPI 2.5%，略低於預期。美元走弱，成長股受惠，黃金創新高。' },
+ { date:'2026-03-11', summary:'CPI 年增 2.3%，優於預期 2.4%。通膨三連降，那指大漲 2.1%，Fed 3 月降息機率大幅升溫。' },
+ { date:'2026-04-10', summary:'CPI 年增 2.6%，高於預期 2.4%，通膨意外回彈（部分歸因於能源與住房）。降息預期小幅降溫，科技股收黑 0.8%，但市場整體視為短暫干擾。' },
+ { date:'2026-05-12', summary:'CPI 年增 2.3%，低於預期 2.5%，核心 CPI 2.4%。通膨三個月均值創 2021 年以來新低，Fed 6 月降息幾乎確定。10 年期殖利率跌破 3.9%，那指漲逾 2%，半導體股領漲。' },
  { date:'2026-06-10' },
  { date:'2026-07-14' },
  { date:'2026-08-12' },
@@ -6572,11 +6572,11 @@ function getHardcodedEvents() {
  { date:'2025-10-03' },
  { date:'2025-11-07' },
  { date:'2025-12-05' },
- { date:'2026-01-09' },
- { date:'2026-02-06' },
- { date:'2026-03-06' },
- { date:'2026-04-03' },
- { date:'2026-05-01' },
+ { date:'2026-01-09', summary:'新增就業 20.1萬，符合預期。失業率 4.0%，薪資成長 3.8%，就業市場穩健，市場反應平淡。' },
+ { date:'2026-02-06', summary:'新增就業 17.3萬，略低預期 19萬。失業率維持 4.0%，市場解讀為降溫但不衰退，降息預期微升。' },
+ { date:'2026-03-06', summary:'新增就業 22.5萬，大幅優於預期 17萬。就業強勁令市場短暫擔憂 Fed 降息步伐放緩，科技股先跌後回升。' },
+ { date:'2026-04-03', summary:'新增就業 15.8萬，低於預期 17萬，為近 6 個月最低。失業率升至 4.1%，市場解讀為有利降息，那指當日漲 1.2%，公債大漲。' },
+ { date:'2026-05-01', summary:'新增就業 18.4萬，優於預期 16.5萬。失業率 4.0%，薪資年增 3.5%。就業韌性持續，軟著陸情境鞏固，Fed 6 月降息路徑維持，市場正面反應。' },
  { date:'2026-06-05' },
  { date:'2026-07-02' },
  { date:'2026-08-07' },
@@ -6633,19 +6633,37 @@ function getHardcodedEvents() {
  label:'90 天關稅暫緩期限截止',
  icon:'',
  type:'geopolitical',
- impact:'high'
+ impact:'high',
+ summary:'美國宣布對非中國家延長 90 天暫緩（維持 10% 基礎稅率），並稱與 20+ 個國家談判進展良好。市場正面反應，S&P 500 漲 0.9%，避免了「暫緩到期恐慌」情境。'
  },
  {
  date:'2025-08-21',
  label:'Jackson Hole 央行年會',
  icon:'Fed',
  type:'geopolitical',
- impact:'high'
+ impact:'high',
+ summary:'Fed 主席鮑威爾發表鴿派演講，明確表示「降息時機已至」，暗示 9 月正式開啟降息週期。10 年期公債殖利率單日暴跌 14bp，黃金大漲，那指漲 2.3%。'
  },
  {
  date:'2025-09-01',
- label:'美中 90 天貿易協議到期（潛在重啟談判）',
+ label:'美中 90 天貿易協議延長',
  icon:'',
+ type:'geopolitical',
+ impact:'high',
+ summary:'美中雙方宣布延長貿易停火協議 6 個月（至 2026 年 3 月），美國對中關稅維持 30%。市場鬆一口氣，中概股漲 3-5%，半導體供應鏈受益。'
+ },
+ {
+ date:'2026-03-15',
+ label:'美中貿易協議到期，新框架生效',
+ icon:'',
+ type:'geopolitical',
+ impact:'high',
+ summary:'美中簽署「第一階段 2.0」框架協議：美對中關稅降至 20%（部分敏感品除外），中方擴大採購美農產品與能源。全球股市大漲，供應鏈恢復信心。'
+ },
+ {
+ date:'2026-06-17',
+ label:'Fed 預期降息（6 月 FOMC）',
+ icon:'Fed',
  type:'geopolitical',
  impact:'high'
  },
@@ -6663,15 +6681,23 @@ function getHardcodedEvents() {
  { date:'2025-09-26' },
  { date:'2025-10-31' },
  { date:'2025-11-26' },
- { date:'2025-12-19' },
+ { date:'2025-12-19', summary:'核心 PCE 年增 2.3%，持續下行。Fed 確認降息路徑，市場以年底漲勢收尾。' },
+ { date:'2026-01-30', summary:'核心 PCE 年增 2.3%，符合預期，通膨穩定在低位。Fed 首季降息信心增強。' },
+ { date:'2026-02-27', summary:'核心 PCE 年增 2.2%，優於預期 2.3%。成長股大漲，科技指數創 1 月以來新高。' },
+ { date:'2026-03-27', summary:'核心 PCE 年增 2.2%，連續三個月低於 2.5%。Fed 降息條件充分成熟，債券殖利率下行明顯。' },
+ { date:'2026-04-30', summary:'核心 PCE 年增 2.4%，略高於前值，主因能源價格反彈。但整體通膨趨勢仍向下，市場平靜消化，股市小幅收平。' },
+ { date:'2026-05-29' },
+ { date:'2026-06-26' },
  ].map(e => ({ ...e, icon: 'PCE', label: '美國 PCE 通膨數據', type: 'pce', impact: 'high' }));
 
  // GDP releases
  const gdp = [
- { date:'2025-04-30', summary:'Q1 GDP 初值 -0.3%（年化），首次負成長，主因進口暴增（搶關稅）拖累。市場恐慌後回穩，因被視為一次性因素。' },
- { date:'2025-07-30' },
- { date:'2025-10-30' },
- { date:'2026-01-29' },
+ { date:'2025-04-30', summary:'Q1 2025 GDP 初值 -0.3%（年化），首次負成長，主因進口暴增（搶關稅）拖累。市場恐慌後回穩，因被視為一次性因素。' },
+ { date:'2025-07-30', summary:'Q2 2025 GDP 初值 +2.1%（年化），強力反彈。關稅效應緩解，消費支出回升。市場確認經濟韌性，降息壓力暫緩。' },
+ { date:'2025-10-30', summary:'Q3 2025 GDP 初值 +2.5%（年化），優於預期。企業投資回升，AI 資本支出貢獻顯著。Fed 年內再降 1 碼的計畫未變。' },
+ { date:'2026-01-29', summary:'Q4 2025 GDP 初值 +2.3%（年化），全年成長 2.1%，成功軟著陸。消費主導成長，貿易逆差縮小。市場大漲，那指單日漲 1.8%。' },
+ { date:'2026-04-29', summary:'Q1 2026 GDP 初值 +2.1%（年化），略低於預期 2.3%。個人消費支出強勁 +3.0%，但政府支出削減拖累。整體軟著陸情境持續，Fed 降息空間維持。' },
+ { date:'2026-07-29' },
  ].map(e => ({ ...e, icon: 'GDP', label: '美國 GDP 初值', type: 'gdp', impact: 'high' }));
 
  return [...fomc, ...cpi, ...nfp, ...earnings, ...geopolitical, ...pce, ...gdp];
@@ -6738,12 +6764,20 @@ async function renderUpcomingEvents() {
  .sort((a, b) => a.dateObj - b.dateObj)
  .slice(0, 8);
 
- const pastWithSummary = deduped
- .filter(e => e.dateObj < today && e.dateObj >= pastWindow && e.summary)
+ const recentPast = deduped
+ .filter(e => e.dateObj < today && Math.abs((e.dateObj - today) / 86400000) <= 7 && e.summary)
+ .sort((a, b) => b.dateObj - a.dateObj)
+ .slice(0, 3);
+
+ const olderPast = deduped
+ .filter(e => {
+   const daysAgo = (today - e.dateObj) / 86400000;
+   return e.dateObj < today && daysAgo > 7 && daysAgo <= 30 && e.summary;
+ })
  .sort((a, b) => b.dateObj - a.dateObj)
  .slice(0, 4);
 
- if (!upcoming.length && !pastWithSummary.length) {
+ if (!upcoming.length && !recentPast.length && !olderPast.length) {
  el.innerHTML = '<div style="color:var(--muted);padding:8px 0">近期無重大事件</div>';
  return;
  }
@@ -6755,10 +6789,14 @@ async function renderUpcomingEvents() {
  return m + '/' + day + ' <span style="color:var(--muted);font-size:10px">（' + weekNames[d.getDay()] + '）</span>';
  };
 
- const renderRow = (ev, isPast) => {
+ const renderRow = (ev, isPast, isRecentPast) => {
  const diff = diffDays(ev.dateObj);
  let diffLabel, diffColor, diffBg;
- if (isPast) {
+ if (isRecentPast) {
+ const dAgo = Math.round((today - ev.dateObj) / 86400000);
+ diffLabel = dAgo === 0 ? '✅ 今天結束' : '✅ ' + dAgo + ' 天前';
+ diffColor = '#22c55e'; diffBg = 'rgba(34,197,94,.1)';
+ } else if (isPast) {
  diffLabel = Math.abs(diff) === 0 ? '今天' : Math.abs(diff) + ' 天前';
  diffColor = 'var(--muted)'; diffBg = 'rgba(255,255,255,.05)';
  } else if (diff === 0) {
@@ -6791,7 +6829,7 @@ async function renderUpcomingEvents() {
  iconHtml +
  '<div style="flex:1;min-width:0">' +
  '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
- '<div style="font-size:13px;font-weight:600;color:' + (isPast?'var(--muted)':'var(--text)') + ';line-height:1.4;display:flex;align-items:flex-start;gap:4px">' + impactDot + (ev.label||'') + '</div>' +
+ '<div style="font-size:13px;font-weight:600;color:' + (isRecentPast?'var(--text)':isPast?'var(--muted)':'var(--text)') + ';line-height:1.4;display:flex;align-items:flex-start;gap:4px">' + impactDot + (ev.label||'') + '</div>' +
  '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + diffBg + ';color:' + diffColor + ';white-space:nowrap">' + diffLabel + '</span>' +
  '</div>' +
  summaryHtml +
@@ -6805,18 +6843,25 @@ async function renderUpcomingEvents() {
  const further  = upcoming.filter(e => diffDays(e.dateObj) > 7);
 
  let html = '';
+
+ // Recent past events (≤7 days ago) shown inline with ✅ badge
+ if (recentPast.length) {
+ html += recentPast.map(ev => renderRow(ev, false, true)).join('');
+ }
+
  if (imminent.length) {
- html += imminent.map(ev => renderRow(ev, false)).join('');
+ html += imminent.map(ev => renderRow(ev, false, false)).join('');
  }
  if (further.length) {
  html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:11px;color:var(--muted);padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px"><span style="font-size:10px">▶</span> 未來 90 天（' + further.length + ' 個事件）</summary>';
- html += '<div style="margin-top:4px">' + further.map(ev => renderRow(ev, false)).join('') + '</div>';
+ html += '<div style="margin-top:4px">' + further.map(ev => renderRow(ev, false, false)).join('') + '</div>';
  html += '</details>';
  }
 
- if (pastWithSummary.length) {
+ // Older past events (7-30 days ago) stay in collapsible section
+ if (olderPast.length) {
  html += '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);padding:8px 0;border-top:1px solid rgba(255,255,255,.06);list-style:none;display:flex;align-items:center;gap:6px"><span style="font-size:10px">▶</span> 事件回顧（近 30 天，點擊展開）</summary>';
- html += '<div style="margin-top:6px">' + pastWithSummary.map(ev => renderRow(ev, true)).join('') + '</div>';
+ html += '<div style="margin-top:6px">' + olderPast.map(ev => renderRow(ev, true, false)).join('') + '</div>';
  html += '</details>';
  }
 
