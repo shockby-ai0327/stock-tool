@@ -115,6 +115,86 @@ function calcVCP(closes, highs, lows) {
   return { vcpScore, vcpDepth: Math.round(depth20 * 100) };
 }
 
+// ── Sector / industry → ETF mapping (Yahoo assetProfile) ───────────────────
+// INDUSTRY first (more specific), SECTOR as fallback. Both Yahoo strings are
+// long-form English (e.g. "Semiconductors", "Software—Application").
+const SECTOR_TO_ETF = {
+  'Technology':             'XLK',
+  'Communication Services': 'XLC',
+  'Consumer Cyclical':      'XLY',
+  'Consumer Defensive':     'XLP',
+  'Financial Services':     'XLF',
+  'Healthcare':             'XLV',
+  'Industrials':            'XLI',
+  'Energy':                 'XLE',
+  'Basic Materials':        'XLB',
+  'Real Estate':            'XLRE',
+  'Utilities':              'XLU',
+};
+
+// Industry strings as Yahoo returns them — note: em-dash separator on Software
+const INDUSTRY_TO_ETF = {
+  // Semiconductors family
+  'Semiconductors':                          'SMH',
+  'Semiconductor Equipment & Materials':     'SMH',
+  // Software family
+  'Software—Application':                    'IGV',
+  'Software—Infrastructure':                 'IGV',
+  'Software - Application':                  'IGV',
+  'Software - Infrastructure':               'IGV',
+  // Biotech
+  'Biotechnology':                           'IBB',
+  'Drug Manufacturers—Specialty & Generic':  'IBB',
+  // Defense / aerospace
+  'Aerospace & Defense':                     'XAR',
+  // Precious metals / mining
+  'Gold':                                    'GDX',
+  'Silver':                                  'GDX',
+  'Other Precious Metals & Mining':          'GDX',
+  // Solar / clean energy
+  'Solar':                                   'TAN',
+  // Real estate sub-industries default to XLRE via SECTOR_TO_ETF
+};
+
+async function getSectorInfo(symbol) {
+  const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=assetProfile,summaryProfile`;
+  const data = await yfFetch(url);
+  const profile = data?.quoteSummary?.result?.[0]?.assetProfile
+               || data?.quoteSummary?.result?.[0]?.summaryProfile;
+  return {
+    sector:   profile?.sector   || null,
+    industry: profile?.industry || null,
+  };
+}
+
+// Resolve sector/industry → ETF using industry-first, sector-fallback strategy.
+function resolveSectorEtf(sector, industry) {
+  if (industry && INDUSTRY_TO_ETF[industry]) return INDUSTRY_TO_ETF[industry];
+  if (sector   && SECTOR_TO_ETF[sector])     return SECTOR_TO_ETF[sector];
+  return null;
+}
+
+// Look up a symbol's sector ETF with 1-year cache. Returns { sector, industry, etf }.
+// `cache` is mutated in place; caller persists at scan end.
+async function lookupSectorWithCache(symbol, cache) {
+  const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const hit = cache[symbol];
+  if (hit && hit.cachedAt && (now - hit.cachedAt) < ONE_YEAR_MS) {
+    return { sector: hit.sector, industry: hit.industry, etf: hit.etf };
+  }
+  try {
+    const { sector, industry } = await getSectorInfo(symbol);
+    const etf = resolveSectorEtf(sector, industry);
+    cache[symbol] = { sector, industry, etf, cachedAt: now };
+    return { sector, industry, etf };
+  } catch (e) {
+    // Negative cache for 1 day so we don't hammer Yahoo on broken tickers.
+    cache[symbol] = { sector: null, industry: null, etf: null, cachedAt: now - ONE_YEAR_MS + 24 * 60 * 60 * 1000 };
+    return { sector: null, industry: null, etf: null };
+  }
+}
+
 async function fetchScreener(scrId, count = 50) {
   try {
     const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=${scrId}&start=0&count=${count}&formatted=false`;
@@ -583,62 +663,9 @@ async function scanUS() {
 
         if (!isLeader && !isDiscovery) return null;
 
-        // Assign sector ETF based on symbol → sector map (best-effort, ~120 tickers)
-        const SECTOR_MAP = {
-          // ── Semiconductors → SMH ──────────────────────────────────────────
-          NVDA:'SMH',AMD:'SMH',AVGO:'SMH',QCOM:'SMH',MU:'SMH',AMAT:'SMH',LRCX:'SMH',
-          KLAC:'SMH',ADI:'SMH',MRVL:'SMH',CRDO:'SMH',ALAB:'SMH',ACLS:'SMH',NVTS:'SMH',
-          MPWR:'SMH',WOLF:'SMH',ON:'SMH',SWKS:'SMH',MCHP:'SMH',TXN:'SMH',INTC:'SMH',
-          SMTC:'SMH',AMBA:'SMH',CRUS:'SMH',SLAB:'SMH',SITM:'SMH',DIOD:'SMH',
-          AXTI:'SMH',KLIC:'SMH',COHU:'SMH',UCTT:'SMH',ICHR:'SMH',ASYS:'SMH',
-          POWI:'SMH',MTSI:'SMH',ALGM:'SMH',LASR:'SMH',AAOI:'SMH',IIVI:'SMH',
-          // ── Software → IGV ────────────────────────────────────────────────
-          ORCL:'IGV',CRM:'IGV',NOW:'IGV',WDAY:'IGV',SNOW:'IGV',DDOG:'IGV',
-          NET:'IGV',MDB:'IGV',CRWD:'IGV',PANW:'IGV',ZS:'IGV',PLTR:'IGV',
-          HUBS:'IGV',VEEV:'IGV',TEAM:'IGV',GTLB:'IGV',S:'IGV',SMAR:'IGV',
-          BILL:'IGV',FRSH:'IGV',DOCN:'IGV',DOCUSIGN:'IGV',
-          // ── Photonics/Fiber/Telecom Equip → XLK ──────────────────────────
-          GLW:'XLK',COHR:'XLK',LITE:'XLK',JNPR:'XLK',CIEN:'XLK',INFN:'XLK',
-          VIAV:'XLK',CALX:'XLK',GILT:'XLK',ADTM:'XLK',NPKI:'XLK',FN:'XLK',
-          // ── Comms / Media → XLC ──────────────────────────────────────────
-          META:'XLC',GOOGL:'XLC',GOOG:'XLC',NFLX:'XLC',DIS:'XLC',PARA:'XLC',
-          WBD:'XLC',SNAP:'XLC',PINS:'XLC',RDDT:'XLC',SPOT:'XLC',EA:'XLC',
-          // ── Defense / Aerospace → XAR ─────────────────────────────────────
-          RKLB:'XAR',ASTS:'XAR',AXON:'XAR',LDOS:'XAR',KTOS:'XAR',LHX:'XAR',
-          NOC:'XAR',RTX:'XAR',LMT:'XAR',GD:'XAR',HEI:'XAR',TDG:'XAR',
-          BKSY:'XAR',PL:'XAR',SPIR:'XAR',ATRO:'XAR',
-          // ── Financials (incl. crypto/fintech) → XLF ───────────────────────
-          COIN:'XLF',HOOD:'XLF',AFRM:'XLF',UPST:'XLF',SQ:'XLF',
-          HUT:'XLF',CIFR:'XLF',MARA:'XLF',RIOT:'XLF',IREN:'XLF',CLSK:'XLF',
-          BTBT:'XLF',WULF:'XLF',BTDR:'XLF',CORZ:'XLF',NBTB:'XLF',
-          GS:'XLF',JPM:'XLF',MS:'XLF',BAC:'XLF',WFC:'XLF',C:'XLF',
-          V:'XLF',MA:'XLF',AXP:'XLF',PYPL:'XLF',NU:'XLF',
-          // ── Biotech / Pharma → IBB ────────────────────────────────────────
-          RXRX:'IBB',MRNA:'IBB',BEAM:'IBB',CRSP:'IBB',NTLA:'IBB',EDIT:'IBB',
-          ALLO:'IBB',FATE:'IBB',SANA:'IBB',VERV:'IBB',ARKG:'IBB',CAPR:'IBB',
-          MGNX:'IBB',STTK:'IBB',ATRA:'IBB',ARQT:'IBB',IMVT:'IBB',
-          // ── General Healthcare → XLV ──────────────────────────────────────
-          ISRG:'XLV',TMO:'XLV',ABT:'XLV',MDT:'XLV',SYK:'XLV',EW:'XLV',
-          DXCM:'XLV',ALGN:'XLV',PODD:'XLV',INSP:'XLV',NVCR:'XLV',PACS:'XLV',
-          // ── Energy / Mining / Materials → XLE / XLB / GDX ────────────────
-          XOM:'XLE',CVX:'XLE',COP:'XLE',EOG:'XLE',SLB:'XLE',HAL:'XLE',
-          NRGV:'XLE',FLNC:'XLE',FSLR:'XLE',ENPH:'XLE',SEDG:'XLE',
-          HL:'GDX',EXK:'GDX',HYMC:'GDX',AG:'GDX',WPM:'GDX',AEM:'GDX',
-          GPRE:'XLB',ALB:'XLB',MP:'XLB',NEM:'GDX',GOLD:'GDX',
-          // ── Consumer Discretionary → XLY ──────────────────────────────────
-          AMZN:'XLY',TSLA:'XLY',NKE:'XLY',PTON:'XLY',LULU:'XLY',
-          RH:'XLY',W:'XLY',WRBY:'XLY',DECK:'XLY',ONON:'XLY',
-          // ── Industrials → XLI ─────────────────────────────────────────────
-          GE:'XLI',CAT:'XLI',HON:'XLI',DE:'XLI',UPS:'XLI',FDX:'XLI',
-          BW:'XLI',LQDA:'XLI',EVC:'XLI',
-          // ── Storage / Memory / Misc HW → SMH ─────────────────────────────
-          MSTR:'SMH',WDC:'SMH',STX:'SMH',SNDK:'SMH',
-        };
-        // Static map covers ~120 popular tickers; unmapped stocks get null
-        const sectorEtf = SECTOR_MAP[sym] || null;
-        const sectorRet = sectorEtf && sectorBenchmarks[sectorEtf] != null ? sectorBenchmarks[sectorEtf] : null;
-        const sectorRS  = sectorRet != null ? round2(m.ret12_1 - sectorRet) : null;
-
+        // Sector ETF + sectorRS are resolved in a post-batch step using Yahoo's
+        // assetProfile (industry/sector → ETF) with a 1-year disk cache. See
+        // the lookup block right after this scan loop.
         const base = {
           symbol: sym,
           name: meta.shortName || meta.longName || sym,
@@ -649,8 +676,10 @@ async function scanUS() {
           ret6m:      round2(m.ret6m),
           ret12_1:    round2(m.ret12_1),
           rs12_1:     round2(m.rs12_1),
-          sectorEtf,
-          sectorRS,
+          sector:     null,
+          industry:   null,
+          sectorEtf:  null,
+          sectorRS:   null,
           accel:      round2(m.accel),
           volExpand:  round2(m.volExpand),
           volTrend:   round2(m.volTrend),
@@ -662,6 +691,7 @@ async function scanUS() {
           vcpDepth:   vcp.vcpDepth ?? null,
           isLeader,
           isDiscovery,
+          _ret12_1Raw: m.ret12_1, // kept for sectorRS calc below
         };
         return base;
       } catch (e) { return null; }
@@ -680,6 +710,45 @@ async function scanUS() {
 
   console.log(`\n  Leaders: ${leaders.length} | Discovery candidates: ${discoCand.length}`);
   if (leaders.length === 0) { console.error('No leaders — aborting'); return; }
+
+  // 3b. Resolve sector ETF for every passing ticker via Yahoo assetProfile.
+  // Cached for 1 year in data/sector_cache.json — most symbols hit cache after day 1.
+  console.log('\n[3b] Resolving sectors via Yahoo assetProfile...');
+  const sectorCache = loadJSON('sector_cache.json', {});
+  const sectorTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  let sectorCacheHits = 0, sectorFetches = 0, sectorResolved = 0;
+
+  const SECTOR_BATCH = 5, SECTOR_DELAY = 300;
+  for (let i = 0; i < sectorTargets.length; i += SECTOR_BATCH) {
+    const batch = sectorTargets.slice(i, i + SECTOR_BATCH);
+    await Promise.all(batch.map(async sym => {
+      const cachedBefore = !!sectorCache[sym];
+      const info = await lookupSectorWithCache(sym, sectorCache);
+      if (cachedBefore) sectorCacheHits += 1; else sectorFetches += 1;
+      if (info.etf) sectorResolved += 1;
+    }));
+    if (i + SECTOR_BATCH < sectorTargets.length) await DELAY(SECTOR_DELAY);
+  }
+  saveJSON('sector_cache.json', sectorCache);
+
+  // Apply sector info to records (compute sectorRS using cached benchmarks)
+  const applySector = (r) => {
+    const info = sectorCache[r.symbol];
+    if (!info) return;
+    r.sector   = info.sector;
+    r.industry = info.industry;
+    r.sectorEtf = info.etf;
+    const benchRet = info.etf && sectorBenchmarks[info.etf] != null ? sectorBenchmarks[info.etf] : null;
+    r.sectorRS = (benchRet != null && r._ret12_1Raw != null) ? round2(r._ret12_1Raw - benchRet) : null;
+    delete r._ret12_1Raw;
+  };
+  leaders.forEach(applySector);
+  discoCand.forEach(applySector);
+
+  const sectorCoverageL = leaders.filter(r => r.sectorEtf).length;
+  const sectorCoverageD = discoCand.filter(r => r.sectorEtf).length;
+  console.log(`  sector cache: ${sectorCacheHits} hits, ${sectorFetches} fetches`);
+  console.log(`  coverage: leaders ${sectorCoverageL}/${leaders.length} (${Math.round(100*sectorCoverageL/Math.max(1,leaders.length))}%) · discovery ${sectorCoverageD}/${discoCand.length}`);
 
   // 4. Score leaders (RS Rating + composite)
   calcRSRatings(leaders);
