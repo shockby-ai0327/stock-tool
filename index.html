@@ -5353,7 +5353,7 @@ function loadScanner() {
 function renderRisk() {
  const div = document.getElementById('risk-content');
  div.innerHTML = '<div class="card"><h3>倉位計算器（Position Sizing）</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">基於 Marty Schwartz 的 1% 法則：單筆交易最大虧損不超過總資金的 1-2%。</p><div class="journal-form" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>總資金 <span id="fx-rate-display" style="font-size:10px;color:var(--muted)"></span></label><div style="display:flex;gap:6px"><input type="number" id="risk-capital" placeholder="1000000" step="1000" style="flex:1"><select id="risk-currency" onchange="setCurrency(this.value)" style="width:90px;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px"><option value="usd">USD $</option><option value="twd">TWD NT$</option></select></div></div><div class="form-group"><label>風險比例</label><select id="risk-pct"><option value="0.5">0.5%（極保守）</option><option value="1" selected>1%（標準）</option><option value="1.5">1.5%（積極）</option><option value="2">2%（激進）</option><option value="3">3%（高風險）</option></select></div><div class="form-group"><label>進場價</label><input type="number" id="risk-entry" step="0.01" placeholder="150.00"></div><div class="form-group"><label>停損價</label><input type="number" id="risk-stop" step="0.01" placeholder="145.00"></div><div class="form-group"><label>市場</label><select id="risk-market" onchange="riskMarketChange()"><option value="us">美股</option><option value="tw">台股</option></select></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcPosition()" style="width:100%">計算倉位</button></div></div></div><div id="position-result"></div>' +
- '<div class="card"><h3>Kelly Criterion 最佳倉位</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">根據你的歷史勝率和盈虧比，計算數學上最佳的倉位比例。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>勝率 (%)</label><input type="number" id="kelly-winrate" value="55" min="1" max="99" step="1"></div><div class="form-group"><label>平均獲利 / 平均虧損</label><input type="number" id="kelly-ratio" value="1.5" min="0.1" step="0.1"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcKelly()">計算 Kelly</button></div></div><div id="kelly-result"></div><div style="margin-top:8px;font-size:12px;color:var(--orange)">實務上建議使用 Half Kelly（凱利值的一半），以降低波動。</div></div>' +
+ '<div class="card"><h3>Kelly Criterion 最佳倉位</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">根據你的歷史勝率和盈虧比，計算數學上最佳的倉位比例。</p><div id="kelly-auto-stats"></div><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>勝率 (%)</label><input type="number" id="kelly-winrate" value="55" min="1" max="99" step="1"></div><div class="form-group"><label>平均獲利 / 平均虧損</label><input type="number" id="kelly-ratio" value="1.5" min="0.1" step="0.1"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcKelly()">計算 Kelly</button></div></div><div id="kelly-result"></div><div style="margin-top:8px;font-size:12px;color:var(--orange)">實務上建議使用 Half Kelly（凱利值的一半），以降低波動。</div></div>' +
  '<div class="card"><h3>最大回撤模擬</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">模擬連續虧損時你的資金會怎樣。這就是風控存在的意義。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>起始資金</label><input type="number" id="dd-capital" value="1000000" step="1000"></div><div class="form-group"><label>每次虧損比例 (%)</label><input type="number" id="dd-loss" value="2" min="0.1" max="50" step="0.5"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcDrawdown()">模擬</button></div></div><div id="dd-result"></div></div>' +
  '<div class="card"><h3>交易策略模板</h3><div class="tab-bar" id="strategy-tabs"><button class="active" onclick="showStrategy(\'breakout\')">突破交易</button><button onclick="showStrategy(\'meanrev\')">均值回歸</button><button onclick="showStrategy(\'momentum\')">動量追蹤</button><button onclick="showStrategy(\'gap\')">缺口交易</button><button onclick="showStrategy(\'orb\')">開盤區間突破</button></div><div id="strategy-detail"></div></div>';
  showStrategy('breakout');
@@ -5424,20 +5424,83 @@ function calcKelly() {
  document.getElementById('kelly-result').innerHTML = html;
 }
 
-function autoFillKellyFromJournal() {
- const j = getJ(); if (j.length < 10) return;
- const buys = {}, trades = { wins: 0, losses: 0, totalWin: 0, totalLoss: 0 };
- j.forEach(e => {
- if (e.action === 'buy') buys[e.ticker] = e.price;
- if (e.action === 'sell' && buys[e.ticker]) {
- const pnl = e.price - buys[e.ticker];
- if (pnl > 0) { trades.wins++; trades.totalWin += pnl; } else { trades.losses++; trades.totalLoss += Math.abs(pnl); }
- delete buys[e.ticker];
+// FIFO walk-through of journal → list of closed buy/sell pairs with return %
+function computeClosedTradeReturns(journal) {
+ // Sort chronologically (oldest first). Journal stored newest-first.
+ const sorted = (journal || []).slice().sort((a, b) => {
+ const da = new Date(a.date || 0).getTime();
+ const db = new Date(b.date || 0).getTime();
+ if (da !== db) return da - db;
+ return (a.id || 0) - (b.id || 0);
+ });
+ const lots = {}; // ticker → array of {qty, price} (FIFO queue)
+ const closed = []; // array of {ticker, retPct, holdDays}
+ sorted.forEach(e => {
+ if (!e.ticker || !e.price || !e.qty) return;
+ if (e.action === 'buy') {
+ if (!lots[e.ticker]) lots[e.ticker] = [];
+ lots[e.ticker].push({ qty: e.qty, price: e.price, date: e.date });
+ } else if (e.action === 'sell') {
+ const q = lots[e.ticker] || [];
+ let remaining = e.qty;
+ while (remaining > 0 && q.length) {
+ const lot = q[0];
+ const matchQty = Math.min(lot.qty, remaining);
+ const retPct = lot.price > 0 ? (e.price - lot.price) / lot.price * 100 : 0;
+ const holdDays = lot.date ? Math.max(0, Math.round((new Date(e.date) - new Date(lot.date)) / 86400000)) : 0;
+ closed.push({ ticker: e.ticker, retPct, holdDays, sellDate: e.date });
+ lot.qty -= matchQty;
+ remaining -= matchQty;
+ if (lot.qty <= 0) q.shift();
+ }
  }
  });
- const total = trades.wins + trades.losses; if (total < 5) return;
- document.getElementById('kelly-winrate').value = (trades.wins / total * 100).toFixed(0);
- document.getElementById('kelly-ratio').value = (trades.wins > 0 && trades.losses > 0 ? (trades.totalWin / trades.wins) / (trades.totalLoss / trades.losses) : 1.5).toFixed(2);
+ return closed;
+}
+
+function autoFillKellyFromJournal() {
+ const stats = document.getElementById('kelly-auto-stats');
+ const j = getJ();
+ const closed = computeClosedTradeReturns(j);
+ const total = closed.length;
+ if (total < 10) {
+ if (stats) stats.innerHTML = '<div style="margin-bottom:12px;padding:10px 14px;background:rgba(245,158,11,.08);border-radius:8px;font-size:13px;color:var(--muted)">📊 歷史交易不足（N=' + total + '），請先累積更多資料。Kelly 建議至少 10 筆已平倉交易。</div>';
+ return;
+ }
+ const winners = closed.filter(t => t.retPct > 0);
+ const losers = closed.filter(t => t.retPct <= 0);
+ const winRate = winners.length / total;
+ const avgWin = winners.length ? winners.reduce((s, t) => s + t.retPct, 0) / winners.length : 0;
+ const avgLoss = losers.length ? Math.abs(losers.reduce((s, t) => s + t.retPct, 0) / losers.length) : 0;
+ const ratio = avgLoss > 0 ? avgWin / avgLoss : (avgWin > 0 ? 2 : 1);
+ // Fill inputs (clamped to valid input ranges)
+ const winRatePct = Math.min(99, Math.max(1, winRate * 100));
+ const ratioVal = Math.min(20, Math.max(0.1, ratio));
+ const wEl = document.getElementById('kelly-winrate');
+ const rEl = document.getElementById('kelly-ratio');
+ if (wEl) wEl.value = winRatePct.toFixed(0);
+ if (rEl) rEl.value = ratioVal.toFixed(2);
+ // Compute Half Kelly for display
+ const kelly = winRate - (1 - winRate) / ratio;
+ const halfKelly = kelly / 2;
+ const halfKellyPct = (halfKelly * 100);
+ const halfKellyDisplay = halfKelly > 0 ? halfKellyPct.toFixed(1) + '%' : '不適用';
+ const riskCap = halfKelly > 0 ? Math.min(5, halfKellyPct * 0.5) : 0;
+ if (stats) {
+ stats.innerHTML =
+ '<div style="margin-bottom:12px;padding:10px 14px;background:rgba(99,102,241,.08);border-radius:8px;font-size:13px;line-height:1.7">' +
+ '📊 根據你的歷史 ' + total + ' 筆已平倉交易：' +
+ '<b>勝率 ' + (winRate * 100).toFixed(0) + '%</b> · ' +
+ '<b>平均賺 +' + avgWin.toFixed(1) + '%</b> · ' +
+ '<b>平均賠 -' + avgLoss.toFixed(1) + '%</b> · ' +
+ '<b>盈虧比 ' + ratio.toFixed(2) + '</b>' +
+ '<div style="margin-top:6px;font-size:12px;color:var(--muted)">Half Kelly 建議：每筆 <b style="color:var(--accent)">' + halfKellyDisplay + '</b> 部位' +
+ (halfKelly > 0 ? ' · 對應風險：每筆損失上限約 ' + riskCap.toFixed(1) + '% 帳戶' : '（策略期望值為負，不應交易）') +
+ '</div>' +
+ '</div>';
+ }
+ // Auto-compute & display Kelly result
+ try { calcKelly(); } catch (e) {}
 }
 
 function calcDrawdown() {
