@@ -58,6 +58,7 @@ async function getOHLCV(symbol, range = '12mo') {
   const oq = result.indicators.quote[0];
   return {
     closes:  oq.close.filter(v => v != null),
+    opens:   (oq.open  || []).filter(v => v != null),
     highs:   oq.high.filter(v => v != null),
     lows:    oq.low.filter(v => v != null),
     volumes: oq.volume.filter(v => v != null),
