@@ -469,6 +469,7 @@ firebase.initializeApp(_fbConfig);
  <button class="active" id="scan-tab-rsleader"  onclick="switchScanStrategy('rsleader')">動能領袖</button>
  <button id="scan-tab-discover" onclick="switchScanStrategy('discover')">加速發現</button>
  <button id="scan-tab-buyzone"  onclick="switchScanStrategy('buyzone')">今日買點</button>
+ <button id="scan-tab-earnings" onclick="switchScanStrategy('earnings')">財報雷達</button>
  <button id="scan-tab-sector"   onclick="switchScanStrategy('sector')">板塊雷達</button>
  </div>
  <div id="market-thermo-container"></div>
@@ -9254,7 +9255,7 @@ async function _showSectorRadarTab() {
 }
 
 function switchScanStrategy(strat) {
-  ['rsleader','discover','buyzone','sector'].forEach(s => {
+  ['rsleader','discover','buyzone','earnings','sector'].forEach(s => {
     const btn = document.getElementById('scan-tab-' + s);
     if (btn) btn.classList.toggle('active', s === strat);
   });
@@ -9262,7 +9263,181 @@ function switchScanStrategy(strat) {
   if (strat === 'rsleader')      { runRSLeaderScan(); }
   else if (strat === 'discover') { _showDiscoveryTab(); }
   else if (strat === 'buyzone')  { _showBuyZoneTab(); }
+  else if (strat === 'earnings') { _showEarningsRadarTab(); }
   else if (strat === 'sector')   { _showSectorRadarTab(); }
+}
+
+// ── 財報雷達 tab (Wave 2 task 2.5) ──────────────────────────────────────
+// Filters cached scan results to stocks with earnings 1-14 days out, sorted
+// by daysToEarnings asc + compositeScore desc. Surfaces last 4 quarters'
+// surprise history because stocks that consistently beat tend to keep beating.
+function _showEarningsRadarTab() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+
+  const leaders = window._rsLeaderCache   || [];
+  const disco   = window._rsDiscoveryCache || [];
+
+  if (!leaders.length && !disco.length) {
+    tableDiv.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' +
+      '<div style="font-size:28px;margin-bottom:8px">📅</div>' +
+      '<div style="font-weight:600;margin-bottom:4px">尚未載入掃描資料</div>' +
+      '<div style="font-size:12px">請先切換到「動能領袖」載入最新掃描結果</div>' +
+      '<button onclick="switchScanStrategy(\'rsleader\')" style="margin-top:16px;padding:8px 20px;border-radius:8px;' +
+        'background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.4);color:#fbbf24;cursor:pointer;font-size:13px">' +
+        '前往載入 →</button></div>';
+    return;
+  }
+
+  // Merge + dedupe by symbol
+  const seen = new Set();
+  const merged = [];
+  for (const r of [...leaders, ...disco]) {
+    if (seen.has(r.symbol)) continue;
+    seen.add(r.symbol);
+    merged.push(r);
+  }
+
+  // Filter to upcoming earnings within 14 days
+  const upcoming = merged.filter(r =>
+    r.daysToEarnings != null && r.daysToEarnings >= 1 && r.daysToEarnings <= 14
+  );
+  upcoming.sort((a, b) => {
+    if (a.daysToEarnings !== b.daysToEarnings) return a.daysToEarnings - b.daysToEarnings;
+    return (b.compositeScore || 0) - (a.compositeScore || 0);
+  });
+
+  const header =
+    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;' +
+    'background:rgba(251,191,36,.07);border-radius:8px;border:1px solid rgba(251,191,36,.25)">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;color:#fbbf24;font-weight:700">📅 財報雷達 — 14 天內財報的動能標的</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' +
+          '財報前 1-14 天 · 按日期升序、分數降序排列 · 顯示過去 4 季 EPS surprise · ' +
+          '<b style="color:#fbbf24">財報後波動率最大</b>' +
+        '</div>' +
+      '</div>' +
+      '<span style="font-size:11px;color:var(--muted)">共 ' + upcoming.length + ' 檔</span>' +
+    '</div>';
+
+  if (!upcoming.length) {
+    tableDiv.innerHTML = header +
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:1.8">' +
+      '<div style="font-size:28px;margin-bottom:8px">📆</div>' +
+      '<div>未來 14 天內無財報公布</div>' +
+      '<div style="font-size:12px;margin-top:6px">當前動能領袖名單均無近期財報催化劑 — 可關注其他策略</div>' +
+      '</div>';
+    return;
+  }
+
+  // Build surprise history badge
+  const surpriseBadge = (history) => {
+    if (!history || !history.length) return '<span style="color:var(--muted);font-size:11px">—</span>';
+    let beats = 0, misses = 0;
+    let lastSurprise = null;
+    history.forEach(h => {
+      if (h.surprisePct != null) {
+        if (h.surprisePct >= 0) beats++; else misses++;
+        lastSurprise = h.surprisePct;
+      } else if (h.actual != null && h.estimate != null) {
+        if (h.actual >= h.estimate) beats++; else misses++;
+      }
+    });
+    const total = beats + misses;
+    if (total === 0) return '<span style="color:var(--muted);font-size:11px">—</span>';
+    if (total >= 4 && beats === 4) return '<span style="color:#ef4444;font-weight:700;font-size:11px">🔥 連 4 季 beat</span>';
+    if (total >= 4 && beats === 3) return '<span style="color:#22c55e;font-weight:600;font-size:11px">✓ 4 季 3 beat</span>';
+    if (total >= 3 && beats >= 2)  return '<span style="color:#22c55e;font-size:11px">✓ ' + beats + '/' + total + ' beat</span>';
+    if (beats === misses)          return '<span style="color:var(--yellow);font-size:11px">Mixed</span>';
+    if (misses > beats)            return '<span style="color:#ef4444;font-size:11px">⚠ 多次 miss</span>';
+    return '<span style="color:var(--muted);font-size:11px">' + beats + '/' + total + '</span>';
+  };
+
+  // Most-recent surprise % (compact display)
+  const recentSurprise = (history) => {
+    if (!history || !history.length) return '—';
+    const recent = history.filter(h => h.surprisePct != null);
+    if (!recent.length) {
+      // Compute from actual vs estimate
+      const last = history[history.length - 1];
+      if (last && last.actual != null && last.estimate != null && last.estimate !== 0) {
+        const pct = (last.actual - last.estimate) / Math.abs(last.estimate) * 100;
+        return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+      }
+      return '—';
+    }
+    const last = recent[recent.length - 1];
+    const v = last.surprisePct;
+    return (v >= 0 ? '+' : '') + (typeof v === 'number' ? v.toFixed(1) : v) + '%';
+  };
+
+  // Entry guidance based on days-to-earnings + signal strength
+  const entryGuide = (r) => {
+    const d = r.daysToEarnings;
+    const vcp = r.vcpScore || 0;
+    const rs = r.rsRating || 0;
+    if (d <= 3) {
+      return '<span style="color:#ef4444;font-weight:600">🔴 已太近 · 不建議新進場</span>';
+    }
+    if (d <= 7 && vcp >= 2 && rs >= 80) {
+      return '<span style="color:#22c55e;font-weight:600">✅ 黃金區（VCP+高 RS）</span>';
+    }
+    if (d <= 7) {
+      return '<span style="color:#f59e0b">⚡ 倒數 7 天 · 半倉</span>';
+    }
+    if (vcp >= 2) {
+      return '<span style="color:#22c55e">📐 VCP 整理 · 適合佈局</span>';
+    }
+    return '<span style="color:var(--muted)">觀望 · 等突破或財報後反應</span>';
+  };
+
+  const rows = upcoming.map((r, i) => {
+    const dColor = r.daysToEarnings <= 3 ? '#ef4444' : r.daysToEarnings <= 7 ? '#f59e0b' : '#fbbf24';
+    const vcpColor = (r.vcpScore || 0) >= 2 ? 'var(--green)' : (r.vcpScore || 0) === 1 ? 'var(--yellow)' : 'var(--muted)';
+    const rsColor = (r.rsRating || 0) >= 90 ? 'var(--green)' : (r.rsRating || 0) >= 80 ? 'var(--yellow)' : 'var(--muted)';
+    const surpriseStr = recentSurprise(r.surpriseHistory);
+    const surpriseColor = surpriseStr === '—' ? 'var(--muted)' : surpriseStr.startsWith('+') ? 'var(--green)' : 'var(--red)';
+
+    return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
+      '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i + 1) + '</td>' +
+      '<td style="padding:10px 8px">' +
+        '<div style="font-weight:700;font-size:15px">' + r.symbol + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + (r.name || r.symbol) + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-size:18px;font-weight:800;color:' + dColor + '">D-' + r.daysToEarnings + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">距財報</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:700;color:' + vcpColor + '">' + (r.vcpScore || 0) + '/4</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + (r.vcpDepth != null ? r.vcpDepth + '% base' : 'VCP') + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:600;color:' + surpriseColor + '">' + surpriseStr + '</div>' +
+        '<div style="font-size:10px;margin-top:2px">' + surpriseBadge(r.surpriseHistory) + '</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;text-align:center">' +
+        '<div style="font-weight:700;color:' + rsColor + '">' + (r.rsRating || '—') + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
+      '</td>' +
+      '<td style="padding:10px 8px;font-size:11px;text-align:center">' + entryGuide(r) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  tableDiv.innerHTML = header +
+    '<div class="table-wrap">' +
+    '<table class="rs-leader-table" style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.1)">' +
+      '<th style="padding:6px 8px;text-align:left">排名</th>' +
+      '<th style="padding:6px 8px;text-align:left">股票</th>' +
+      '<th style="padding:6px 8px;text-align:center">距財報</th>' +
+      '<th style="padding:6px 8px;text-align:center">VCP</th>' +
+      '<th style="padding:6px 8px;text-align:center">上次 EPS surprise</th>' +
+      '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
+      '<th style="padding:6px 8px;text-align:center">進場指引</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
 }
 
 function updateScanRegimeWarning() {
