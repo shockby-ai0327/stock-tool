@@ -1,0 +1,43 @@
+name: Insider Buying Scan (SEC EDGAR)
+
+on:
+  # Daily at 06:00 UTC (before US market opens — ~01:00–02:00 ET)
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+  # On-demand trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write   # write back insider_data.json + cik_map.json
+
+jobs:
+  insider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install node-fetch
+        working-directory: scripts
+
+      - name: Run insider scan
+        run: node scripts/insider_scan.js
+
+      - name: Commit insider results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/insider_data.json ] && git add data/insider_data.json || true
+          [ -f data/cik_map.json ]      && git add data/cik_map.json      || true
+          git diff --cached --quiet || git commit -m "insider: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash || true
+          git push
