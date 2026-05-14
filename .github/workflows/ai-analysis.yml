@@ -1,0 +1,63 @@
+name: AI Stock Forward Analysis
+
+on:
+  # Auto-run after every successful stock scan
+  workflow_run:
+    workflows: ["Stock RS Leader Scan"]
+    types: [completed]
+
+  # On-demand trigger (for testing / manual refresh)
+  workflow_dispatch:
+    inputs:
+      market:
+        description: 'Market to analyze: us / tw / all'
+        required: false
+        default: 'us'
+
+permissions:
+  contents: write   # write back analysis results to data/
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Only run when triggered by a successful scan (or manual)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout (always use latest — scan just committed)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install node-fetch
+        working-directory: scripts
+
+      - name: Analyze US leaders
+        if: ${{ github.event.inputs.market != 'tw' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/ai_analysis.js us
+
+      - name: Analyze TW leaders
+        if: ${{ github.event.inputs.market == 'tw' || github.event.inputs.market == 'all' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/ai_analysis.js tw
+
+      - name: Commit analysis results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/us_ai_analysis.json data/tw_ai_analysis.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

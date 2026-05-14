@@ -59,9 +59,43 @@ async function getOHLCV(symbol, range = '12mo') {
   return {
     closes:  oq.close.filter(v => v != null),
     highs:   oq.high.filter(v => v != null),
+    lows:    oq.low.filter(v => v != null),
     volumes: oq.volume.filter(v => v != null),
     meta:    result.meta,
   };
+}
+
+// ── VCP (Volatility Contraction Pattern) detector ──────────────────────────
+// Minervini method: price above trend, each pullback tighter than the last.
+// Returns { vcpScore: 0-4, vcpDepth: number (% range in last 20d) }
+function calcVCP(closes, highs, lows) {
+  const n = closes.length;
+  if (n < 60 || highs.length < 60 || lows.length < 60) return { vcpScore: 0 };
+  const rangeOf = (start, end) => {
+    const h = highs.slice(start, end ?? undefined);
+    const l = lows.slice(start, end ?? undefined);
+    const hi = Math.max(...h), lo = Math.min(...l);
+    return lo > 0 ? (hi - lo) / lo : 0;
+  };
+  const r10 = rangeOf(-10);       // last 10 days (tightest window)
+  const r20 = rangeOf(-30, -10);  // 10–30 days ago
+  const r30 = rangeOf(-60, -30);  // 30–60 days ago
+
+  // Each window must be ≥10% tighter than the prior one
+  if (!(r10 < r20 * 0.90 && r20 < r30 * 0.90)) return { vcpScore: 0 };
+
+  const depth20 = rangeOf(-20);   // overall base depth (last 20 days)
+
+  // Proximity to 3-month high (+1 bonus if within 8%)
+  const price = closes[n - 1];
+  const high3m = Math.max(...highs.slice(-60));
+  const nearHigh = price >= high3m * 0.92;
+
+  // Tightness score: tighter = better
+  const tightScore = depth20 < 0.07 ? 3 : depth20 < 0.12 ? 2 : 1;
+  const vcpScore = Math.min(4, nearHigh ? tightScore + 1 : tightScore);
+
+  return { vcpScore, vcpDepth: Math.round(depth20 * 100) };
 }
 
 async function fetchScreener(scrId, count = 50) {
@@ -331,11 +365,12 @@ async function scanUS() {
     const batch = allSymbols.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, highs, volumes, meta } = await getOHLCV(sym, '12mo');
+        const { closes, highs, lows, volumes, meta } = await getOHLCV(sym, '12mo');
         // Need at least 3 months of data; leaders need 12mo
         if (closes.length < 60) return null;
 
         const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
+        const vcp = calcVCP(closes, highs, lows);
 
         // ── Leader filter (12-1mo confirmed momentum) ──
         const isLeader = closes.length >= 200
@@ -429,6 +464,8 @@ async function scanUS() {
           avgVol20:   Math.round(m.avgVol20),
           high52w:    round2(m.high52w),
           high3m:     round2(m.high3m),
+          vcpScore:   vcp.vcpScore,
+          vcpDepth:   vcp.vcpDepth ?? null,
           isLeader,
           isDiscovery,
         };
@@ -513,10 +550,11 @@ async function scanTW() {
     const batch = TW_POOL.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, highs, volumes, meta } = await getOHLCV(sym, '12mo');
+        const { closes, highs, lows, volumes, meta } = await getOHLCV(sym, '12mo');
         if (closes.length < 60) return null;
         const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
         if (m.price < m.ma50 || m.ret12_1 <= 0) return null;
+        const vcp = calcVCP(closes, highs, lows);
         return {
           symbol: sym, name: meta.shortName || sym,
           price: round2(m.price), changePct: round2(m.changePct),
@@ -525,6 +563,7 @@ async function scanTW() {
           accel: round2(m.accel), volExpand: round2(m.volExpand),
           ma50: round2(m.ma50), avgVol20: Math.round(m.avgVol20),
           high52w: round2(m.high52w), high3m: round2(m.high3m),
+          vcpScore: vcp.vcpScore, vcpDepth: vcp.vcpDepth ?? null,
         };
       } catch (e) { return null; }
     }));

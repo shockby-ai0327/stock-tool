@@ -1007,6 +1007,57 @@ async function analyzeStock() {
  rd.innerHTML += patternCard;
  }
  setTimeout(() => renderKline('stock-kline', ohlcv), 50);
+ // AI Forward Analysis — load from GitHub JSON, inject as card
+ (async () => {
+ const mkt = ticker.includes('.TW') ? 'tw' : 'us';
+ try {
+ const ai = window._aiAnalysis || await fetchAIAnalysis(mkt);
+ if (ai && ai.bySymbol) {
+ window._aiAnalysis = ai;
+ const entry = ai.bySymbol.get(ticker);
+ if (entry) {
+ const biasColor = entry.bias === 'bullish' ? '#22c55e' : entry.bias === 'bearish' ? '#ef4444' : '#f59e0b';
+ const biasLabel = entry.bias === 'bullish' ? '偏多' : entry.bias === 'bearish' ? '偏空' : '中性';
+ const stars = '★'.repeat(entry.stars) + '☆'.repeat(5 - entry.stars);
+ const genAge = ai.generatedAt ? Math.round((Date.now() - ai.generatedAt) / 3600000) : null;
+ const ageNote = genAge != null ? (genAge < 1 ? '剛生成' : genAge + ' 小時前') : '';
+ const aiCard = '<div class="card" style="border-left:3px solid rgba(99,102,241,.6);margin-top:12px">' +
+ '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+ '<div style="font-size:14px;font-weight:700">🤖 Claude AI 前瞻分析</div>' +
+ '<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:' +
+ (entry.bias==='bullish'?'rgba(34,197,94,.15)':entry.bias==='bearish'?'rgba(239,68,68,.15)':'rgba(245,158,11,.15)') +
+ ';color:' + biasColor + '">' + biasLabel + '</span>' +
+ '<span style="font-size:13px;color:#fbbf24">' + stars + '</span>' +
+ '<span style="font-size:10px;color:var(--muted);margin-left:auto">' + ageNote + ' · 僅供參考</span>' +
+ '</div>' +
+ '<div style="display:grid;gap:10px">' +
+ '<div style="padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid rgba(99,102,241,.4)">' +
+ '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.5px">前瞻展望（30–60 天）</div>' +
+ '<div style="font-size:13px;line-height:1.7;color:var(--text)">' + (entry.outlook || '—') + '</div>' +
+ '</div>' +
+ '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+ '<div style="padding:10px 12px;background:rgba(34,197,94,.04);border-radius:8px;border-left:2px solid rgba(34,197,94,.3)">' +
+ '<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;letter-spacing:.5px"> 關鍵催化劑</div>' +
+ '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' + (entry.catalyst || '—') + '</div>' +
+ '</div>' +
+ '<div style="padding:10px 12px;background:rgba(239,68,68,.04);border-radius:8px;border-left:2px solid rgba(239,68,68,.3)">' +
+ '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px;letter-spacing:.5px"> 主要風險</div>' +
+ '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' + (entry.risk || '—') + '</div>' +
+ '</div>' +
+ '</div>' +
+ '</div>' +
+ '<div style="margin-top:8px;font-size:10px;color:var(--muted);line-height:1.5">⚠ 本分析由 Claude AI 基於掃描時技術與動能數據自動生成，不構成投資建議。每次掃描後更新。</div>' +
+ '</div>';
+ rd.innerHTML += aiCard;
+ } else {
+ // Stock not in top 20 leaders — show placeholder
+ const placeholder = '<div class="card" style="border-left:3px solid rgba(99,102,241,.2);margin-top:12px">' +
+ '<div style="font-size:12px;color:var(--muted)">🤖 <b>Claude AI 前瞻分析</b> — 此股尚無 AI 分析（僅 RS 排行榜前 15 名 + 加速發現前 5 名提供）。若此股進入排行榜，下次掃描後將自動生成。</div></div>';
+ rd.innerHTML += placeholder;
+ }
+ }
+ } catch(e) { console.warn('AI analysis load failed:', e.message); }
+ })();
  // SEC EDGAR — 非阻塞，US股票才抓
  if (!ticker.includes('.')) {
    const edgarDiv = document.createElement('div');
@@ -7370,6 +7421,30 @@ async function fetchPrecomputedScan(market) {
   }
 }
 
+// ── AI Analysis: load Claude forward analysis from GitHub ───────────────────
+let _aiAnalysisCache = {}; // market → {generatedAt, analyses: Map{symbol→analysis}}
+
+async function fetchAIAnalysis(market) {
+  market = market || 'us';
+  if (_aiAnalysisCache[market] && (Date.now() - (_aiAnalysisCache[market].ts || 0)) < 30 * 60 * 1000) {
+    return _aiAnalysisCache[market];
+  }
+  try {
+    const file = market === 'tw' ? 'tw_ai_analysis.json' : 'us_ai_analysis.json';
+    const url = GH_RAW + file + '?t=' + Math.floor(Date.now() / 300000); // 5-min CDN bust
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.analyses || !data.analyses.length || !data.generatedAt) return null;
+    const bySymbol = new Map(data.analyses.map(a => [a.symbol, a]));
+    _aiAnalysisCache[market] = { ts: Date.now(), generatedAt: data.generatedAt, bySymbol };
+    return _aiAnalysisCache[market];
+  } catch(e) {
+    console.warn('[fetchAIAnalysis]', e.message);
+    return null;
+  }
+}
+
 // ── Price cache: survive Yahoo outages ──────────────────────────────────────
 // On every successful fetch we snapshot prices to sessionStorage.
 // If all sources fail we restore the last good snapshot and mark data as stale.
@@ -8272,6 +8347,16 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
   const tableDiv = document.getElementById('scanner-table');
   if (!tableDiv) return;
 
+  // Load AI analysis in background (non-blocking), re-render when ready
+  if (!window._aiAnalysis) {
+    fetchAIAnalysis(_scannerMarket || 'us').then(ai => {
+      if (ai && ai.bySymbol && ai.bySymbol.size > 0) {
+        window._aiAnalysis = ai;
+        _renderRSLeaderTable(results, tableDiv, ''); // re-render with AI data
+      }
+    }).catch(() => {});
+  }
+
   const universeLabel = meta.universeSize
     ? '全市場 ' + meta.universeSize + ' 檔掃描池（S&P500 + 中小型成長股 + 動能 ETF 持股）'
     : '預算排行';
@@ -8621,12 +8706,31 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       }
     }
 
+    // VCP badge
+    const vcpHtml = (r.vcpScore >= 3)
+      ? '<span title="Volatility Contraction Pattern — 波動率收縮，蓄勢待發" style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(20,184,166,.2);color:#2dd4bf;font-weight:700;cursor:help">📐VCP</span>'
+      : (r.vcpScore === 2)
+      ? '<span title="VCP 輕度收縮" style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(20,184,166,.1);color:#5eead4;font-weight:600;cursor:help">VCP</span>'
+      : '';
+
+    // AI analysis badge
+    const aiCache = window._aiAnalysis;
+    const aiEntry = aiCache && aiCache.bySymbol && aiCache.bySymbol.get(r.symbol);
+    const aiStarsHtml = aiEntry
+      ? (()=>{
+          const biasColor = aiEntry.bias === 'bullish' ? '#22c55e' : aiEntry.bias === 'bearish' ? '#ef4444' : '#f59e0b';
+          const stars = '★'.repeat(aiEntry.stars) + '☆'.repeat(5 - aiEntry.stars);
+          return '<div title="Claude AI 前瞻分析：' + (aiEntry.outlook || '').replace(/"/g, "'") + '" style="font-size:10px;margin-top:3px;color:' + biasColor + ';cursor:help">' +
+            '<span style="opacity:.7">🤖</span> ' + stars + '</div>';
+        })()
+      : '';
+
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
-        sigHtml + earnHtml +
+        sigHtml + earnHtml + aiStarsHtml +
       '</td>' +
       '<td style="padding:10px 8px;text-align:right">' +
         '<div style="font-weight:600">$' + f(r.price) + liveDot + '</div>' +
