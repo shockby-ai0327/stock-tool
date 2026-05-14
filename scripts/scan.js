@@ -137,37 +137,216 @@ async function getOHLCV(symbol, range = '12mo') {
   };
 }
 
-// ── VCP (Volatility Contraction Pattern) detector ──────────────────────────
-// Minervini method: price above trend, each pullback tighter than the last.
-// Returns { vcpScore: 0-4, vcpDepth: number (% range in last 20d) }
-function calcVCP(closes, highs, lows) {
-  const n = closes.length;
-  if (n < 60 || highs.length < 60 || lows.length < 60) return { vcpScore: 0 };
-  const rangeOf = (start, end) => {
-    const h = highs.slice(start, end ?? undefined);
-    const l = lows.slice(start, end ?? undefined);
-    const hi = Math.max(...h), lo = Math.min(...l);
-    return lo > 0 ? (hi - lo) / lo : 0;
+// ── VCP (Volatility Contraction Pattern) — Minervini base-count detector ──
+// Real Minervini-style analysis: scan price history backwards looking for
+// "bases" (consolidation periods), count them since last deep correction,
+// and assess contraction quality.
+//
+// A base is a consolidation period where:
+//   - duration ≥ 5 trading days
+//   - high-low range < 18% of starting price
+//   - price stays above its starting low throughout
+//   - was preceded by an advance (not a downtrend)
+//
+// Output:
+//   {
+//     vcpScore:        0-6  (4 = base 1 ideal; +1/+2 for contraction bonuses)
+//     baseNumber:      1-5+ (0 if no clear base)
+//     vcpDepth:        current base depth % (back-compat: was vcpDepth)
+//     pivotPrice:      highest high in current base (breakout trigger)
+//     baseStartDate:   ISO date — null (no timestamps in OHLCV stream)
+//     baseStartIdx:    integer index from end (e.g. 12 = base started 12 days ago)
+//     baseDays:        length of current base in trading days
+//     priorPullbackPct: % drop from peak before current base started
+//   }
+function calcVCPv2(closes, highs, lows, volumes) {
+  const empty = {
+    vcpScore: 0, baseNumber: 0, vcpDepth: null,
+    pivotPrice: null, baseStartDate: null, baseStartIdx: null,
+    baseDays: 0, priorPullbackPct: null,
   };
-  const r10 = rangeOf(-10);       // last 10 days (tightest window)
-  const r20 = rangeOf(-30, -10);  // 10–30 days ago
-  const r30 = rangeOf(-60, -30);  // 30–60 days ago
+  const n = closes.length;
+  if (!Array.isArray(closes) || n < 60) return empty;
+  if (!Array.isArray(highs) || highs.length < n) return empty;
+  if (!Array.isArray(lows)  || lows.length  < n) return empty;
+  const vols = Array.isArray(volumes) ? volumes : [];
 
-  // Each window must be ≥10% tighter than the prior one
-  if (!(r10 < r20 * 0.90 && r20 < r30 * 0.90)) return { vcpScore: 0 };
+  // Helper: scan window [start, end) and return high/low range.
+  const rangeStats = (start, end) => {
+    let hi = -Infinity, lo = Infinity;
+    for (let i = start; i < end; i++) {
+      if (highs[i] > hi) hi = highs[i];
+      if (lows[i]  < lo) lo = lows[i];
+    }
+    return { hi, lo, depthPct: lo > 0 ? (hi - lo) / lo : 0 };
+  };
+  const avgVol = (start, end) => {
+    if (vols.length < end) return 0;
+    let sum = 0, cnt = 0;
+    for (let i = start; i < end; i++) {
+      const v = vols[i];
+      if (v != null && isFinite(v)) { sum += v; cnt++; }
+    }
+    return cnt > 0 ? sum / cnt : 0;
+  };
 
-  const depth20 = rangeOf(-20);   // overall base depth (last 20 days)
+  // ── Step 1: Detect current base (end of series back to consolidation start)
+  // Walk back from the latest bar while price stays above (baseLow * 0.95),
+  // depth stays < 18%, and we haven't gone more than 60 days back.
+  // We allow a 5% undercut tolerance for noisy intraday wicks.
+  const MAX_BASE_LEN = 60, MIN_BASE_LEN = 5, MAX_DEPTH = 0.18, UNDERCUT_TOL = 0.05;
+  let baseStartIdx = -1;
+  let baseHi = highs[n - 1], baseLo = lows[n - 1];
+  for (let k = 1; k < Math.min(MAX_BASE_LEN, n); k++) {
+    const i = n - 1 - k;
+    if (i < 0) break;
+    const newHi = Math.max(baseHi, highs[i]);
+    const newLo = Math.min(baseLo, lows[i]);
+    const depth = newLo > 0 ? (newHi - newLo) / newLo : 0;
+    // Stop expanding base if depth exceeds 18% — that's no longer a base
+    if (depth > MAX_DEPTH) {
+      baseStartIdx = i + 1;
+      break;
+    }
+    // Stop if a deep undercut (>5%) below the base low so far
+    if (k >= MIN_BASE_LEN && newLo < baseLo * (1 - UNDERCUT_TOL)) {
+      baseStartIdx = i + 1;
+      break;
+    }
+    baseHi = newHi; baseLo = newLo;
+    baseStartIdx = i;
+  }
+  // If we couldn't establish a base of min length, no setup
+  const baseDays = (n - 1) - baseStartIdx + 1;
+  if (baseStartIdx < 0 || baseDays < MIN_BASE_LEN) return empty;
 
-  // Proximity to 3-month high (+1 bonus if within 8%)
-  const price = closes[n - 1];
-  const high3m = Math.max(...highs.slice(-60));
-  const nearHigh = price >= high3m * 0.92;
+  const currentBaseDepth = baseLo > 0 ? (baseHi - baseLo) / baseLo : 0;
+  const currentBaseVol = avgVol(baseStartIdx, n);
 
-  // Tightness score: tighter = better
-  const tightScore = depth20 < 0.07 ? 3 : depth20 < 0.12 ? 2 : 1;
-  const vcpScore = Math.min(4, nearHigh ? tightScore + 1 : tightScore);
+  // ── Step 2: Confirm base preceded by an advance (otherwise it's just a fall)
+  // Check if 20-day return into base start was positive (advance into base).
+  const preAdvanceLookback = 20;
+  const preStart = Math.max(0, baseStartIdx - preAdvanceLookback);
+  let priorPullbackPct = null;
+  let preAdvanceOk = false;
+  if (preStart < baseStartIdx) {
+    const preLow = Math.min(...lows.slice(preStart, baseStartIdx));
+    const preHigh = Math.max(...highs.slice(preStart, baseStartIdx));
+    // Advance check: pre-base high should be at least 10% above pre-base low
+    preAdvanceOk = preLow > 0 && (preHigh - preLow) / preLow >= 0.10;
+    // Pullback into base: how far did price drop from pre-base peak to base low?
+    if (preHigh > 0) {
+      priorPullbackPct = ((preHigh - baseLo) / preHigh) * 100;
+    }
+  }
+  if (!preAdvanceOk) return empty;
 
-  return { vcpScore, vcpDepth: Math.round(depth20 * 100) };
+  // ── Step 3: Count bases backwards since the last deep correction (≥20%)
+  // Walk back through prior consolidations, identifying each one until
+  // we hit a deep correction (≥20% peak-to-trough drop).
+  let baseNumber = 1;
+  let scanEnd = baseStartIdx;        // exclusive end of prior region to scan
+  const priorBases = [];              // collect for contraction analysis
+  const DEEP_CORRECTION_PCT = 20;
+
+  while (baseNumber < 6 && scanEnd > 30) {
+    // Find prior peak in the 60 days before scanEnd
+    const lookBack = Math.max(0, scanEnd - 60);
+    let priorPeak = -Infinity, priorPeakIdx = -1;
+    for (let i = lookBack; i < scanEnd; i++) {
+      if (highs[i] > priorPeak) { priorPeak = highs[i]; priorPeakIdx = i; }
+    }
+    if (priorPeakIdx < 0) break;
+
+    // Find pullback low from priorPeak to scanEnd
+    let pullbackLow = Infinity, pullbackLowIdx = -1;
+    for (let i = priorPeakIdx; i < scanEnd; i++) {
+      if (lows[i] < pullbackLow) { pullbackLow = lows[i]; pullbackLowIdx = i; }
+    }
+    if (pullbackLowIdx < 0) break;
+
+    const pullbackPct = priorPeak > 0 ? ((priorPeak - pullbackLow) / priorPeak) * 100 : 0;
+    // If this prior leg was a deep correction (≥20%), stop counting — fresh count
+    if (pullbackPct >= DEEP_CORRECTION_PCT) break;
+
+    // Find an earlier base inside [lookBack, priorPeakIdx]:
+    // walk forward from lookBack looking for a 5+ day window with depth < 18%
+    let foundBaseStart = -1, foundBaseEnd = -1, foundBaseHi = 0, foundBaseLo = 0;
+    for (let s = priorPeakIdx - 1; s >= lookBack + MIN_BASE_LEN - 1; s--) {
+      let hi = -Infinity, lo = Infinity;
+      let valid = true;
+      for (let len = 0; len < MAX_BASE_LEN && s - len >= lookBack; len++) {
+        const idx = s - len;
+        hi = Math.max(hi, highs[idx]);
+        lo = Math.min(lo, lows[idx]);
+        const d = lo > 0 ? (hi - lo) / lo : 0;
+        if (d > MAX_DEPTH) {
+          if (len + 1 >= MIN_BASE_LEN) {
+            foundBaseStart = idx + 1; foundBaseEnd = s + 1;
+            // recompute hi/lo on the included window
+            foundBaseHi = -Infinity; foundBaseLo = Infinity;
+            for (let i = foundBaseStart; i < foundBaseEnd; i++) {
+              if (highs[i] > foundBaseHi) foundBaseHi = highs[i];
+              if (lows[i]  < foundBaseLo) foundBaseLo = lows[i];
+            }
+          }
+          valid = false; break;
+        }
+      }
+      if (foundBaseStart >= 0) break;
+      // If we walked all the way without exceeding depth, treat s..lookBack as base
+      if (valid && s - lookBack + 1 >= MIN_BASE_LEN) {
+        foundBaseStart = lookBack; foundBaseEnd = s + 1;
+        foundBaseHi = hi; foundBaseLo = lo;
+        break;
+      }
+    }
+    if (foundBaseStart < 0) break;
+
+    const priorBaseDepth = foundBaseLo > 0 ? (foundBaseHi - foundBaseLo) / foundBaseLo : 0;
+    const priorBaseVol = avgVol(foundBaseStart, foundBaseEnd);
+    priorBases.push({
+      start: foundBaseStart, end: foundBaseEnd,
+      hi: foundBaseHi, lo: foundBaseLo, depth: priorBaseDepth,
+      pullbackPct, avgVol: priorBaseVol,
+    });
+    baseNumber++;
+    scanEnd = foundBaseStart;
+  }
+
+  // ── Step 4: Score
+  // Base 1 = score 4, Base 2 = 3, Base 3 = 2, Base 4+ = 1
+  const baseScores = { 1: 4, 2: 3, 3: 2, 4: 1, 5: 1 };
+  let score = baseScores[baseNumber] || 1;
+
+  // Bonus: current pullback < prior pullback (proper contraction)
+  const prevBase = priorBases[0];
+  if (prevBase && priorPullbackPct != null && prevBase.pullbackPct > 0
+      && priorPullbackPct < prevBase.pullbackPct) {
+    score++;
+  }
+  // Bonus: current base avg volume < prior base avg volume (drying up)
+  if (prevBase && prevBase.avgVol > 0 && currentBaseVol > 0
+      && currentBaseVol < prevBase.avgVol) {
+    score++;
+  }
+  score = Math.max(0, Math.min(6, score));
+
+  return {
+    vcpScore: score,
+    baseNumber,
+    vcpDepth: Math.round(currentBaseDepth * 100),
+    pivotPrice: +baseHi.toFixed(2),
+    baseStartDate: null,
+    baseStartIdx: (n - 1) - baseStartIdx,  // days back from latest bar
+    baseDays,
+    priorPullbackPct: priorPullbackPct != null ? +priorPullbackPct.toFixed(1) : null,
+  };
+}
+
+// Backward-compatible wrapper — older callers expect calcVCP(closes, highs, lows)
+function calcVCP(closes, highs, lows, volumes) {
+  return calcVCPv2(closes, highs, lows, volumes);
 }
 
 // ── Sector / industry → ETF mapping (Yahoo assetProfile) ───────────────────
@@ -700,8 +879,9 @@ function computeTripleResonance(leaders, discoveries, insiderData, newsSentiment
     // Criterion 2: VCP tight base (score ≥ 2)
     if ((stock.vcpScore || 0) >= 2) {
       const depthStr = stock.vcpDepth != null ? ` (${stock.vcpDepth}% base)` : '';
+      const baseStr  = stock.vcpBaseNumber ? ` · Base ${stock.vcpBaseNumber}` : '';
       stars++;
-      reasons.push(`VCP ${stock.vcpScore}/4${depthStr}`);
+      reasons.push(`VCP ${stock.vcpScore}/6${depthStr}${baseStr}`);
     }
 
     // Criterion 3: Insider cluster buying OR analyst upgrades
@@ -742,6 +922,8 @@ function computeTripleResonance(leaders, discoveries, insiderData, newsSentiment
         daysToEarnings:     stock.daysToEarnings ?? null,
         vcpScore:           stock.vcpScore || 0,
         vcpDepth:           stock.vcpDepth ?? null,
+        vcpBaseNumber:      stock.vcpBaseNumber ?? 0,
+        vcpPivot:           stock.vcpPivot ?? null,
         insiderValue30d:    insider?.totalValue30d || 0,
         insiderBuyerCount:  insider?.buyerCount30d || 0,
         insiderClusterBuy:  !!insider?.clusterBuy,
@@ -890,7 +1072,7 @@ async function scanUS() {
         if (closes.length < 60) return null;
 
         const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
-        const vcp = calcVCP(closes, highs, lows);
+        const vcp = calcVCPv2(closes, highs, lows, volumes);
 
         // ── Leader filter (12-1mo confirmed momentum) ──
         const isLeader = closes.length >= 200
@@ -933,8 +1115,12 @@ async function scanUS() {
           avgVol20:   Math.round(m.avgVol20),
           high52w:    round2(m.high52w),
           high3m:     round2(m.high3m),
-          vcpScore:   vcp.vcpScore,
-          vcpDepth:   vcp.vcpDepth ?? null,
+          vcpScore:        vcp.vcpScore,
+          vcpDepth:        vcp.vcpDepth ?? null,
+          vcpBaseNumber:   vcp.baseNumber ?? 0,
+          vcpPivot:        vcp.pivotPrice ?? null,
+          vcpBaseDays:     vcp.baseDays ?? 0,
+          vcpPriorPullbackPct: vcp.priorPullbackPct ?? null,
           isLeader,
           isDiscovery,
           _ret12_1Raw: m.ret12_1, // kept for sectorRS calc below
@@ -1131,7 +1317,7 @@ async function scanTW() {
         if (closes.length < 60) return null;
         const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
         if (m.price < m.ma50 || m.ret12_1 <= 0) return null;
-        const vcp = calcVCP(closes, highs, lows);
+        const vcp = calcVCPv2(closes, highs, lows, volumes);
         return {
           symbol: sym, name: meta.shortName || sym,
           price: round2(m.price), changePct: round2(m.changePct),
@@ -1141,6 +1327,10 @@ async function scanTW() {
           ma50: round2(m.ma50), avgVol20: Math.round(m.avgVol20),
           high52w: round2(m.high52w), high3m: round2(m.high3m),
           vcpScore: vcp.vcpScore, vcpDepth: vcp.vcpDepth ?? null,
+          vcpBaseNumber: vcp.baseNumber ?? 0,
+          vcpPivot: vcp.pivotPrice ?? null,
+          vcpBaseDays: vcp.baseDays ?? 0,
+          vcpPriorPullbackPct: vcp.priorPullbackPct ?? null,
         };
       } catch (e) { return null; }
     }));
