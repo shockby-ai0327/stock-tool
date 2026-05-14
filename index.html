@@ -203,6 +203,109 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 /* Theme toggle button */
 .theme-toggle{width:100%;padding:9px 20px;background:none;border:none;border-top:1px solid var(--border);color:var(--muted);text-align:left;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:color .2s}
 .theme-toggle:hover{color:var(--text)}
+
+/* ── Catalyst alert badges (Task 7.1) ── */
+.cat-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:14px;font-size:12px;font-weight:600;background:var(--bg);border:1px solid var(--border);color:var(--text)}
+.cat-badge[data-type="earnings"]{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:var(--yellow)}
+.cat-badge[data-type="insider"]{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:var(--green)}
+.cat-badge[data-type="upgrade"]{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:var(--accent)}
+.cat-badge[data-type="news"]{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#8b5cf6}
+.cat-badge[data-type="vcp"]{background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3);color:#ec4899}
+
+/* Big move warning banner */
+.big-move-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;margin:12px 0;font-size:14px;font-weight:600}
+.big-move-banner.up{background:linear-gradient(90deg,rgba(16,185,129,.12),rgba(16,185,129,.04));border:1px solid rgba(16,185,129,.3);color:var(--green)}
+.big-move-banner.down{background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border:1px solid rgba(239,68,68,.3);color:var(--red)}
+
+/* Collapsible details enhancement */
+details.collapsible{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0;margin-bottom:16px;overflow:hidden}
+details.collapsible summary{padding:14px 20px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;list-style:none;display:flex;align-items:center;justify-content:space-between;user-select:none}
+details.collapsible summary::-webkit-details-marker{display:none}
+details.collapsible summary::after{content:"▼";font-size:10px;color:var(--muted);transition:transform .2s}
+details.collapsible[open] summary::after{transform:rotate(180deg)}
+details.collapsible summary:hover{background:rgba(59,130,246,.04)}
+details.collapsible > div, details.collapsible > table{padding:0 20px 16px 20px}
+details.collapsible > .table-wrap{padding:0 20px 16px 20px}
+
+/* Action link box for educational content (Task 7.4) */
+.edu-action-link{margin-top:14px;padding:10px 14px;border-radius:6px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px}
+.edu-action-link button{padding:5px 12px;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;transition:opacity .2s}
+.edu-action-link button:hover{opacity:.85}
+
+/* Alerts panel (Task 7.2) */
+.alerts-panel{max-width:900px}
+.alert-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:13px;flex-wrap:wrap}
+.alert-row .alert-cond{flex:1;min-width:200px}
+.alert-row.triggered{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)}
+.alert-toast{position:fixed;top:20px;right:20px;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;max-width:340px;font-size:13px;animation:alertSlideIn .3s ease}
+@keyframes alertSlideIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── Task 7.3 — Comprehensive mobile responsive overrides ── */
+@media (max-width: 768px) {
+  /* All grid layouts collapse to single column */
+  .grid2, .grid3, .grid4 { grid-template-columns: 1fr !important; gap: 12px; }
+
+  /* Tables horizontally scrollable */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Hide RS Leader secondary cols on small screens */
+  .rs-leader-table .col-disthi, .rs-leader-table .col-volume { display: none; }
+
+  /* Cards full-width with smaller padding */
+  .card { padding: 14px; }
+  .card h3 { font-size: 13px; }
+
+  /* Reduce font sizes */
+  body { font-size: 14px; }
+  .stock-price { font-size: 28px; }
+  .stock-change { font-size: 14px; }
+  .stock-name { font-size: 20px; }
+
+  /* Stack stock header */
+  .stock-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+  /* Tab bars stay scrollable, no wrap */
+  .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 4px; }
+  .tab-bar button { white-space: nowrap; flex-shrink: 0; }
+
+  /* Remove hover transforms — touch devices have no hover */
+  *:hover { transform: none !important; }
+
+  /* Tighter spacing for journal forms */
+  .journal-form { grid-template-columns: 1fr 1fr; }
+
+  /* AI analysis card readable on mobile */
+  #dash-narrative-card { font-size: 13px; }
+
+  /* Modal sizing */
+  .modal { max-width: 100%; padding: 16px; }
+  .entry-modal { padding: 16px; }
+
+  /* Chart height reasonable on small screens */
+  .chart-container { height: 280px; }
+
+  /* Catalyst badges compact */
+  .cat-badge { font-size: 11px; padding: 4px 8px; }
+
+  /* Details summaries compact */
+  details.collapsible summary { padding: 12px 14px; font-size: 12px; }
+  details.collapsible > div, details.collapsible > table, details.collapsible > .table-wrap { padding: 0 14px 14px 14px; }
+}
+
+@media (max-width: 480px) {
+  /* Phone portrait — even tighter */
+  .journal-form { grid-template-columns: 1fr; }
+  .rs-leader-table th, .rs-leader-table td { padding: 6px 4px; font-size: 11px; }
+  body { font-size: 13px; }
+  .stock-price { font-size: 24px; }
+  .stock-name { font-size: 18px; }
+  .card { padding: 12px; }
+  th, td { padding: 6px 6px; font-size: 11px; }
+  .dash-market-row { grid-template-columns: repeat(2, 1fr); }
+  .dash-kpi { padding: 10px 12px; }
+  .dash-kpi .val { font-size: 18px; }
+  .alert-toast { left: 10px; right: 10px; max-width: none; top: 10px; }
+}
 </style>
 </head>
 <!-- Firebase SDK (compat v10) -->
@@ -293,6 +396,12 @@ firebase.initializeApp(_fbConfig);
  <div id="dash-premarket"></div>
  <!-- 持倉動態 -->
  <div id="dash-holdings"></div>
+ <!-- 板塊配置（持倉分散度） -->
+ <div id="dash-sector-concentration"></div>
+ <!-- 持倉相關性矩陣 -->
+ <div id="dash-correlation"></div>
+ <!-- 帳戶回撤分析 -->
+ <div id="dash-drawdown"></div>
 
  <!-- T交易精選 -->
  <div class="card" style="margin-top:20px">
@@ -471,6 +580,7 @@ firebase.initializeApp(_fbConfig);
  <button id="scan-tab-buyzone"  onclick="switchScanStrategy('buyzone')">今日買點</button>
  <button id="scan-tab-earnings" onclick="switchScanStrategy('earnings')">財報雷達</button>
  <button id="scan-tab-sector"   onclick="switchScanStrategy('sector')">板塊雷達</button>
+ <button id="scan-tab-strategy" onclick="switchScanStrategy('strategy')">📊 策略表現</button>
  </div>
  <div id="market-thermo-container"></div>
  <div class="card" id="scanner-results">
@@ -9318,7 +9428,7 @@ async function _showSectorRadarTab() {
 }
 
 function switchScanStrategy(strat) {
-  ['rsleader','discover','buyzone','earnings','sector'].forEach(s => {
+  ['rsleader','discover','buyzone','earnings','sector','strategy'].forEach(s => {
     const btn = document.getElementById('scan-tab-' + s);
     if (btn) btn.classList.toggle('active', s === strat);
   });
@@ -9328,6 +9438,7 @@ function switchScanStrategy(strat) {
   else if (strat === 'buyzone')  { _showBuyZoneTab(); }
   else if (strat === 'earnings') { _showEarningsRadarTab(); }
   else if (strat === 'sector')   { _showSectorRadarTab(); }
+  else if (strat === 'strategy') { renderStrategyPerformance(); }
 }
 
 // ── 財報雷達 tab (Wave 2 task 2.5) ──────────────────────────────────────
