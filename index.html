@@ -308,6 +308,18 @@ firebase.initializeApp(_fbConfig);
  </div>
  </div>
 
+ <!-- 三重共振雷達 — 財報 + VCP + 內部人（Wave 2 killer feature） -->
+ <div class="card" id="dash-triple-resonance-card" style="margin-bottom:20px;border-left:3px solid #fbbf24;background:linear-gradient(135deg, rgba(251,191,36,.04) 0%, rgba(0,0,0,0) 100%)">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+ <div>
+ <div style="font-weight:700;font-size:14px;color:#fbbf24">三重共振雷達 — 財報 + VCP + 內部人</div>
+ <div style="font-size:11px;color:var(--muted);margin-top:3px">同時滿足 ≥3 個領先指標的高機率設定（事前可見的爆發條件）</div>
+ </div>
+ <span id="dash-triple-resonance-meta" style="font-size:10px;color:var(--muted)"></span>
+ </div>
+ <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">載入中...</div></div>
+ </div>
+
  <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
  <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場</span></div>
@@ -7025,6 +7037,8 @@ async function quickDashboardScan(force) {
  // If already cached from scanner tab, use that immediately
  if (window._rsLeaderCache && window._rsLeaderCache.length) {
    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
+   // Also render triple-resonance (cached from same JSON fetch)
+   renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
    return;
  }
 
@@ -7040,13 +7054,82 @@ async function quickDashboardScan(force) {
      }).catch(() => {});
      // Show immediately with static prices while live prices load
      window._rsLeaderCache = leaders;
+     window._tripleResonanceCache = precomputed.data.tripleResonance || [];
+     window._scanMetaCache = { scannedAt: precomputed.data.scannedAt };
      renderDashRSLeader(leaders.slice(0, 5));
+     renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
      return;
    }
  } catch(e) {}
 
  // Fallback: prompt user to visit scanner
  if (rsEl) rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
+ // Also fallback the triple-resonance card
+ renderTripleResonance(null, null);
+}
+
+// ── Triple-Resonance Radar (Wave 2 killer feature) ───────────────────────
+// Reads precomputed candidates from us_scan.json (computed server-side in
+// scan.js#computeTripleResonance). Defensive — handles null / empty data
+// gracefully. Click any row to jump straight to that stock's page.
+function renderTripleResonance(candidates, meta) {
+  const el = document.getElementById('dash-triple-resonance-list');
+  const metaEl = document.getElementById('dash-triple-resonance-meta');
+  if (!el) return;
+
+  if (metaEl) {
+    if (meta && meta.scannedAt) {
+      const t = new Date(meta.scannedAt);
+      const ageMin = Math.round((Date.now() - t.getTime()) / 60000);
+      const ageLabel = ageMin < 60 ? ageMin + ' 分鐘前' : Math.round(ageMin / 60) + ' 小時前';
+      metaEl.textContent = '掃描 ' + ageLabel;
+    } else {
+      metaEl.textContent = '';
+    }
+  }
+
+  if (!candidates || !candidates.length) {
+    el.innerHTML =
+      '<div style="text-align:center;padding:14px 12px;color:var(--muted);font-size:12px;line-height:1.7">' +
+      '目前無同時滿足 3 個以上條件的標的' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px;opacity:.85">條件嚴格 — 沒有訊號不代表市場差，意味著你不會被假訊號干擾</div>' +
+      '</div>';
+    return;
+  }
+
+  const starHtml = (n) => {
+    const filled = Math.min(5, Math.max(1, n));
+    return '<span style="color:#fbbf24;font-weight:700;letter-spacing:1px">' + '★'.repeat(filled) + '</span>';
+  };
+
+  el.innerHTML = candidates.map((c, i) => {
+    const reasonText = (c.reasons || []).slice(0, 4).join(' · ');
+    const earnTag = c.daysToEarnings != null && c.daysToEarnings >= 1 && c.daysToEarnings <= 14
+      ? '<span style="background:rgba(251,191,36,.15);color:#fbbf24;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600">D-' + c.daysToEarnings + '</span>'
+      : '';
+    const discoTag = c.isDiscovery
+      ? '<span style="background:rgba(168,85,247,.12);color:#a855f7;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px">加速</span>'
+      : '';
+    const priceLine = c.price != null
+      ? '<span style="color:var(--muted);font-size:11px">$' + Number(c.price).toFixed(2) + '</span>'
+      : '';
+
+    return '<div onclick="showStock(\'' + c.symbol + '\')" ' +
+      'style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s" ' +
+      'onmouseover="this.style.background=\'rgba(251,191,36,.06)\'" ' +
+      'onmouseout="this.style.background=\'transparent\'">' +
+      '<span style="color:var(--muted);font-size:11px;min-width:18px;text-align:center">#' + (i + 1) + '</span>' +
+      '<div style="min-width:80px;display:flex;align-items:center;gap:5px">' +
+        '<b style="color:#fbbf24;font-size:14px">' + c.symbol + '</b>' +
+        earnTag + discoTag +
+      '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + reasonText + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);opacity:.75;margin-top:2px">' + (c.name || '') + ' · ' + priceLine + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;min-width:60px">' + starHtml(c.stars) + '</div>' +
+      '</div>';
+  }).join('');
 }
 
 function renderDashRSLeader(results) {
@@ -7935,7 +8018,10 @@ async function triggerGithubScan() {
     window._rsDiff = diff;
 
     window._rsLeaderCache = leaders;
+    window._tripleResonanceCache = data.tripleResonance || [];
+    window._scanMetaCache = { scannedAt: data.scannedAt };
     renderDashRSLeader(leaders.slice(0, 5));
+    renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
 
     // Summary toast
     const newEntries = currTop.filter(s => prevSymbols.length > 0 && !prevSymbols.includes(s));
@@ -8211,9 +8297,12 @@ async function runRSLeaderScan() {
     // Cache leaders + discoveries; overlay live prices on discoveries too
     window._rsLeaderCache    = leaders;
     window._rsDiscoveryCache = data.discoveries || [];
+    window._tripleResonanceCache = data.tripleResonance || [];
+    window._scanMetaCache = { scannedAt: data.scannedAt };
     window._rsDiff = null; // clear diff on fresh load (not a manual refresh)
     if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
     renderDashRSLeader(leaders.slice(0, 5));
+    renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
 
     // Render with metadata banner (show top 15 in main view)
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);

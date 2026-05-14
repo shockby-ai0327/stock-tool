@@ -668,6 +668,96 @@ function calcMetrics(closes, highs, volumes, meta, benchReturn) {
 
 function round2(v) { return v != null ? Math.round(v * 100) / 100 : null; }
 
+// ── Triple-Resonance Radar ─────────────────────────────────────────────────
+// THE killer signal: stocks that simultaneously satisfy ≥3 of these predictive
+// conditions are statistically the highest-probability setups before a move:
+//   1. Earnings catalyst imminent (≤14 days)         — known timing for vol
+//   2. VCP tight base (score ≥ 2)                    — Minervini-style setup
+//   3. Insider cluster buy OR ≥2 analyst upgrades    — informed-money signal
+//   4. RS Rating ≥ 80                                — already leading market
+//   bonus: news sentiment 'bullish'                  — narrative tailwind
+//
+// Returns the top 15 candidates sorted by stars desc, then composite desc.
+// Each candidate is a flat object with reasons[] (zh-TW) for UI display.
+function computeTripleResonance(leaders, discoveries, insiderData, newsSentiment) {
+  const all = [...leaders, ...discoveries];
+  const seen = new Set();
+  const candidates = [];
+
+  for (const stock of all) {
+    if (seen.has(stock.symbol)) continue;
+    seen.add(stock.symbol);
+
+    let stars = 0;
+    const reasons = [];
+
+    // Criterion 1: Earnings imminent (≤14 days)
+    if (stock.daysToEarnings != null && stock.daysToEarnings >= 1 && stock.daysToEarnings <= 14) {
+      stars++;
+      reasons.push(`財報倒數 ${stock.daysToEarnings} 天`);
+    }
+
+    // Criterion 2: VCP tight base (score ≥ 2)
+    if ((stock.vcpScore || 0) >= 2) {
+      const depthStr = stock.vcpDepth != null ? ` (${stock.vcpDepth}% base)` : '';
+      stars++;
+      reasons.push(`VCP ${stock.vcpScore}/4${depthStr}`);
+    }
+
+    // Criterion 3: Insider cluster buying OR analyst upgrades
+    const insider = insiderData && insiderData.bySymbol && insiderData.bySymbol[stock.symbol];
+    const hasInsiderBuy = insider && insider.clusterBuy;
+    const upgradeCount  = (stock.recentUpgrades || []).length;
+    const hasUpgrades   = upgradeCount >= 2;
+    if (hasInsiderBuy || hasUpgrades) {
+      stars++;
+      if (hasInsiderBuy) {
+        const k = Math.round((insider.totalValue30d || 0) / 1000);
+        reasons.push(`內部人買入 $${k}K (${insider.buyerCount30d || 0} 位)`);
+      } else {
+        reasons.push(`${upgradeCount} 位分析師升評`);
+      }
+    }
+
+    // Criterion 4: RS Rating ≥ 80
+    if ((stock.rsRating || 0) >= 80) {
+      stars++;
+      reasons.push(`RS Rating ${stock.rsRating}`);
+    }
+
+    // Bonus: news sentiment is bullish
+    const news = newsSentiment && newsSentiment.bySymbol && newsSentiment.bySymbol[stock.symbol];
+    if (news && news.sentiment === 'bullish') {
+      stars++;
+      reasons.push('近期新聞偏多');
+    }
+
+    if (stars >= 3) {
+      candidates.push({
+        symbol:             stock.symbol,
+        name:               stock.name,
+        price:              stock.price,
+        rsRating:           stock.rsRating ?? null,
+        compositeScore:     stock.compositeScore ?? null,
+        daysToEarnings:     stock.daysToEarnings ?? null,
+        vcpScore:           stock.vcpScore || 0,
+        vcpDepth:           stock.vcpDepth ?? null,
+        insiderValue30d:    insider?.totalValue30d || 0,
+        insiderBuyerCount:  insider?.buyerCount30d || 0,
+        insiderClusterBuy:  !!insider?.clusterBuy,
+        recentUpgradeCount: upgradeCount,
+        newsSentiment:      news?.sentiment || null,
+        isDiscovery:        !!stock.isDiscovery,
+        stars,
+        reasons,
+      });
+    }
+  }
+
+  candidates.sort((a, b) => (b.stars - a.stars) || ((b.compositeScore || 0) - (a.compositeScore || 0)));
+  return candidates.slice(0, 15);
+}
+
 // ── US Scan ─────────────────────────────────────────────────────────────────
 
 async function scanUS() {
@@ -986,6 +1076,20 @@ async function scanUS() {
     .sort((a, b) => b.discoScore - a.discoScore)
     .slice(0, 15);
 
+  // 5b. Triple-Resonance Radar — load any catalyst data and compute candidates.
+  // Both data files are produced by their own workflows (insider-scan.yml,
+  // news-scan.yml) and may not exist yet — that's fine, the function is
+  // defensive and will fall back to whatever signals are present.
+  const insiderData    = loadJSON('insider_data.json',    null);
+  const newsSentiment  = loadJSON('news_sentiment.json',  null);
+  const tripleResonance = computeTripleResonance(
+    leaders.slice(0, 25),
+    discoveries,
+    insiderData,
+    newsSentiment,
+  );
+  console.log(`  triple-resonance: ${tripleResonance.length} candidates (insider data: ${insiderData ? 'yes' : 'no'} · news: ${newsSentiment ? 'yes' : 'no'})`);
+
   // 6. Save
   const output = {
     scannedAt:    new Date().toISOString(),
@@ -995,10 +1099,11 @@ async function scanUS() {
     benchmark:    { symbol: 'SPY', ret12_1: round2(benchReturn) },
     leaders:      leaders.slice(0, 25),
     discoveries,
+    tripleResonance,
   };
 
   writeFileSync(join(DATA_DIR, 'us_scan.json'), JSON.stringify(output, null, 2));
-  console.log(`\n[6] Saved → us_scan.json (${output.leaders.length} leaders, ${discoveries.length} discoveries)`);
+  console.log(`\n[6] Saved → us_scan.json (${output.leaders.length} leaders, ${discoveries.length} discoveries, ${tripleResonance.length} triple-resonance)`);
   console.log(`End: ${new Date().toISOString()}\n`);
 }
 
