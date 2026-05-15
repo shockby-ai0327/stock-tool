@@ -396,6 +396,16 @@ firebase.initializeApp(_fbConfig);
  <div id="dash-premarket"></div>
  <!-- 持倉動態 -->
  <div id="dash-holdings"></div>
+ <!-- 條件式警報 (Wave 7.2) -->
+ <div class="card" id="dash-alerts-card" style="margin-bottom:20px">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+ <h3 style="margin:0">🔔 條件式警報</h3>
+ <button onclick="showAlertForm()" style="font-size:11px;padding:5px 12px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:#f59e0b;cursor:pointer">+ 新增警報</button>
+ </div>
+ <div id="alerts-form-container" style="display:none;margin-bottom:10px"></div>
+ <div id="alerts-active-list" style="font-size:12px"></div>
+ <div id="alerts-history-list" style="margin-top:10px;font-size:11px"></div>
+ </div>
  <!-- 板塊配置（持倉分散度） -->
  <div id="dash-sector-concentration"></div>
  <!-- 持倉相關性矩陣 -->
@@ -7437,9 +7447,44 @@ async function renderDashHoldings() {
  '</div>';
  }).join('');
  const tc = totalPnl>=0?'var(--green)':'var(--red)';
+
+ // Wave 5.3 — sector concentration: aggregate value per sector ETF from scan cache
+ const sectorVal = {};
+ let mappedVal = 0, unmappedVal = 0;
+ const scanLookup = window._rsLeaderCache ? new Map(window._rsLeaderCache.map(s => [s.symbol, s])) : null;
+ for (const [ticker, p] of open) {
+  const cur = prices[ticker] || 0;
+  const positionVal = cur * p.qty;
+  const entry = scanLookup ? scanLookup.get(ticker) : null;
+  const sector = (entry && entry.sectorEtf) || 'UNMAPPED';
+  if (sector === 'UNMAPPED') unmappedVal += positionVal;
+  else { sectorVal[sector] = (sectorVal[sector] || 0) + positionVal; mappedVal += positionVal; }
+ }
+ const totalVal = mappedVal + unmappedVal;
+ let sectorHtml = '';
+ if (totalVal > 0 && (Object.keys(sectorVal).length >= 2 || unmappedVal > 0)) {
+  const sectorRows = Object.entries(sectorVal).sort((a,b) => b[1] - a[1]);
+  const maxPct = sectorRows.length ? sectorRows[0][1] / totalVal * 100 : 0;
+  const concentrationWarn = maxPct > 40;
+  sectorHtml =
+   '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">📊 板塊配置' + (concentrationWarn ? '  <span style="color:var(--red);font-weight:700">⚠ ' + sectorRows[0][0] + ' 集中度 ' + maxPct.toFixed(0) + '% 過高</span>' : '') + '</div>' +
+    sectorRows.map(([etf, val]) => {
+     const pct = val / totalVal * 100;
+     const color = pct > 40 ? 'var(--red)' : pct > 25 ? 'var(--yellow)' : 'var(--green)';
+     return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;font-size:11px">' +
+      '<span style="min-width:42px;color:var(--muted)">' + etf + '</span>' +
+      '<div style="flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden"><div style="width:' + pct.toFixed(0) + '%;height:100%;background:' + color + '"></div></div>' +
+      '<span style="min-width:36px;text-align:right;font-weight:600;color:' + color + '">' + pct.toFixed(0) + '%</span>' +
+     '</div>';
+    }).join('') +
+    (unmappedVal > 0 ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">未分類 ' + (unmappedVal / totalVal * 100).toFixed(0) + '%（不在掃描器快取內）</div>' : '') +
+   '</div>';
+ }
+
  el.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0"> 持倉動態</h3>' +
  '<span style="font-size:13px;font-weight:700;color:'+tc+'">'+(totalPnl>=0?'+':'')+'$'+Math.round(totalPnl)+' ('+(totalCost>0?(totalPnl/totalCost*100):0).toFixed(2)+'%)</span></div>' +
- items +
+ items + sectorHtml +
  '<div style="text-align:right;margin-top:8px"><button class="btn btn-sm" style="font-size:11px" onclick="showPage(\'portfolio\');setTimeout(()=>switchJournalTab(\'holdings\'),50)">詳細追蹤 →</button></div></div>';
 }
 
@@ -8437,6 +8482,180 @@ function _updateNotifBtn() {
     btn.style.background = 'rgba(245,158,11,.08)';
   }
 }
+
+// ── Conditional Alerts (Wave 7.2) ─────────────────────────────────────────
+// User defines conditions; checked every 5 minutes; triggers push + toast.
+// Storage: localStorage['stock_alerts'] = [{id, type, symbol, condition, value, created, triggered}]
+const ALERT_STORE_KEY = 'stock_alerts';
+
+function _getAlerts() {
+  try { return JSON.parse(localStorage.getItem(ALERT_STORE_KEY) || '[]'); } catch(e) { return []; }
+}
+function _saveAlerts(arr) {
+  try { localStorage.setItem(ALERT_STORE_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+function showAlertForm() {
+  const c = document.getElementById('alerts-form-container');
+  if (!c) return;
+  if (c.style.display === 'none') {
+    c.style.display = 'block';
+    c.innerHTML = '<div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;display:grid;grid-template-columns:1fr 1.5fr 1fr 1.2fr auto;gap:8px;align-items:center">' +
+      '<select id="alert-type" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">' +
+        '<option value="price">股價</option>' +
+        '<option value="rsi">RSI</option>' +
+        '<option value="rsrank">RS Rating</option>' +
+        '<option value="vix">VIX</option>' +
+        '<option value="portfolio_dd">帳戶回撤</option>' +
+      '</select>' +
+      '<input id="alert-symbol" placeholder="代號 (VIX/帳戶不需要)" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;text-transform:uppercase">' +
+      '<select id="alert-cond" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">' +
+        '<option value=">">大於</option>' +
+        '<option value="<">小於</option>' +
+        '<option value="crosses-above">向上突破</option>' +
+        '<option value="crosses-below">向下跌破</option>' +
+      '</select>' +
+      '<input id="alert-value" type="number" step="0.01" placeholder="數值" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">' +
+      '<button onclick="addAlert()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600">新增</button>' +
+    '</div>';
+  } else {
+    c.style.display = 'none';
+  }
+}
+
+function addAlert() {
+  const type   = document.getElementById('alert-type').value;
+  const symbol = (document.getElementById('alert-symbol').value || '').toUpperCase().trim();
+  const cond   = document.getElementById('alert-cond').value;
+  const val    = parseFloat(document.getElementById('alert-value').value);
+  if (!isFinite(val)) return showToast('請輸入數值', 'warn');
+  if (['price','rsi','rsrank'].includes(type) && !symbol) return showToast('請輸入股票代號', 'warn');
+  const alerts = _getAlerts();
+  alerts.push({
+    id: 'alert_' + Date.now(),
+    type, symbol: symbol || null, condition: cond, value: val,
+    created: new Date().toISOString(), triggered: null, lastValue: null,
+  });
+  _saveAlerts(alerts);
+  showAlertForm();
+  renderAlertsPanel();
+  showToast('✅ 警報已新增', 'success');
+}
+
+function deleteAlert(id) {
+  _saveAlerts(_getAlerts().filter(a => a.id !== id));
+  renderAlertsPanel();
+}
+
+function clearTriggeredAlerts() {
+  _saveAlerts(_getAlerts().filter(a => !a.triggered));
+  renderAlertsPanel();
+}
+
+function renderAlertsPanel() {
+  const active = document.getElementById('alerts-active-list');
+  const hist   = document.getElementById('alerts-history-list');
+  if (!active || !hist) return;
+  const alerts = _getAlerts();
+  const activeOnes  = alerts.filter(a => !a.triggered);
+  const triggered = alerts.filter(a => a.triggered).slice(-10).reverse();
+
+  const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤' };
+  const condLabel = { '>': '大於', '<': '小於', 'crosses-above': '向上突破', 'crosses-below': '向下跌破' };
+
+  if (!activeOnes.length) {
+    active.innerHTML = '<div style="color:var(--muted);padding:6px 0">尚無條件式警報（每 5 分鐘自動檢查）</div>';
+  } else {
+    active.innerHTML = '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px">作用中（' + activeOnes.length + '）</div>' +
+      activeOnes.map(a =>
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:4px">' +
+          '<span style="font-size:11px;color:var(--muted);min-width:55px">' + typeLabel[a.type] + '</span>' +
+          (a.symbol ? '<span style="font-weight:600;color:var(--accent);min-width:55px">' + a.symbol + '</span>' : '<span style="min-width:55px"></span>') +
+          '<span style="color:var(--muted);font-size:11px">' + condLabel[a.condition] + '</span>' +
+          '<b style="margin-left:2px">' + a.value + '</b>' +
+          (a.lastValue != null ? '<span style="color:var(--muted);font-size:10px;margin-left:auto">當前 ' + a.lastValue + '</span>' : '<span style="margin-left:auto"></span>') +
+          '<button onclick="deleteAlert(\'' + a.id + '\')" title="刪除" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>' +
+        '</div>'
+      ).join('');
+  }
+  if (triggered.length) {
+    hist.innerHTML = '<div style="padding-top:8px;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="color:var(--muted);font-weight:600">歷史觸發（最近 ' + triggered.length + '）</span><button onclick="clearTriggeredAlerts()" style="background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer">清除</button></div>' +
+      triggered.map(a =>
+        '<div style="padding:4px 8px;color:var(--muted);font-size:11px">' +
+          '✓ ' + (a.symbol || '') + ' ' + typeLabel[a.type] + ' ' + condLabel[a.condition] + ' ' + a.value +
+          ' <span style="opacity:.6;float:right">' + new Date(a.triggered).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
+        '</div>'
+      ).join('') +
+    '</div>';
+  } else hist.innerHTML = '';
+}
+
+async function checkAlerts() {
+  const alerts = _getAlerts();
+  const active = alerts.filter(a => !a.triggered);
+  if (!active.length) return;
+  let changed = false;
+  for (const a of active) {
+    let current = null;
+    try {
+      if (a.type === 'price' && a.symbol) {
+        const d = await quickPrice(a.symbol);
+        if (d) current = d.price;
+      } else if (a.type === 'vix') {
+        const d = await quickPrice('^VIX');
+        if (d) current = d.price;
+      } else if (a.type === 'rsrank' && a.symbol) {
+        const cache = window._rsLeaderCache;
+        if (cache) {
+          const entry = cache.find(s => s.symbol === a.symbol);
+          if (entry) current = entry.rsRating;
+        }
+      } else if (a.type === 'portfolio_dd') {
+        // Compute current drawdown from journal
+        try {
+          const j = (typeof getJ === 'function') ? getJ() : [];
+          // Simple: use trailing realized PnL series, max drawdown %
+          const realized = [];
+          let running = 0;
+          j.filter(e => e.action === 'sell').forEach(e => {
+            running += (e.price - (e.cost || 0)) * (e.qty || 0);
+            realized.push(running);
+          });
+          if (realized.length) {
+            let peak = realized[0], maxDd = 0, cur = realized[realized.length - 1];
+            for (const v of realized) { if (v > peak) peak = v; const dd = peak > 0 ? (peak - v) / peak * 100 : 0; if (dd > maxDd) maxDd = dd; }
+            current = peak > 0 ? (peak - cur) / peak * 100 : 0;
+          }
+        } catch(e) {}
+      }
+    } catch (e) { continue; }
+    if (current == null) continue;
+    const prev = a.lastValue;
+    a.lastValue = +current.toFixed(2);
+    changed = true;
+
+    let hit = false;
+    if (a.condition === '>')           hit = current > a.value;
+    else if (a.condition === '<')      hit = current < a.value;
+    else if (a.condition === 'crosses-above' && prev != null) hit = prev <= a.value && current > a.value;
+    else if (a.condition === 'crosses-below' && prev != null) hit = prev >= a.value && current < a.value;
+
+    if (hit) {
+      a.triggered = new Date().toISOString();
+      const condLabel = { '>': '大於', '<': '小於', 'crosses-above': '向上突破', 'crosses-below': '向下跌破' }[a.condition];
+      const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤' }[a.type];
+      const msg = (a.symbol ? a.symbol + ' ' : '') + typeLabel + ' ' + condLabel + ' ' + a.value + ' (當前 ' + current.toFixed(2) + ')';
+      showToast('🔔 ' + msg, 'success');
+      try { _sendPushNotification('🔔 警報觸發', msg, a.id); } catch(e) {}
+    }
+  }
+  if (changed) _saveAlerts(alerts);
+  renderAlertsPanel();
+}
+
+// Background check every 5 minutes; render once on load
+setInterval(() => { try { checkAlerts(); } catch(e) {} }, 5 * 60 * 1000);
+setTimeout(() => { try { renderAlertsPanel(); checkAlerts(); } catch(e) {} }, 2000);
 
 // ⚡ 重新整理 — force-reload GitHub JSON + live prices + rank-diff display.
 // Reliable during market hours (no Yahoo rate-limit issues from browser scan).
