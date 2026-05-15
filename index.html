@@ -417,6 +417,19 @@ firebase.initializeApp(_fbConfig);
  </div>
  </div>
 
+ <!-- 今日市場敘事 — Claude AI 生成（Wave 6） -->
+ <div class="card" id="dash-narrative-card" style="margin-bottom:20px;border-left:3px solid #6366f1;background:linear-gradient(135deg, rgba(99,102,241,.04) 0%, rgba(0,0,0,0) 100%)">
+ <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+ <div style="font-weight:700;font-size:14px;color:#818cf8">🌍 今日市場敘事</div>
+ <span id="narrative-regime-badge" style="font-size:11px;padding:2px 8px;border-radius:10px"></span>
+ <span id="narrative-meta" style="font-size:10px;color:var(--muted);margin-left:auto"></span>
+ </div>
+ <div id="narrative-headline" style="font-size:13px;font-weight:600;color:var(--text)">載入中...</div>
+ <div id="narrative-body" style="font-size:12px;line-height:1.7;color:var(--muted);margin-top:6px"></div>
+ <div id="narrative-rotation" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px"></div>
+ <div id="narrative-watch" style="margin-top:8px;font-size:12px"></div>
+ </div>
+
  <!-- 三重共振雷達 — 財報 + VCP + 內部人（Wave 2 killer feature） -->
  <div class="card" id="dash-triple-resonance-card" style="margin-bottom:20px;border-left:3px solid #fbbf24;background:linear-gradient(135deg, rgba(251,191,36,.04) 0%, rgba(0,0,0,0) 100%)">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
@@ -7032,6 +7045,7 @@ async function renderDashboard(forceRescan) {
  renderPreMarketCard(marketData);
  fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
  renderDashHoldings(); // 持倉動態
+ loadMarketNarrative('us'); // Wave 6 — Claude AI 市場敘事
  // 6. T交易精選（15 分鐘快取，獨立載入）
  renderDashTTrading();
  // 7. 國際新聞摘要（10 分鐘快取）
@@ -7465,6 +7479,64 @@ async function quickDashboardScan(force) {
  if (rsEl) rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
  // Also fallback the triple-resonance card
  renderTripleResonance(null, null);
+}
+
+// ── Market Narrative (Wave 6) — daily AI commentary on the macro picture ──
+async function loadMarketNarrative(market) {
+ market = market || 'us';
+ try {
+  const file = market === 'tw' ? 'tw_market_narrative.json' : 'us_market_narrative.json';
+  const r = await fetch(GH_RAW + file + '?t=' + Math.floor(Date.now() / 600000));
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const data = await r.json();
+  renderMarketNarrative(data);
+ } catch (e) {
+  renderMarketNarrative(null);
+ }
+}
+
+function renderMarketNarrative(data) {
+ const headEl   = document.getElementById('narrative-headline');
+ const bodyEl   = document.getElementById('narrative-body');
+ const badgeEl  = document.getElementById('narrative-regime-badge');
+ const metaEl   = document.getElementById('narrative-meta');
+ const rotateEl = document.getElementById('narrative-rotation');
+ const watchEl  = document.getElementById('narrative-watch');
+ if (!headEl) return;
+ if (!data || !data.narrative || !data.generatedAt) {
+  headEl.textContent = 'AI 敘事尚未生成';
+  bodyEl.innerHTML = '<span style="color:var(--muted)">下次掃描+ AI 工作流跑完後會自動產生今日市場敘事。</span>';
+  if (badgeEl) badgeEl.textContent = '';
+  if (metaEl) metaEl.textContent = '';
+  if (rotateEl) rotateEl.innerHTML = '';
+  if (watchEl) watchEl.innerHTML = '';
+  return;
+ }
+ headEl.textContent = data.headline || '';
+ bodyEl.textContent = data.narrative || '';
+
+ const regimeColors = { 'risk-on': '#22c55e', 'risk-off': '#ef4444', 'rotation': '#fbbf24', 'neutral': '#94a3b8' };
+ const regimeLabels = { 'risk-on': '🟢 風險偏好', 'risk-off': '🔴 避險', 'rotation': '🟡 板塊輪動', 'neutral': '⚪ 中性' };
+ const rc = regimeColors[data.regime] || '#94a3b8';
+ if (badgeEl) {
+  badgeEl.style.background = rc + '22';
+  badgeEl.style.color = rc;
+  badgeEl.textContent = regimeLabels[data.regime] || data.regime;
+ }
+ if (metaEl) {
+  const ageMin = Math.round((Date.now() - data.generatedAt) / 60000);
+  metaEl.textContent = ageMin < 60 ? ageMin + ' 分鐘前生成' : Math.round(ageMin / 60) + ' 小時前生成';
+ }
+ if (rotateEl) {
+  const into = (data.sectorRotation && data.sectorRotation.into) || [];
+  const outOf = (data.sectorRotation && data.sectorRotation.outOf) || [];
+  rotateEl.innerHTML =
+   (into.length ? '<span style="color:#22c55e">資金流入：</span>' + into.map(s => '<span style="background:rgba(34,197,94,.12);color:#22c55e;padding:2px 8px;border-radius:6px;font-weight:600">' + s + '</span>').join(' ') : '') +
+   (outOf.length ? '<span style="margin-left:8px;color:#ef4444">資金流出：</span>' + outOf.map(s => '<span style="background:rgba(239,68,68,.12);color:#ef4444;padding:2px 8px;border-radius:6px;font-weight:600">' + s + '</span>').join(' ') : '');
+ }
+ if (watchEl && data.tomorrowWatch) {
+  watchEl.innerHTML = '<span style="padding:8px 12px;background:rgba(99,102,241,.08);border-radius:6px;display:inline-block;color:#a5b4fc;border-left:2px solid #6366f1"><b>📌 明日關注：</b> ' + data.tomorrowWatch + '</span>';
+ }
 }
 
 // ── Triple-Resonance Radar (Wave 2 killer feature) ───────────────────────

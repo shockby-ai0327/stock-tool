@@ -48,6 +48,12 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/ai_analysis.js us
 
+      - name: Generate US market narrative
+        if: ${{ github.event.inputs.market != 'tw' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/market_narrative.js us
+
       - name: Analyze TW leaders
         if: ${{ github.event.inputs.market == 'tw' || github.event.inputs.market == 'all' }}
         env:
@@ -58,6 +64,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/us_ai_analysis.json data/tw_ai_analysis.json 2>/dev/null || true
+          git add data/us_ai_analysis.json data/tw_ai_analysis.json data/us_market_narrative.json data/tw_market_narrative.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
