@@ -1139,6 +1139,52 @@ async function analyzeStock() {
  '</div>';
  rd.innerHTML = ctxBar + rd.innerHTML;
  }
+
+ // Wave 7.1 — Catalyst alerts row (earnings / insider / analyst upgrade / VCP)
+ const catalystBadges = [];
+ const scanEntry = window._rsLeaderCache ? window._rsLeaderCache.find(s => s.symbol === ticker) : null;
+ if (scanEntry) {
+  if (scanEntry.daysToEarnings != null && scanEntry.daysToEarnings >= 0 && scanEntry.daysToEarnings <= 14) {
+   const urgent = scanEntry.daysToEarnings <= 7;
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:' + (urgent ? 'rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.4)' : 'rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.4)') + '">📅 財報 ' + scanEntry.daysToEarnings + ' 天後</span>');
+  }
+  if ((scanEntry.recentUpgrades || []).length >= 1) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.4)">📈 ' + scanEntry.recentUpgrades.length + ' 位分析師升評</span>');
+  }
+  if ((scanEntry.recentDowngrades || []).length >= 2) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.4)">📉 ' + scanEntry.recentDowngrades.length + ' 位分析師降評</span>');
+  }
+  if (scanEntry.shortPctOfFloat != null && scanEntry.shortPctOfFloat > 0.20) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.4)" title="高 short interest 有 squeeze 潛力">⚡ 空頭 ' + (scanEntry.shortPctOfFloat * 100).toFixed(0) + '%</span>');
+  }
+ }
+ // Triple-resonance match
+ const tripleRes = window._tripleResonanceCache ? window._tripleResonanceCache.find(t => t.symbol === ticker) : null;
+ if (tripleRes) {
+  catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(251,191,36,.22),rgba(245,158,11,.15));color:#fbbf24;border:1px solid rgba(251,191,36,.5)" title="' + (tripleRes.reasons || []).join(' · ') + '">🎯 三重共振 ' + '★'.repeat(tripleRes.stars || 3) + '</span>');
+ }
+ // Insider buying (load lazily)
+ (async () => {
+  try {
+   if (!window._insiderDataCache) {
+    const r = await fetch(GH_RAW + 'insider_data.json?t=' + Math.floor(Date.now() / 1800000), { signal: AbortSignal.timeout(5000) });
+    if (r.ok) window._insiderDataCache = await r.json();
+   }
+   const ins = window._insiderDataCache && window._insiderDataCache[ticker];
+   if (ins && ins.totalValue30d > 0) {
+    const insBadge = '<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.4)">💼 內部人買入 $' + (ins.totalValue30d / 1000).toFixed(0) + 'K' + (ins.clusterBuy ? ' (cluster)' : '') + '</span>';
+    const catBar = document.getElementById('stock-catalyst-bar');
+    if (catBar) catBar.insertAdjacentHTML('beforeend', insBadge);
+   }
+  } catch(e) {}
+ })();
+ if (catalystBadges.length) {
+  const catBar = '<div id="stock-catalyst-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;align-self:center">催化劑</span>' + catalystBadges.join('') + '</div>';
+  rd.innerHTML = catBar + rd.innerHTML;
+ } else {
+  // empty bar exists in case async insider loads → can append there
+  rd.innerHTML = '<div id="stock-catalyst-bar" style="display:none"></div>' + rd.innerHTML;
+ }
  }
  // Append K-line pattern card (after main render, before kline chart init)
  if (allPatterns.length) {
@@ -1196,12 +1242,13 @@ async function analyzeStock() {
  '</div>' +
  '<div style="margin-top:8px;font-size:10px;color:var(--muted);line-height:1.5">⚠ 本分析由 Claude AI 基於掃描時技術與動能數據自動生成，不構成投資建議。每次掃描後更新。</div>' +
  '</div>';
- rd.innerHTML += aiCard;
+ // Wave 7.1 — inject at TOP of stock page (after header banners), not bottom
+ rd.innerHTML = aiCard + rd.innerHTML;
  } else {
- // Stock not in top 20 leaders — show placeholder
- const placeholder = '<div class="card" style="border-left:3px solid rgba(99,102,241,.2);margin-top:12px">' +
+ // Stock not in top 20 leaders — show placeholder at top too
+ const placeholder = '<div class="card" style="border-left:3px solid rgba(99,102,241,.2)">' +
  '<div style="font-size:12px;color:var(--muted)">🤖 <b>Claude AI 前瞻分析</b> — 此股尚無 AI 分析（僅 RS 排行榜前 15 名 + 加速發現前 5 名提供）。若此股進入排行榜，下次掃描後將自動生成。</div></div>';
- rd.innerHTML += placeholder;
+ rd.innerHTML = placeholder + rd.innerHTML;
  }
  }
  } catch(e) { console.warn('AI analysis load failed:', e.message); }
@@ -6154,6 +6201,71 @@ function showEduTab(tab) {
  const eduContent = { ta: getTaEducation(), patterns: getPatternsEducation(), psychology: getPsychologyEducation(), money: getMoneyEducation(), glossary: getGlossaryEducation() };
  document.getElementById('edu-detail').innerHTML = eduContent[tab];
  if (tab === 'glossary') initGlossarySearch();
+ // Wave 7.4 — populate dynamic count/stats links after content render
+ setTimeout(() => {
+  // Schwartz breakout count from RS leader cache
+  const eduSchwartz = document.getElementById('edu-schwartz-count');
+  if (eduSchwartz) {
+   const cache = window._rsLeaderCache || [];
+   const breakouts = cache.filter(s => (s.rsRating || 0) >= 80 && (s.volExpand || 0) >= 1.5 && s.price && s.ma50 && s.price >= s.ma50);
+   eduSchwartz.textContent = breakouts.length || '0';
+   eduSchwartz.style.color = breakouts.length >= 3 ? 'var(--green)' : breakouts.length >= 1 ? 'var(--yellow)' : 'var(--muted)';
+  }
+  // Auto-Kelly stats from journal
+  const eduKelly = document.getElementById('edu-kelly-stats');
+  if (eduKelly) {
+   try {
+    const j = getJ();
+    const stats = computeJournalKellyStats ? computeJournalKellyStats(j) : null;
+    if (stats && stats.totalTrades >= 10) {
+     eduKelly.innerHTML = '📊 你的歷史 ' + stats.totalTrades + ' 筆已平倉交易：勝率 <b>' + (stats.winRate*100).toFixed(0) + '%</b>、盈虧比 <b>' + stats.ratio.toFixed(2) + '</b> → Half Kelly 建議 <b style="color:var(--accent)">' + (stats.halfKelly*100).toFixed(1) + '%</b>/筆';
+    } else if (stats && stats.totalTrades > 0) {
+     eduKelly.innerHTML = '📊 已平倉交易 ' + stats.totalTrades + ' 筆（需累積 10+ 才能計算 Kelly）';
+    } else {
+     eduKelly.innerHTML = '📊 尚無已平倉交易，先到風控中心累積歷史資料';
+    }
+   } catch (e) { eduKelly.innerHTML = '📊 計算中...'; }
+  }
+ }, 100);
+}
+
+// Helper for education page Kelly auto-stats
+function computeJournalKellyStats(j) {
+ if (!j || !j.length) return null;
+ const sorted = j.slice().sort((a,b) => new Date(a.date) - new Date(b.date));
+ const queues = {};
+ const trades = [];
+ for (const e of sorted) {
+  if (e.action === 'buy') {
+   if (!queues[e.ticker]) queues[e.ticker] = [];
+   const costPerShare = (e.net || e.price * e.qty) / e.qty;
+   queues[e.ticker].push({ qty: e.qty, cost: costPerShare });
+  } else if (e.action === 'sell') {
+   const q = queues[e.ticker] || [];
+   let remaining = e.qty, totalCost = 0;
+   while (remaining > 0 && q.length) {
+    const lot = q[0];
+    const take = Math.min(remaining, lot.qty);
+    totalCost += take * lot.cost;
+    lot.qty -= take;
+    remaining -= take;
+    if (lot.qty <= 0) q.shift();
+   }
+   const proceeds = e.net || e.price * e.qty;
+   const realized = proceeds - totalCost;
+   if (totalCost > 0) trades.push({ ret: realized / totalCost, $: realized });
+  }
+ }
+ if (!trades.length) return { totalTrades: 0 };
+ const wins = trades.filter(t => t.ret > 0);
+ const losses = trades.filter(t => t.ret <= 0);
+ const winRate = wins.length / trades.length;
+ const avgWin = wins.length ? wins.reduce((s,t) => s + t.ret, 0) / wins.length : 0;
+ const avgLoss = losses.length ? Math.abs(losses.reduce((s,t) => s + t.ret, 0) / losses.length) : 0;
+ const ratio = avgLoss > 0 ? avgWin / avgLoss : (avgWin > 0 ? 99 : 0);
+ const kelly = ratio > 0 ? winRate - (1 - winRate) / ratio : 0;
+ const halfKelly = Math.max(0, kelly / 2);
+ return { totalTrades: trades.length, winRate, avgWin, avgLoss, ratio, kelly, halfKelly };
 }
 
 function getEduLiveHtml() {
@@ -6881,12 +6993,25 @@ function getPsychologyEducation() {
  return '<div class="card edu-card"><h3>FOMO（Fear Of Missing Out）錯失恐懼</h3><p><b>症狀：</b>看到一檔股票大漲，覺得「再不買就來不及了」，衝動進場。</p><p style="margin-top:8px"><b>為什麼危險：</b></p><p>① 你在情緒最高點進場</p><p>② 你沒有交易計畫</p><p>③ 追高買入的人是最後的買方</p><p style="margin-top:8px"><b>Schwartz 的解法：</b></p><p>「市場每天都有新機會。錯過這一檔不會死，但追高進場可能會讓你的帳戶死掉。」</p><p>紀律：如果你沒有在掃描階段就選中這檔股票，盤中不要追。</p></div>' +
  '<div class="card edu-card"><h3> 過度交易（Overtrading）</h3><p><b>自我診斷：</b></p><p> 每天交易超過 3 筆</p><p> 在沒有明確信號時仍然進場</p><p> 虧損後急著想「賺回來」</p><p> 覺得不交易就是在浪費時間</p><p> 交易時感到興奮/焦慮而非冷靜</p><p style="margin-top:8px">如果上述打勾超過 2 項，你可能在過度交易。</p><p style="margin-top:8px"><b>Steinhardt 的原則：</b>「最好的交易者是透過「不交易」來賺錢的。」</p><p>設定每日最大交易次數（建議 1-3 筆）</p><p>連虧 2 筆後暫停交易，離開螢幕至少 30 分鐘</p></div>' +
  '<div class="card edu-card"><h3> 虧損後的心理恢復</h3><p><span class="edu-term">報復性交易的循環</span></p><p>虧損 → 沮喪 → 想立刻賺回來 → 加大倉位 → 不設停損 → 更大虧損 → 崩潰</p><p style="margin-top:8px"><b>打破循環的方法：</b></p><p>① <b>縮小倉位</b>：虧損後下一筆交易用平常一半的倉位</p><p>② <b>回到基本面</b>：重新檢視你的交易計畫</p><p>③ <b>分離情緒和決策</b>：你的帳戶不認識你</p><p>④ <b>看長期數據</b>：查看績效分析頁面</p><p style="margin-top:12px"><b>Schwartz：</b>「我從來不和市場爭論。如果我錯了，我立刻出場。」</p></div>' +
- '<div class="card edu-card"><h3> Schwartz & Steinhardt 的交易哲學</h3><p style="margin-bottom:12px"><span class="edu-term">Marty Schwartz</span></p><p>「最重要的事情是資金管理、資金管理、資金管理。」</p><p>「我的勝率大約 55%。我賺錢的秘密不是常常對，而是對的時候賺得多，錯的時候賠得少。」</p><p>「永遠不要在虧損的部位上加碼。」</p><p style="margin-top:12px"><span class="edu-term">Michael Steinhardt</span></p><p>「Variant Perception：找到市場共識錯誤的地方。」</p><p>「交易的本質是機率遊戲。你不需要每次都對，但你需要確保每次對的時候利潤夠大。」</p></div>';
+ '<div class="card edu-card"><h3> Schwartz & Steinhardt 的交易哲學</h3><p style="margin-bottom:12px"><span class="edu-term">Marty Schwartz</span></p><p>「最重要的事情是資金管理、資金管理、資金管理。」</p><p>「我的勝率大約 55%。我賺錢的秘密不是常常對，而是對的時候賺得多，錯的時候賠得少。」</p><p>「永遠不要在虧損的部位上加碼。」</p><p style="margin-top:12px"><span class="edu-term">Michael Steinhardt</span></p><p>「Variant Perception：找到市場共識錯誤的地方。」</p><p>「交易的本質是機率遊戲。你不需要每次都對，但你需要確保每次對的時候利潤夠大。」</p>' +
+   '<div style="margin-top:14px;padding:12px 14px;background:rgba(34,197,94,.06);border-left:3px solid var(--green);border-radius:6px">' +
+    '<div style="font-size:12px;color:var(--text);margin-bottom:6px">📍 <b>今天有 <span id="edu-schwartz-count" style="color:var(--green)">…</span> 支股票符合 Schwartz 突破設定</b>（RS≥80 + 量比≥1.5x + 站上 MA20）</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+     '<button onclick="showPage(\'scanner\');setTimeout(()=>switchScanStrategy(\'rsleader\'),100)" style="padding:6px 14px;background:rgba(34,197,94,.18);border:1px solid rgba(34,197,94,.4);border-radius:6px;color:#22c55e;font-size:12px;cursor:pointer;font-weight:600">查看 RS 排行 →</button>' +
+     '<button onclick="showPage(\'scanner\');setTimeout(()=>switchScanStrategy(\'strategy\'),100)" style="padding:6px 14px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);border-radius:6px;color:#a5b4fc;font-size:12px;cursor:pointer;font-weight:600">📊 此策略歷史勝率 →</button>' +
+    '</div>' +
+   '</div>' +
+  '</div>';
 }
 
 function getMoneyEducation() {
  return '<div class="card edu-card"><h3> 1% 法則：為什麼能救你的命</h3><p><span class="edu-term">核心原則</span>：每筆交易的最大虧損不超過總資金的 1%。</p><p style="margin-top:8px"><b>數學證明：</b></p><p>假設你有 100 萬資金，每次最多虧 1 萬（1%）。即使你連虧 <b>10 次</b>，你的資金仍有 ~90.4 萬。</p><p>但如果你每次虧 <b>10%</b>，連虧 10 次後你只剩 34.9 萬。</p><p style="margin-top:12px"><b>1% 法則不限制倉位大小</b>，它限制的是<b>虧損距離</b>。</p><p>倉位 = 最大虧損額 ÷ (進場價 - 停損價)</p><p>→ 去「風控中心」頁面可以自動計算。</p></div>' +
- '<div class="card edu-card"><h3> Kelly Criterion 詳解</h3><p><span class="edu-term">公式</span>：f* = W - (1-W)/R</p><p>f* = 最佳倉位比例，W = 勝率，R = 平均獲利 / 平均虧損</p><p style="margin-top:8px"><b>例子：</b>勝率 55%，R=1.5 → f* = 0.55 - 0.45/1.5 = <b>0.25</b>（25%）</p><p style="margin-top:8px"><b>實務重點：</b></p><p>① Full Kelly 波動性大，建議使用 <b>Half Kelly</b></p><p>② Kelly 值為負 → 不應該交易</p><p>→ 去「風控中心」頁面可以自動計算你的 Kelly 值。</p></div>' +
+ '<div class="card edu-card"><h3> Kelly Criterion 詳解</h3><p><span class="edu-term">公式</span>：f* = W - (1-W)/R</p><p>f* = 最佳倉位比例，W = 勝率，R = 平均獲利 / 平均虧損</p><p style="margin-top:8px"><b>例子：</b>勝率 55%，R=1.5 → f* = 0.55 - 0.45/1.5 = <b>0.25</b>（25%）</p><p style="margin-top:8px"><b>實務重點：</b></p><p>① Full Kelly 波動性大，建議使用 <b>Half Kelly</b></p><p>② Kelly 值為負 → 不應該交易</p>' +
+   '<div style="margin-top:12px;padding:12px 14px;background:rgba(99,102,241,.06);border-left:3px solid var(--accent);border-radius:6px">' +
+    '<div id="edu-kelly-stats" style="font-size:12px;color:var(--muted);margin-bottom:8px">📊 根據你的歷史交易自動計算...</div>' +
+    '<button onclick="showPage(\'portfolio\');setTimeout(()=>switchJournalTab(\'risk\'),100)" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600">套用到風控中心 →</button>' +
+   '</div>' +
+  '</div>' +
  '<div class="card edu-card"><h3> 金字塔加碼法（Pyramiding）</h3><p><span class="edu-term">核心概念</span>：在獲利的部位上加碼，而非虧損的部位。</p><p style="margin-top:8px"><b>標準做法：</b></p><p>① 初始倉位：40%（在進場價買入）</p><p>② 第一次加碼：30%（股價上漲 1R 後）</p><p>③ 第二次加碼：20%（股價上漲 2R 後）</p><p style="margin-top:8px"><b>關鍵紀律：</b></p><p>每次加碼後，將停損移到上一次加碼的價位</p><p>永遠不在虧損的部位加碼（這叫「攤平」）</p><p>加碼數量必須遞減</p><p style="margin-top:12px"><b>Schwartz：</b>「我只在勝利的時候加大注碼。」</p></div>' +
  '<div class="card edu-card"><h3> 反馬丁格爾策略（Anti-Martingale）</h3><p><span class="edu-term">馬丁格爾（絕對不要用）</span>：虧損後加倍下注 → 在有限資金下<b>必然爆倉</b>。</p><p style="margin-top:8px"><span class="edu-term">反馬丁格爾（推薦）</span>：獲利後增加倉位，虧損後減少倉位。</p><p style="margin-top:8px"><b>實作方式：</b></p><p>① 連續獲利 3 次 → 倉位可增加 20-50%</p><p>② 連續虧損 2 次 → 倉位減少 50%</p><p>③ 回撤超過 10% → 暫停交易</p><p style="margin-top:8px"><b>邏輯：</b>連勝時策略與市場匹配，應把握。連虧時應保護資金。</p></div>';
 }
