@@ -37,6 +37,16 @@ jobs:
         run: npm install node-fetch
         working-directory: scripts
 
+      # Restore OHLCV cache from previous run (lives in GitHub Actions cache, not git)
+      # Saves 60-80% of OHLCV API calls between scans on the same day
+      - name: Restore OHLCV cache
+        uses: actions/cache@v4
+        with:
+          path: data/ohlcv_cache.json
+          key: ohlcv-cache-${{ github.run_id }}
+          restore-keys: |
+            ohlcv-cache-
+
       - name: Run US scan
         if: ${{ github.event.inputs.market != 'tw' }}
         run: node scripts/scan.js us
@@ -49,7 +59,9 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Stage scan outputs + caches/memory created by Wave 1 (auto-created on first run)
+          # Stage scan outputs + caches/memory (auto-created on first run)
+          # NOTE: ohlcv_cache.json is in .gitignore — too large for git, lives in
+          # GitHub Actions cache between runs (see "Restore/Save OHLCV cache" steps).
           git add data/us_scan.json data/tw_scan.json
           [ -f data/sector_cache.json ]    && git add data/sector_cache.json    || true
           [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true

@@ -141,6 +141,37 @@ async function getOHLCV(symbol, range = '12mo') {
   };
 }
 
+// OHLCV cache with TTL — daily resolution data only changes once/day after close.
+// Refresh policy:
+//   • Cache > 4h old during US market hours (UTC 13:30-21:00 weekdays) → refresh
+//   • Cache > 12h old after hours → refresh
+//   • Cache > 48h old weekend → refresh
+// Saves ~60-80% of OHLCV fetches on warm runs.
+function _ohlcvCacheStaleness(cachedAt) {
+  if (!cachedAt) return Infinity;
+  const age = Date.now() - cachedAt;
+  const d = new Date();
+  const utcHour = d.getUTCHours(), utcDay = d.getUTCDay(); // 0=Sun, 6=Sat
+  const inMarketHours = utcDay >= 1 && utcDay <= 5 && utcHour >= 13 && utcHour < 22;
+  const ttl = utcDay === 0 || utcDay === 6 ? 48 * 3600e3
+            : inMarketHours                ? 4 * 3600e3
+            :                                12 * 3600e3;
+  return age - ttl; // positive = stale
+}
+
+async function getOHLCVCached(symbol, ohlcvCache) {
+  const cached = ohlcvCache[symbol];
+  if (cached && _ohlcvCacheStaleness(cached.fetchedAt) < 0) {
+    return { ...cached.data, _fromCache: true };
+  }
+  const fresh = await getOHLCV(symbol, '12mo');
+  // Only cache if we got a usable dataset
+  if (fresh.closes && fresh.closes.length >= 60) {
+    ohlcvCache[symbol] = { fetchedAt: Date.now(), data: fresh };
+  }
+  return { ...fresh, _fromCache: false };
+}
+
 // ── VCP (Volatility Contraction Pattern) — Minervini base-count detector ──
 // Real Minervini-style analysis: scan price history backwards looking for
 // "bases" (consolidation periods), count them since last deep correction,
@@ -969,7 +1000,10 @@ async function scanUS() {
     SCREENER_IDS.map(id => fetchScreener(id, 50))
   );
 
-  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL, ...RUSSELL_EXTENDED]);
+  // 2026-05-16: dropped RUSSELL_EXTENDED — 900 tickers of mid-tail noise added
+  // ~15 min runtime for marginal alpha (most never become leaders). Screeners
+  // and universe_memory catch the dynamic small/mid caps that actually matter.
+  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL]);
   // Track which screener(s) surfaced each ticker so we can save to memory below.
   const todaySources = new Map(); // ticker → Set<screenerId>
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -1030,24 +1064,27 @@ async function scanUS() {
   const allSymbols = [...universe].sort(() => Math.random() - 0.5);
   console.log(`  Universe: ${allSymbols.length} symbols`);
 
-  // 2. SPY + sector benchmarks
+  // Load OHLCV cache once — used in steps 2 and 3.
+  const ohlcvCache = loadJSON('ohlcv_cache.json', {});
+
+  // 2. SPY + sector benchmarks (now also cached via OHLCV cache)
   console.log('\n[2] Fetching benchmarks...');
   let benchReturn = 0;
   const sectorBenchmarks = {}; // sym → ret12_1
 
   const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN'];
   try {
-    const spy = await getOHLCV('SPY', '12mo');
+    const spy = await getOHLCVCached('SPY', ohlcvCache);
     const n = spy.closes.length;
     benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
-    console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}%`);
+    console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}% ${spy._fromCache ? '(cache)' : ''}`);
   } catch (e) { console.warn(`  SPY failed: ${e.message}`); }
 
-  // Fetch sector ETF returns for relative sector RS (non-blocking, best-effort)
+  // Fetch sector ETF returns for relative sector RS (cached)
   try {
     const sectorResults = await Promise.allSettled(
       SECTOR_ETFS_SCAN.map(async sym => {
-        const { closes } = await getOHLCV(sym, '12mo');
+        const { closes } = await getOHLCVCached(sym, ohlcvCache);
         const n = closes.length;
         return { sym, ret: (closes[Math.max(0, n - 21)] - closes[0]) / closes[0] * 100 };
       })
@@ -1059,9 +1096,10 @@ async function scanUS() {
   } catch(e) { console.warn('  Sector benchmarks failed:', e.message); }
 
   // 3. Scan all symbols
-  // 2026-05-16: batch 15 → 25 to compress OHLCV phase by ~40%.
-  const BATCH = 25, BATCH_DELAY = 350;
-  console.log(`\n[3] Scanning ${allSymbols.length} symbols (batch=${BATCH})...`);
+  // 2026-05-16: batch 25 + OHLCV cache with TTL (warm runs ~70% hit).
+  const BATCH = 25, BATCH_DELAY = 250;
+  let ohlcvHits = 0, ohlcvFetches = 0;
+  console.log(`\n[3] Scanning ${allSymbols.length} symbols (batch=${BATCH}, cache=${Object.keys(ohlcvCache).length})...`);
 
   const leaders   = [];  // confirmed momentum (12-1mo RS)
   const discoCand = [];  // acceleration discovery (3-mo accel)
@@ -1070,7 +1108,9 @@ async function scanUS() {
     const batch = allSymbols.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, highs, lows, volumes, meta } = await getOHLCV(sym, '12mo');
+        const ohlcv = await getOHLCVCached(sym, ohlcvCache);
+        if (ohlcv._fromCache) ohlcvHits++; else ohlcvFetches++;
+        const { closes, highs, lows, volumes, meta } = ohlcv;
         // Need at least 3 months of data; leaders need 12mo
         if (closes.length < 60) return null;
 
@@ -1139,9 +1179,13 @@ async function scanUS() {
       if (v.isDiscovery) discoCand.push(v);
     });
 
-    process.stdout.write(`  ${Math.min(i + BATCH, allSymbols.length)}/${allSymbols.length} (L:${leaders.length} D:${discoCand.length})\r`);
-    if (i + BATCH < allSymbols.length) await DELAY(BATCH_DELAY);
+    process.stdout.write(`  ${Math.min(i + BATCH, allSymbols.length)}/${allSymbols.length} (L:${leaders.length} D:${discoCand.length} cache=${ohlcvHits})\r`);
+    // Adaptive delay: only sleep if we actually hit network this batch
+    const batchFetched = settled.filter(s => s.status === 'fulfilled' && s.value).length;
+    if (i + BATCH < allSymbols.length && batchFetched > BATCH * 0.3) await DELAY(BATCH_DELAY);
   }
+  console.log(`\n  OHLCV cache: ${ohlcvHits} hits, ${ohlcvFetches} fetches`);
+  saveJSON('ohlcv_cache.json', ohlcvCache);
 
   console.log(`\n  Leaders: ${leaders.length} | Discovery candidates: ${discoCand.length}`);
   if (leaders.length === 0) { console.error('No leaders — aborting'); return; }

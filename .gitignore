@@ -1,0 +1,17 @@
+# OS / IDE
+.DS_Store
+.claude/
+*.swp
+
+# Large transient caches (kept in GitHub Actions cache, not git)
+data/ohlcv_cache.json
+
+# Local-only experimental dirs
+smart-stock/
+trade-guide/
+short-term-enhancement-instructions.md
+smart-stock-source.html
+serve.rb
+
+# Node
+node_modules/
