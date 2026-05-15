@@ -1476,6 +1476,135 @@ function detectChartPatterns(closes, highs, lows) {
  return patterns;
 }
 
+// ============ VCP BASE-COUNT (Minervini) ============
+// Port of scripts/scan.js calcVCPv2. Detects base structure & contraction quality.
+// Output: { vcpScore (0-6), baseNumber (1-5+), vcpDepth%, pivotPrice (breakout trigger),
+//           baseDays, baseStartIdx (days back), priorPullbackPct }
+function calcVCPBase(closes, highs, lows, volumes) {
+ const empty = { vcpScore: 0, baseNumber: 0, vcpDepth: null,
+                 pivotPrice: null, baseDays: 0, baseStartIdx: null,
+                 priorPullbackPct: null };
+ const n = (closes||[]).length;
+ if (n < 60) return empty;
+ if (!highs || highs.length < n) return empty;
+ if (!lows  || lows.length  < n) return empty;
+ const vols = volumes || [];
+
+ const MAX_BASE_LEN = 60, MIN_BASE_LEN = 5, MAX_DEPTH = 0.18, UNDERCUT_TOL = 0.05;
+ const avgVolWin = (s, e) => {
+  if (vols.length < e) return 0;
+  let sum = 0, cnt = 0;
+  for (let i = s; i < e; i++) { const v = vols[i]; if (v != null && isFinite(v)) { sum += v; cnt++; } }
+  return cnt > 0 ? sum / cnt : 0;
+ };
+
+ // Step 1: detect current base by walking backwards from latest bar
+ let baseStartIdx = -1;
+ let baseHi = highs[n - 1], baseLo = lows[n - 1];
+ for (let k = 1; k < Math.min(MAX_BASE_LEN, n); k++) {
+  const i = n - 1 - k;
+  if (i < 0) break;
+  const newHi = Math.max(baseHi, highs[i]);
+  const newLo = Math.min(baseLo, lows[i]);
+  const depth = newLo > 0 ? (newHi - newLo) / newLo : 0;
+  if (depth > MAX_DEPTH) { baseStartIdx = i + 1; break; }
+  if (k >= MIN_BASE_LEN && newLo < baseLo * (1 - UNDERCUT_TOL)) {
+   baseStartIdx = i + 1; break;
+  }
+  baseHi = newHi; baseLo = newLo;
+  baseStartIdx = i;
+ }
+ const baseDays = (n - 1) - baseStartIdx + 1;
+ if (baseStartIdx < 0 || baseDays < MIN_BASE_LEN) return empty;
+
+ const currentBaseDepth = baseLo > 0 ? (baseHi - baseLo) / baseLo : 0;
+ const currentBaseVol = avgVolWin(baseStartIdx, n);
+
+ // Step 2: confirm preceded by an advance (else it's just a downtrend)
+ const preStart = Math.max(0, baseStartIdx - 20);
+ let priorPullbackPct = null, preAdvanceOk = false;
+ if (preStart < baseStartIdx) {
+  const preLow = Math.min(...lows.slice(preStart, baseStartIdx));
+  const preHigh = Math.max(...highs.slice(preStart, baseStartIdx));
+  preAdvanceOk = preLow > 0 && (preHigh - preLow) / preLow >= 0.10;
+  if (preHigh > 0) priorPullbackPct = ((preHigh - baseLo) / preHigh) * 100;
+ }
+ if (!preAdvanceOk) return empty;
+
+ // Step 3: walk back through prior consolidations until 20%+ correction
+ let baseNumber = 1;
+ let scanEnd = baseStartIdx;
+ const priorBases = [];
+ while (baseNumber < 6 && scanEnd > 30) {
+  const lookBack = Math.max(0, scanEnd - 60);
+  let priorPeak = -Infinity, priorPeakIdx = -1;
+  for (let i = lookBack; i < scanEnd; i++) {
+   if (highs[i] > priorPeak) { priorPeak = highs[i]; priorPeakIdx = i; }
+  }
+  if (priorPeakIdx < 0) break;
+  let pullbackLow = Infinity;
+  for (let i = priorPeakIdx; i < scanEnd; i++) if (lows[i] < pullbackLow) pullbackLow = lows[i];
+  if (!isFinite(pullbackLow)) break;
+  const pullbackPct = priorPeak > 0 ? ((priorPeak - pullbackLow) / priorPeak) * 100 : 0;
+  if (pullbackPct >= 20) break;
+
+  let foundBaseStart = -1, foundBaseEnd = -1, foundBaseHi = 0, foundBaseLo = 0;
+  for (let s = priorPeakIdx - 1; s >= lookBack + MIN_BASE_LEN - 1; s--) {
+   let hi = -Infinity, lo = Infinity, valid = true;
+   for (let len = 0; len < MAX_BASE_LEN && s - len >= lookBack; len++) {
+    const idx = s - len;
+    hi = Math.max(hi, highs[idx]);
+    lo = Math.min(lo, lows[idx]);
+    const d = lo > 0 ? (hi - lo) / lo : 0;
+    if (d > MAX_DEPTH) {
+     if (len + 1 >= MIN_BASE_LEN) {
+      foundBaseStart = idx + 1; foundBaseEnd = s + 1;
+      foundBaseHi = -Infinity; foundBaseLo = Infinity;
+      for (let i = foundBaseStart; i < foundBaseEnd; i++) {
+       if (highs[i] > foundBaseHi) foundBaseHi = highs[i];
+       if (lows[i]  < foundBaseLo) foundBaseLo = lows[i];
+      }
+     }
+     valid = false; break;
+    }
+   }
+   if (foundBaseStart >= 0) break;
+   if (valid && s - lookBack + 1 >= MIN_BASE_LEN) {
+    foundBaseStart = lookBack; foundBaseEnd = s + 1;
+    foundBaseHi = hi; foundBaseLo = lo; break;
+   }
+  }
+  if (foundBaseStart < 0) break;
+  priorBases.push({ start: foundBaseStart, end: foundBaseEnd,
+                    hi: foundBaseHi, lo: foundBaseLo,
+                    pullbackPct, avgVol: avgVolWin(foundBaseStart, foundBaseEnd) });
+  baseNumber++;
+  scanEnd = foundBaseStart;
+ }
+
+ // Step 4: score (Base 1 = 4 best, Base 4+ = 1 red flag)
+ const baseScores = { 1: 4, 2: 3, 3: 2, 4: 1, 5: 1 };
+ let score = baseScores[baseNumber] || 1;
+ const prevBase = priorBases[0];
+ // Bonus: tighter pullback than prior base
+ if (prevBase && priorPullbackPct != null && prevBase.pullbackPct > 0
+     && priorPullbackPct < prevBase.pullbackPct) score++;
+ // Bonus: volume drying up in current base
+ if (prevBase && prevBase.avgVol > 0 && currentBaseVol > 0
+     && currentBaseVol < prevBase.avgVol) score++;
+ score = Math.max(0, Math.min(6, score));
+
+ return {
+  vcpScore: score,
+  baseNumber,
+  vcpDepth: Math.round(currentBaseDepth * 100),
+  pivotPrice: +baseHi.toFixed(2),
+  baseDays,
+  baseStartIdx: (n - 1) - baseStartIdx,
+  priorPullbackPct: priorPullbackPct != null ? +priorPullbackPct.toFixed(1) : null,
+ };
+}
+
 // ============ TECHNICAL ANALYSIS ============
 function technicalAnalysis(closes, highs, lows, volumes, price) {
  const ma5 = sma(closes, 5), ma20 = sma(closes, 20), ma60 = sma(closes, 60);
@@ -1592,7 +1721,12 @@ function technicalAnalysis(closes, highs, lows, volumes, price) {
 
  score = Math.max(-100, Math.min(100, score));
  let sig = score >= 40 ? 'strong-buy' : score >= 15 ? 'buy' : score <= -40 ? 'strong-sell' : score <= -15 ? 'sell' : 'hold';
- return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig, ema8, ema21, vwap: vwapV, fib, pivot, obv: obvV, ichimoku: ichV };
+
+ // VCP base-count analysis (Minervini) — null-safe
+ let vcpInfo = null;
+ try { vcpInfo = calcVCPBase(closes, highs, lows, volumes); } catch (e) { vcpInfo = null; }
+
+ return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig, ema8, ema21, vwap: vwapV, fib, pivot, obv: obvV, ichimoku: ichV, vcp: vcpInfo };
 }
 
 // ============ VALUE ANALYSIS ============
