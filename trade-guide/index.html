@@ -314,27 +314,80 @@ td{text-wrap:pretty}
 .fill-hint.show{display:block}
 
 /* Mobile */
+/* ── Mobile Overlay Drawer ── */
+#mob-overlay{
+  display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(2px);
+  transition:opacity .25s ease;
+}
+#mob-overlay.open{display:block}
+#mob-menu-btn{
+  display:none;width:38px;height:38px;border-radius:8px;
+  align-items:center;justify-content:center;
+  background:var(--surface2);color:var(--text);font-size:1.25rem;
+  border:1px solid var(--border);transition:all var(--trans);flex-shrink:0;
+}
+#mob-menu-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
 @media(max-width:768px){
-  #app{display:block;width:100vw;overflow-x:hidden}
-  #sidebar{display:none}
-  #study-view{display:block;width:100vw;overflow-x:hidden}
-  #content{display:block;flex:none;padding:20px 16px;width:100vw;max-width:100vw;overflow-x:hidden}
+  #mob-menu-btn{display:flex}
   #sidebar-toggle{display:none!important}
-  .card{overflow:hidden;padding:20px 18px}
+
+  /* Sidebar 變成左側滑出抽屜 */
+  #sidebar{
+    position:fixed;top:0;left:-300px;bottom:0;z-index:200;
+    width:285px;padding:16px 0;padding-top:calc(var(--nav-h) + 12px);
+    overflow-y:auto;height:100vh;
+    background:var(--surface);border-right:1px solid var(--border);
+    box-shadow:4px 0 24px rgba(0,0,0,.18);
+    transition:left .28s cubic-bezier(.4,0,.2,1);
+  }
+  #sidebar.mob-open{left:0}
+  body.sidebar-collapsed #sidebar{left:-300px}
+
+  /* Content 全寬，好閱讀 */
+  #app{display:block;width:100vw;overflow-x:hidden}
+  #study-view{display:block;width:100vw;overflow-x:hidden}
+  #content{
+    display:block;flex:none;
+    padding:20px 16px 40px;
+    width:100vw;max-width:100vw;overflow-x:hidden;
+  }
+
+  /* 卡片手機優化 */
+  .card{overflow:hidden;padding:18px 16px;margin-bottom:14px}
+  .card h3{font-size:1rem;margin-bottom:10px}
+  .card p,.card li{font-size:.93rem;line-height:1.75}
+
+  /* Chapter 標題 */
+  .chapter h2{font-size:1.35rem}
+  .chapter .subtitle{font-size:.9rem;margin-bottom:20px}
+
+  /* 表格橫向滾動 */
   table{display:block;width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   table tbody{display:table;width:100%;min-width:520px}
-  .q-card{padding:20px 16px}
+
+  /* Quiz */
+  .q-card{padding:18px 14px}
   .q-text{font-size:.97rem}
-  #quiz-view{padding:20px 12px}
+  #quiz-view{padding:16px 12px}
   .fill-wrap{flex-direction:column}
   .info-grid,.payment-flow-grid,.scenario-grid,.template-grid{grid-template-columns:1fr}
+
+  /* highlight / tag 間距 */
+  .highlight{padding:11px 14px;font-size:.9rem}
+  .tag{font-size:.72rem;padding:2px 8px}
 }
 </style>
 </head>
 <body>
 
+<!-- Mobile overlay -->
+<div id="mob-overlay" onclick="closeMobSidebar()"></div>
+
 <!-- NAV -->
 <nav id="nav">
+  <button id="mob-menu-btn" onclick="toggleMobSidebar()" title="章節選單" aria-label="開啟章節選單">☰</button>
   <div class="logo">廣澤<span>外貿培訓</span></div>
   <div class="mode-tabs">
     <button class="mode-tab active" id="tab-study" onclick="setMode('study')">📖 學習</button>
@@ -2217,7 +2270,7 @@ function toggleTheme() {
   document.getElementById('theme-btn').textContent = t==='dark' ? '☀️' : '🌙';
 })();
 
-// ── SIDEBAR ───────────────────────────────────────────────────────────────
+// ── SIDEBAR (desktop) ─────────────────────────────────────────────────────
 function syncSidebarToggleLabel() {
   const btn = document.getElementById('sidebar-toggle');
   if(!btn) return;
@@ -2240,11 +2293,29 @@ function toggleSidebar() {
   syncSidebarToggleLabel();
 })();
 
+// ── MOBILE DRAWER ─────────────────────────────────────────────────────────
+function toggleMobSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mob-overlay');
+  const isOpen = sidebar.classList.toggle('mob-open');
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobSidebar() {
+  document.getElementById('sidebar').classList.remove('mob-open');
+  document.getElementById('mob-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 // ── STUDY ──────────────────────────────────────────────────────────────────
 function showChapter(idx) {
   currentChapter = idx;
   document.querySelectorAll('.chapter').forEach((c,i)=>c.classList.toggle('active',i===idx));
   document.querySelectorAll('.ch-link').forEach(c=>c.classList.toggle('active', Number(c.dataset.chapter)===idx));
+  // 手機：選完章節後自動關閉抽屜
+  closeMobSidebar();
+  window.scrollTo({top:0, behavior:'smooth'});
   document.getElementById('content').scrollTop = 0;
 }
 

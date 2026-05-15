@@ -1,9 +1,11 @@
 name: AI Stock Forward Analysis
 
 on:
-  # Auto-run after every successful stock scan
+  # Auto-run AFTER News Sentiment Scan completes — ensures news data is
+  # fresh when ai_analysis.js builds catalyst-aware prompts.
+  # Chain: Stock Scan → News Scan → AI Analysis (this) → Backtest (separate)
   workflow_run:
-    workflows: ["Stock RS Leader Scan"]
+    workflows: ["News Sentiment Scan"]
     types: [completed]
 
   # On-demand trigger (for testing / manual refresh)
@@ -22,10 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # Only run when triggered by a successful scan (or manual)
+    # Run regardless of news-scan outcome — fresh news is preferred but not required.
+    # If news-scan fails, ai_analysis still works using older cached news data.
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure'
 
     steps:
       - name: Checkout (always use latest — scan just committed)
@@ -59,6 +63,12 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/ai_analysis.js tw
+
+      - name: Generate TW market narrative
+        if: ${{ github.event.inputs.market == 'tw' || github.event.inputs.market == 'all' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/market_narrative.js tw
 
       - name: Commit analysis results
         run: |

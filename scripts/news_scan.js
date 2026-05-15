@@ -112,11 +112,13 @@ Return ONLY valid JSON, no markdown:
 
 // ── Main ─────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('\n=== News Sentiment Scan (Yahoo + Claude Haiku) ===');
+  const market = (process.argv[2] || 'us').toLowerCase();
+  console.log('\n=== News Sentiment Scan (Yahoo + Claude Haiku) — ' + market.toUpperCase() + ' ===');
   console.log(`Start: ${new Date().toISOString()}`);
 
-  const scan = loadJSON('us_scan.json', null);
-  if (!scan) { console.error('No us_scan.json found — run scan.js first'); return; }
+  const scanFile = `${market}_scan.json`;
+  const scan = loadJSON(scanFile, null);
+  if (!scan) { console.error('No ' + scanFile + ' found — run scan.js first'); return; }
 
   // Top 20 by composite score across leaders+discoveries
   const merged = [
@@ -161,7 +163,7 @@ async function main() {
     targetCount: ranked.length,
     bySymbol,
   };
-  saveJSON('news_sentiment.json', output);
+  saveJSON(`${market}_news_sentiment.json`, output);
 
   const bullish = Object.values(bySymbol).filter(b => b.sentiment === 'bullish').length;
   const bearish = Object.values(bySymbol).filter(b => b.sentiment === 'bearish').length;

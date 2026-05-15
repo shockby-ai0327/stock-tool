@@ -368,7 +368,13 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div class="main" style="padding-bottom:44px">
  <div id="page-dashboard" class="page active">
- <h2 style="margin-bottom:4px;font-size:20px;font-weight:600;letter-spacing:-.3px">今日市場總覽</h2>
+ <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+ <h2 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-.3px">今日市場總覽</h2>
+ <div style="display:flex;gap:6px;font-size:11px">
+  <button id="dash-mode-compact" onclick="setDashboardMode('compact')" style="padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">精簡模式</button>
+  <button id="dash-mode-full" onclick="setDashboardMode('full')" style="padding:5px 10px;border-radius:6px;background:var(--accent);border:1px solid var(--accent);color:#fff;cursor:pointer">完整模式</button>
+ </div>
+ </div>
  <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
  <div style="margin-bottom:20px">
  <div style="display:flex;gap:8px">
@@ -1048,6 +1054,18 @@ async function analyzeStock() {
  _lastAnalyzedTicker = ticker;
  const rd = document.getElementById('stock-result');
  rd.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在分析 ' + ticker + ' ...</p></div>';
+ // Bug 4: auto-load scan cache if user landed directly on stock page without
+ // visiting dashboard first — otherwise catalyst bar, RS weakness, AI badges
+ // would all be silently empty.
+ if (!window._rsLeaderCache || !window._rsLeaderCache.length) {
+  const isTW = ticker.endsWith('.TW') || ticker.endsWith('.TWO');
+  fetchPrecomputedScan(isTW ? 'tw' : 'us').then(pre => {
+   if (pre && pre.data) {
+    if (pre.data.leaders)        window._rsLeaderCache       = pre.data.leaders;
+    if (pre.data.tripleResonance) window._tripleResonanceCache = pre.data.tripleResonance;
+   }
+  }).catch(() => {});
+ }
  try {
  // Fetch chart + fundamentals in parallel
  const [chart, fundamentals] = await Promise.all([
@@ -1680,7 +1698,33 @@ function calcVCPBase(closes, highs, lows, volumes) {
 }
 
 // ============ TECHNICAL ANALYSIS ============
+// Issue 21 — memoize TA results: same input arrays + price = same TA.
+// Switching K-line timeframe in the UI triggers re-renders that previously
+// re-ran the entire VCP + GMMA + Volume Profile pipeline. Memoization cuts
+// repeat work to a hash lookup.
+const _taCache = new Map();
+const _TA_CACHE_MAX = 20;  // bounded — don't leak memory on many tickers
+function _taCacheKey(closes, price) {
+ const n = closes.length;
+ if (n === 0) return 'empty';
+ // Fingerprint = length + first + middle + last + price
+ // Cheap and unique enough for browser-side caching
+ return n + '|' + closes[0] + '|' + closes[Math.floor(n/2)] + '|' + closes[n-1] + '|' + price;
+}
+function _taCachePut(key, val) {
+ if (_taCache.size >= _TA_CACHE_MAX) _taCache.delete(_taCache.keys().next().value);
+ _taCache.set(key, val);
+}
+
 function technicalAnalysis(closes, highs, lows, volumes, price) {
+ const _memoKey = _taCacheKey(closes, price);
+ if (_taCache.has(_memoKey)) return _taCache.get(_memoKey);
+ const _result = _technicalAnalysisCore(closes, highs, lows, volumes, price);
+ _taCachePut(_memoKey, _result);
+ return _result;
+}
+
+function _technicalAnalysisCore(closes, highs, lows, volumes, price) {
  const ma5 = sma(closes, 5), ma20 = sma(closes, 20), ma60 = sma(closes, 60);
  const e12 = emaArr(closes, 12), e26 = emaArr(closes, 26);
  const macdLine = []; for (let i = 0; i < e12.length; i++) if (e12[i] != null && e26[i] != null) macdLine.push(e12[i] - e26[i]);
@@ -4058,12 +4102,38 @@ function _showMindsetModal(analyzed, totalWithNotes) {
  document.body.appendChild(ov);
 }
 
+// Wave 5.5 backfill: stamp entryRS on historical buy entries (one-time migration)
+// Best-effort: matches by ticker against current _rsLeaderCache. Old positions
+// of stocks no longer in cache stay null (we can't know their historical RS).
+async function _backfillEntryRS() {
+ const j = getJ();
+ if (!j.length) return;
+ const buysNeedingRS = j.filter(e => e.action === 'buy' && e.entryRS == null);
+ if (!buysNeedingRS.length) return;
+ // Ensure scan cache is loaded
+ if (!window._rsLeaderCache || !window._rsLeaderCache.length) {
+  try {
+   const pre = await fetchPrecomputedScan('us');
+   if (pre && pre.data && pre.data.leaders) window._rsLeaderCache = pre.data.leaders;
+  } catch(e) {}
+ }
+ if (!window._rsLeaderCache) return;
+ let updated = 0;
+ for (const e of buysNeedingRS) {
+  const match = window._rsLeaderCache.find(s => s.symbol === e.ticker);
+  if (match && match.rsRating != null) { e.entryRS = match.rsRating; e._entryRSBackfilled = true; updated++; }
+ }
+ if (updated > 0) saveJ(j);
+}
+
 function renderJournal() {
  const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
  emp.style.display = 'none';
  window._jNotesMap = {};
  j.forEach(e => { window._jNotesMap[e.id] = e.notes || ''; if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
+ // Trigger one-time entryRS backfill in background
+ _backfillEntryRS();
  const tBuy = j.filter(e => e.action === 'buy').reduce((s, e) => s + e.net, 0);
  const tSell = j.filter(e => e.action === 'sell').reduce((s, e) => s + e.net, 0);
  const tFee = j.reduce((s, e) => s + (e.fee || 0), 0), pnl = tSell - tBuy;
@@ -7536,7 +7606,8 @@ async function renderDashboard(forceRescan) {
  renderPreMarketCard(marketData);
  fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
  renderDashHoldings(); // 持倉動態
- loadMarketNarrative('us'); // Wave 6 — Claude AI 市場敘事
+ // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
+ loadMarketNarrative(window._dashboardMarket || 'us');
  // 6. T交易精選（15 分鐘快取，獨立載入）
  renderDashTTrading();
  // 7. 國際新聞摘要（10 分鐘快取）
@@ -8964,6 +9035,42 @@ function _updateNotifBtn() {
   }
 }
 
+// ── Dashboard compact / full mode (Issue 14) ─────────────────────────────
+// Compact = hide non-actionable cards (events, premarket, news), keep:
+//   market narrative, triple-resonance, RS leader, alerts, holdings
+// Persists in localStorage.
+const DASH_MODE_KEY = 'dash_mode';
+const COMPACT_HIDE_IDS = [
+ 'dash-events-card',     // calendar (read-once info)
+ 'dash-premarket',       // premarket card (large)
+ 'dash-news-card',       // news (browse, not actionable)
+];
+
+function getDashboardMode() {
+ try { return localStorage.getItem(DASH_MODE_KEY) || 'full'; } catch(e) { return 'full'; }
+}
+function setDashboardMode(mode) {
+ try { localStorage.setItem(DASH_MODE_KEY, mode); } catch(e) {}
+ _applyDashboardMode(mode);
+}
+function _applyDashboardMode(mode) {
+ mode = mode || getDashboardMode();
+ const compactBtn = document.getElementById('dash-mode-compact');
+ const fullBtn    = document.getElementById('dash-mode-full');
+ if (compactBtn && fullBtn) {
+  const active = 'background:var(--accent);border-color:var(--accent);color:#fff';
+  const idle   = 'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted)';
+  compactBtn.setAttribute('style', 'padding:5px 10px;border-radius:6px;cursor:pointer;' + (mode === 'compact' ? active : idle));
+  fullBtn.setAttribute('style',    'padding:5px 10px;border-radius:6px;cursor:pointer;' + (mode === 'full'    ? active : idle));
+ }
+ for (const id of COMPACT_HIDE_IDS) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = mode === 'compact' ? 'none' : '';
+ }
+}
+// Apply on load
+setTimeout(() => _applyDashboardMode(), 500);
+
 // ── Conditional Alerts (Wave 7.2) ─────────────────────────────────────────
 // User defines conditions; checked every 5 minutes; triggers push + toast.
 // Storage: localStorage['stock_alerts'] = [{id, type, symbol, condition, value, created, triggered}]
@@ -8984,10 +9091,11 @@ function showAlertForm() {
     c.innerHTML = '<div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;display:grid;grid-template-columns:1fr 1.5fr 1fr 1.2fr auto;gap:8px;align-items:center">' +
       '<select id="alert-type" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">' +
         '<option value="price">股價</option>' +
-        '<option value="rsi">RSI</option>' +
+        '<option value="rsi">RSI (14)</option>' +
         '<option value="rsrank">RS Rating</option>' +
+        '<option value="below_ma">價格/MA20 比（< 1.0 = 跌破）</option>' +
         '<option value="vix">VIX</option>' +
-        '<option value="portfolio_dd">帳戶回撤</option>' +
+        '<option value="portfolio_dd">帳戶回撤 %</option>' +
       '</select>' +
       '<input id="alert-symbol" placeholder="代號 (VIX/帳戶不需要)" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;text-transform:uppercase">' +
       '<select id="alert-cond" style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">' +
@@ -9041,7 +9149,7 @@ function renderAlertsPanel() {
   const activeOnes  = alerts.filter(a => !a.triggered);
   const triggered = alerts.filter(a => a.triggered).slice(-10).reverse();
 
-  const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤' };
+  const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤', below_ma: '價格/MA20' };
   const condLabel = { '>': '大於', '<': '小於', 'crosses-above': '向上突破', 'crosses-below': '向下跌破' };
 
   if (!activeOnes.length) {
@@ -9108,6 +9216,25 @@ async function checkAlerts() {
             current = peak > 0 ? (peak - cur) / peak * 100 : 0;
           }
         } catch(e) {}
+      } else if (a.type === 'rsi' && a.symbol) {
+        // Compute RSI from recent closes
+        try {
+          const chart = await yfChart(a.symbol, '3mo', '1d');
+          const closes = (chart?.indicators?.quote?.[0]?.close || []).filter(v => v != null);
+          if (closes.length >= 15) current = rsi(closes, 14);
+        } catch (e) {}
+      } else if (a.type === 'below_ma' && a.symbol) {
+        // "price below MA20" — sets `current` = price/MA20 ratio (1.0 = at MA20)
+        // Combined with condition '<' and value 1.0 = "price below MA20"
+        try {
+          const chart = await yfChart(a.symbol, '3mo', '1d');
+          const closes = (chart?.indicators?.quote?.[0]?.close || []).filter(v => v != null);
+          if (closes.length >= 20) {
+            const cur = closes[closes.length - 1];
+            const ma  = sma(closes, 20);
+            if (ma > 0) current = +(cur / ma).toFixed(4);
+          }
+        } catch (e) {}
       }
     } catch (e) { continue; }
     if (current == null) continue;
@@ -9124,7 +9251,7 @@ async function checkAlerts() {
     if (hit) {
       a.triggered = new Date().toISOString();
       const condLabel = { '>': '大於', '<': '小於', 'crosses-above': '向上突破', 'crosses-below': '向下跌破' }[a.condition];
-      const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤' }[a.type];
+      const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤', below_ma: '價格/MA20' }[a.type];
       const msg = (a.symbol ? a.symbol + ' ' : '') + typeLabel + ' ' + condLabel + ' ' + a.value + ' (當前 ' + current.toFixed(2) + ')';
       showToast('🔔 ' + msg, 'success');
       try { _sendPushNotification('🔔 警報觸發', msg, a.id); } catch(e) {}
@@ -9388,10 +9515,10 @@ async function _refreshLivePrices() {
           '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + '</td>' +
           '<td style="padding:10px 8px"><div style="font-weight:700;font-size:15px">' + r.symbol + redditBadge + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + (r.name||r.symbol) + '</div>' + sigHtml + '</td>' +
           '<td style="padding:10px 8px;text-align:right"><div style="font-weight:600">$' + f(r.price) + liveDot + '</div><div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' + stopHtml + '</td>' +
-          '<td style="padding:10px 8px;text-align:center"><div style="font-size:22px;font-weight:800;color:' + scoreColor + '">' + r.rsRating + '</div><div style="font-size:10px;color:var(--muted)">RS Rating</div></td>' +
+          '<td style="padding:10px 8px;text-align:center"><div style="font-size:22px;font-weight:800;color:' + scoreColor + '">' + r.rsRating + '</div><div style="font-size:10px;color:var(--muted);cursor:help" title="相對強度評等（1-99）：個股 12-1 月報酬率 vs 整體市場百分位。≥80=強勢、≥90=領先群、95+=極少數頂尖。IBD CAN SLIM 經典指標。">RS Rating ⓘ</div></td>' +
           '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
           '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
-          '<td style="padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:800;color:' + scoreColor + '">' + r.compositeScore + '</div><div style="font-size:10px;color:var(--muted)">綜合分</div></td>' +
+          '<td style="padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:800;color:' + scoreColor + '">' + r.compositeScore + '</div><div style="font-size:10px;color:var(--muted);cursor:help" title="綜合分 = RS Rating×50% + 量能擴張×30% + 動量×20%（+ 加速度 ±3 紅利）。≥70 為穩健領袖；≥85 動能爆發。權重為啟發式，非嚴格回測權重。">綜合分 ⓘ</div></td>' +
           '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;font-weight:600">進場指引</button></td>' +
         '</tr>';
       }).join('');
@@ -9999,13 +10126,13 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       '</td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:22px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.rsRating + '</div>' +
-        '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
+        '<div style="font-size:10px;color:var(--muted);cursor:help" title="相對強度評等（1-99）：個股 12-1 月報酬率 vs 整體市場百分位。≥80=強勢、≥90=領先群、95+=極少數頂尖。IBD CAN SLIM 經典指標。">RS Rating ⓘ</div>' +
       '</td>' +
       '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
-        '<div style="font-size:10px;color:var(--muted)">綜合分</div>' +
+        '<div style="font-size:10px;color:var(--muted);cursor:help" title="綜合分 = RS Rating×50% + 量能擴張×30% + 動量×20%（+ 加速度 ±3 紅利）。≥70 為穩健領袖；≥85 動能爆發。權重為啟發式，非嚴格回測權重。">綜合分 ⓘ</div>' +
       '</td>' +
       '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;white-space:nowrap;font-weight:600">進場指引</button></td>' +
     '</tr>';
@@ -10503,7 +10630,7 @@ async function renderStrategyPerformance() {
         '<th style="padding:8px;text-align:center">勝率</th>' +
         '<th style="padding:8px;text-align:center">平均報酬</th>' +
         '<th style="padding:8px;text-align:center">盈虧比</th>' +
-        '<th style="padding:8px;text-align:center">Sharpe</th>' +
+        '<th style="padding:8px;text-align:center;cursor:help" title="Sharpe Ratio: 平均報酬÷波動率（年化）。<0.5 弱、0.5-1 普通、1-2 良好、>2 卓越。已調整風險的報酬指標。">Sharpe ⓘ</th>' +
         '<th style="padding:8px;text-align:center">平均持有</th>' +
       '</tr></thead>' +
       '<tbody>' + rows + '</tbody>' +
@@ -10679,7 +10806,7 @@ function _showEarningsRadarTab() {
       '</td>' +
       '<td style="padding:10px 8px;text-align:center">' +
         '<div style="font-weight:700;color:' + rsColor + '">' + (r.rsRating || '—') + '</div>' +
-        '<div style="font-size:10px;color:var(--muted)">RS Rating</div>' +
+        '<div style="font-size:10px;color:var(--muted);cursor:help" title="相對強度評等（1-99）：個股 12-1 月報酬率 vs 整體市場百分位。≥80=強勢、≥90=領先群、95+=極少數頂尖。IBD CAN SLIM 經典指標。">RS Rating ⓘ</div>' +
       '</td>' +
       '<td style="padding:10px 8px;font-size:11px;text-align:center">' + entryGuide(r) + '</td>' +
     '</tr>';

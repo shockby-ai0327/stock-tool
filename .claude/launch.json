@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stock-tool",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "python3 -m http.server 8080 --directory /Users/rich/Desktop/ai"],
+      "port": 8080
+    },
+    {
+      "name": "trade-guide",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "ruby -run -ehttpd /tmp/trade-guide-preview -p8081"],
+      "port": 8081
+    }
+    ,{
+      "name": "econ",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /tmp/econ-preview && python3 -m http.server 8082"],
+      "port": 8082
+    }
+  ]
+}

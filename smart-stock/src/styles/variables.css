@@ -1,0 +1,73 @@
+:root {
+  --bg: #0f1117;
+  --bg-secondary: #151820;
+  --card: #1a1d28;
+  --card-hover: #1f2333;
+  --border: #2a2d3a;
+  --border-hover: #3a3d4a;
+  --green: #00c853;
+  --green-bg: rgba(0, 200, 83, 0.12);
+  --red: #ff1744;
+  --red-bg: rgba(255, 23, 68, 0.12);
+  --accent: #536dfe;
+  --accent-bg: rgba(83, 109, 254, 0.12);
+  --accent-hover: #6d85ff;
+  --yellow: #ffc107;
+  --yellow-bg: rgba(255, 193, 7, 0.12);
+  --text: #e0e0e0;
+  --text-dim: #9e9e9e;
+  --text-muted: #666;
+  --heading: #ffffff;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --transition: 0.2s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
