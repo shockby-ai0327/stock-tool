@@ -560,6 +560,8 @@ firebase.initializeApp(_fbConfig);
  <div id="journal-tab-holdings" style="display:none">
  <!-- Wave 5.4: Portfolio drawdown analytics -->
  <div id="portfolio-drawdown-card"></div>
+ <!-- Wave 5.2: Holdings correlation matrix -->
+ <div id="dash-correlation"></div>
  <div id="holdings-content"></div>
  </div>
  <div id="journal-tab-risk" style="display:none">
@@ -3337,9 +3339,128 @@ function renderDrawdownChart() {
   '</div>';
 }
 
+// ── Wave 5.2 — Holdings Correlation Matrix ───────────────────────────────
+// Computes 60-day Pearson correlation between every pair of open positions.
+// Renders as heatmap table. Flags high-correlation pairs (>0.7) as warning.
+async function renderCorrelationMatrix() {
+ const div = document.getElementById('dash-correlation');
+ if (!div) return;
+ const j = getJ();
+ if (!j.length) { div.innerHTML = ''; return; }
+ const open = calcOpenPositions(j);
+ if (open.length < 2) {
+  div.innerHTML = '<div class="card"><h3>🔗 持倉相關性</h3><div style="color:var(--muted);font-size:13px;padding:8px 0">需要 2 個以上持倉才能分析相關性（目前 ' + open.length + '）</div></div>';
+  return;
+ }
+ div.innerHTML = '<div class="card"><h3>🔗 持倉相關性</h3><div style="color:var(--muted);font-size:13px;padding:8px 0">分析中...<span class="spinner" style="width:14px;height:14px;border-width:2px;vertical-align:middle;margin-left:6px"></span></div></div>';
+
+ const tickers = open.map(([t]) => t);
+ // Fetch 60-day closes for each
+ const closesByTicker = {};
+ await Promise.all(tickers.map(async t => {
+  try {
+   const chart = await yfChart(t, '3mo', '1d');
+   const closes = (chart?.indicators?.quote?.[0]?.close || []).filter(v => v != null);
+   if (closes.length >= 30) closesByTicker[t] = closes.slice(-60);
+  } catch (e) {}
+ }));
+ const available = tickers.filter(t => closesByTicker[t]);
+ if (available.length < 2) {
+  div.innerHTML = '<div class="card"><h3>🔗 持倉相關性</h3><div style="color:var(--muted);font-size:13px;padding:8px 0">無法載入足夠的歷史價格資料</div></div>';
+  return;
+ }
+
+ // Convert to daily returns
+ const returnsByTicker = {};
+ const minLen = Math.min(...available.map(t => closesByTicker[t].length));
+ for (const t of available) {
+  const c = closesByTicker[t].slice(-minLen);
+  const r = [];
+  for (let i = 1; i < c.length; i++) r.push((c[i] - c[i-1]) / c[i-1]);
+  returnsByTicker[t] = r;
+ }
+
+ // Pearson correlation
+ function corr(a, b) {
+  const n = Math.min(a.length, b.length);
+  if (n < 2) return null;
+  let sa = 0, sb = 0;
+  for (let i = 0; i < n; i++) { sa += a[i]; sb += b[i]; }
+  const ma = sa / n, mb = sb / n;
+  let cov = 0, va = 0, vb = 0;
+  for (let i = 0; i < n; i++) {
+   const da = a[i] - ma, db = b[i] - mb;
+   cov += da * db; va += da * da; vb += db * db;
+  }
+  const denom = Math.sqrt(va * vb);
+  return denom > 0 ? cov / denom : null;
+ }
+
+ // Build matrix
+ const matrix = {};
+ for (const t1 of available) {
+  matrix[t1] = {};
+  for (const t2 of available) {
+   matrix[t1][t2] = t1 === t2 ? 1 : corr(returnsByTicker[t1], returnsByTicker[t2]);
+  }
+ }
+
+ // Find high correlation pairs (>0.7)
+ const highPairs = [];
+ for (let i = 0; i < available.length; i++) {
+  for (let k = i + 1; k < available.length; k++) {
+   const v = matrix[available[i]][available[k]];
+   if (v != null && v > 0.7) highPairs.push({ a: available[i], b: available[k], v });
+  }
+ }
+ highPairs.sort((a, b) => b.v - a.v);
+
+ // Render heatmap
+ const colorOf = (v) => {
+  if (v == null) return 'rgba(255,255,255,.05)';
+  if (v >= 0.8) return 'rgba(239,68,68,.45)';
+  if (v >= 0.5) return 'rgba(245,158,11,.32)';
+  if (v >= 0.2) return 'rgba(34,197,94,.22)';
+  if (v >= -0.2) return 'rgba(255,255,255,.07)';
+  if (v >= -0.5) return 'rgba(99,102,241,.20)';
+  return 'rgba(99,102,241,.35)';
+ };
+ const fmt = v => v == null ? '—' : v.toFixed(2);
+
+ const headerRow = '<tr><td style="padding:4px 6px"></td>' + available.map(t => '<td style="padding:4px 6px;font-weight:600;text-align:center;font-size:11px;color:var(--accent)">' + t + '</td>').join('') + '</tr>';
+ const rows = available.map(t1 => {
+  return '<tr><td style="padding:4px 6px;font-weight:600;font-size:11px;color:var(--accent)">' + t1 + '</td>' +
+   available.map(t2 => {
+    const v = matrix[t1][t2];
+    return '<td style="padding:4px 6px;text-align:center;font-size:11px;background:' + colorOf(v) + ';border-radius:3px;font-weight:600;color:' + (v != null && Math.abs(v) > 0.5 ? 'var(--text)' : 'var(--muted)') + '" title="' + t1 + ' vs ' + t2 + '">' + (t1 === t2 ? '—' : fmt(v)) + '</td>';
+   }).join('') + '</tr>';
+ }).join('');
+
+ const warningHtml = highPairs.length ?
+  '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,68,68,.08);border-left:3px solid var(--red);border-radius:6px;font-size:12px;line-height:1.7">' +
+   '<b style="color:var(--red)">⚠ 高相關性警告（>0.7）</b><br>' +
+   highPairs.slice(0, 5).map(p => '<span style="color:var(--muted)">• <b style="color:var(--text)">' + p.a + ' ↔ ' + p.b + '</b>：' + p.v.toFixed(2) + '（動向高度同步，集中風險）</span>').join('<br>') +
+  '</div>' : '';
+
+ div.innerHTML =
+  '<div class="card">' +
+   '<h3>🔗 持倉相關性矩陣 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">基於近 60 日日報酬</span></h3>' +
+   '<div style="overflow-x:auto;margin-top:10px"><table style="border-collapse:separate;border-spacing:2px;width:auto;margin:0 auto">' + headerRow + rows + '</table></div>' +
+   '<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted)">' +
+    '<span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,.45);border-radius:2px;vertical-align:middle"></span> >0.8 高相關</span>' +
+    '<span><span style="display:inline-block;width:12px;height:12px;background:rgba(245,158,11,.32);border-radius:2px;vertical-align:middle"></span> 0.5-0.8</span>' +
+    '<span><span style="display:inline-block;width:12px;height:12px;background:rgba(34,197,94,.22);border-radius:2px;vertical-align:middle"></span> 0.2-0.5 分散良好</span>' +
+    '<span><span style="display:inline-block;width:12px;height:12px;background:rgba(99,102,241,.20);border-radius:2px;vertical-align:middle"></span> 負相關（避險）</span>' +
+   '</div>' +
+   warningHtml +
+  '</div>';
+}
+
 async function renderHoldings() {
  // Wave 5.4 — render drawdown card first (independent of price fetch)
  renderDrawdownChart();
+ // Wave 5.2 — render correlation matrix (lazy, background)
+ renderCorrelationMatrix();
  const div = document.getElementById('holdings-content');
  const j = getJ();
  if (!j.length) { div.innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>尚無交易紀錄</h3><p style="color:var(--muted);margin-top:8px">新增買入紀錄後，持倉追蹤將自動計算。</p></div>'; return; }
