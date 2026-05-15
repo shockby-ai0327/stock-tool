@@ -88,6 +88,31 @@ async function yfInitSession() {
   console.log(`  YF session: cookie=${yfSession.cookie ? 'set' : 'missing'} crumb=${yfSession.crumb ? 'set' : 'missing'}`);
 }
 
+// 2026-05-16 CRITICAL FIX: split into two fetchers.
+// - yfFetchPlain: chart + screener endpoints. NO cookie. Always worked, always will.
+// - yfFetch: quoteSummary v10 only. Sends cookie + crumb required by Yahoo.
+// The Wave 1 mistake was using one cookie-bearing fetcher for everything — Yahoo's
+// chart endpoint started returning empty results when our cookie was malformed.
+async function yfFetchPlain(url, retries = 3) {
+  const headers = {
+    'User-Agent': YF_UA,
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+      if (res.status === 404) throw new Error('HTTP 404');
+      if (res.status === 429) { await DELAY((i + 1) * 2000); continue; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await DELAY(600 * (i + 1));
+    }
+  }
+}
+
 async function yfFetch(url, retries = 3) {
   const headers = {
     'User-Agent': YF_UA,
@@ -98,14 +123,12 @@ async function yfFetch(url, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
-      // 2026-05-16: fail fast on auth errors — retrying won't fix 401/403/404.
-      // Without this, every quoteSummary failure consumed 25-30s of retry waits.
+      // Fail fast on auth errors — retrying won't fix 401/403/404.
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         throw new Error(`HTTP ${res.status}`);
       }
       if (res.status === 429) {
-        const wait = (i + 1) * 2000;
-        await DELAY(wait);
+        await DELAY((i + 1) * 2000);
         continue;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -124,10 +147,10 @@ function withCrumb(url) {
   return url + (url.includes('?') ? '&' : '?') + 'crumb=' + encodeURIComponent(yfSession.crumb);
 }
 
-// OHLCV via v8/finance/chart — no auth required
+// OHLCV via v8/finance/chart — no auth required (use plain fetcher, no cookie)
 async function getOHLCV(symbol, range = '12mo') {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}&includePrePost=false`;
-  const data = await yfFetch(url);
+  const data = await yfFetchPlain(url);
   const result = data?.chart?.result?.[0];
   if (!result) throw new Error('no data');
   const oq = result.indicators.quote[0];
@@ -565,7 +588,7 @@ async function lookupQuoteWithCache(symbol, cache) {
 async function fetchScreener(scrId, count = 50) {
   try {
     const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=${scrId}&start=0&count=${count}&formatted=false`;
-    const data = await yfFetch(url);
+    const data = await yfFetchPlain(url);
     const quotes = data?.finance?.result?.[0]?.quotes || [];
     return quotes.map(q => q.symbol).filter(s => s && s.length <= 5 && !/[./]/.test(s));
   } catch (e) {
@@ -988,22 +1011,26 @@ async function scanUS() {
   console.log('\n[1] Building universe...');
 
   // Yahoo predefined screeners — broader coverage. Some may 404; fetchScreener returns [] on failure.
-  // 2026-05-16: trimmed from 7×100 to 4×50 to fit under 25min timeout on cold start.
   const SCREENER_IDS = [
     'day_gainers',
     'small_cap_gainers',
     'growth_technology_stocks',
     'most_actives',
+    'undervalued_growth_stocks',
+    'aggressive_small_caps',
+    'undervalued_large_caps',
   ];
 
   const screenerResults = await Promise.allSettled(
-    SCREENER_IDS.map(id => fetchScreener(id, 50))
+    SCREENER_IDS.map(id => fetchScreener(id, 75))
   );
 
-  // 2026-05-16: dropped RUSSELL_EXTENDED — 900 tickers of mid-tail noise added
-  // ~15 min runtime for marginal alpha (most never become leaders). Screeners
-  // and universe_memory catch the dynamic small/mid caps that actually matter.
-  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL]);
+  // 2026-05-16 (round 2): RUSSELL_EXTENDED restored.
+  // Original slowness was actually the cookie-bearing yfFetch corrupting the chart
+  // endpoint responses (returned 200 OK + empty data, masquerading as slow).
+  // With the plain fetcher now in use for chart, even 1500-ticker scans finish
+  // in 3-5 min cold start and ~1-2 min warm (OHLCV cache hits).
+  const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL, ...RUSSELL_EXTENDED]);
   // Track which screener(s) surfaced each ticker so we can save to memory below.
   const todaySources = new Map(); // ticker → Set<screenerId>
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -1096,8 +1123,9 @@ async function scanUS() {
   } catch(e) { console.warn('  Sector benchmarks failed:', e.message); }
 
   // 3. Scan all symbols
-  // 2026-05-16: batch 25 + OHLCV cache with TTL (warm runs ~70% hit).
-  const BATCH = 25, BATCH_DELAY = 250;
+  // 2026-05-16: batch 50 + OHLCV cache with TTL (warm runs ~70% hit).
+  // Chart endpoint is plain (no cookie), can sustain higher concurrency.
+  const BATCH = 50, BATCH_DELAY = 100;
   let ohlcvHits = 0, ohlcvFetches = 0;
   console.log(`\n[3] Scanning ${allSymbols.length} symbols (batch=${BATCH}, cache=${Object.keys(ohlcvCache).length})...`);
 
