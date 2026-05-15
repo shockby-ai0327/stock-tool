@@ -1726,7 +1726,76 @@ function technicalAnalysis(closes, highs, lows, volumes, price) {
  let vcpInfo = null;
  try { vcpInfo = calcVCPBase(closes, highs, lows, volumes); } catch (e) { vcpInfo = null; }
 
- return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig, ema8, ema21, vwap: vwapV, fib, pivot, obv: obvV, ichimoku: ichV, vcp: vcpInfo };
+ // GMMA (Guppy Multiple Moving Average) — 6 short EMAs vs 6 long EMAs
+ let gmmaInfo = null;
+ try {
+  const shortPeriods = [3, 5, 8, 10, 12, 15];
+  const longPeriods = [30, 35, 40, 45, 50, 60];
+  const shortVals = shortPeriods.map(p => ema(closes, p)).filter(v => v != null);
+  const longVals  = longPeriods.map(p => ema(closes, p)).filter(v => v != null);
+  if (shortVals.length >= 4 && longVals.length >= 4) {
+   const shortAvg = shortVals.reduce((a,b) => a+b, 0) / shortVals.length;
+   const longAvg  = longVals.reduce((a,b)  => a+b, 0) / longVals.length;
+   const shortMax = Math.max(...shortVals), shortMin = Math.min(...shortVals);
+   const longMax  = Math.max(...longVals),  longMin  = Math.min(...longVals);
+   const shortSpread = shortAvg > 0 ? (shortMax - shortMin) / shortAvg : 0;
+   const longSpread  = longAvg  > 0 ? (longMax  - longMin)  / longAvg  : 0;
+   let trend = 'neutral', strength = 5;
+   if (shortMin > longMax) {
+    trend = 'strong-up';
+    strength = Math.min(10, Math.round(5 + (shortAvg / longAvg - 1) * 50));
+   } else if (shortMax < longMin) {
+    trend = 'strong-down';
+    strength = Math.min(10, Math.round(5 + (1 - shortAvg / longAvg) * 50));
+   } else if (shortSpread < 0.02 && longSpread < 0.02) {
+    trend = 'consolidation'; strength = 3;
+   }
+   gmmaInfo = { trend, strength: Math.max(1, strength), shortAvg, longAvg };
+  }
+ } catch (e) { gmmaInfo = null; }
+
+ // Volume Profile (POC / VAH / VAL) over last 60 days
+ let volProfile = null;
+ try {
+  const n60 = Math.min(60, closes.length);
+  if (n60 >= 30 && highs.length >= n60 && lows.length >= n60 && volumes.length >= n60) {
+   const sliceH = highs.slice(-n60), sliceL = lows.slice(-n60), sliceV = volumes.slice(-n60);
+   const periodHi = Math.max(...sliceH), periodLo = Math.min(...sliceL);
+   if (periodHi > periodLo) {
+    const BUCKETS = 50;
+    const bucketSize = (periodHi - periodLo) / BUCKETS;
+    const profile = new Array(BUCKETS).fill(0);
+    for (let i = 0; i < n60; i++) {
+     const dayHi = sliceH[i], dayLo = sliceL[i], dayVol = sliceV[i];
+     if (!dayHi || !dayLo || !dayVol) continue;
+     const startB = Math.max(0, Math.floor((dayLo - periodLo) / bucketSize));
+     const endB   = Math.min(BUCKETS - 1, Math.floor((dayHi - periodLo) / bucketSize));
+     const spread = Math.max(1, endB - startB + 1);
+     const volPerBucket = dayVol / spread;
+     for (let b = startB; b <= endB; b++) profile[b] += volPerBucket;
+    }
+    const totalVol = profile.reduce((a,b) => a+b, 0);
+    // POC: bucket with max volume
+    let pocIdx = 0, pocVol = 0;
+    for (let i = 0; i < BUCKETS; i++) if (profile[i] > pocVol) { pocVol = profile[i]; pocIdx = i; }
+    const poc = periodLo + (pocIdx + 0.5) * bucketSize;
+    // VAH/VAL: expand outward from POC until 70% captured
+    let captured = profile[pocIdx], hi = pocIdx, lo = pocIdx;
+    const target = totalVol * 0.70;
+    while (captured < target && (hi < BUCKETS - 1 || lo > 0)) {
+     const nextHi = hi < BUCKETS - 1 ? profile[hi + 1] : -1;
+     const nextLo = lo > 0 ? profile[lo - 1] : -1;
+     if (nextHi >= nextLo) { hi++; captured += profile[hi]; }
+     else { lo--; captured += profile[lo]; }
+    }
+    const vah = periodLo + (hi + 1) * bucketSize;
+    const val = periodLo + lo * bucketSize;
+    volProfile = { poc: +poc.toFixed(2), vah: +vah.toFixed(2), val: +val.toFixed(2), totalVolume: totalVol };
+   }
+  }
+ } catch (e) { volProfile = null; }
+
+ return { ma5, ma20, ma60, macd: macdV, signal: sigV, hist: histV, rsi: rsiV, bb, kd: kdV, atr: atrV, volRatio, sigs, score, sig, ema8, ema21, vwap: vwapV, fib, pivot, obv: obvV, ichimoku: ichV, vcp: vcpInfo, gmma: gmmaInfo, volumeProfile: volProfile };
 }
 
 // ============ VALUE ANALYSIS ============
@@ -2004,6 +2073,26 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
 
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
  '<div class="card"><h3> K線走勢圖</h3><div class="tab-bar" style="margin-bottom:8px"><button class="active" onclick="switchStockTF(\'' + ticker + '\',\'6mo\',\'1d\',this)">日線 6M</button><button onclick="switchStockTF(\'' + ticker + '\',\'1mo\',\'1h\',this)">1H 月線</button><button onclick="switchStockTF(\'' + ticker + '\',\'5d\',\'15m\',this)">15m 週線</button><button onclick="switchStockTF(\'' + ticker + '\',\'1d\',\'5m\',this)">5m 日內</button><button onclick="switchStockTF(\'' + ticker + '\',\'2y\',\'1wk\',this)">週線 2Y</button></div><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+ // VCP base-count analysis (only show if score ≥ 2)
+ ((ta.vcp && ta.vcp.vcpScore >= 2) ? (()=>{
+  const v = ta.vcp;
+  const baseColor = v.baseNumber === 1 ? 'var(--green)' : v.baseNumber === 2 ? '#22c55e' : v.baseNumber === 3 ? 'var(--yellow)' : 'var(--red)';
+  const baseLabel = v.baseNumber === 1 ? 'Base 1（理想型態）' : v.baseNumber === 2 ? 'Base 2（良好）' : v.baseNumber === 3 ? 'Base 3（風險升高）' : 'Base ' + v.baseNumber + '+（晚期，紅旗）';
+  const scoreStars = '★'.repeat(v.vcpScore) + '☆'.repeat(Math.max(0, 6 - v.vcpScore));
+  const pivotBreak = v.pivotPrice && price > v.pivotPrice;
+  return '<div class="card" style="border-left:3px solid #14b8a6">' +
+   '<h3>📐 VCP 蓄勢分析 <span style="font-size:13px;color:#5eead4;margin-left:8px">' + scoreStars + ' ' + v.vcpScore + '/6</span></h3>' +
+   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;font-size:13px">' +
+    '<div style="padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:10px;color:var(--muted);margin-bottom:3px">基底位階</div><b style="color:' + baseColor + '">' + baseLabel + '</b></div>' +
+    '<div style="padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:10px;color:var(--muted);margin-bottom:3px">整理深度 / 天數</div><b>' + v.vcpDepth + '% · ' + v.baseDays + ' 天</b></div>' +
+    '<div style="padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px"><div style="font-size:10px;color:var(--muted);margin-bottom:3px">突破點 (Pivot)</div><b style="color:' + (pivotBreak ? 'var(--green)' : 'var(--accent)') + '">' + fp(v.pivotPrice) + (pivotBreak ? ' ✓ 已突破' : '') + '</b></div>' +
+   '</div>' +
+   '<div style="margin-top:10px;padding:10px 12px;background:rgba(20,184,166,.05);border-radius:6px;font-size:12px;line-height:1.7">' +
+    '<b style="color:#5eead4">建議策略：</b> ' + (pivotBreak ? '已突破，等回測 ' + fp(v.pivotPrice) + ' 附近不破即可加碼。' : '等待放量突破 <b style="color:var(--accent)">' + fp(v.pivotPrice) + '</b>（量比 ≥ 1.5x）後進場。') +
+    (v.baseNumber >= 4 ? '<br><span style="color:var(--red)">⚠ 第 ' + v.baseNumber + ' 個 base 風險偏高，建議減少倉位</span>' : '') +
+   '</div>' +
+  '</div>';
+ })() : '') +
  '<div class="grid2"><div class="card"><h3> 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div>' +
  '<div class="card"><h3> 價值面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(va.score) + '">' + (va.score > 0 ? '+' : '') + va.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((va.score + 100) / 2) + '%;background:' + sc(va.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + va.verdict + '</div></div></div></div>' +
  // Long-term value investing entry/exit
@@ -2038,6 +2127,8 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
  (ta.fib ? '<tr><td style="color:var(--muted)">Fibonacci</td><td colspan="2"><span style="font-size:11px">38.2%:' + f(ta.fib.level382) + ' | 50%:' + f(ta.fib.level500) + ' | 61.8%:' + f(ta.fib.level618) + '</span></td></tr>' : '') +
  (ta.ichimoku ? '<tr><td style="color:var(--muted)">一目雲</td><td><b>' + f(ta.ichimoku.tenkan) + ' / ' + f(ta.ichimoku.kijun) + '</b></td><td>' + (price > ta.ichimoku.cloudTop ? '<span style="color:var(--green)">雲上</span>' : price < ta.ichimoku.cloudBottom ? '<span style="color:var(--red)">雲下</span>' : '<span style="color:var(--yellow)">雲中</span>') + '</td></tr>' : '') +
  '<tr><td style="color:var(--muted)">OBV</td><td><b>' + (ta.obv > 0 ? '+' : '') + (ta.obv / 1e6).toFixed(1) + 'M</b></td><td>' + (ta.obv > 0 ? '<span style="color:var(--green)">買方累積</span>' : '<span style="color:var(--red)">賣方累積</span>') + '</td></tr>' +
+ (ta.gmma ? '<tr><td style="color:var(--muted)">GMMA</td><td><b>' + (ta.gmma.trend === 'strong-up' ? '強多頭' : ta.gmma.trend === 'strong-down' ? '強空頭' : ta.gmma.trend === 'consolidation' ? '收斂整理' : '中性') + ' · ' + ta.gmma.strength + '/10</b></td><td><span style="color:' + (ta.gmma.trend === 'strong-up' ? 'var(--green)' : ta.gmma.trend === 'strong-down' ? 'var(--red)' : ta.gmma.trend === 'consolidation' ? 'var(--yellow)' : 'var(--muted)') + '">' + (ta.gmma.trend === 'strong-up' ? '趨勢確認' : ta.gmma.trend === 'strong-down' ? '弱勢確認' : ta.gmma.trend === 'consolidation' ? '蓄勢' : '無方向') + '</span></td></tr>' : '') +
+ (ta.volumeProfile ? '<tr><td style="color:var(--muted)" title="Volume Profile: 主成交區 POC、價值區上下緣 VAH/VAL">Vol Profile</td><td colspan="2"><span style="font-size:11px">POC <b>' + f(ta.volumeProfile.poc) + '</b> · VAH <b style="color:var(--red)">' + f(ta.volumeProfile.vah) + '</b> / VAL <b style="color:var(--green)">' + f(ta.volumeProfile.val) + '</b></span> <span style="color:' + (price > ta.volumeProfile.vah ? 'var(--green)' : price < ta.volumeProfile.val ? 'var(--red)' : 'var(--yellow)') + ';margin-left:6px">' + (price > ta.volumeProfile.vah ? '高於價值區' : price < ta.volumeProfile.val ? '低於價值區' : '於價值區內') + '</span></td></tr>' : '') +
  '</table></div></div>' +
  '<div class="card"><h3>基本面指標</h3><div class="table-wrap"><table><tr><td style="color:var(--muted)">本益比(PE)</td><td><b>' + (va.pe ? f(va.pe, 1) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">預估PE</td><td><b>' + (va.fpe ? f(va.fpe, 1) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">股價淨值比(PB)</td><td><b>' + (va.pb ? f(va.pb, 2) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">PEG</td><td><b>' + (va.peg ? f(va.peg, 2) : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">殖利率</td><td><b>' + (va.dy ? f(va.dy, 2) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">ROE</td><td><b>' + (va.roe != null ? f(va.roe, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">負債比</td><td><b>' + (va.debt != null ? f(va.debt, 0) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">利潤率</td><td><b>' + (va.pm != null ? f(va.pm, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">營收成長</td><td><b>' + (va.rg != null ? f(va.rg, 1) + '%' : 'N/A') + '</b></td></tr><tr><td style="color:var(--muted)">分析師目標價</td><td><b>' + (va.tp ? fp(va.tp) : 'N/A') + '</b> ' + (va.upside != null ? '<span style="color:' + (va.upside > 0 ? 'var(--green)' : 'var(--red)') + '">(' + f(va.upside, 1) + '%)</span>' : '') + '</td></tr></table></div></div></div>' +
  '<div class="card"><h3>價值投資分析因子</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">' + (va.factors.length ? va.factors.map(ff => '<span class="tag" style="background:' + tagC(ff.i) + '">' + tagI(ff.i) + ' ' + ff.n + '</span>').join('') : '<span style="color:var(--muted)">基本面資料不足</span>') + '</div></div>' +
