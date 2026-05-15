@@ -47,9 +47,29 @@ jobs:
           restore-keys: |
             ohlcv-cache-
 
-      - name: Run US scan
+      # Auto-retry on Yahoo IP ban (exit code 2). Up to 3 attempts with backoff.
+      # Each retry inside same workflow run keeps the same IP, but actions/cache
+      # and node_modules are warm so retry overhead is minimal. After 3 fails,
+      # the run fails loudly and next cron triggers on a fresh runner.
+      - name: Run US scan (with retry on IP ban)
         if: ${{ github.event.inputs.market != 'tw' }}
-        run: node scripts/scan.js us
+        run: |
+          for attempt in 1 2 3; do
+            echo "=== US scan attempt $attempt ==="
+            if node scripts/scan.js us; then
+              echo "✅ scan succeeded on attempt $attempt"
+              exit 0
+            else
+              code=$?
+              if [ $code -eq 2 ] && [ $attempt -lt 3 ]; then
+                echo "⚠ Yahoo IP ban detected — waiting 90s before retry..."
+                sleep 90
+              else
+                echo "❌ scan failed with exit code $code"
+                exit $code
+              fi
+            fi
+          done
 
       - name: Run TW scan
         if: ${{ github.event.inputs.market != 'us' }}

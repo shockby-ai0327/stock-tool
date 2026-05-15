@@ -1099,13 +1099,25 @@ async function scanUS() {
   let benchReturn = 0;
   const sectorBenchmarks = {}; // sym → ret12_1
 
+  // 2026-05-16: Yahoo intermittently rate-limits GitHub Actions runner IPs.
+  // SPY is our canary — if it fails, this runner is likely banned. Abort with
+  // non-zero exit so the workflow fails LOUDLY (instead of silently committing
+  // empty data). Next cron run (3h later) will land on a different runner.
   const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN'];
   try {
     const spy = await getOHLCVCached('SPY', ohlcvCache);
+    if (!spy || !spy.closes || spy.closes.length < 100) {
+      throw new Error('SPY returned empty data — likely IP-banned by Yahoo');
+    }
     const n = spy.closes.length;
     benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
     console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}% ${spy._fromCache ? '(cache)' : ''}`);
-  } catch (e) { console.warn(`  SPY failed: ${e.message}`); }
+  } catch (e) {
+    console.error(`\n  ❌ SPY benchmark failed: ${e.message}`);
+    console.error('  This runner appears to be IP-banned by Yahoo. Aborting.');
+    console.error('  Next scheduled run will retry on a different runner IP.\n');
+    process.exit(2);  // distinctive exit code = "IP banned, retry later"
+  }
 
   // Fetch sector ETF returns for relative sector RS (cached)
   try {
