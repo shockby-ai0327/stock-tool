@@ -15,6 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install node-fetch
+      - run: npm install
         working-directory: scripts
       - run: node scripts/yahoo_diag.js

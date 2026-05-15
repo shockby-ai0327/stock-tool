@@ -1,46 +1,49 @@
 /**
- * yahoo_diag.js — Diagnose what Yahoo returns from GitHub Actions IPs.
- * Run via workflow_dispatch on a new short workflow.
+ * yahoo_diag.js — Test yahoo-finance2 npm library
+ * (replaces previous raw-fetch diagnostic now that we've confirmed Yahoo
+ * is blocking direct query1/query2 access from GitHub Actions IPs)
  */
-import fetch from 'node-fetch';
+import yahooFinance from 'yahoo-finance2';
 
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
-async function diag(label, url, headers = {}) {
-  console.log(`\n=== ${label} ===`);
-  console.log(`URL: ${url}`);
+async function main() {
+  console.log('=== yahoo-finance2 historical SPY ===');
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': UA, ...headers },
-      signal: AbortSignal.timeout(10000),
+    const result = await yahooFinance.historical('SPY', {
+      period1: new Date(Date.now() - 365 * 86400_000),
+      period2: new Date(),
+      interval: '1d',
     });
-    console.log(`Status: ${res.status} ${res.statusText}`);
-    console.log(`Content-Type: ${res.headers.get('content-type')}`);
-    console.log(`X-Yahoo-Request-Id: ${res.headers.get('x-yahoo-request-id') || 'none'}`);
-    const body = await res.text();
-    console.log(`Body length: ${body.length}`);
-    console.log(`Body (first 500 chars):\n${body.slice(0, 500)}`);
+    console.log('SPY history length:', result.length);
+    if (result.length > 0) {
+      console.log('First:', result[0]);
+      console.log('Last:', result[result.length - 1]);
+    }
   } catch (e) {
-    console.log(`EXCEPTION: ${e.message}`);
+    console.log('historical FAILED:', e.message);
+  }
+
+  console.log('\n=== yahoo-finance2 quote SPY ===');
+  try {
+    const quote = await yahooFinance.quote('SPY');
+    console.log('quote:', JSON.stringify(quote, null, 2).slice(0, 500));
+  } catch (e) {
+    console.log('quote FAILED:', e.message);
+  }
+
+  console.log('\n=== yahoo-finance2 chart SPY (3mo) ===');
+  try {
+    const result = await yahooFinance.chart('SPY', {
+      period1: new Date(Date.now() - 90 * 86400_000),
+      interval: '1d',
+    });
+    console.log('chart quotes length:', result?.quotes?.length);
+    if (result?.quotes?.length > 0) {
+      console.log('First close:', result.quotes[0]?.close);
+      console.log('Last close:', result.quotes[result.quotes.length - 1]?.close);
+    }
+  } catch (e) {
+    console.log('chart FAILED:', e.message);
   }
 }
 
-await diag('Chart SPY (no extra headers)',
-  'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1mo');
-
-await new Promise(r => setTimeout(r, 1500));
-
-await diag('Chart AAPL (no extra headers)',
-  'https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1mo');
-
-await new Promise(r => setTimeout(r, 1500));
-
-await diag('Screener day_gainers',
-  'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=day_gainers&start=0&count=5&formatted=false');
-
-await new Promise(r => setTimeout(r, 1500));
-
-await diag('query2 chart SPY',
-  'https://query2.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1mo');
-
-console.log('\n=== Done ===');
+main().catch(e => { console.error('FATAL:', e); process.exit(1); });
