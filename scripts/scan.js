@@ -97,10 +97,14 @@ async function yfFetch(url, retries = 3) {
   if (yfSession.cookie) headers['Cookie'] = yfSession.cookie;
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { headers, signal: AbortSignal.timeout(12000) });
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+      // 2026-05-16: fail fast on auth errors — retrying won't fix 401/403/404.
+      // Without this, every quoteSummary failure consumed 25-30s of retry waits.
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        throw new Error(`HTTP ${res.status}`);
+      }
       if (res.status === 429) {
-        const wait = (i + 1) * 3000;
-        console.log(`  429 rate limit, waiting ${wait}ms...`);
+        const wait = (i + 1) * 2000;
         await DELAY(wait);
         continue;
       }
@@ -108,7 +112,7 @@ async function yfFetch(url, retries = 3) {
       return await res.json();
     } catch (e) {
       if (i === retries - 1) throw e;
-      await DELAY(1500 * (i + 1));
+      await DELAY(800 * (i + 1));
     }
   }
 }
@@ -953,18 +957,16 @@ async function scanUS() {
   console.log('\n[1] Building universe...');
 
   // Yahoo predefined screeners — broader coverage. Some may 404; fetchScreener returns [] on failure.
+  // 2026-05-16: trimmed from 7×100 to 4×50 to fit under 25min timeout on cold start.
   const SCREENER_IDS = [
     'day_gainers',
     'small_cap_gainers',
     'growth_technology_stocks',
     'most_actives',
-    'undervalued_growth_stocks',
-    'aggressive_small_caps',
-    'undervalued_large_caps',
   ];
 
   const screenerResults = await Promise.allSettled(
-    SCREENER_IDS.map(id => fetchScreener(id, 100))
+    SCREENER_IDS.map(id => fetchScreener(id, 50))
   );
 
   const universe = new Set([...SP500, ...GROWTH_EXTENDED, ...DISCOVERY_POOL, ...RUSSELL_EXTENDED]);
@@ -1057,7 +1059,8 @@ async function scanUS() {
   } catch(e) { console.warn('  Sector benchmarks failed:', e.message); }
 
   // 3. Scan all symbols
-  const BATCH = 15, BATCH_DELAY = 500;
+  // 2026-05-16: batch 15 → 25 to compress OHLCV phase by ~40%.
+  const BATCH = 25, BATCH_DELAY = 350;
   console.log(`\n[3] Scanning ${allSymbols.length} symbols (batch=${BATCH})...`);
 
   const leaders   = [];  // confirmed momentum (12-1mo RS)
@@ -1145,12 +1148,23 @@ async function scanUS() {
 
   // 3b. Resolve sector ETF for every passing ticker via Yahoo assetProfile.
   // Cached for 1 year in data/sector_cache.json — most symbols hit cache after day 1.
+  // 2026-05-16 fix: prioritize uncached targets up to a fetch budget; rest fall
+  // through to next run. Prevents first-run cold-start from blowing past 25min.
   console.log('\n[3b] Resolving sectors via Yahoo assetProfile...');
   const sectorCache = loadJSON('sector_cache.json', {});
-  const sectorTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  const sectorAllTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  // Budget: only attempt up to MAX_SECTOR_FETCHES uncached symbols per run
+  const MAX_SECTOR_FETCHES = 80;
+  let sectorFetchBudget = MAX_SECTOR_FETCHES;
+  const sectorTargets = sectorAllTargets.filter(sym => {
+    if (sectorCache[sym]) return true; // already cached → cheap, always include
+    if (sectorFetchBudget > 0) { sectorFetchBudget -= 1; return true; }
+    return false; // over budget → skip this run
+  });
+  console.log(`  Sector targets: ${sectorTargets.length}/${sectorAllTargets.length} (${sectorAllTargets.length - sectorTargets.length} deferred over budget)`);
   let sectorCacheHits = 0, sectorFetches = 0, sectorResolved = 0;
 
-  const SECTOR_BATCH = 5, SECTOR_DELAY = 300;
+  const SECTOR_BATCH = 10, SECTOR_DELAY = 200;
   for (let i = 0; i < sectorTargets.length; i += SECTOR_BATCH) {
     const batch = sectorTargets.slice(i, i + SECTOR_BATCH);
     await Promise.all(batch.map(async sym => {
@@ -1186,12 +1200,24 @@ async function scanUS() {
   // 3c. Enrich each passing ticker with earnings / short / analyst data.
   // Cached in data/quote_cache.json for 24h. Only fetched for leaders+discovery
   // (~200-400 tickers, vs the full ~1500 universe).
+  // 2026-05-16 fix: prioritize uncached up to budget; defer rest to next run.
   console.log('\n[3c] Fetching earnings / short / analyst data...');
   const quoteCache = loadJSON('quote_cache.json', {});
-  const quoteTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  const quoteAllTargets = [...new Set([...leaders, ...discoCand].map(r => r.symbol))];
+  const MAX_QUOTE_FETCHES = 60;
+  let quoteFetchBudget = MAX_QUOTE_FETCHES;
+  const quoteTargets = quoteAllTargets.filter(sym => {
+    const fresh = quoteCache[sym]
+      && quoteCache[sym].cachedAt
+      && (Date.now() - quoteCache[sym].cachedAt) < 24 * 60 * 60 * 1000;
+    if (fresh) return true;
+    if (quoteFetchBudget > 0) { quoteFetchBudget -= 1; return true; }
+    return false;
+  });
+  console.log(`  Quote targets: ${quoteTargets.length}/${quoteAllTargets.length} (${quoteAllTargets.length - quoteTargets.length} deferred over budget)`);
   let quoteCacheHits = 0, quoteFetches = 0;
 
-  const QUOTE_BATCH = 5, QUOTE_DELAY = 400;
+  const QUOTE_BATCH = 10, QUOTE_DELAY = 250;
   const quoteResults = {}; // sym → extracted fields
   for (let i = 0; i < quoteTargets.length; i += QUOTE_BATCH) {
     const batch = quoteTargets.slice(i, i + QUOTE_BATCH);
