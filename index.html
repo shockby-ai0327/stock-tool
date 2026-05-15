@@ -9943,6 +9943,95 @@ async function _showSectorRadarTab() {
     '</table></div>';
 }
 
+// ── 策略表現 tab (Wave 3.2) ─────────────────────────────────────────────
+// Reads signal_stats.json (computed by scripts/backtest.js after each scan).
+// Shows rolling 252-day stats per signal type: win rate, avg return, Sharpe.
+window._signalStatsCache = null;
+
+async function fetchSignalStats() {
+  if (window._signalStatsCache && (Date.now() - window._signalStatsCache._ts) < 30 * 60 * 1000) {
+    return window._signalStatsCache;
+  }
+  try {
+    const r = await fetch(GH_RAW + 'signal_stats.json?t=' + Math.floor(Date.now() / 600000), { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    data._ts = Date.now();
+    window._signalStatsCache = data;
+    return data;
+  } catch(e) { return null; }
+}
+
+async function renderStrategyPerformance() {
+  const tableDiv = document.getElementById('scanner-table');
+  if (!tableDiv) return;
+  tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spinner" style="display:inline-block;width:24px;height:24px"></div><div style="margin-top:12px">載入策略表現資料...</div></div>';
+  const stats = await fetchSignalStats();
+  if (!stats || !stats.stats) {
+    tableDiv.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);line-height:1.8">' +
+      '<div style="font-size:32px;margin-bottom:10px">📊</div>' +
+      '<div style="font-weight:600">策略表現資料尚未生成</div>' +
+      '<div style="font-size:12px;margin-top:8px">backtest 工作流會在每次掃描後執行<br>需要累積至少 20 個已結案訊號才會顯示完整統計</div>' +
+      '</div>';
+    return;
+  }
+
+  const typeLabels = {
+    rs_leader:        'RS Leader',
+    discovery:        '加速發現',
+    triple_resonance: '三重共振',
+    vcp_breakout:     'VCP 突破',
+    earnings_play:    '財報前 setup',
+  };
+
+  const rows = Object.entries(stats.stats).map(([type, info]) => {
+    const s = info.trailing_252d || {};
+    const label = typeLabels[type] || type;
+    if (s.insufficientData) {
+      return '<tr style="opacity:.5"><td style="padding:10px 8px"><b>' + label + '</b></td><td colspan="6" style="padding:10px 8px;color:var(--muted)">資料不足（N=' + (s.sampleSize || 0) + '，需 20+）</td></tr>';
+    }
+    const winColor = s.winRate >= 0.6 ? 'var(--green)' : s.winRate >= 0.45 ? 'var(--yellow)' : 'var(--red)';
+    const retColor = (s.avgReturn || 0) >= 5 ? 'var(--green)' : (s.avgReturn || 0) >= 0 ? 'var(--yellow)' : 'var(--red)';
+    const sharpeColor = (s.sharpe || 0) >= 1 ? 'var(--green)' : (s.sharpe || 0) >= 0.5 ? 'var(--yellow)' : 'var(--red)';
+    const winBar = '<div style="width:60px;height:6px;background:rgba(255,255,255,.05);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px"><div style="width:' + (s.winRate * 100).toFixed(0) + '%;height:100%;background:' + winColor + ';border-radius:3px"></div></div>';
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 8px"><b>' + label + '</b></td>' +
+      '<td style="padding:10px 8px;text-align:center">' + s.total + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:' + winColor + ';font-weight:600">' + (s.winRate * 100).toFixed(1) + '%' + winBar + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:' + retColor + ';font-weight:600">' + (s.avgReturn >= 0 ? '+' : '') + (s.avgReturn || 0).toFixed(2) + '%</td>' +
+      '<td style="padding:10px 8px;text-align:center">' + (s.avgWin != null && s.avgLoss ? ((s.avgWin / Math.abs(s.avgLoss)) || 0).toFixed(2) : '—') + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:' + sharpeColor + ';font-weight:600">' + (s.sharpe != null ? s.sharpe.toFixed(2) : '—') + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--muted)">' + (s.avgHoldDays || '—') + ' 天</td>' +
+    '</tr>';
+  }).join('');
+
+  const generatedAge = stats.computedAt ? Math.round((Date.now() - stats.computedAt) / 60000) : null;
+  const ageLabel = generatedAge != null ? (generatedAge < 60 ? generatedAge + ' 分鐘前' : Math.round(generatedAge / 60) + ' 小時前') : '';
+
+  tableDiv.innerHTML =
+    '<div style="margin-bottom:12px;padding:10px 14px;background:rgba(99,102,241,.05);border-radius:8px;font-size:12px;line-height:1.7">' +
+      '<b style="color:#a5b4fc">📊 過去 252 天滾動回測（已結案訊號）</b><br>' +
+      '<span style="color:var(--muted)">每個訊號類型的歷史命中率、平均報酬、Sharpe ratio。' +
+      '勝率 ≥ 60% 為強訊號；Sharpe ≥ 1 表示風險調整後報酬良好。' + (ageLabel ? ' · ' + ageLabel + '更新' : '') + '</span>' +
+    '</div>' +
+    '<div class="table-wrap"><table style="width:100%;border-collapse:collapse">' +
+      '<thead><tr style="font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">' +
+        '<th style="padding:8px;text-align:left">策略</th>' +
+        '<th style="padding:8px;text-align:center">訊號數</th>' +
+        '<th style="padding:8px;text-align:center">勝率</th>' +
+        '<th style="padding:8px;text-align:center">平均報酬</th>' +
+        '<th style="padding:8px;text-align:center">盈虧比</th>' +
+        '<th style="padding:8px;text-align:center">Sharpe</th>' +
+        '<th style="padding:8px;text-align:center">平均持有</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table></div>' +
+    '<div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6">' +
+      '說明：訊號自動追蹤 — 達目標價 (entry×1.15)、停損 (entry×0.92) 或 60 天到期算結案。每日掃描後更新。' +
+    '</div>';
+}
+
 function switchScanStrategy(strat) {
   ['rsleader','discover','buyzone','earnings','sector','strategy'].forEach(s => {
     const btn = document.getElementById('scan-tab-' + s);

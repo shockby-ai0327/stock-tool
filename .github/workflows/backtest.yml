@@ -1,0 +1,45 @@
+name: Backtest Signal History
+
+on:
+  # Auto-run after every successful stock scan
+  workflow_run:
+    workflows: ["Stock RS Leader Scan"]
+    types: [completed]
+
+  # On-demand
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout (always use latest — scan just committed)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install node-fetch
+        working-directory: scripts
+
+      - name: Run backtest update
+        run: node scripts/backtest.js
+
+      - name: Commit signal history + stats
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/signal_history.json data/signal_stats.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "backtest: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
