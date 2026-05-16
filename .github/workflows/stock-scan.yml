@@ -60,6 +60,14 @@ jobs:
         if: ${{ github.event.inputs.market != 'us' }}
         run: node scripts/scan.js tw
 
+      # Step C: Python enriches leaders/discoveries with earnings, short
+      # interest, analyst ratings, sector mapping — data Yahoo blocks for
+      # node-fetch. Recomputes tripleResonance with these catalyst fields.
+      - name: Enrich with quoteSummary via Python yfinance
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/enrich_quotes.py
+        continue-on-error: true  # don't fail whole scan if enrichment hiccups
+
       - name: Save OHLCV cache
         if: always()
         uses: actions/cache/save@v4
