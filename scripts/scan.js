@@ -183,16 +183,16 @@ function _ohlcvCacheStaleness(cachedAt) {
 }
 
 async function getOHLCVCached(symbol, ohlcvCache) {
+  // 2026-05-16: Yahoo bans node-fetch on GH Actions IPs entirely. OHLCV is now
+  // pre-populated by Python yfinance (scripts/fetch_ohlcv.py) which runs BEFORE
+  // this script in the workflow. So we only read from cache; no direct fetch.
   const cached = ohlcvCache[symbol];
-  if (cached && _ohlcvCacheStaleness(cached.fetchedAt) < 0) {
+  if (cached && cached.data && cached.data.closes && cached.data.closes.length >= 60) {
     return { ...cached.data, _fromCache: true };
   }
-  const fresh = await getOHLCV(symbol, '12mo');
-  // Only cache if we got a usable dataset
-  if (fresh.closes && fresh.closes.length >= 60) {
-    ohlcvCache[symbol] = { fetchedAt: Date.now(), data: fresh };
-  }
-  return { ...fresh, _fromCache: false };
+  // Cache miss = ticker wasn't pre-fetched by Python (e.g. recently added to
+  // screener results). Return empty so scan loop skips this symbol.
+  return { closes: [], highs: [], lows: [], opens: [], volumes: [], meta: {}, _fromCache: false };
 }
 
 // ── VCP (Volatility Contraction Pattern) — Minervini base-count detector ──
@@ -1099,24 +1099,22 @@ async function scanUS() {
   let benchReturn = 0;
   const sectorBenchmarks = {}; // sym → ret12_1
 
-  // 2026-05-16: Yahoo intermittently rate-limits GitHub Actions runner IPs.
-  // SPY is our canary — if it fails, this runner is likely banned. Abort with
-  // non-zero exit so the workflow fails LOUDLY (instead of silently committing
-  // empty data). Next cron run (3h later) will land on a different runner.
+  // 2026-05-16: OHLCV cache is pre-populated by Python yfinance (scripts/fetch_ohlcv.py)
+  // running as a prior workflow step. SPY canary check now validates the
+  // upstream Python fetch ran successfully.
   const SECTOR_ETFS_SCAN = ['SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE','IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN'];
   try {
     const spy = await getOHLCVCached('SPY', ohlcvCache);
     if (!spy || !spy.closes || spy.closes.length < 100) {
-      throw new Error('SPY returned empty data — likely IP-banned by Yahoo');
+      throw new Error('SPY missing from cache — Python yfinance fetcher likely failed');
     }
     const n = spy.closes.length;
     benchReturn = (spy.closes[Math.max(0, n - 21)] - spy.closes[0]) / spy.closes[0] * 100;
     console.log(`  SPY 12-1mo: ${benchReturn.toFixed(2)}% ${spy._fromCache ? '(cache)' : ''}`);
   } catch (e) {
     console.error(`\n  ❌ SPY benchmark failed: ${e.message}`);
-    console.error('  This runner appears to be IP-banned by Yahoo. Aborting.');
-    console.error('  Next scheduled run will retry on a different runner IP.\n');
-    process.exit(2);  // distinctive exit code = "IP banned, retry later"
+    console.error('  Run scripts/fetch_ohlcv.py first to pre-populate OHLCV cache.\n');
+    process.exit(2);
   }
 
   // Fetch sector ETF returns for relative sector RS (cached)

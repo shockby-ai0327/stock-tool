@@ -1,7 +1,6 @@
 name: Stock RS Leader Scan
 
 on:
-  # Auto-run: 3x per trading day (US ET: pre-market, midday, near close)
   schedule:
     - cron: '25 13 * * 1-5'   # 09:25 ET pre-market
     - cron: '0  17 * * 1-5'   # 13:00 ET midday
@@ -18,26 +17,28 @@ permissions:
   contents: write
 
 jobs:
-  # 5 parallel attempts on different runners (different IPs).
-  # Yahoo intermittently rate-limits ~50-70% of Azure IPs, so 5 in parallel
-  # gives >97% chance at least one succeeds. Each attempt is a 'race' — the
-  # first to finish a clean scan uploads its artifact, others fail fast on
-  # SPY canary and exit immediately (cheap).
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false  # don't cancel siblings when one fails
-      matrix:
-        attempt: [1, 2, 3, 4, 5]
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
+      # Python first (yfinance bulk-fetches OHLCV; Yahoo bans node-fetch but
+      # allows yfinance's request pattern from GH Actions IPs)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install yfinance pandas
+
+      # Node second (consumes the pre-populated OHLCV cache)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - run: npm install
+      - name: Install Node deps
+        run: npm install
         working-directory: scripts
 
       - name: Restore OHLCV cache
@@ -45,9 +46,12 @@ jobs:
         with:
           path: data/ohlcv_cache.json
           key: ohlcv-cache-shared
-          restore-keys: |
-            ohlcv-cache-
 
+      # Step A: Python fetches OHLCV via yfinance (the only thing Yahoo lets through)
+      - name: Fetch OHLCV via Python yfinance
+        run: python scripts/fetch_ohlcv.py
+
+      # Step B: Node scans using the cached data
       - name: Run US scan
         if: ${{ github.event.inputs.market != 'tw' }}
         run: node scripts/scan.js us
@@ -56,76 +60,14 @@ jobs:
         if: ${{ github.event.inputs.market != 'us' }}
         run: node scripts/scan.js tw
 
-      - name: Upload scan results artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scan-attempt-${{ matrix.attempt }}
-          path: |
-            data/us_scan.json
-            data/tw_scan.json
-            data/sector_cache.json
-            data/quote_cache.json
-            data/universe_memory.json
-            data/ohlcv_cache.json
-          if-no-files-found: ignore
-          retention-days: 1
-
-  # Pick the first-completed successful attempt's artifacts and commit them.
-  collect:
-    needs: scan
-    runs-on: ubuntu-latest
-    if: always()  # run even if some matrix jobs failed
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all scan artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: false
-        continue-on-error: true
-
-      - name: Pick first successful scan
-        id: pick
-        run: |
-          set -e
-          PICKED=""
-          for attempt in 1 2 3 4 5; do
-            dir="artifacts/scan-attempt-$attempt"
-            if [ -f "$dir/us_scan.json" ]; then
-              # Sanity: ensure scan has leaders (non-empty)
-              count=$(python3 -c "import json; print(len(json.load(open('$dir/us_scan.json')).get('leaders',[])))" 2>/dev/null || echo 0)
-              if [ "$count" -gt 0 ]; then
-                PICKED="$dir"
-                echo "Picked attempt $attempt (leaders=$count)"
-                break
-              fi
-            fi
-          done
-          if [ -z "$PICKED" ]; then
-            echo "❌ All 5 attempts failed to produce valid scan data."
-            echo "   Next cron will retry on 5 fresh runners."
-            exit 1
-          fi
-          # Copy picked files into place
-          mkdir -p data
-          for f in us_scan.json tw_scan.json sector_cache.json quote_cache.json universe_memory.json; do
-            [ -f "$PICKED/$f" ] && cp "$PICKED/$f" "data/$f" || true
-          done
-          # OHLCV cache also lives in actions/cache, but we copy it here to
-          # persist via the save step below.
-          [ -f "$PICKED/ohlcv_cache.json" ] && cp "$PICKED/ohlcv_cache.json" "data/ohlcv_cache.json" || true
-          echo "picked_dir=$PICKED" >> "$GITHUB_OUTPUT"
-
       - name: Save OHLCV cache
-        if: success()
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: data/ohlcv_cache.json
           key: ohlcv-cache-shared
 
       - name: Commit scan results
-        if: success()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -133,6 +75,7 @@ jobs:
           [ -f data/sector_cache.json ]    && git add data/sector_cache.json    || true
           [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true
           [ -f data/universe_memory.json ] && git add data/universe_memory.json || true
+          [ -f data/universe_static.json ] && git add data/universe_static.json || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git pull --rebase --autostash || true
           git push
