@@ -10408,59 +10408,24 @@ let _sectorTs    = 0;
 async function _fetchSectorData() {
   if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
 
-  // v8/finance/chart — no auth needed. Use range=5d so we always get data
-  // even on weekends/holidays/after-hours (Yahoo returns last available bars).
-  const fetchOne = async (sym) => {
-    for (const host of ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']) {
-      try {
-        const url = 'https://' + host + '/v8/finance/chart/' + sym +
-          '?interval=1d&range=5d&includePrePost=false';
-        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const d = await res.json();
-        const result = d?.chart?.result?.[0];
-        if (!result) throw new Error('no result');
-        const meta   = result.meta;
-        const closes = (result.indicators?.quote?.[0]?.close || []).filter(v => v != null);
-        const price     = meta.regularMarketPrice || closes[closes.length - 1] || 0;
-        const prevClose = meta.chartPreviousClose || closes[closes.length - 2] || price;
-        const high52w   = meta.fiftyTwoWeekHigh || 0;
-        return {
-          price,
-          changePct: prevClose ? (price - prevClose) / prevClose * 100 : 0,
-          distHigh:  (price && high52w) ? (price - high52w) / high52w * 100 : null,
-        };
-      } catch(e) {
-        console.warn('[sector]', sym, host, e.message);
-      }
-    }
-    return null; // both hosts failed
-  };
-
-  // Fetch all ETFs sequentially in small batches
-  const results = [];
-  const BATCH = 4;
-  for (let i = 0; i < SECTOR_ETFS.length; i += BATCH) {
-    const batch = SECTOR_ETFS.slice(i, i + BATCH);
-    const settled = await Promise.allSettled(batch.map(e => fetchOne(e.sym)));
-    settled.forEach((s, j) => {
-      const e = batch[j];
-      const data = s.status === 'fulfilled' ? s.value : null;
-      results.push({
-        ...e,
-        price:     data?.price     ?? 0,
-        changePct: data?.changePct ?? 0,
-        distHigh:  data?.distHigh  ?? null,
-        _failed:   !data,
-      });
-    });
-    if (i + BATCH < SECTOR_ETFS.length) await new Promise(r => setTimeout(r, 250));
+  // 2026-05-16: Yahoo rate-limits the user's browser IP on direct chart calls.
+  // Sector radar data is now pre-computed by Python yfinance in the scan
+  // workflow (scripts/fetch_ohlcv.py) and committed as data/sector_radar.json.
+  // We just read the static file.
+  try {
+    const url = GH_RAW + 'sector_radar.json?t=' + Math.floor(Date.now() / 300000); // 5-min CDN bust
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.sectors || !data.sectors.length) throw new Error('empty');
+    _sectorCache = data.sectors;
+    _sectorTs    = Date.now();
+    window._sectorDataAge = Date.now() - (data.generatedAt || 0);
+    return _sectorCache;
+  } catch (e) {
+    console.warn('[sector] static load failed:', e.message);
+    return null;
   }
-
-  // Always return results (even with zeros) so the tab renders rather than failing
-  _sectorCache = results;
-  _sectorTs = Date.now();
-  return _sectorCache;
 }
 
 async function _showSectorRadarTab() {

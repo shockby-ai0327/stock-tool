@@ -154,3 +154,55 @@ print(f"\n✅ Wrote {len(cache)} entries to ohlcv_cache.json ({sz:.1f} MB)")
 print(f"   fetched={fetched}, failed={len(failed)} ({100*len(failed)/max(len(to_fetch),1):.0f}%)")
 if failed[:10]:
     print(f"   sample failures: {failed[:10]}")
+
+# Sector Radar data (frontend reads this — avoids Yahoo IP-ban on user's browser)
+SECTOR_RADAR_ETFS = [
+    {'sym':'SMH', 'name':'半導體',    'group':'growth'},
+    {'sym':'IGV', 'name':'AI軟體',    'group':'growth'},
+    {'sym':'XLK', 'name':'科技',      'group':'growth'},
+    {'sym':'XLC', 'name':'通訊服務',  'group':'growth'},
+    {'sym':'XLY', 'name':'非必需消費','group':'growth'},
+    {'sym':'XLI', 'name':'工業',      'group':'neutral'},
+    {'sym':'XLF', 'name':'金融',      'group':'neutral'},
+    {'sym':'XLB', 'name':'材料',      'group':'neutral'},
+    {'sym':'XLE', 'name':'能源',      'group':'neutral'},
+    {'sym':'IBB', 'name':'生技',      'group':'neutral'},
+    {'sym':'XAR', 'name':'太空國防',  'group':'growth'},
+    {'sym':'GDX', 'name':'礦業黃金',  'group':'defensive'},
+    {'sym':'XLV', 'name':'醫療保健',  'group':'defensive'},
+    {'sym':'XLP', 'name':'必需消費',  'group':'defensive'},
+    {'sym':'XLRE','name':'房地產',    'group':'defensive'},
+    {'sym':'XLU', 'name':'公用事業',  'group':'defensive'},
+]
+
+sector_radar = []
+for etf in SECTOR_RADAR_ETFS:
+    sym = etf['sym']
+    entry = cache.get(sym)
+    if not entry or not entry.get('data'):
+        sector_radar.append({**etf, 'price':0, 'changePct':0, 'distHigh':None, '_failed':True})
+        continue
+    closes = entry['data'].get('closes') or []
+    highs = entry['data'].get('highs') or []
+    if len(closes) < 2:
+        sector_radar.append({**etf, 'price':0, 'changePct':0, 'distHigh':None, '_failed':True})
+        continue
+    price = closes[-1]
+    prev_close = closes[-2]
+    change_pct = (price - prev_close) / prev_close * 100 if prev_close else 0
+    high52w = max(highs[-252:]) if highs else price
+    dist_high = (price - high52w) / high52w * 100 if high52w else None
+    sector_radar.append({
+        **etf,
+        'price':     round(price, 2),
+        'changePct': round(change_pct, 2),
+        'distHigh':  round(dist_high, 2) if dist_high is not None else None,
+        '_failed':   False,
+    })
+
+SECTOR_RADAR_PATH = DATA_DIR / 'sector_radar.json'
+SECTOR_RADAR_PATH.write_text(json.dumps({
+    'generatedAt': now_ms,
+    'sectors':     sector_radar,
+}, indent=2))
+print(f"✅ Wrote sector_radar.json ({sum(1 for s in sector_radar if not s['_failed'])}/{len(sector_radar)} ETFs)")
