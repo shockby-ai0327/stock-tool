@@ -91,8 +91,12 @@ now_ms = int(time.time() * 1000)
 QUOTE_TTL_MS  = 24 * 3600 * 1000      # 24h
 SECTOR_TTL_MS = 365 * 24 * 3600 * 1000  # 1 year
 
+CACHE_SCHEMA_VERSION = 2  # bump when adding fields, invalidates old entries
+
 def is_fresh(cache_entry, ttl_ms):
-    return cache_entry and (now_ms - cache_entry.get('cachedAt', 0)) < ttl_ms
+    if not cache_entry: return False
+    if cache_entry.get('schemaVersion') != CACHE_SCHEMA_VERSION: return False
+    return (now_ms - cache_entry.get('cachedAt', 0)) < ttl_ms
 
 # Fetch sector benchmarks for sectorRS calculation
 # We need 12-1 month return of each sector ETF
@@ -144,7 +148,7 @@ for i, sym in enumerate(targets, 1):
             enriched_sector += 1
 
         if needs_quote:
-            # Earnings date / days to
+            # Earnings date / days to — yfinance returns dict with 'Earnings Date': [date]
             earnings_date = None
             days_to_earnings = None
             try:
@@ -154,16 +158,57 @@ for i, sym in enumerate(targets, 1):
                     ed = cal.get('Earnings Date')
                 if ed:
                     ed_obj = ed[0] if isinstance(ed, (list, tuple)) and ed else ed
-                    if hasattr(ed_obj, 'timestamp'):
-                        # datetime / Timestamp
-                        ed_dt = ed_obj if hasattr(ed_obj, 'tzinfo') else None
+                    # ed_obj may be datetime.date OR datetime.datetime OR pd.Timestamp
+                    if hasattr(ed_obj, 'year') and hasattr(ed_obj, 'month') and hasattr(ed_obj, 'day'):
+                        ed_date = ed_obj if not hasattr(ed_obj, 'date') else ed_obj
+                        # Normalize to date object for day math
                         if hasattr(ed_obj, 'to_pydatetime'):
-                            ed_dt = ed_obj.to_pydatetime()
-                        elif hasattr(ed_obj, 'year'):
-                            ed_dt = datetime(ed_obj.year, ed_obj.month, ed_obj.day, tzinfo=timezone.utc)
-                        if ed_dt:
-                            earnings_date = int(ed_dt.timestamp())
-                            days_to_earnings = (ed_dt.date() - datetime.now(timezone.utc).date()).days
+                            ed_date = ed_obj.to_pydatetime().date()
+                        elif hasattr(ed_obj, 'date') and callable(getattr(ed_obj, 'date')):
+                            ed_date = ed_obj.date()
+                        else:
+                            from datetime import date as _date
+                            ed_date = _date(ed_obj.year, ed_obj.month, ed_obj.day)
+                        # Convert to unix timestamp (midnight UTC)
+                        ed_dt = datetime(ed_date.year, ed_date.month, ed_date.day, tzinfo=timezone.utc)
+                        earnings_date = int(ed_dt.timestamp())
+                        days_to_earnings = (ed_date - datetime.now(timezone.utc).date()).days
+            except Exception as e:
+                pass
+
+            # EPS Revision Momentum — the strongest single fundamental factor in
+            # academic literature (Stickel 1989, Womack 1996). yfinance eps_trend
+            # gives current consensus + values from 7/30/60/90 days ago.
+            eps_revision = None
+            try:
+                et = t.eps_trend
+                if et is not None and len(et) > 0 and '0y' in et.index:
+                    row = et.loc['0y']  # current fiscal year estimate trajectory
+                    cur = float(row.get('current', 0) or 0)
+                    d90 = float(row.get('90daysAgo', 0) or 0)
+                    d30 = float(row.get('30daysAgo', 0) or 0)
+                    d7  = float(row.get('7daysAgo',  0) or 0)
+                    eps_revision = {
+                        'current':    round(cur, 4),
+                        'pct90d':     round((cur - d90) / abs(d90) * 100, 2) if d90 else None,
+                        'pct30d':     round((cur - d30) / abs(d30) * 100, 2) if d30 else None,
+                        'pct7d':      round((cur - d7)  / abs(d7)  * 100, 2) if d7  else None,
+                    }
+            except Exception:
+                pass
+
+            # EPS Revision Counts — # of analysts upping vs downing estimates
+            eps_revision_counts = None
+            try:
+                er = t.eps_revisions
+                if er is not None and len(er) > 0 and '0y' in er.index:
+                    row = er.loc['0y']
+                    eps_revision_counts = {
+                        'up7d':    int(row.get('upLast7days', 0) or 0),
+                        'up30d':   int(row.get('upLast30days', 0) or 0),
+                        'down7d':  int(row.get('downLast7Days', 0) or 0),
+                        'down30d': int(row.get('downLast30days', 0) or 0),
+                    }
             except Exception:
                 pass
 
@@ -234,16 +279,19 @@ for i, sym in enumerate(targets, 1):
                 pass
 
             quote_cache[sym] = {
-                'cachedAt': now_ms,
+                'cachedAt':      now_ms,
+                'schemaVersion': CACHE_SCHEMA_VERSION,
                 'data': {
-                    'earningsDate':     earnings_date,
-                    'daysToEarnings':   days_to_earnings,
-                    'shortPctOfFloat':  short_pct,
-                    'shortRatio':       short_rt,
-                    'recentUpgrades':   recent_upgrades,
-                    'recentDowngrades': recent_downgrades,
-                    'surpriseHistory':  surprise_history,
-                    'recommendation':   recommendation,
+                    'earningsDate':       earnings_date,
+                    'daysToEarnings':     days_to_earnings,
+                    'shortPctOfFloat':    short_pct,
+                    'shortRatio':         short_rt,
+                    'recentUpgrades':     recent_upgrades,
+                    'recentDowngrades':   recent_downgrades,
+                    'surpriseHistory':    surprise_history,
+                    'recommendation':     recommendation,
+                    'epsRevision':        eps_revision,
+                    'epsRevisionCounts':  eps_revision_counts,
                 },
             }
             enriched_quote += 1
@@ -267,14 +315,16 @@ def apply(record):
     if isinstance(qe, dict):
         q = qe.get('data') or {}
         if isinstance(q, dict):
-            record['earningsDate']     = q.get('earningsDate')
-            record['daysToEarnings']   = q.get('daysToEarnings')
-            record['shortPctOfFloat']  = q.get('shortPctOfFloat')
-            record['shortRatio']       = q.get('shortRatio')
-            record['recentUpgrades']   = q.get('recentUpgrades') or []
-            record['recentDowngrades'] = q.get('recentDowngrades') or []
-            record['surpriseHistory']  = q.get('surpriseHistory') or []
-            record['recommendation']   = q.get('recommendation')
+            record['earningsDate']      = q.get('earningsDate')
+            record['daysToEarnings']    = q.get('daysToEarnings')
+            record['shortPctOfFloat']   = q.get('shortPctOfFloat')
+            record['shortRatio']        = q.get('shortRatio')
+            record['recentUpgrades']    = q.get('recentUpgrades') or []
+            record['recentDowngrades']  = q.get('recentDowngrades') or []
+            record['surpriseHistory']   = q.get('surpriseHistory') or []
+            record['recommendation']    = q.get('recommendation')
+            record['epsRevision']       = q.get('epsRevision')
+            record['epsRevisionCounts'] = q.get('epsRevisionCounts')
     se = sector_cache.get(sym)
     if isinstance(se, dict):
         record['sector']    = se.get('sector')
@@ -313,19 +363,38 @@ for r in leaders + [d for d in discoveries if not any(l['symbol'] == d['symbol']
         stars += 1
         reasons.append(f"RS {r['rsRating']}")
 
+    # EPS Revision Momentum — academic alpha factor (Stickel, Womack).
+    # 30-day upward consensus revision ≥ +3% is meaningful.
+    epsrev = r.get('epsRevision')
+    if isinstance(epsrev, dict) and epsrev.get('pct30d') is not None:
+        pct30 = epsrev['pct30d']
+        if pct30 >= 3:
+            stars += 1
+            reasons.append(f"EPS 預估上修 +{pct30:.1f}%/30d")
+
+    # EPS revision count net positive in past week
+    erc = r.get('epsRevisionCounts')
+    if isinstance(erc, dict):
+        net7 = (erc.get('up7d') or 0) - (erc.get('down7d') or 0)
+        if net7 >= 3:
+            stars += 1
+            reasons.append(f"分析師預估淨上修 +{net7}/7d")
+
     if stars >= 3:
         candidates.append({
-            'symbol':           r['symbol'],
-            'name':             r.get('name', r['symbol']),
-            'price':            r.get('price'),
-            'rsRating':         r.get('rsRating'),
-            'compositeScore':   r.get('compositeScore'),
-            'daysToEarnings':   dte,
-            'vcpScore':         vcp_score,
+            'symbol':             r['symbol'],
+            'name':               r.get('name', r['symbol']),
+            'price':              r.get('price'),
+            'rsRating':           r.get('rsRating'),
+            'compositeScore':     r.get('compositeScore'),
+            'daysToEarnings':     dte,
+            'vcpScore':           vcp_score,
             'recentUpgradeCount': len(upgrades),
-            'isDiscovery':      not any(l['symbol'] == r['symbol'] for l in leaders),
-            'stars':            stars,
-            'reasons':          reasons,
+            'epsRevisionPct30d':  (r.get('epsRevision') or {}).get('pct30d'),
+            'epsRevisionNet7d':   ((r.get('epsRevisionCounts') or {}).get('up7d') or 0) - ((r.get('epsRevisionCounts') or {}).get('down7d') or 0) if r.get('epsRevisionCounts') else None,
+            'isDiscovery':        not any(l['symbol'] == r['symbol'] for l in leaders),
+            'stars':              stars,
+            'reasons':            reasons,
         })
 
 candidates.sort(key=lambda x: (-x['stars'], -(x.get('compositeScore') or 0)))

@@ -1177,6 +1177,18 @@ async function analyzeStock() {
   if (scanEntry.shortPctOfFloat != null && scanEntry.shortPctOfFloat > 0.20) {
    catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.4)" title="高 short interest 有 squeeze 潛力">⚡ 空頭 ' + (scanEntry.shortPctOfFloat * 100).toFixed(0) + '%</span>');
   }
+  // EPS Revision Momentum — academic-validated alpha factor (Stickel 1989, Womack 1996)
+  const epsR = scanEntry.epsRevision;
+  if (epsR && epsR.pct30d != null && epsR.pct30d >= 3) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;background:rgba(34,197,94,.18);color:#16a34a;border:1px solid rgba(34,197,94,.5)" title="分析師 EPS 預估近 30 天上修，學術文獻中最穩定的基本面 alpha 因子之一">🔥 EPS 預估 +' + epsR.pct30d.toFixed(1) + '%/30d</span>');
+  } else if (epsR && epsR.pct30d != null && epsR.pct30d <= -3) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.4)" title="分析師 EPS 預估下修，警示訊號">⚠ EPS 預估 ' + epsR.pct30d.toFixed(1) + '%/30d</span>');
+  }
+  // EPS Revision Counts — explicit upgrade/downgrade analyst count
+  const erc = scanEntry.epsRevisionCounts;
+  if (erc && (erc.up7d || 0) - (erc.down7d || 0) >= 3) {
+   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.4)" title="過去 7 天分析師預估值淨上修人數">📊 分析師淨上修 +' + ((erc.up7d || 0) - (erc.down7d || 0)) + '/7d</span>');
+  }
  }
  // Triple-resonance match
  const tripleRes = window._tripleResonanceCache ? window._tripleResonanceCache.find(t => t.symbol === ticker) : null;
