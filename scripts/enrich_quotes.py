@@ -260,25 +260,27 @@ print(f"Cache writes: {enriched_quote} quotes, {enriched_sector} sectors")
 if failed[:3]:
     print(f"Sample failures: {failed[:3]}")
 
-# Apply caches to scan records
+# Apply caches to scan records — defensive: cache entries may be None
 def apply(record):
     sym = record['symbol']
-    if sym in quote_cache:
-        q = quote_cache[sym].get('data', {})
-        record['earningsDate']     = q.get('earningsDate')
-        record['daysToEarnings']   = q.get('daysToEarnings')
-        record['shortPctOfFloat']  = q.get('shortPctOfFloat')
-        record['shortRatio']       = q.get('shortRatio')
-        record['recentUpgrades']   = q.get('recentUpgrades', [])
-        record['recentDowngrades'] = q.get('recentDowngrades', [])
-        record['surpriseHistory']  = q.get('surpriseHistory', [])
-        record['recommendation']   = q.get('recommendation')
-    if sym in sector_cache:
-        s = sector_cache[sym]
-        record['sector']    = s.get('sector')
-        record['industry']  = s.get('industry')
+    qe = quote_cache.get(sym)
+    if isinstance(qe, dict):
+        q = qe.get('data') or {}
+        if isinstance(q, dict):
+            record['earningsDate']     = q.get('earningsDate')
+            record['daysToEarnings']   = q.get('daysToEarnings')
+            record['shortPctOfFloat']  = q.get('shortPctOfFloat')
+            record['shortRatio']       = q.get('shortRatio')
+            record['recentUpgrades']   = q.get('recentUpgrades') or []
+            record['recentDowngrades'] = q.get('recentDowngrades') or []
+            record['surpriseHistory']  = q.get('surpriseHistory') or []
+            record['recommendation']   = q.get('recommendation')
+    se = sector_cache.get(sym)
+    if isinstance(se, dict):
+        record['sector']    = se.get('sector')
+        record['industry']  = se.get('industry')
         if not record.get('sectorEtf'):
-            record['sectorEtf'] = s.get('etf')
+            record['sectorEtf'] = se.get('etf')
 
 for r in leaders:     apply(r)
 for r in discoveries: apply(r)
