@@ -156,28 +156,18 @@ function tagValue(xml, tag) {
 }
 
 async function parseForm4(cik, accession, primaryDoc) {
-  // SEC archives URLs are unpadded CIK (strip leading zeros) + accession without dashes
   const cikUnpadded = String(parseInt(cik, 10));
   const accClean = accession.replace(/-/g, '');
   const baseUrl = `https://www.sec.gov/Archives/edgar/data/${cikUnpadded}/${accClean}`;
-  // Form 4 primary doc is typically a .xml — fetch it
-  // primaryDoc field might already be the XML filename, fall back to standard names.
-  const candidates = [
-    primaryDoc,
-    'primary_doc.xml',
-    'doc4.xml',
-    `${accClean}.xml`,
-  ].filter(Boolean);
-
+  // 2026-05-19 speed-up: primaryDoc is already the correct XML filename from
+  // SEC submissions API. Previous code tried 4 candidates per filing, each
+  // 404 taking ~500ms → ~2s wasted per filing on lookups.
+  if (!primaryDoc) return null;
   let xml = null;
-  for (const fname of candidates) {
-    try {
-      xml = await secFetch(`${baseUrl}/${fname}`, 'text');
-      if (xml && xml.includes('ownershipDocument')) break;
-      xml = null;
-    } catch (e) { /* try next candidate */ }
-  }
-  if (!xml) return null;
+  try {
+    xml = await secFetch(`${baseUrl}/${primaryDoc}`, 'text');
+    if (!xml || !xml.includes('ownershipDocument')) return null;
+  } catch (e) { return null; }
 
   // Insider name + title
   const ownerBlock = tagText(xml, 'reportingOwner');
@@ -213,11 +203,11 @@ async function parseForm4(cik, accession, primaryDoc) {
 
 // ── Per-symbol aggregation ────────────────────────────────────────────────
 async function scanSymbol(symbol, cik) {
-  // 2026-05-19: wrap whole symbol scan in 60s timeout so one slow SEC EDGAR
-  // call (e.g. CDN hiccup) can't hang the entire workflow.
+  // 2026-05-19 (v2): 30s timeout. With single-fetch parseForm4 and no inner
+  // DELAY, even tickers with 20 Form 4 filings should finish in <15s.
   return Promise.race([
     _scanSymbolImpl(symbol, cik),
-    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 60s')), 60000)),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 30s')), 30000)),
   ]).catch(() => null);
 }
 
@@ -226,14 +216,17 @@ async function _scanSymbolImpl(symbol, cik) {
     const filings = await getRecentForm4Filings(cik);
     if (!filings.length) return null;
 
+    // Parallel-fetch all filings for this ticker (Promise.all with bounded count
+    // — getRecentForm4Filings already limits to last 30 days = typically <10)
+    const settled = await Promise.allSettled(
+      filings.map(f => parseForm4(cik, f.accession, f.primaryDoc))
+    );
     const allPurchases = [];
-    for (const f of filings) {
-      try {
-        const purchases = await parseForm4(cik, f.accession, f.primaryDoc);
-        if (purchases && purchases.length) allPurchases.push(...purchases);
-        await DELAY(120); // pace SEC requests
-      } catch (e) { /* skip broken filings */ }
-    }
+    settled.forEach(r => {
+      if (r.status === 'fulfilled' && r.value && r.value.length) {
+        allPurchases.push(...r.value);
+      }
+    });
     if (!allPurchases.length) return null;
 
     const totalValue30d = allPurchases.reduce((s, p) => s + p.value, 0);
