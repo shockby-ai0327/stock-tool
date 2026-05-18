@@ -28,15 +28,28 @@ jobs:
         with:
           ref: main
 
+      # Python for yfinance news fetch (Yahoo blocks node-fetch on news endpoint)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install yfinance pandas
+
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install Node deps
         run: npm install node-fetch
         working-directory: scripts
 
+      # Step A: Python pre-fetches news headlines via yfinance
+      - name: Fetch US news via Python yfinance
+        run: python scripts/fetch_news.py us
+
+      # Step B: Node sends headlines to Claude for sentiment classification
       - name: Run news sentiment scan (US)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -48,6 +61,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           [ -f data/us_news_sentiment.json ] && git add data/us_news_sentiment.json || true
           [ -f data/tw_news_sentiment.json ] && git add data/tw_news_sentiment.json || true
+          [ -f data/us_news_raw.json ]       && git add data/us_news_raw.json       || true
+          [ -f data/tw_news_raw.json ]       && git add data/tw_news_raw.json       || true
           git diff --cached --quiet || git commit -m "news: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git pull --rebase --autostash || true
           git push

@@ -40,6 +40,11 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/signal_history.json data/signal_stats.json 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "backtest: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          # 2026-05-19 FIX: add files individually so missing one doesn't abort all
+          [ -f data/signal_history.json ] && git add data/signal_history.json || true
+          [ -f data/signal_stats.json ]   && git add data/signal_stats.json   || true
+          git diff --cached --quiet && echo "(no backtest changes)" || git commit -m "backtest: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          # FIX: pull --rebase before push to avoid race with parallel workflows
+          # (backtest, news-scan, ai-analysis all triggered by stock-scan completion)
+          git pull --rebase --autostash 2>&1 | tail -3 || true
           git push

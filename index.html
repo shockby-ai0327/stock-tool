@@ -5641,7 +5641,9 @@ let _scannerCustomPool = JSON.parse(localStorage.getItem('scanner_custom_pool') 
 function saveCustomPool() { localStorage.setItem('scanner_custom_pool', JSON.stringify(_scannerCustomPool)); }
 let _scannerResults = [];
 let _scannerTimer = null;
-let _todayWatchlist = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
+// 2026-05-19: vestigial — watchlist feature deleted but cloud sync legacy still
+// references these var names. Keep declarations as empty stubs.
+let _todayWatchlist = [];
 let _watchlistTimer = null;
 
 // ============ FRED — 總經指標 ============

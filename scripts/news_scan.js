@@ -42,26 +42,23 @@ function saveJSON(filename, data) {
   writeFileSync(join(DATA_DIR, filename), JSON.stringify(data, null, 2));
 }
 
-// ── Yahoo news fetch (no auth) ────────────────────────────────────────────
-async function fetchYahooNews(symbol, count = 10) {
-  const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=${count}&quotesCount=0`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': YF_UA, 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  const news = data?.news || [];
-  // Filter to last 7 days
-  const cutoffSec = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
-  return news
-    .filter(n => (n.providerPublishTime || 0) >= cutoffSec && n.title)
-    .map(n => ({
-      title:      n.title,
-      publisher:  n.publisher || '',
-      publishAt:  n.providerPublishTime || 0,
-      link:       n.link || '',
-    }));
+// 2026-05-19: Yahoo blocks node-fetch on /v1/finance/search (same as chart).
+// News headlines are pre-fetched by Python yfinance (scripts/fetch_news.py)
+// and stored in data/{market}_news_raw.json. We just read that file.
+function readPythonNewsFile(market) {
+  const path = join(DATA_DIR, `${market}_news_raw.json`);
+  if (!existsSync(path)) return null;
+  try { return JSON.parse(readFileSync(path, 'utf8')); }
+  catch (e) { return null; }
+}
+function getHeadlinesFromCache(symbol, newsCache) {
+  if (!newsCache || !newsCache.bySymbol) return [];
+  const items = newsCache.bySymbol[symbol] || [];
+  return items.slice(0, 10).map(n => ({
+    title:     n.title,
+    publisher: n.publisher || '',
+    link:      n.link || '',
+  }));
 }
 
 // ── Claude Haiku sentiment scoring ────────────────────────────────────────
@@ -136,12 +133,22 @@ async function main() {
 
   console.log(`  Targets: top ${ranked.length} stocks by composite score`);
 
+  // 2026-05-19: load headlines from Python-fetched cache
+  const newsCache = readPythonNewsFile(market);
+  if (!newsCache) {
+    console.error(`  ❌ ${market}_news_raw.json missing — Python fetch_news.py didn't run`);
+    console.error('     Continuing with empty news (Claude sentiment will be skipped)');
+  } else {
+    const totalHeadlines = Object.values(newsCache.bySymbol || {}).reduce((s, v) => s + v.length, 0);
+    console.log(`  Loaded news cache: ${Object.keys(newsCache.bySymbol || {}).length} symbols, ${totalHeadlines} headlines`);
+  }
+
   const bySymbol = {};
   for (let i = 0; i < ranked.length; i++) {
     const s = ranked[i];
     try {
       process.stdout.write(`  [${i + 1}/${ranked.length}] ${s.symbol}... `);
-      const headlines = await fetchYahooNews(s.symbol);
+      const headlines = getHeadlinesFromCache(s.symbol, newsCache);
       if (!headlines.length) { console.log('no recent news'); continue; }
 
       const sentiment = await scoreSentiment(s.symbol, headlines);
