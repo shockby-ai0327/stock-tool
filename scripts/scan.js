@@ -970,7 +970,8 @@ function computeTripleResonance(leaders, discoveries, insiderData, newsSentiment
       reasons.push('近期新聞偏多');
     }
 
-    if (stars >= 3) {
+    // 2026-05-19: raised from 3★ to 4★ — 3★ was too loose
+    if (stars >= 4) {
       candidates.push({
         symbol:             stock.symbol,
         name:               stock.name,
@@ -1406,22 +1407,34 @@ async function scanUS() {
 async function scanTW() {
   console.log('\n=== TW RS Leader Scan ===');
 
+  // 2026-05-19: TW scan also reads from ohlcv_cache.json (populated by Python
+  // yfinance fetch_ohlcv.py). Yahoo blocks node-fetch on chart endpoint =
+  // direct getOHLCV() returns 'no data' from GH Actions IPs.
+  const ohlcvCache = loadJSON('ohlcv_cache.json', {});
+
   let benchReturn = 0;
   try {
-    const bench = await getOHLCV('0050.TW', '12mo');
+    const bench = await getOHLCVCached('0050.TW', ohlcvCache);
+    if (!bench || !bench.closes || bench.closes.length < 100) {
+      throw new Error('0050.TW missing from cache — Python fetcher likely failed for TW tickers');
+    }
     const n = bench.closes.length;
     benchReturn = (bench.closes[Math.max(0, n - 21)] - bench.closes[0]) / bench.closes[0] * 100;
-    console.log(`  0050.TW 12-1mo: ${benchReturn.toFixed(2)}%`);
-  } catch (e) { console.warn('  0050.TW failed:', e.message); }
+    console.log(`  0050.TW 12-1mo: ${benchReturn.toFixed(2)}% ${bench._fromCache ? '(cache)' : ''}`);
+  } catch (e) {
+    console.error(`  ❌ 0050.TW failed: ${e.message}`);
+    console.error('  Aborting TW scan (would produce useless empty output).');
+    process.exit(2);
+  }
 
   const results = [];
-  const BATCH = 8;
+  const BATCH = 25;
 
   for (let i = 0; i < TW_POOL.length; i += BATCH) {
     const batch = TW_POOL.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
       try {
-        const { closes, highs, lows, volumes, meta } = await getOHLCV(sym, '12mo');
+        const { closes, highs, lows, volumes, meta } = await getOHLCVCached(sym, ohlcvCache);
         if (closes.length < 60) return null;
         const m = calcMetrics(closes, highs, volumes, meta, benchReturn);
         if (m.price < m.ma50 || m.ret12_1 <= 0) return null;

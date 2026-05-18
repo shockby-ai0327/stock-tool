@@ -31,12 +31,15 @@ from datetime import datetime, timezone
 
 DATA_DIR = Path(__file__).resolve().parent.parent / 'data'
 DATA_DIR.mkdir(exist_ok=True)
-UNIVERSE_FILE = DATA_DIR / 'universe_static.json'
+UNIVERSE_FILE    = DATA_DIR / 'universe_static.json'
+UNIVERSE_FILE_TW = DATA_DIR / 'universe_static_tw.json'
 CACHE_PATH = DATA_DIR / 'ohlcv_cache.json'
 
 # Benchmark ETFs we always want fresh (used for SPY canary + sectorRS)
+# 2026-05-19: added 0050.TW (TW benchmark) so TW scan no longer fails.
 BENCHMARK_ETFS = ['SPY','SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE',
-                  'IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN','QQQ','IWM','DIA']
+                  'IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN','QQQ','IWM','DIA',
+                  '0050.TW','0056.TW']
 
 now_ms = int(time.time() * 1000)
 now_utc = datetime.now(timezone.utc)
@@ -62,12 +65,17 @@ if CACHE_PATH.exists():
     except Exception as e:
         print(f"WARN: cache parse failed ({e}), starting fresh")
 
-# Build target list
+# Build target list — US + TW
 universe = []
 if UNIVERSE_FILE.exists():
     universe = json.loads(UNIVERSE_FILE.read_text()).get('tickers', [])
 else:
     print(f"WARN: {UNIVERSE_FILE} missing — using benchmarks only")
+# TW universe (smaller, ~100 tickers)
+if UNIVERSE_FILE_TW.exists():
+    tw_tickers = json.loads(UNIVERSE_FILE_TW.read_text()).get('tickers', [])
+    universe = list(set(universe + tw_tickers))
+    print(f"  + TW universe: {len(tw_tickers)} tickers")
 
 all_targets = list({*BENCHMARK_ETFS, *universe})
 # Benchmarks use a tighter TTL to keep SPY etc. fresh

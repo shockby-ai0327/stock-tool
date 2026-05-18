@@ -585,27 +585,9 @@ firebase.initializeApp(_fbConfig);
  <div id="market-regime-banner" style="margin-bottom:14px"></div>
  <!-- 掃描器專屬市場環境警告 -->
  <div id="scan-regime-warning" style="display:none"></div>
- <!-- 自訂掃描清單管理器 -->
- <div id="custom-pool-manager" style="display:none;margin-bottom:14px">
-   <div class="card" style="padding:14px">
-     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-       <div class="section-label" style="margin:0">自訂掃描清單</div>
-       <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="clearCustomPool()">清空</button>
-     </div>
-     <div id="custom-pool-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:10px"></div>
-     <div style="display:flex;gap:8px">
-       <input id="custom-pool-input" placeholder="輸入代號（AAPL / 2330.TW）..." style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addToCustomPool()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-       <button class="btn btn-sm btn-primary" onclick="addToCustomPool()">加入</button>
-       <button class="btn btn-sm" style="background:var(--card);border:1px solid var(--border);color:var(--muted)" onclick="importFromWatchlist()" title="從今日自選股匯入">匯入自選股</button>
-     </div>
-     <div style="font-size:11px;color:var(--muted);margin-top:8px">最多 50 檔 · 美股或台股（.TW 後綴）皆可混合加入</div>
-   </div>
- </div>
-
  <div class="tab-bar" id="scanner-market-tabs">
  <button class="active" onclick="switchScannerMarket('us')">美股</button>
  <button onclick="switchScannerMarket('tw')">台股</button>
- <button onclick="switchScannerMarket('custom')">自選池</button>
  </div>
  <div class="tab-bar" id="scanner-tabs">
  <button class="active" id="scan-tab-rsleader"  onclick="switchScanStrategy('rsleader')">動能領袖</button>
@@ -619,15 +601,6 @@ firebase.initializeApp(_fbConfig);
  <div class="card" id="scanner-results">
  <h3>掃描結果</h3>
  <div id="scanner-table"></div>
- </div>
- <div class="card" id="scanner-watchlist" style="border:2px solid var(--accent)">
- <div style="display:flex;justify-content:space-between;align-items:center">
- <h3>今日標的（即時監控中）</h3>
- <span id="scanner-market-status"></span>
- </div>
- <div style="font-size:12px;color:var(--muted);margin-bottom:12px">數據延遲約 15-20 秒，適合 15 分鐘以上級別的交易決策</div>
- <div id="watchlist-cards"></div>
- <div id="watchlist-empty" style="text-align:center;padding:30px;color:var(--muted)">從上方掃描結果點擊 [+] 加入今日標的</div>
  </div>
  </div>
  <div id="page-education" class="page">
@@ -847,8 +820,10 @@ async function yfChart(ticker, range, interval, timeoutMs = 8000) {
 }
 
 async function yfPageFundamentals(ticker) {
+ // 2026-05-19: Yahoo blocks browser IPs from scraping HTML pages.
+ // Try Yahoo first (still works occasionally), then fall back to our
+ // quote_cache.json which has fundamentals from yfinance ticker.info.
  try {
- // Taiwan stocks: use tw.stock.yahoo.com which has different data structure
  if (ticker.endsWith('.TW') || ticker.endsWith('.TWO')) {
  return await twPageFundamentals(ticker);
  }
@@ -856,11 +831,58 @@ async function yfPageFundamentals(ticker) {
  const html = await r.text();
  const regex = /<script type="application\/json" data-sveltekit-fetched data-url="https:\/\/query1\.finance\.yahoo\.com\/v10\/finance\/quoteSummary[^"]*"[^>]*>([\s\S]*?)<\/script>/;
  const match = html.match(regex);
- if (!match) return null;
- const data = JSON.parse(match[1]);
- const body = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
- return body.quoteSummary.result[0];
- } catch (e) { console.warn('Page scrape failed:', e); return null; }
+ if (match) {
+   const data = JSON.parse(match[1]);
+   const body = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+   if (body.quoteSummary?.result?.[0]) return body.quoteSummary.result[0];
+ }
+ } catch (e) { /* fall through */ }
+
+ // Fallback: read fundamentals from our committed quote_cache.json
+ try {
+   const r = await fetch(GH_RAW + 'quote_cache.json?t=' + Math.floor(Date.now() / 900000));
+   if (r.ok) {
+     const cache = await r.json();
+     const entry = cache[ticker.toUpperCase()];
+     const f = entry?.data?.fundamentals;
+     if (f) {
+       // Map Python-side fundamentals into Yahoo quoteSummary shape that
+       // valueAnalysis() expects (summaryDetail / defaultKeyStatistics / financialData).
+       const w = v => v != null && !isNaN(v) ? { raw: v } : undefined;
+       return {
+         summaryDetail: {
+           trailingPE:    w(f.trailingPE),
+           forwardPE:     w(f.forwardPE),
+           priceToBook:   w(f.priceToBook),
+           dividendYield: w(f.dividendYield),
+           marketCap:     w(f.marketCap),
+           beta:          w(f.beta),
+         },
+         defaultKeyStatistics: {
+           pegRatio:        w(f.pegRatio),
+           priceToBook:     w(f.priceToBook),
+           forwardPE:       w(f.forwardPE),
+           trailingPegRatio:w(f.pegRatio),
+         },
+         financialData: {
+           returnOnEquity:  w(f.returnOnEquity),
+           profitMargins:   w(f.profitMargins),
+           operatingMargins:w(f.operatingMargins),
+           revenueGrowth:   w(f.revenueGrowth),
+           earningsGrowth:  w(f.earningsGrowth),
+           debtToEquity:    w(f.debtToEquity),
+           targetMeanPrice: w(f.targetMeanPrice),
+           currentPrice:    entry?.data ? undefined : undefined,
+         },
+         price: {
+           currency: f.currency,
+         },
+         _source: 'quote_cache',
+       };
+     }
+   }
+ } catch (e) { console.warn('quote_cache fundamentals fallback failed:', e.message); }
+ return null;
 }
 
 async function twPageFundamentals(ticker) {
@@ -5385,7 +5407,17 @@ async function switchStockTF(ticker, range, interval, btn) {
  el.innerHTML = '';
  renderKline('stock-kline', ohlcv);
  } catch (e) {
- el.innerHTML = '<div style="color:var(--red);padding:12px">載入失敗: ' + e.message + '</div>';
+ // 2026-05-19: 友善訊息分流 — intraday 沒 fallback, 日線/週線有 OHLCV cache fallback
+ const isIntraday = ['5m','15m','1h'].includes(interval);
+ const msg = isIntraday
+   ? '<div style="padding:16px;text-align:center;color:var(--muted);line-height:1.7">' +
+     '<div style="font-size:20px;margin-bottom:8px">⏱</div>' +
+     '<div style="font-weight:600;color:var(--text)">分時 K 線暫不可用</div>' +
+     '<div style="font-size:12px;margin-top:6px">Yahoo 阻擋瀏覽器 IP 的分時請求。<br>' +
+     '我們的後端快取只有日線資料。<br><br>' +
+     '<button onclick="switchStockTF(\'' + ticker + '\',\'6mo\',\'1d\',document.querySelector(\'.tab-bar button\'))" style="padding:6px 14px;border-radius:6px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:12px">改看日線</button></div></div>'
+   : '<div style="color:var(--red);padding:12px">載入失敗：' + e.message + '<br><span style="color:var(--muted);font-size:11px">此股可能不在掃描宇宙內（僅 1213 檔有後端快取）</span></div>';
+ el.innerHTML = msg;
  }
 }
 
@@ -5810,6 +5842,11 @@ async function fetchMarketRegime() {
  window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall: finalOverall, hmm: existingHmm || null };
  renderRegimeBanner();
  try { updateScanRegimeWarning(); } catch(e) {}
+ // 2026-05-19: refresh dashboard regime div using same _rsRegimeCard source
+ try {
+   const dRegimeDiv = document.getElementById('dash-regime');
+   if (dRegimeDiv && typeof _rsRegimeCard === 'function') dRegimeDiv.innerHTML = _rsRegimeCard();
+ } catch(e) {}
  // FRED 殖利率曲線（非阻塞）
  fetchFredMacro().then(fred => {
    if (!window._marketRegime) return;
@@ -6034,194 +6071,37 @@ function renderEdgarCard(data) {
 }
 
 
-function renderCustomPoolTags() {
-  const el = document.getElementById('custom-pool-tags');
-  if (!el) return;
-  if (!_scannerCustomPool.length) {
-    el.innerHTML = '<span style="color:var(--muted);font-size:12px">尚無標的，請輸入代號後加入</span>';
-    return;
-  }
-  el.innerHTML = _scannerCustomPool.map(sym =>
-    '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:20px;font-size:12px;color:var(--accent)">' +
-    sym + '<span style="cursor:pointer;color:var(--muted);margin-left:2px" onclick="removeFromCustomPool(\'' + sym + '\')">&times;</span></span>'
-  ).join('');
-}
-
-function addToCustomPool() {
-  const input = document.getElementById('custom-pool-input');
-  if (!input) return;
-  const raw = input.value.trim().toUpperCase().split(/[\s,，]+/);
-  raw.forEach(sym => {
-    if (!sym) return;
-    if (_scannerCustomPool.length >= 50) { alert('最多 50 檔'); return; }
-    if (!_scannerCustomPool.includes(sym)) _scannerCustomPool.push(sym);
-  });
-  saveCustomPool();
-  renderCustomPoolTags();
-  input.value = '';
-}
-
-function removeFromCustomPool(sym) {
-  _scannerCustomPool = _scannerCustomPool.filter(s => s !== sym);
-  saveCustomPool();
-  renderCustomPoolTags();
-}
-
-function clearCustomPool() {
-  if (!confirm('確定清空自訂清單？')) return;
-  _scannerCustomPool = [];
-  saveCustomPool();
-  renderCustomPoolTags();
-}
-
-function importFromWatchlist() {
-  const wl = JSON.parse(localStorage.getItem('scanner-watchlist') || '[]');
-  const syms = wl.map(w => (w.symbol || w).toUpperCase()).filter(Boolean);
-  syms.forEach(sym => {
-    if (_scannerCustomPool.length >= 50) return;
-    if (!_scannerCustomPool.includes(sym)) _scannerCustomPool.push(sym);
-  });
-  saveCustomPool();
-  renderCustomPoolTags();
-}
+// 2026-05-19: customPool + watchlist features removed per user feedback ("自選池太雞肋").
+// Stubs kept so external callers (e.g. legacy sync code) don't crash.
+function removeFromCustomPool() {}
+function clearCustomPool() {}
+function importFromWatchlist() {}
+function renderCustomPoolTags() {}
+function addToCustomPool() {}
 
 function switchScannerMarket(market) {
   _scannerMarket = market;
-  window._marketRegime = null; // force re-fetch for correct benchmark
+  window._marketRegime = null;
   document.querySelectorAll('#scanner-market-tabs button').forEach((b, i) =>
-    b.classList.toggle('active', ['us','tw','custom'][i] === market)
+    b.classList.toggle('active', ['us','tw'][i] === market)
   );
-  const mgr = document.getElementById('custom-pool-manager');
-  if (mgr) { mgr.style.display = market === 'custom' ? '' : 'none'; }
-  if (market === 'custom') renderCustomPoolTags();
-  // Re-run whichever strategy tab is currently active
   const strat = window._currentScanStrat || 'rsleader';
   if (strat === 'rsleader') runRSLeaderScan();
 }
 
-function removeFromWatchlist(symbol) {
- _todayWatchlist = _todayWatchlist.filter(w => w.symbol !== symbol);
- saveTodayWatchlist(); renderWatchlist();
- if (_todayWatchlist.length === 0) stopWatchlistRefresh();
-}
-function saveTodayWatchlist() { localStorage.setItem('scanner-watchlist', JSON.stringify(_todayWatchlist)); syncField('watchlist', _todayWatchlist); }
-
-function startWatchlistRefresh() {
- if (_watchlistTimer) return;
- if (_todayWatchlist.length === 0) return;
- _watchlistTimer = setInterval(async () => { if (!document.hidden) await refreshWatchlist(); }, 10000);
- refreshWatchlist();
-}
-function stopWatchlistRefresh() { if (_watchlistTimer) { clearInterval(_watchlistTimer); _watchlistTimer = null; } }
-
-async function refreshWatchlist() {
- if (_todayWatchlist.length === 0) return;
- const quotes = await batchQuote(_todayWatchlist.map(w => w.symbol));
- _todayWatchlist.forEach(w => {
- const q = quotes.find(qq => qq.symbol === w.symbol);
- if (q) {
- w.currentPrice = q.regularMarketPrice; w.changePct = q.regularMarketChangePercent;
- w.volume = q.regularMarketVolume; w.avgVolume = q.averageDailyVolume3Month;
- w.dayHigh = q.regularMarketDayHigh; w.dayLow = q.regularMarketDayLow;
- if (w.entryPrice && w.currentPrice <= w.entryPrice && !w.alerts.includes('entry')) { w.alerts.push('entry'); triggerAlert(w.symbol, '已觸及進場價 ' + w.entryPrice); }
- if (w.stopPrice && w.currentPrice <= w.stopPrice && !w.alerts.includes('stop')) { w.alerts.push('stop'); triggerAlert(w.symbol, ' 已觸及停損價 ' + w.stopPrice); }
- }
- });
- renderWatchlist();
-}
-
-function triggerAlert(symbol, message) {
- const notification = document.createElement('div');
- notification.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px 20px;background:var(--accent);color:#fff;font-weight:600;text-align:center;z-index:9999;animation:flashGreen 2s ease-out';
- notification.textContent = '' + symbol + ': ' + message;
- document.body.appendChild(notification);
- setTimeout(() => notification.remove(), 5000);
- try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value = 880; gain.gain.value = 0.1; osc.start(); setTimeout(() => { osc.stop(); ctx.close(); }, 200); } catch (e) {}
-}
-
-function renderWatchlist() {
- const cardsDiv = document.getElementById('watchlist-cards');
- const emptyDiv = document.getElementById('watchlist-empty');
- const statusEl = document.getElementById('scanner-market-status');
- const now = new Date();
- const utcH = now.getUTCHours(), utcM = now.getUTCMinutes(), utcMin = utcH * 60 + utcM;
- const usOpen = utcMin >= 810 && utcMin < 1200;
- const twOpen = utcMin >= 60 && utcMin < 330;
- const weekday = now.getDay() >= 1 && now.getDay() <= 5;
- let marketStatus = '';
- if (_scannerMarket === 'us') marketStatus = usOpen && weekday ? '<span style="color:var(--green)">美股 開盤中</span>' : '<span style="color:var(--muted)">美股 休市</span>';
- else marketStatus = twOpen && weekday ? '<span style="color:var(--green)">台股 開盤中</span>' : '<span style="color:var(--muted)">台股 休市</span>';
- if (_todayWatchlist.length > 0) marketStatus += ' · <span style="color:var(--accent)">每 10 秒刷新</span>';
- statusEl.innerHTML = marketStatus;
- if (_todayWatchlist.length === 0) { cardsDiv.innerHTML = ''; emptyDiv.style.display = 'block'; return; }
- emptyDiv.style.display = 'none';
- let html = '';
- _todayWatchlist.forEach(w => {
- const up = (w.changePct || 0) >= 0;
- const hasAlert = w.alerts && w.alerts.length > 0;
- const borderColor = hasAlert ? 'var(--yellow)' : 'var(--border)';
- const flashClass = w.alerts?.includes('entry') ? ' class="alert-flash"' : '';
- html += '<div class="card" style="border-color:' + borderColor + ';margin-bottom:12px"' + flashClass + '>';
- html += '<div style="display:flex;justify-content:space-between;align-items:center">';
- html += '<div><b style="font-size:18px;cursor:pointer;color:var(--accent)" onclick="document.getElementById(\'ticker-input\').value=\'' + w.symbol + '\';showPage(\'stock\');analyzeStock()">' + w.symbol + '</b> <span style="color:var(--muted);font-size:13px">' + (w.name || '') + '</span></div>';
- html += '<div style="text-align:right"><div style="font-size:22px;font-weight:700">' + (w.currentPrice ? w.currentPrice.toFixed(2) : '-') + '</div>';
- html += '<span style="color:' + (up ? 'var(--green)' : 'var(--red)') + ';font-weight:600">' + (up ? '+' : '') + (w.changePct ? w.changePct.toFixed(2) : '0') + '%</span></div></div>';
- html += '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0">';
- html += '<span>信號: <span class="tag" style="background:rgba(59,130,246,.15);color:var(--accent)">' + (w.signal || '-') + '</span></span>';
- html += '<span>量: ' + (w.volume ? (w.volume / 1e6).toFixed(1) + 'M' : '-') + '</span>';
- html += '<span>今高: ' + (w.dayHigh ? w.dayHigh.toFixed(2) : '-') + '</span>';
- html += '<span>今低: ' + (w.dayLow ? w.dayLow.toFixed(2) : '-') + '</span></div>';
- html += '<div style="display:flex;gap:12px;margin:8px 0;align-items:center;flex-wrap:wrap">';
- html += '<div class="form-group" style="flex:1;min-width:120px"><label>進場價</label><input type="number" step="0.01" value="' + (w.entryPrice || '') + '" onchange="updateWatchlistField(\'' + w.symbol + '\',\'entryPrice\',this.value)" placeholder="設定進場觸發價" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;width:100%"></div>';
- html += '<div class="form-group" style="flex:1;min-width:120px"><label>停損價</label><input type="number" step="0.01" value="' + (w.stopPrice || '') + '" onchange="updateWatchlistField(\'' + w.symbol + '\',\'stopPrice\',this.value)" placeholder="設定停損觸發價" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;width:100%"></div>';
- if (w.entryPrice && w.stopPrice && w.entryPrice > w.stopPrice) {
- const risk = w.entryPrice - w.stopPrice; const target = w.entryPrice + risk * 2.5; const rr = ((target - w.entryPrice) / risk).toFixed(1);
- html += '<div style="text-align:center;min-width:80px"><div style="font-size:11px;color:var(--muted)">停利目標</div><div style="font-size:16px;font-weight:700;color:var(--accent)">' + target.toFixed(2) + '</div><div style="font-size:11px;color:var(--yellow)">R倍數 1:' + rr + '</div></div>';
- }
- html += '</div>';
- if (w.atr && w.entryPrice) {
- const ep = w.entryPrice, atr = w.atr;
- const r1 = ep + atr, r2 = ep + 2*atr, r3 = ep + 3*atr;
- html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;padding:8px;background:rgba(0,0,0,.15);border-radius:8px">' +
- '<span style="font-size:10px;color:var(--muted);align-self:center">ATR ' + atr.toFixed(2) + ' →</span>' +
- '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(239,68,68,.12);color:var(--red)">停損 ' + (ep - 1.5*atr).toFixed(2) + '</span>' +
- '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.12);color:var(--green)">1R ' + r1.toFixed(2) + '</span>' +
- '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.15);color:var(--green)">2R ' + r2.toFixed(2) + '</span>' +
- '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.18);color:var(--green)">3R ' + r3.toFixed(2) + '</span>' +
- '</div>';
- }
- if (w.alerts?.includes('entry')) html += '<div style="padding:8px 12px;background:rgba(16,185,129,.15);border-radius:8px;color:var(--green);font-weight:600;margin:8px 0">已觸及進場價！請確認是否符合交易計畫後決策</div>';
- if (w.alerts?.includes('stop')) html += '<div style="padding:8px 12px;background:rgba(239,68,68,.15);border-radius:8px;color:var(--red);font-weight:600;margin:8px 0"> 已觸及停損價！建議立即評估是否出場</div>';
- html += '<div style="display:flex;gap:8px;margin-top:8px">';
- html += '<button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text)" onclick="showWatchlistChart(\'' + w.symbol + '\')">展開K線</button>';
- html += '<button class="btn btn-danger btn-sm" onclick="removeFromWatchlist(\'' + w.symbol + '\')">移除</button></div>';
- html += '<div id="watchlist-chart-' + w.symbol.replace('.', '_') + '" style="display:none;margin-top:12px"></div></div>';
- });
- cardsDiv.innerHTML = html;
-}
-
-function updateWatchlistField(symbol, field, value) {
- const w = _todayWatchlist.find(w => w.symbol === symbol);
- if (w) { w[field] = parseFloat(value) || null; saveTodayWatchlist(); renderWatchlist(); }
-}
-
-async function showWatchlistChart(symbol) {
- const chartId = 'watchlist-chart-' + symbol.replace('.', '_');
- const el = document.getElementById(chartId);
- if (!el) return;
- if (el.style.display !== 'none') { el.style.display = 'none'; return; }
- el.style.display = 'block'; el.innerHTML = '<div class="loading"><div class="spinner"></div></div>'; el.style.height = '300px';
- try {
- const chart = await yfChart(symbol, '1mo', '1d');
- const q = chart.indicators.quote[0]; const ohlcv = [];
- for (let i = 0; i < chart.timestamp.length; i++) { if (q.close[i] != null) ohlcv.push({ t: chart.timestamp[i], o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 }); }
- el.innerHTML = ''; renderKline(chartId, ohlcv);
- } catch (e) { el.innerHTML = '<div style="color:var(--red);padding:12px">圖表載入失敗</div>'; }
-}
+// Watchlist stubs — feature removed but old syncField('watchlist',...) and
+// startWatchlistRefresh() / loadScanner() etc. still reference these.
+function removeFromWatchlist() {}
+function saveTodayWatchlist() {}
+function startWatchlistRefresh() {}
+function stopWatchlistRefresh() {}
+async function refreshWatchlist() {}
+function renderWatchlist() {}
+function updateWatchlistField() {}
+async function showWatchlistChart() {}
+function triggerAlert() {}
 
 function loadScanner() {
- renderWatchlist();
- if (_todayWatchlist.length > 0) startWatchlistRefresh();
  if (_scannerTimer) clearInterval(_scannerTimer);
  _scannerTimer = setInterval(() => {
    if (_currentPage !== 'scanner') return;
@@ -7613,8 +7493,6 @@ async function renderDashboard(forceRescan) {
  const tnxPrc = tnx ? tnx.price : 4.2;
  const fgiScore = calcFGI(spyChg, vixPrc, qqqChg, tnxPrc);
  const fgiInfo = fgiLabel(fgiScore);
- const regime = assessMarketRegime(fgiScore, vixPrc, spyChg);
-
  const fgiCard = document.getElementById('dash-fgi-card');
  if (fgiCard) {
  fgiCard.innerHTML =
@@ -7624,12 +7502,17 @@ async function renderDashboard(forceRescan) {
  '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:12px"><div style="width:' + fgiScore + '%;height:100%;border-radius:2px;background:' + fgiInfo.color + ';transition:width .5s"></div></div>';
  }
 
+ // 2026-05-19: 統一規模判斷 — dashboard 用同一個 _rsRegimeCard 為單一真實來源
+ // (之前 dashboard 用 assessMarketRegime(FGI+VIX), scanner 用 _rsRegimeCard(SPY+VIX)
+ // 結果兩處顯示矛盾。現在共用同一個邏輯。)
  const regimeDiv = document.getElementById('dash-regime');
  if (regimeDiv) {
- regimeDiv.innerHTML = '<div style="background:rgba(0,0,0,.2);border-left:4px solid ' + regime.color + ';border-radius:6px;padding:12px 16px">' +
- '<div style="font-weight:700;color:' + regime.color + ';margin-bottom:4px">' + regime.label + '</div>' +
- '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">' + regime.desc + '</div>' +
- '<div style="font-size:13px;color:var(--text)">' + regime.tradeAdvice + '</div></div>';
+   // _rsRegimeCard reads window._marketRegime; if not loaded yet, render a
+   // simple placeholder and wait for fetchMarketRegime() to populate.
+   const html = (typeof _rsRegimeCard === 'function' && window._marketRegime)
+     ? _rsRegimeCard()
+     : '<div style="padding:10px 14px;color:var(--muted);font-size:12px">大盤環境載入中...</div>';
+   regimeDiv.innerHTML = html;
  }
 
  const statusDiv = document.getElementById('dash-market-status');
@@ -8223,7 +8106,7 @@ function renderTripleResonance(candidates, meta) {
   if (!candidates || !candidates.length) {
     el.innerHTML =
       '<div style="text-align:center;padding:14px 12px;color:var(--muted);font-size:12px;line-height:1.7">' +
-      '目前無同時滿足 3 個以上條件的標的' +
+      '目前無同時滿足 4 個以上條件的高品質標的' +
       '<div style="font-size:11px;color:var(--muted);margin-top:6px;opacity:.85">條件嚴格 — 沒有訊號不代表市場差，意味著你不會被假訊號干擾</div>' +
       '</div>';
     return;
@@ -10656,7 +10539,12 @@ async function renderStrategyPerformance() {
     const s = info.trailing_252d || {};
     const label = typeLabels[type] || type;
     if (s.insufficientData) {
-      return '<tr style="opacity:.5"><td style="padding:10px 8px"><b>' + label + '</b></td><td colspan="6" style="padding:10px 8px;color:var(--muted)">資料不足（N=' + (s.sampleSize || 0) + '，需 20+）</td></tr>';
+      const tracking = s.total || 0;
+      const closed = s.sampleSize || 0;
+      const msg = closed === 0 && tracking > 0
+        ? `追蹤中 ${tracking} 個訊號（尚無結案 — 等達標/停損/60天到期）`
+        : `已結案 ${closed} 個（需 20+ 才有統計顯著性，目前追蹤 ${tracking} 個）`;
+      return '<tr style="opacity:.6"><td style="padding:10px 8px"><b>' + label + '</b></td><td colspan="6" style="padding:10px 8px;color:var(--muted);font-size:11px">' + msg + '</td></tr>';
     }
     const winColor = s.winRate >= 0.6 ? 'var(--green)' : s.winRate >= 0.45 ? 'var(--yellow)' : 'var(--red)';
     const retColor = (s.avgReturn || 0) >= 5 ? 'var(--green)' : (s.avgReturn || 0) >= 0 ? 'var(--yellow)' : 'var(--red)';

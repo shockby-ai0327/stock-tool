@@ -93,7 +93,7 @@ now_ms = int(time.time() * 1000)
 QUOTE_TTL_MS  = 24 * 3600 * 1000      # 24h
 SECTOR_TTL_MS = 365 * 24 * 3600 * 1000  # 1 year
 
-CACHE_SCHEMA_VERSION = 2  # bump when adding fields, invalidates old entries
+CACHE_SCHEMA_VERSION = 3  # bump when adding fields, invalidates old entries (v3: added fundamentals)
 
 def is_fresh(cache_entry, ttl_ms):
     if not cache_entry: return False
@@ -280,6 +280,30 @@ for i, sym in enumerate(targets, 1):
             except Exception:
                 pass
 
+            # Fundamentals — extracted from same ticker.info call. Lets frontend
+            # render PE/PEG/ROE/yield without hitting Yahoo (which blocks browser).
+            def _fnum(k):
+                v = info.get(k)
+                try: return float(v) if v is not None else None
+                except Exception: return None
+            fundamentals = {
+                'trailingPE':       _fnum('trailingPE'),
+                'forwardPE':        _fnum('forwardPE'),
+                'priceToBook':      _fnum('priceToBook'),
+                'pegRatio':         _fnum('pegRatio') or _fnum('trailingPegRatio'),
+                'dividendYield':    _fnum('dividendYield'),
+                'returnOnEquity':   _fnum('returnOnEquity'),
+                'profitMargins':    _fnum('profitMargins'),
+                'operatingMargins': _fnum('operatingMargins'),
+                'revenueGrowth':    _fnum('revenueGrowth'),
+                'earningsGrowth':   _fnum('earningsGrowth'),
+                'debtToEquity':     _fnum('debtToEquity'),
+                'targetMeanPrice':  _fnum('targetMeanPrice'),
+                'marketCap':        _fnum('marketCap'),
+                'beta':             _fnum('beta'),
+                'currency':         info.get('currency'),
+            }
+
             quote_cache[sym] = {
                 'cachedAt':      now_ms,
                 'schemaVersion': CACHE_SCHEMA_VERSION,
@@ -294,6 +318,7 @@ for i, sym in enumerate(targets, 1):
                     'recommendation':     recommendation,
                     'epsRevision':        eps_revision,
                     'epsRevisionCounts':  eps_revision_counts,
+                    'fundamentals':       fundamentals,
                 },
             }
             enriched_quote += 1
@@ -382,7 +407,9 @@ for r in leaders + [d for d in discoveries if not any(l['symbol'] == d['symbol']
             stars += 1
             reasons.append(f"分析師預估淨上修 +{net7}/7d")
 
-    if stars >= 3:
+    # 2026-05-19: raised from 3★ to 4★ — 3★ was too loose (48% of leaders passed,
+    # almost no filtering value). 4★ requires real catalyst convergence.
+    if stars >= 4:
         candidates.append({
             'symbol':             r['symbol'],
             'name':               r.get('name', r['symbol']),
