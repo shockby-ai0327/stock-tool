@@ -49,11 +49,21 @@ jobs:
       - name: Fetch US news via Python yfinance
         run: python scripts/fetch_news.py us
 
+      - name: Fetch TW news via Python yfinance
+        run: python scripts/fetch_news.py tw
+        continue-on-error: true  # TW news may be sparse; don't kill workflow
+
       # Step B: Node sends headlines to Claude for sentiment classification
       - name: Run news sentiment scan (US)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/news_scan.js us
+
+      - name: Run news sentiment scan (TW)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/news_scan.js tw
+        continue-on-error: true  # TW news fetching may yield empty results
 
       - name: Commit news sentiment
         run: |

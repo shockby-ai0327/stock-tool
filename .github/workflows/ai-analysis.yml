@@ -58,14 +58,17 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/market_narrative.js us
 
+      # 2026-05-19 fix: same pattern as US — runs by default for workflow_run
+      # (where inputs.market is undefined). Only skipped when user explicitly
+      # dispatches with market=us.
       - name: Analyze TW leaders
-        if: ${{ github.event.inputs.market == 'tw' || github.event.inputs.market == 'all' }}
+        if: ${{ github.event.inputs.market != 'us' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/ai_analysis.js tw
 
       - name: Generate TW market narrative
-        if: ${{ github.event.inputs.market == 'tw' || github.event.inputs.market == 'all' }}
+        if: ${{ github.event.inputs.market != 'us' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/market_narrative.js tw
