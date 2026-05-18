@@ -8705,10 +8705,44 @@ async function _overlayViaV8Chart(leaders) {
 async function overlayLivePrices(leaders) {
   if (!leaders || !leaders.length) return leaders;
 
+  // 2026-05-18: Yahoo blocks browser IPs for v7/quote and v8/chart endpoints.
+  // Finnhub quote works reliably (free tier, 60 req/min). Made Layer 0.
+  // Quote endpoint returns: c (current), dp (change%), h/l (day range), pc (prev close).
+  // Run in parallel with concurrency cap to stay under 60/min.
+  const BATCH_FINNHUB = 10;
+  try {
+    let finnhubHits = 0;
+    for (let i = 0; i < leaders.length; i += BATCH_FINNHUB) {
+      const batch = leaders.slice(i, i + BATCH_FINNHUB);
+      const settled = await Promise.allSettled(batch.map(l => finnhubQuote(l.symbol)));
+      settled.forEach((s, j) => {
+        const l = batch[j];
+        if (s.status === 'fulfilled' && s.value && typeof s.value.c === 'number' && s.value.c > 0) {
+          const q = s.value;
+          l.price       = q.c;
+          l.changePct   = typeof q.dp === 'number' ? q.dp : l.changePct;
+          if (typeof q.h === 'number')  l.dayHigh  = q.h;
+          if (typeof q.l === 'number')  l.dayLow   = q.l;
+          if (typeof q.pc === 'number') l.prevClose = q.pc;
+          l._livePrice = true;
+          l._cacheAge  = 0;
+          l._priceSource = 'finnhub';
+          finnhubHits++;
+        }
+      });
+      if (i + BATCH_FINNHUB < leaders.length) await new Promise(r => setTimeout(r, 250));
+    }
+    if (finnhubHits > 0) {
+      _savePriceCache(leaders);
+      console.log('[overlay] finnhub hits:', finnhubHits, '/', leaders.length);
+      return leaders;
+    }
+  } catch(e) { console.warn('[overlay] finnhub failed:', e.message); }
+
+  // Layer 1-3: Yahoo fallbacks (kept in case Yahoo unbans IPs later)
   const syms = leaders.map(l => l.symbol).join(',');
   const FIELDS = 'symbol,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekHigh,regularMarketVolume';
 
-  // Layer 1: Yahoo v7 via query1 (fastest — batched, browser cookies)
   try {
     const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -8724,7 +8758,6 @@ async function overlayLivePrices(leaders) {
     }
   } catch(e) { console.warn('[overlay] query1 v7 failed:', e.message); }
 
-  // Layer 2: Yahoo v7 via query2 (different CDN, often works when query1 is rate-limited)
   try {
     const url = 'https://query2.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&fields=' + FIELDS;
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -8740,8 +8773,6 @@ async function overlayLivePrices(leaders) {
     }
   } catch(e) { console.warn('[overlay] query2 v7 failed:', e.message); }
 
-  // Layer 3: Yahoo v8/chart — no auth, no cookies, completely reliable
-  console.warn('[overlay] falling back to v8/chart (no-auth)');
   try {
     await _overlayViaV8Chart(leaders);
     if (leaders.some(l => l._livePrice)) {
@@ -8750,7 +8781,6 @@ async function overlayLivePrices(leaders) {
     }
   } catch(e) { console.warn('[overlay] v8/chart failed:', e.message); }
 
-  // All sources failed — restore last known good prices from sessionStorage
   console.warn('[overlay] all sources failed — restoring cache');
   _restorePriceCache(leaders);
   return leaders;
