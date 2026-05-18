@@ -363,8 +363,22 @@ for i, sym in enumerate(targets, 1):
         failed.append((sym, str(e)[:80]))
         continue
 
-QUOTE_CACHE.write_text(json.dumps(quote_cache, default=str))
-SECTOR_CACHE.write_text(json.dumps(sector_cache, default=str))
+# 2026-05-19 BUG FIX: Node's JSON.parse rejects NaN/Infinity (Python's
+# default json.dumps allows them but they're non-standard JSON). yfinance
+# returns NaN for missing surprise values, polluting tw_scan.json so the
+# Node scripts (ai_analysis.js) crash on parse. Use allow_nan=False + NaN→None.
+import math
+def _sanitize(o):
+    if isinstance(o, float) and (math.isnan(o) or math.isinf(o)):
+        return None
+    if isinstance(o, dict):
+        return {k: _sanitize(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_sanitize(v) for v in o]
+    return o
+
+QUOTE_CACHE.write_text(json.dumps(_sanitize(quote_cache), default=str, allow_nan=False))
+SECTOR_CACHE.write_text(json.dumps(_sanitize(sector_cache), default=str, allow_nan=False))
 print(f"Cache writes: {enriched_quote} quotes, {enriched_sector} sectors")
 if failed[:3]:
     print(f"Sample failures: {failed[:3]}")
@@ -464,7 +478,7 @@ candidates.sort(key=lambda x: (-x['stars'], -(x.get('compositeScore') or 0)))
 scan['tripleResonance'] = candidates[:15]
 print(f"tripleResonance candidates: {len(scan['tripleResonance'])}")
 
-SCAN_FILE.write_text(json.dumps(scan, indent=2))
+SCAN_FILE.write_text(json.dumps(_sanitize(scan), indent=2, allow_nan=False))
 print(f"✅ Updated {SCAN_FILE.name}")
 
 # Generate ohlcv_lite.json — only leaders + discoveries + benchmarks for
