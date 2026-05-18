@@ -84,5 +84,14 @@ jobs:
             [ -f "$f" ] && git add "$f" || true
           done
           git diff --cached --quiet && echo "(no AI changes to commit)" || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git pull --rebase --autostash 2>&1 | tail -3 || true
-          git push
+          # Push with retry — parallel workflows (backtest, news, insider) can
+          # push between our fetch and push, leaving us with stale remote ref.
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then
+              echo "✅ push succeeded on attempt $attempt"
+              break
+            fi
+            echo "⚠ push failed, attempt $attempt — retrying after pull..."
+            sleep $((attempt * 2))
+          done

@@ -39,5 +39,8 @@ jobs:
           [ -f data/insider_data.json ] && git add data/insider_data.json || true
           [ -f data/cik_map.json ]      && git add data/cik_map.json      || true
           git diff --cached --quiet || git commit -m "insider: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git pull --rebase --autostash || true
-          git push
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 2))
+          done

@@ -74,5 +74,9 @@ jobs:
           [ -f data/us_news_raw.json ]       && git add data/us_news_raw.json       || true
           [ -f data/tw_news_raw.json ]       && git add data/tw_news_raw.json       || true
           git diff --cached --quiet || git commit -m "news: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git pull --rebase --autostash || true
-          git push
+          # Push with retry — workflows race on main
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 2))
+          done
