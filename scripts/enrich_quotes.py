@@ -27,6 +27,8 @@ DATA_DIR     = Path(__file__).resolve().parent.parent / 'data'
 SCAN_FILE    = DATA_DIR / 'us_scan.json'
 QUOTE_CACHE  = DATA_DIR / 'quote_cache.json'
 SECTOR_CACHE = DATA_DIR / 'sector_cache.json'
+OHLCV_CACHE  = DATA_DIR / 'ohlcv_cache.json'        # gitignored, ~7MB
+OHLCV_LITE   = DATA_DIR / 'ohlcv_lite.json'          # committed, leaders+discoveries only
 
 # Match scan.js mapping tables exactly so the JSON output is consistent
 SECTOR_TO_ETF = {
@@ -403,3 +405,18 @@ print(f"tripleResonance candidates: {len(scan['tripleResonance'])}")
 
 SCAN_FILE.write_text(json.dumps(scan, indent=2))
 print(f"✅ Updated {SCAN_FILE.name}")
+
+# Generate ohlcv_lite.json — only leaders + discoveries + benchmarks for
+# frontend K-line chart fallback (yfChart reads this when Yahoo blocks the
+# user's browser). Full cache is ~7MB (gitignored), lite is ~250KB (committed).
+try:
+    full_cache = json.loads(OHLCV_CACHE.read_text())
+    keep_symbols = set([r['symbol'] for r in leaders] + [r['symbol'] for r in discoveries])
+    # Always include benchmarks so frontend can render SPY/sector ETF charts
+    keep_symbols.update(['SPY','QQQ','IWM','DIA','SMH','IGV','XLK','XLF','XLE','XLV','XLI','XLY','XLP','XLU','XLB','XLC','XLRE','IBB','XAR','GDX','TAN'])
+    lite = {sym: full_cache[sym] for sym in keep_symbols if sym in full_cache}
+    OHLCV_LITE.write_text(json.dumps(lite))
+    sz = OHLCV_LITE.stat().st_size / 1024
+    print(f"✅ Wrote ohlcv_lite.json: {len(lite)} symbols ({sz:.0f} KB)")
+except Exception as e:
+    print(f"⚠ ohlcv_lite generation failed: {e}")

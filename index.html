@@ -787,11 +787,63 @@ async function finnhubBatchPreScreen(symbols) {
 
 async function yfChart(ticker, range, interval, timeoutMs = 8000) {
  range = range || '6mo'; interval = interval || '1d';
- const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
- const r = await pFetch(url, true, timeoutMs, 30 * 60 * 1000); // 30-min cache: daily OHLCV doesn't change intraday
- const j = await r.json();
- if (!j.chart || !j.chart.result || !j.chart.result[0]) throw new Error('No data for ' + ticker);
- return j.chart.result[0];
+ // Layer 1: Yahoo v8/chart (browser IPs often blocked, but kept for when they work)
+ try {
+   const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?interval=' + interval + '&range=' + range + '&includePrePost=false';
+   const r = await pFetch(url, true, timeoutMs, 30 * 60 * 1000);
+   const j = await r.json();
+   if (j.chart && j.chart.result && j.chart.result[0]) {
+     const result = j.chart.result[0];
+     // Verify non-empty (Yahoo sometimes returns 200 OK + empty result)
+     const closes = (result?.indicators?.quote?.[0]?.close || []).filter(v => v != null);
+     if (closes.length >= 10) return result;
+   }
+ } catch(e) { /* fall through */ }
+
+ // 2026-05-18: Yahoo blocks browser IPs for v8/chart. Fallback to ohlcv_cache.json
+ // on GitHub raw — daily data for ~1213-ticker universe + benchmark ETFs.
+ // Intraday (5m/15m/1h) has no fallback yet — gracefully fails.
+ if (interval === '1d' || interval === '1wk') {
+   try {
+     const r = await fetch(GH_RAW + 'ohlcv_lite.json?t=' + Math.floor(Date.now() / 900000));
+     if (r.ok) {
+       const cache = await r.json();
+       const entry = cache[ticker.toUpperCase()];
+       if (entry && entry.data && entry.data.closes && entry.data.closes.length >= 30) {
+         const d = entry.data;
+         const n = d.closes.length;
+         // Synthesize Yahoo-shaped timestamps (1 per business day going back from today)
+         const timestamps = [];
+         const today = new Date(); today.setHours(20, 0, 0, 0);
+         for (let i = n - 1; i >= 0; i--) {
+           const daysBack = (n - 1 - i);
+           let t = new Date(today.getTime() - daysBack * 86400000);
+           while (t.getDay() === 0 || t.getDay() === 6) t = new Date(t.getTime() - 86400000);
+           timestamps.unshift(Math.floor(t.getTime() / 1000));
+         }
+         // Slice to requested range
+         let slice = n;
+         if (range === '1mo') slice = Math.min(n, 22);
+         else if (range === '3mo') slice = Math.min(n, 66);
+         else if (range === '6mo') slice = Math.min(n, 132);
+         else if (range === '1y' || range === '12mo') slice = Math.min(n, 252);
+         const start = n - slice;
+         return {
+           meta: { symbol: ticker, regularMarketPrice: d.closes[n-1] },
+           timestamp: timestamps.slice(start),
+           indicators: { quote: [{
+             close:  d.closes.slice(start),
+             high:   d.highs.slice(start),
+             low:    d.lows.slice(start),
+             open:   d.opens.slice(start),
+             volume: d.volumes.slice(start),
+           }] },
+         };
+       }
+     }
+   } catch(e) { /* fall through */ }
+ }
+ throw new Error('No data for ' + ticker + ' (Yahoo blocked + not in OHLCV cache)');
 }
 
 async function yfPageFundamentals(ticker) {
