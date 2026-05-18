@@ -159,14 +159,21 @@ async function parseForm4(cik, accession, primaryDoc) {
   const cikUnpadded = String(parseInt(cik, 10));
   const accClean = accession.replace(/-/g, '');
   const baseUrl = `https://www.sec.gov/Archives/edgar/data/${cikUnpadded}/${accClean}`;
-  // 2026-05-19 speed-up: primaryDoc is already the correct XML filename from
-  // SEC submissions API. Previous code tried 4 candidates per filing, each
-  // 404 taking ~500ms → ~2s wasted per filing on lookups.
   if (!primaryDoc) return null;
+
+  // 2026-05-19 BUG FIX: SEC's primaryDoc field often has 'xslF345X06/form4.xml'
+  // which is the HTML-rendered view (no <ownershipDocument> tag). The raw XML
+  // sits at the URL WITHOUT the xsl* prefix. Strip any xsl* path prefix to
+  // get the actual XML form filing.
+  const rawXmlName = primaryDoc.replace(/^xsl[A-Za-z0-9]+\//, '');
   let xml = null;
   try {
-    xml = await secFetch(`${baseUrl}/${primaryDoc}`, 'text');
-    if (!xml || !xml.includes('ownershipDocument')) return null;
+    xml = await secFetch(`${baseUrl}/${rawXmlName}`, 'text');
+    if (!xml || !xml.includes('ownershipDocument')) {
+      // Fallback: try original (in case the XSL strip was wrong)
+      xml = await secFetch(`${baseUrl}/${primaryDoc}`, 'text');
+      if (!xml || !xml.includes('ownershipDocument')) return null;
+    }
   } catch (e) { return null; }
 
   // Insider name + title
