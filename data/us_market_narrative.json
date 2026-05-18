@@ -1,1 +1,127 @@
-{"generatedAt":0,"market":"US","narrative":null,"headline":null,"regime":"neutral"}
+{
+  "generatedAt": 1779139978707,
+  "market": "US",
+  "scanAt": "2026-05-18T20:59:11.732Z",
+  "macros": {
+    "spy": {
+      "last": 738.65,
+      "changePct": -0.07
+    },
+    "vix": {
+      "last": 17.82,
+      "changePct": -3.31
+    },
+    "tnx": {
+      "last": 4.62,
+      "changePct": 0.61
+    },
+    "dxy": {
+      "last": 99,
+      "changePct": -0.28
+    }
+  },
+  "sectorLeaders": [
+    {
+      "etf": "XLE",
+      "last": 60.58,
+      "changePct": 1.92
+    },
+    {
+      "etf": "XLP",
+      "last": 85.9,
+      "changePct": 1.49
+    },
+    {
+      "etf": "XLF",
+      "last": 51.74,
+      "changePct": 1.25
+    }
+  ],
+  "sectorLaggards": [
+    {
+      "etf": "SMH",
+      "last": 546.16,
+      "changePct": -1.83
+    },
+    {
+      "etf": "IBB",
+      "last": 164.03,
+      "changePct": -1.68
+    },
+    {
+      "etf": "XLK",
+      "last": 174.36,
+      "changePct": -1.08
+    }
+  ],
+  "gainers": [
+    {
+      "symbol": "RAMP",
+      "name": "LiveRamp Holdings, Inc.",
+      "changePct": 27.34
+    },
+    {
+      "symbol": "BRC",
+      "name": "Brady Corporation",
+      "changePct": 18.98
+    },
+    {
+      "symbol": "BIO",
+      "name": "Bio-Rad Laboratories, Inc.",
+      "changePct": 13.85
+    },
+    {
+      "symbol": "D",
+      "name": "Dominion Energy, Inc.",
+      "changePct": 9.44
+    },
+    {
+      "symbol": "RBLX",
+      "name": "Roblox Corporation",
+      "changePct": 9.64
+    }
+  ],
+  "losers": [
+    {
+      "symbol": "AEHR",
+      "name": "Aehr Test Systems",
+      "changePct": -16.01
+    },
+    {
+      "symbol": "USAR",
+      "name": "USA Rare Earth, Inc.",
+      "changePct": -12.77
+    },
+    {
+      "symbol": "POET",
+      "name": "POET Technologies Inc.",
+      "changePct": -11.02
+    },
+    {
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics, Inc.",
+      "changePct": -8.98
+    },
+    {
+      "symbol": "REGN",
+      "name": "Regeneron Pharmaceuticals, Inc",
+      "changePct": -9.82
+    }
+  ],
+  "narrative": "市場呈現防守性輪轉，能源(XLE +1.92%)與消費必需品(XLP +1.49%)領漲，而科技股(XLK -1.08%)與生物科技(IBB -1.68%)承壓。VIX下跌3.31%至17.82顯示風險情緒溫和，但10年期殖利率上升61bp至4.62%暗示長期利率預期上移。儘管大盤微跌，半導體(SMH)領跌反映獲利了結。積極面是MU、WDC等晶片股仍維持強勁動能(RS 94-98)，NRGV、MGNX等績優股加速上揚。資金呈現有序輪動而非恐慌出逃。",
+  "headline": "能源領漲防守領跑，科技承壓但動能仍強",
+  "regime": "rotation",
+  "sectorRotation": {
+    "into": [
+      "XLE",
+      "XLP",
+      "XLF"
+    ],
+    "outOf": [
+      "XLK",
+      "SMH",
+      "IBB"
+    ]
+  },
+  "tomorrowWatch": "密切關注MU、AMAT等五星級三共振股的財報與技術面反應，以及10Y殖利率能否站穩4.60上方"
+}
