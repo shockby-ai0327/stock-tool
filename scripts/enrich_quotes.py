@@ -24,8 +24,11 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 DATA_DIR     = Path(__file__).resolve().parent.parent / 'data'
-SCAN_FILE    = DATA_DIR / 'us_scan.json'
-QUOTE_CACHE  = DATA_DIR / 'quote_cache.json'
+
+# 2026-05-19: market-aware. Default 'us' for backward compat.
+MARKET = (sys.argv[1] if len(sys.argv) > 1 else 'us').lower()
+SCAN_FILE    = DATA_DIR / f'{MARKET}_scan.json'
+QUOTE_CACHE  = DATA_DIR / 'quote_cache.json'   # shared across markets (keyed by symbol)
 SECTOR_CACHE = DATA_DIR / 'sector_cache.json'
 OHLCV_CACHE  = DATA_DIR / 'ohlcv_cache.json'        # gitignored, ~7MB
 OHLCV_LITE   = DATA_DIR / 'ohlcv_lite.json'          # committed, leaders+discoveries only
@@ -61,7 +64,36 @@ INDUSTRY_TO_ETF = {
     'Solar':                                   'TAN',
 }
 
-def resolve_etf(sector, industry):
+# TW sector ETFs — most TW stocks fit broad 0050.TW; specific industries map
+# to themed Taiwan ETFs where available
+TW_SECTOR_TO_ETF = {
+    'Technology':             '0052.TW',   # 富邦科技
+    'Financial Services':     '0055.TW',   # 元大MSCI金融
+    'Healthcare':             '00692.TW',  # 富邦公司治理（有醫療成分）
+    'Consumer Cyclical':      '0050.TW',
+    'Consumer Defensive':     '0056.TW',   # 高股息（多防禦性）
+    'Industrials':            '0050.TW',
+    'Energy':                 '0050.TW',
+    'Basic Materials':        '0050.TW',
+    'Real Estate':            '0050.TW',
+    'Utilities':              '0056.TW',
+    'Communication Services': '0050.TW',
+}
+
+TW_INDUSTRY_TO_ETF = {
+    'Semiconductors':                          '0052.TW',
+    'Semiconductor Equipment & Materials':     '0052.TW',
+    'Software—Application':                    '0052.TW',
+    'Software—Infrastructure':                 '0052.TW',
+}
+
+def resolve_etf(sector, industry, market='us'):
+    if market == 'tw':
+        if industry and industry in TW_INDUSTRY_TO_ETF:
+            return TW_INDUSTRY_TO_ETF[industry]
+        if sector and sector in TW_SECTOR_TO_ETF:
+            return TW_SECTOR_TO_ETF[sector]
+        return '0050.TW'  # default broad TW benchmark
     if industry and industry in INDUSTRY_TO_ETF:
         return INDUSTRY_TO_ETF[industry]
     if sector and sector in SECTOR_TO_ETF:
@@ -141,11 +173,13 @@ for i, sym in enumerate(targets, 1):
         if needs_sector:
             sector   = info.get('sector')
             industry = info.get('industry')
+            # Auto-detect market from ticker suffix (.TW or .TWO)
+            sym_market = 'tw' if (sym.endswith('.TW') or sym.endswith('.TWO')) else 'us'
             sector_cache[sym] = {
                 'cachedAt': now_ms,
                 'sector':   sector,
                 'industry': industry,
-                'etf':      resolve_etf(sector, industry),
+                'etf':      resolve_etf(sector, industry, sym_market),
             }
             enriched_sector += 1
 

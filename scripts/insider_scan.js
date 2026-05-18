@@ -213,6 +213,15 @@ async function parseForm4(cik, accession, primaryDoc) {
 
 // ── Per-symbol aggregation ────────────────────────────────────────────────
 async function scanSymbol(symbol, cik) {
+  // 2026-05-19: wrap whole symbol scan in 60s timeout so one slow SEC EDGAR
+  // call (e.g. CDN hiccup) can't hang the entire workflow.
+  return Promise.race([
+    _scanSymbolImpl(symbol, cik),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 60s')), 60000)),
+  ]).catch(() => null);
+}
+
+async function _scanSymbolImpl(symbol, cik) {
   try {
     const filings = await getRecentForm4Filings(cik);
     if (!filings.length) return null;
@@ -263,21 +272,34 @@ async function main() {
   const withCik = targets.map(s => ({ symbol: s, cik: cikMap[s]?.cik })).filter(t => t.cik);
   console.log(`  CIK match: ${withCik.length}/${targets.length}`);
 
-  // 3. Scan each symbol (paced, ~5 req/sec)
+  // 3. Scan symbols in parallel batches. SEC limit is 10 req/sec — concurrency 5
+  // keeps us comfortably under (each scanSymbol does ~2 SEC calls).
+  // 2026-05-19: was sequential with 220ms delay = ~8s per ticker × 37 = 5 min,
+  // sometimes hung on a single slow ticker pushing total > 10 min cancel.
+  // Parallel batches of 5 = ~1.5-2 min total, immune to single-ticker hangs.
   const bySymbol = {};
   let hits = 0;
-  for (let i = 0; i < withCik.length; i++) {
-    const { symbol, cik } = withCik[i];
-    const result = await scanSymbol(symbol, cik);
-    if (result) {
-      bySymbol[symbol] = result;
-      hits += 1;
-      const tag = result.clusterBuy ? '★ CLUSTER' : '·';
-      console.log(`  [${i+1}/${withCik.length}] ${symbol}: ${result.buyerCount30d} insider(s), $${(result.totalValue30d/1000).toFixed(0)}K ${tag}`);
-    } else {
-      process.stdout.write(`  [${i+1}/${withCik.length}] ${symbol}: no purchases       \r`);
-    }
-    await DELAY(220); // base pace between symbols
+  const BATCH = 5;
+  for (let i = 0; i < withCik.length; i += BATCH) {
+    const slice = withCik.slice(i, i + BATCH);
+    const results = await Promise.allSettled(slice.map(t => scanSymbol(t.symbol, t.cik)));
+    results.forEach((r, j) => {
+      const { symbol } = slice[j];
+      const result = r.status === 'fulfilled' ? r.value : null;
+      const idx = i + j + 1;
+      if (result) {
+        bySymbol[symbol] = result;
+        hits += 1;
+        const tag = result.clusterBuy ? '★ CLUSTER' : '·';
+        console.log(`  [${idx}/${withCik.length}] ${symbol}: ${result.buyerCount30d} insider(s), $${(result.totalValue30d/1000).toFixed(0)}K ${tag}`);
+      } else if (r.status === 'rejected') {
+        console.log(`  [${idx}/${withCik.length}] ${symbol}: error (${(r.reason?.message || 'unknown').slice(0, 40)})`);
+      } else {
+        process.stdout.write(`  [${idx}/${withCik.length}] ${symbol}: no purchases       \r`);
+      }
+    });
+    // Small breather between batches to stay polite to SEC
+    if (i + BATCH < withCik.length) await DELAY(400);
   }
 
   // 4. Save
