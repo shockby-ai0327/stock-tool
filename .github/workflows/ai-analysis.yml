@@ -74,18 +74,12 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "=== Files written by AI scripts ==="
-          ls -la data/us_ai_analysis.json data/us_market_narrative.json 2>&1 || true
-          echo "=== Content size ==="
-          wc -c data/us_ai_analysis.json data/us_market_narrative.json 2>&1 || true
-          echo "=== git status BEFORE add ==="
-          git status --short data/
-          git add data/us_ai_analysis.json data/tw_ai_analysis.json data/us_market_narrative.json data/tw_market_narrative.json 2>&1 || true
-          echo "=== git status AFTER add ==="
-          git status --short data/
-          echo "=== diff cached check ==="
-          git diff --cached --stat
-          git diff --cached --quiet && echo "(no staged changes)" || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          # Pull latest before push to avoid race conditions with scan/backtest workflows
+          # 2026-05-19 FIX: git add aborts on first missing pathspec, leaving
+          # OTHER files unstaged. Add each file individually so missing TW files
+          # don't kill US staging.
+          for f in data/us_ai_analysis.json data/tw_ai_analysis.json data/us_market_narrative.json data/tw_market_narrative.json; do
+            [ -f "$f" ] && git add "$f" || true
+          done
+          git diff --cached --quiet && echo "(no AI changes to commit)" || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git pull --rebase --autostash 2>&1 | tail -3 || true
-          git push 2>&1
+          git push

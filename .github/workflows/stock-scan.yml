@@ -79,7 +79,10 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/us_scan.json data/tw_scan.json 2>/dev/null || true
+          # 2026-05-19: add files individually so missing tw_scan.json (when only US runs)
+          # doesn't abort the whole add and skip us_scan.json staging.
+          [ -f data/us_scan.json ] && git add data/us_scan.json || true
+          [ -f data/tw_scan.json ] && git add data/tw_scan.json || true
           [ -f data/sector_cache.json ]    && git add data/sector_cache.json    || true
           [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true
           [ -f data/sector_radar.json ]    && git add data/sector_radar.json    || true
