@@ -1,69 +1,74 @@
 {
-  "generatedAt": 1779217582387,
+  "generatedAt": 1779225182414,
   "market": "US",
-  "scanAt": "2026-05-19T19:01:03.890Z",
+  "scanAt": "2026-05-19T21:07:45.038Z",
   "macros": {
     "spy": {
-      "last": 734.55,
-      "changePct": -0.55
+      "last": 733.73,
+      "changePct": -0.67
     },
     "vix": {
-      "last": 17.99,
-      "changePct": 0.95
+      "last": 18.06,
+      "changePct": 1.35
     },
     "tnx": {
-      "last": 4.66,
-      "changePct": 0.87
+      "last": 4.67,
+      "changePct": 0.95
     },
     "dxy": {
-      "last": 99.33,
-      "changePct": 0.36
+      "last": 99.32,
+      "changePct": 0.35
     }
   },
   "sectorLeaders": [
     {
-      "etf": "XLV",
-      "last": 147.29,
-      "changePct": 1.08
+      "etf": "XLE",
+      "last": 61.29,
+      "changePct": 1.17
     },
     {
-      "etf": "XLE",
-      "last": 61.21,
-      "changePct": 1.04
+      "etf": "XLV",
+      "last": 147.32,
+      "changePct": 1.1
     },
     {
       "etf": "XLU",
-      "last": 44.19,
-      "changePct": 0.57
+      "last": 44.34,
+      "changePct": 0.91
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 84.03,
-      "changePct": -3.57
+      "last": 83.78,
+      "changePct": -3.86
     },
     {
       "etf": "XLB",
-      "last": 49.13,
-      "changePct": -2.16
+      "last": 49.04,
+      "changePct": -2.35
     },
     {
-      "etf": "XLY",
-      "last": 114.94,
-      "changePct": -1.19
+      "etf": "XAR",
+      "last": 259.46,
+      "changePct": -1.42
     }
   ],
   "gainers": [
     {
       "symbol": "ALAB",
       "name": "Astera Labs, Inc.",
-      "changePct": 15.83
+      "changePct": 13.3
     },
     {
       "symbol": "AGYS",
       "name": "Agilysys, Inc.",
-      "changePct": 12.71
+      "changePct": 12.45
+    },
+    {
+      "symbol": "RXO",
+      "name": "RXO, Inc.",
+      "changePct": 10.63
     },
     {
       "symbol": "CMBT",
@@ -71,57 +76,52 @@
       "changePct": 10.29
     },
     {
-      "symbol": "RXO",
-      "name": "RXO, Inc.",
-      "changePct": 9.55
-    },
-    {
-      "symbol": "MAAS",
-      "name": "Maase Inc.",
-      "changePct": 8.72
+      "symbol": "CLSK",
+      "name": "CleanSpark, Inc.",
+      "changePct": 9.3
     }
   ],
   "losers": [
     {
-      "symbol": "WRBY",
-      "name": "Warby Parker Inc.",
-      "changePct": -12.56
-    },
-    {
       "symbol": "BLBD",
       "name": "Blue Bird Corporation",
-      "changePct": -10.69
+      "changePct": -11.12
+    },
+    {
+      "symbol": "WRBY",
+      "name": "Warby Parker Inc.",
+      "changePct": -10.96
     },
     {
       "symbol": "AYA",
       "name": "Aya Gold & Silver Inc.",
-      "changePct": -10
+      "changePct": -10.7
+    },
+    {
+      "symbol": "FRMI",
+      "name": "Fermi Inc.",
+      "changePct": -10.38
     },
     {
       "symbol": "UEC",
       "name": "Uranium Energy Corp.",
-      "changePct": -9.2
-    },
-    {
-      "symbol": "FLNC",
-      "name": "Fluence Energy, Inc.",
-      "changePct": -9.26
+      "changePct": -9.77
     }
   ],
-  "narrative": "市場呈現防守輪動特徵。儘管大盤下跌0.55%，VIX溫和上升至17.99，但防守性板塊XLV（+1.08%）和XLE（+1.04%）領漲，顯示資金從成長股轉向防守。10年期收益率升至4.66%反映利率預期堅挺。材料和消費裁量權等周期板塊下滑，礦業ETF GDX跌3.57%，暗示對經濟增長的擔憂。技術股動能仍存（MU RS94），但整體呈現降溫跡象。高收益率環境下，投資者重新配置至穩定現金流資產。",
-  "headline": "美股小幅回調，防守性板塊領漲，資金轉向醫療能源",
+  "narrative": "市場呈現分化格局。美股下跌0.67%，但VIX溫和上升至18.06，10年期殖利率跳升至4.67%，反映升息預期升溫。資金流向防守性板塊：能源(XLE +1.17%)與醫療(XLV +1.1%)領漲，規避利率敏感股。科技股表現兩極：MU、SNDK等記憶體龍頭強勢(RS 94-99)，但GDX礦業與XLB原物料慘跌，顯示成長股篩選加劇。ALAB、AGYS等小型股爆發，暗示資金尋求高β機會。殖利率上揚與風險資產混合訊號，屬典型輪動格局。",
+  "headline": "殖利率走高打壓大盤，能源醫療抗跌，科技動能領先",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "XLV",
       "XLE",
+      "XLV",
       "XLU"
     ],
     "outOf": [
+      "GDX",
       "XLB",
-      "XLY",
-      "GDX"
+      "XAR"
     ]
   },
-  "tomorrowWatch": "關注收益率動向與防守板塊強度能否維持，警惕成長股反彈訊號"
+  "tomorrowWatch": "關注10年期殖利率動向與聯準會預期，SNDK、MU等高RS值科技股能否延續動能，留意SITM等四星財報股表現"
 }
