@@ -86,12 +86,17 @@ def parse_twse(data):
         return {}
 
     bySymbol = {}
+    nameMap = {}
     for row in data['data']:
         try:
             sym = row[idx['symbol']].strip()
             # Pure-numeric Taiwan tickers (e.g. 2330, 2317). Skip warrants etc.
             if not sym.isdigit() or len(sym) != 4:
                 continue
+            # 同時抓 Chinese name (證券名稱) — TWSE 提供繁體中文公司名
+            if 'name' in idx:
+                cname = row[idx['name']].strip()
+                if cname: nameMap[sym] = cname
             def _to_int(s):
                 try: return int(str(s).replace(',', '').strip())
                 except: return 0
@@ -121,6 +126,8 @@ def parse_twse(data):
             }
         except Exception:
             continue
+    # Attach nameMap to result via closure trick
+    bySymbol['__nameMap__'] = nameMap
     return bySymbol
 
 def main():
@@ -140,6 +147,9 @@ def main():
         twse_data = fetch_json(TWSE_T86.format(date=date_str))
         by_symbol = parse_twse(twse_data)
 
+    # Extract name map from sentinel key
+    name_map = by_symbol.pop('__nameMap__', {}) if by_symbol else {}
+
     out = {
         'generatedAt': int(time.time() * 1000),
         'tradeDate':   date_str,
@@ -151,6 +161,16 @@ def main():
     print(f'✅ Wrote {OUT.name}: {len(by_symbol)} tickers, {len(strong_buys)} strong_buys')
     if strong_buys[:5]:
         print(f'   sample strong_buys: {strong_buys[:5]}')
+
+    # 2026-05-19: Save Chinese name map for TW tickers (yfinance returns English
+    # shortName for TW; TWSE provides authoritative Chinese names).
+    if name_map:
+        NAME_OUT = DATA_DIR / 'tw_name_map.json'
+        NAME_OUT.write_text(json.dumps({
+            'generatedAt': int(time.time() * 1000),
+            'bySymbol':    name_map,
+        }, ensure_ascii=False, indent=2))
+        print(f'✅ Wrote tw_name_map.json: {len(name_map)} Chinese company names')
 
 if __name__ == '__main__':
     main()

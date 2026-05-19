@@ -114,6 +114,16 @@ if not scan or 'leaders' not in scan:
 quote_cache  = load_json(QUOTE_CACHE,  {})
 sector_cache = load_json(SECTOR_CACHE, {})
 
+# 2026-05-19: TW tickers — load TWSE-sourced Chinese name map. yfinance ticker.info
+# returns English shortName for TW (e.g. 'WINBOND ELECTRONIC CORP' instead of '華邦電').
+# fetch_twse_institutions.py extracts the authoritative Chinese names.
+tw_name_map = {}
+try:
+    tw_name_data = load_json(DATA_DIR / 'tw_name_map.json' if hasattr(DATA_DIR, '__truediv__') else 'tw_name_map.json', {})
+    tw_name_map = tw_name_data.get('bySymbol', {})
+except Exception:
+    pass
+
 leaders     = scan.get('leaders', [])
 discoveries = scan.get('discoveries', [])
 targets = list(dict.fromkeys(
@@ -411,13 +421,19 @@ def apply(record):
         record['industry']  = se.get('industry')
         if not record.get('sectorEtf'):
             record['sectorEtf'] = se.get('etf')
-        # Use yfinance shortName when scan.js meta only gave us the ticker
-        # (common for TW tickers — chart endpoint meta is sparse)
-        cur_name = record.get('name', '')
-        if cur_name == sym or not cur_name:
+        # 2026-05-19: TW Chinese name takes priority (yfinance returns English).
+        # For TW ticker, look up from tw_name_map (TWSE-sourced 證券名稱).
+        # For US, fall back to yfinance shortName/longName.
+        is_tw = sym.endswith('.TW') or sym.endswith('.TWO')
+        new_name = None
+        if is_tw:
+            tw_code = sym.replace('.TW', '').replace('.TWO', '')
+            new_name = tw_name_map.get(tw_code)
+        if not new_name:
             new_name = se.get('shortName') or se.get('longName')
-            if new_name and new_name != sym:
-                record['name'] = new_name
+        cur_name = record.get('name', '')
+        if new_name and new_name != sym and (cur_name == sym or not cur_name or is_tw):
+            record['name'] = new_name
 
 for r in leaders:     apply(r)
 for r in discoveries: apply(r)
