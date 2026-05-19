@@ -73,6 +73,12 @@ jobs:
         run: python scripts/enrich_quotes.py tw
         continue-on-error: true
 
+      # 三大法人買賣超 (TWSE public API) — TW-specific institutional flow
+      - name: Fetch TW institutional buy/sell (三大法人)
+        if: ${{ github.event.inputs.market != 'us' }}
+        run: python scripts/fetch_twse_institutions.py
+        continue-on-error: true
+
       - name: Save OHLCV cache
         if: always()
         uses: actions/cache/save@v4
@@ -91,6 +97,8 @@ jobs:
           [ -f data/sector_cache.json ]    && git add data/sector_cache.json    || true
           [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true
           [ -f data/sector_radar.json ]    && git add data/sector_radar.json    || true
+          [ -f data/tw_sector_radar.json ] && git add data/tw_sector_radar.json || true
+          [ -f data/tw_institutions.json ] && git add data/tw_institutions.json || true
           [ -f data/ohlcv_lite.json ]      && git add data/ohlcv_lite.json      || true
           [ -f data/universe_memory.json ] && git add data/universe_memory.json || true
           [ -f data/universe_static.json ] && git add data/universe_static.json || true

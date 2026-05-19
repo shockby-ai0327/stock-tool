@@ -130,20 +130,20 @@ ${vcpNote}
 Position vs 52-week high: ${pctFromHigh52}% | vs 3-month high: ${pctFromHigh3m}%
 ${catalystBlock}
 
-TASK: Provide a concise forward-looking analysis (80–120 words total). Be direct and trader-focused — no generic disclaimers. ${catalystBlock ? 'USE the catalyst data above — weave specific facts into your analysis.' : ''}
+任務：提供精準的前瞻分析（120-180 字繁體中文）。直接給交易者看，不要免責聲明。${catalystBlock ? '務必引用上方催化劑數據中的具體事實。' : ''}
 
-Cover:
-1. Whether this momentum is likely to CONTINUE or STALL in 30–60 days, and why
-2. The single most important catalyst or condition to WATCH (specific and actionable — use real data above)
-3. The single biggest RISK that could derail this setup
-${stock.daysToEarnings != null && stock.daysToEarnings <= 14 ? '4. CRITICAL: Earnings in ' + stock.daysToEarnings + ' days. Comment on pre-earnings setup quality and beat/miss probability based on surprise history.' : ''}
-${insiderInfo && insiderInfo.clusterBuy ? '5. Insider cluster buying detected — weight this as a strong bullish signal.' : ''}
-${downgradesCount >= 2 ? '6. Multiple analyst downgrades — flag explicitly as bearish.' : ''}
+涵蓋以下三點（用繁體中文回答）：
+1. 未來 30-60 天動能會「持續」還是「停滯」，為什麼
+2. 最關鍵的催化劑（具體、可執行 — 引用上方真實數據）
+3. 最大的風險（特定於此 setup，不要泛泛而談）
+${stock.daysToEarnings != null && stock.daysToEarnings <= 14 ? '4. 重要：' + stock.daysToEarnings + ' 天後財報。基於過往 surprise 紀錄評論盤前 setup 品質與 beat/miss 機率。' : ''}
+${insiderInfo && insiderInfo.clusterBuy ? '5. 偵測到內部人 cluster buying — 視為強烈看多訊號。' : ''}
+${downgradesCount >= 2 ? '6. 多位分析師降評 — 明確標記為看空訊號。' : ''}
 
-Return ONLY valid JSON, no markdown, no extra text:
-{"outlook": "...", "catalyst": "...", "risk": "...", "bias": "bullish|neutral|bearish", "stars": 1-5, "catalystAware": ${catalystBlock ? 'true' : 'false'}}
+僅回傳合法 JSON（不要 markdown、不要多餘文字）。outlook/catalyst/risk 三個欄位內容必須是繁體中文：
+{"outlook": "繁體中文分析...", "catalyst": "繁體中文關鍵催化劑...", "risk": "繁體中文最大風險...", "bias": "bullish|neutral|bearish", "stars": 1-5, "catalystAware": ${catalystBlock ? 'true' : 'false'}}
 
-Stars: 5=exceptional setup with confirmed catalysts, 4=strong, 3=decent momentum, 2=marginal, 1=weak/extended/negative catalysts`;
+Stars 評等標準：5=極佳 setup 且催化劑明確、4=強勢、3=動能尚可、2=邊際、1=弱勢/過度延伸/負面催化劑`;
 }
 
 // ── Analyze a single market's leaders ─────────────────────────────────────

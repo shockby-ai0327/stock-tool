@@ -125,7 +125,7 @@ now_ms = int(time.time() * 1000)
 QUOTE_TTL_MS  = 24 * 3600 * 1000      # 24h
 SECTOR_TTL_MS = 365 * 24 * 3600 * 1000  # 1 year
 
-CACHE_SCHEMA_VERSION = 3  # bump when adding fields, invalidates old entries (v3: added fundamentals)
+CACHE_SCHEMA_VERSION = 4  # v4: added shortName/longName to sector_cache for TW
 
 def is_fresh(cache_entry, ttl_ms):
     if not cache_entry: return False
@@ -175,11 +175,16 @@ for i, sym in enumerate(targets, 1):
             industry = info.get('industry')
             # Auto-detect market from ticker suffix (.TW or .TWO)
             sym_market = 'tw' if (sym.endswith('.TW') or sym.endswith('.TWO')) else 'us'
+            # 2026-05-19: also grab company name for TW tickers (yfinance v8 chart
+            # meta doesn't always include shortName for TW). For US, name from
+            # scan.js meta is already good — only overwrite if missing.
             sector_cache[sym] = {
                 'cachedAt': now_ms,
                 'sector':   sector,
                 'industry': industry,
                 'etf':      resolve_etf(sector, industry, sym_market),
+                'shortName': info.get('shortName') or info.get('longName') or sym,
+                'longName':  info.get('longName')  or info.get('shortName') or sym,
             }
             enriched_sector += 1
 
@@ -406,6 +411,13 @@ def apply(record):
         record['industry']  = se.get('industry')
         if not record.get('sectorEtf'):
             record['sectorEtf'] = se.get('etf')
+        # Use yfinance shortName when scan.js meta only gave us the ticker
+        # (common for TW tickers — chart endpoint meta is sparse)
+        cur_name = record.get('name', '')
+        if cur_name == sym or not cur_name:
+            new_name = se.get('shortName') or se.get('longName')
+            if new_name and new_name != sym:
+                record['name'] = new_name
 
 for r in leaders:     apply(r)
 for r in discoveries: apply(r)

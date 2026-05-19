@@ -1269,21 +1269,52 @@ async function analyzeStock() {
  if (tripleRes) {
   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(251,191,36,.22),rgba(245,158,11,.15));color:#fbbf24;border:1px solid rgba(251,191,36,.5)" title="' + (tripleRes.reasons || []).join(' · ') + '">🎯 三重共振 ' + '★'.repeat(tripleRes.stars || 3) + '</span>');
  }
- // Insider buying (load lazily)
- (async () => {
-  try {
-   if (!window._insiderDataCache) {
-    const r = await fetch(GH_RAW + 'insider_data.json?t=' + Math.floor(Date.now() / 1800000), { signal: AbortSignal.timeout(5000) });
-    if (r.ok) window._insiderDataCache = await r.json();
-   }
-   const ins = window._insiderDataCache && window._insiderDataCache[ticker];
-   if (ins && ins.totalValue30d > 0) {
-    const insBadge = '<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.4)">💼 內部人買入 $' + (ins.totalValue30d / 1000).toFixed(0) + 'K' + (ins.clusterBuy ? ' (cluster)' : '') + '</span>';
-    const catBar = document.getElementById('stock-catalyst-bar');
-    if (catBar) catBar.insertAdjacentHTML('beforeend', insBadge);
-   }
-  } catch(e) {}
- })();
+ // Insider buying (US only — load lazily)
+ if (!isTw(ticker)) {
+  (async () => {
+   try {
+    if (!window._insiderDataCache) {
+     const r = await fetch(GH_RAW + 'insider_data.json?t=' + Math.floor(Date.now() / 1800000), { signal: AbortSignal.timeout(5000) });
+     if (r.ok) window._insiderDataCache = await r.json();
+    }
+    const ins = window._insiderDataCache && window._insiderDataCache[ticker];
+    if (ins && ins.totalValue30d > 0) {
+     const insBadge = '<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.4)">💼 內部人買入 $' + (ins.totalValue30d / 1000).toFixed(0) + 'K' + (ins.clusterBuy ? ' (cluster)' : '') + '</span>';
+     const catBar = document.getElementById('stock-catalyst-bar');
+     if (catBar) catBar.insertAdjacentHTML('beforeend', insBadge);
+    }
+   } catch(e) {}
+  })();
+ }
+ // 2026-05-19: TW 三大法人買賣超 (TWSE) — TW-only catalyst
+ if (isTw(ticker)) {
+  (async () => {
+   try {
+    const inst = await fetchTWSEInstitutional();
+    const code = ticker.replace('.TW', '').replace('.TWO', '');
+    const v = inst[code];
+    if (!v || v.total == null) return;
+    const tot = v.total;
+    const conv = v.conviction;
+    let color, bg, border, label;
+    if (conv === 'strong_buy')       { color = '#22c55e'; bg = 'rgba(34,197,94,.18)'; border = 'rgba(34,197,94,.5)'; label = '🏛 三大法人強買'; }
+    else if (conv === 'buy')         { color = '#16a34a'; bg = 'rgba(34,197,94,.10)'; border = 'rgba(34,197,94,.3)'; label = '🏛 三大法人買超'; }
+    else if (conv === 'strong_sell') { color = '#ef4444'; bg = 'rgba(239,68,68,.18)'; border = 'rgba(239,68,68,.5)'; label = '🏛 三大法人強賣'; }
+    else if (conv === 'sell')        { color = '#dc2626'; bg = 'rgba(239,68,68,.10)'; border = 'rgba(239,68,68,.3)'; label = '🏛 三大法人賣超'; }
+    else return; // neutral — skip badge
+    const fStr = fmtChineseNumber(v.foreign||0) + ' 外資';
+    const tStr = fmtChineseNumber(v.trust||0)   + ' 投信';
+    const dStr = fmtChineseNumber(v.dealer||0)  + ' 自營';
+    const totStr = fmtChineseNumber(tot);
+    const html = '<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;background:' + bg + ';color:' + color + ';border:1px solid ' + border + '" title="外資 ' + fStr + ' / 投信 ' + tStr + ' / 自營 ' + dStr + '">' + label + ' ' + (tot >= 0 ? '+' : '') + totStr + ' 股</span>';
+    const bar = document.getElementById('stock-catalyst-bar');
+    if (bar) {
+     bar.insertAdjacentHTML('beforeend', html);
+     bar.style.display = 'flex';
+    }
+   } catch(e) {}
+  })();
+ }
  if (catalystBadges.length) {
   const catBar = '<div id="stock-catalyst-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;align-self:center">催化劑</span>' + catalystBadges.join('') + '</div>';
   rd.innerHTML = catBar + rd.innerHTML;
@@ -3179,15 +3210,45 @@ function newsAnalysis(it) {
  return '<b>市場綜合分析：</b>此新聞反映當前市場焦點議題。應結合技術面（趨勢、支撐壓力）和基本面（估值、獲利前景）做出決策。<br><br><b>投資建議：</b>維持多元分散投資組合，不因單一新聞做過激調整。價格走勢比新聞標題更值得信賴。控制倉位和停損，不確定性高時保留現金。';
 }
 
+// ============ 數字格式化 helpers（萬/億）============
+// 2026-05-19: 台灣使用者習慣的數字單位
+function isTw(ticker) { return ticker && (ticker.endsWith('.TW') || ticker.endsWith('.TWO')); }
+function currencySymbol(ticker) { return isTw(ticker) ? 'NT$' : '$'; }
+function fmtChineseNumber(v) {
+  if (v == null || isNaN(v)) return 'N/A';
+  const abs = Math.abs(v);
+  if (abs >= 1e8) return (v / 1e8).toFixed(2) + '億';
+  if (abs >= 1e4) return (v / 1e4).toFixed(1) + '萬';
+  return Math.round(v).toLocaleString();
+}
+function fmtNumberSmart(v, ticker) {
+  // TW tickers use 萬/億, US tickers use K/M/B
+  if (v == null || isNaN(v)) return 'N/A';
+  if (isTw(ticker)) return fmtChineseNumber(v);
+  const abs = Math.abs(v);
+  if (abs >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+  if (abs >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+  if (abs >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+  return Math.round(v).toLocaleString();
+}
+
 // ============ JOURNAL ============
 const FEE = 0.003;
+// 2026-05-19: TW 證交稅 (0.3% on sell only) + handling fee adjustment
+const TW_FEE_BUY  = 0.001425;  // 0.1425% 手續費（買入）
+const TW_FEE_SELL = 0.004425;  // 0.1425% 手續費 + 0.3% 證交稅
+function feeForTrade(ticker, action) {
+  if (!isTw(ticker)) return FEE;
+  return action === 'sell' ? TW_FEE_SELL : TW_FEE_BUY;
+}
 function getJ() { return JSON.parse(localStorage.getItem('stock-journal') || '[]'); }
 function saveJ(d) { localStorage.setItem('stock-journal', JSON.stringify(d)); syncField('journal', d); }
 function addJournal() {
  const stopVal = parseFloat(document.getElementById('j-stop').value) || null;
  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value, stop: stopVal };
  if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
- e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
+ // 2026-05-19: TW 證交稅 (0.3% sell-only) + 手續費 (0.1425% both sides)
+ e.amount = e.price * e.qty; e.fee = e.amount * feeForTrade(e.ticker, e.action); e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
  // Wave 5.5 — snapshot RS Rating at entry time (for relative weakness tracking)
  if (e.action === 'buy' && window._rsLeaderCache) {
   const rs = window._rsLeaderCache.find(s => s.symbol === e.ticker);
@@ -4217,7 +4278,7 @@ function renderJournal() {
  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
  emp.style.display = 'none';
  window._jNotesMap = {};
- j.forEach(e => { window._jNotesMap[e.id] = e.notes || ''; if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * FEE; e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
+ j.forEach(e => { window._jNotesMap[e.id] = e.notes || ''; if (!e.fee) { e.amount = e.price * e.qty; e.fee = e.amount * feeForTrade(e.ticker, e.action); e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee; } });
  // Trigger one-time entryRS backfill in background
  _backfillEntryRS();
  const tBuy = j.filter(e => e.action === 'buy').reduce((s, e) => s + e.net, 0);
@@ -5567,24 +5628,27 @@ const _twseInstCache = { data: null, ts: 0, TTL: 60 * 60 * 1000 };
 async function fetchTWSEInstitutional() {
   if (_twseInstCache.data && Date.now() - _twseInstCache.ts < _twseInstCache.TTL) return _twseInstCache.data;
   try {
-    // TWSE T86 — 三大法人買賣超資料（今日或最近交易日）
-    const today = new Date();
-    const fmt = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-    let dateStr = fmt(today);
-    // 嘗試今日，若市場未開盤改昨日
-    const url = 'https://www.twse.com.tw/fund/T86?response=json&date=' + dateStr + '&selectType=ALLBUT0999';
-    const raw = await pFetch(url); // use existing proxy function
-    const data = await raw.json();
-    if (!data || data.stat !== 'OK') throw new Error('no data');
-    // data.data: each row = [代號, 名稱, 外資買, 外資賣, 外資淨, 投信買, 投信賣, 投信淨, 自營買, 自營賣, 自營淨, 三大法人]
+    // 2026-05-19: read from Python-fetched tw_institutions.json
+    // (scripts/fetch_twse_institutions.py runs daily via stock-scan workflow,
+    //  avoids browser-side TWSE rate limits + handles weekends/holidays).
+    const url = GH_RAW + 'tw_institutions.json?t=' + Math.floor(Date.now() / 600000);
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.bySymbol) throw new Error('no data');
+    // Schema match: backend uses {foreign, investmentTrust, dealer, total, conviction}
+    // Map to legacy frontend shape {foreign, trust, total} for backward compat
     const map = {};
-    (data.data || []).forEach(row => {
-      const sym = row[0].trim();
-      const foreign = parseInt((row[4] || '0').replace(/,/g, '')) || 0; // 外資淨買超
-      const trust = parseInt((row[7] || '0').replace(/,/g, '')) || 0;   // 投信淨買超
-      const total = parseInt((row[11] || '0').replace(/,/g, '')) || 0;  // 三大法人合計
-      map[sym] = { foreign, trust, total };
-    });
+    for (const [sym, v] of Object.entries(data.bySymbol)) {
+      map[sym] = {
+        foreign:    v.foreign,
+        trust:      v.investmentTrust,
+        dealer:     v.dealer,
+        total:      v.total,
+        conviction: v.conviction,
+      };
+    }
+    map._tradeDate = data.tradeDate;
     _twseInstCache.data = map;
     _twseInstCache.ts = Date.now();
     return map;
@@ -6084,11 +6148,13 @@ function addToCustomPool() {}
 function switchScannerMarket(market) {
   _scannerMarket = market;
   window._marketRegime = null;
+  _sectorCache = null; // 2026-05-19: clear sector cache on market switch
   document.querySelectorAll('#scanner-market-tabs button').forEach((b, i) =>
     b.classList.toggle('active', ['us','tw'][i] === market)
   );
   const strat = window._currentScanStrat || 'rsleader';
   if (strat === 'rsleader') runRSLeaderScan();
+  else if (strat === 'sector') _showSectorRadarTab();
 }
 
 // Watchlist stubs — feature removed but old syncField('watchlist',...) and
@@ -10383,22 +10449,22 @@ const SECTOR_ETFS = [
 
 let _sectorCache = null;
 let _sectorTs    = 0;
+let _sectorCacheMarket = null; // 'us' or 'tw' — invalidate cache on market switch
 
 async function _fetchSectorData() {
-  if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000) return _sectorCache;
+  if (_sectorCache && Date.now() - _sectorTs < 5 * 60 * 1000 && _sectorCacheMarket === _scannerMarket) return _sectorCache;
 
-  // 2026-05-16: Yahoo rate-limits the user's browser IP on direct chart calls.
-  // Sector radar data is now pre-computed by Python yfinance in the scan
-  // workflow (scripts/fetch_ohlcv.py) and committed as data/sector_radar.json.
-  // We just read the static file.
+  // 2026-05-19: TW market uses tw_sector_radar.json (Taiwan ETFs), US uses sector_radar.json
+  const file = _scannerMarket === 'tw' ? 'tw_sector_radar.json' : 'sector_radar.json';
   try {
-    const url = GH_RAW + 'sector_radar.json?t=' + Math.floor(Date.now() / 300000); // 5-min CDN bust
+    const url = GH_RAW + file + '?t=' + Math.floor(Date.now() / 300000); // 5-min CDN bust
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data.sectors || !data.sectors.length) throw new Error('empty');
     _sectorCache = data.sectors;
     _sectorTs    = Date.now();
+    _sectorCacheMarket = _scannerMarket;
     window._sectorDataAge = Date.now() - (data.generatedAt || 0);
     return _sectorCache;
   } catch (e) {

@@ -37,9 +37,15 @@ CACHE_PATH = DATA_DIR / 'ohlcv_cache.json'
 
 # Benchmark ETFs we always want fresh (used for SPY canary + sectorRS)
 # 2026-05-19: added 0050.TW (TW benchmark) so TW scan no longer fails.
-BENCHMARK_ETFS = ['SPY','SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE',
-                  'IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN','QQQ','IWM','DIA',
-                  '0050.TW','0056.TW']
+# Added TW sector ETFs for TW sector radar.
+BENCHMARK_ETFS = [
+    # US
+    'SPY','SMH','IGV','XLK','XLC','XLY','XLI','XLF','XLB','XLE',
+    'IBB','XAR','GDX','XLV','XLP','XLU','XLRE','TAN','QQQ','IWM','DIA',
+    # TW sector ETFs (for 板塊雷達 TW)
+    '0050.TW','0052.TW','0053.TW','0055.TW','0056.TW',
+    '00692.TW','00878.TW','00891.TW','00929.TW','00919.TW',
+]
 
 now_ms = int(time.time() * 1000)
 now_utc = datetime.now(timezone.utc)
@@ -214,3 +220,49 @@ SECTOR_RADAR_PATH.write_text(json.dumps({
     'sectors':     sector_radar,
 }, indent=2))
 print(f"✅ Wrote sector_radar.json ({sum(1 for s in sector_radar if not s['_failed'])}/{len(sector_radar)} ETFs)")
+
+# 2026-05-19: TW 板塊雷達 — Taiwan-listed sector ETFs
+TW_SECTOR_RADAR_ETFS = [
+    {'sym': '0050.TW',  'name': '台灣 50',       'group': 'broad'},
+    {'sym': '0056.TW',  'name': '高股息',         'group': 'dividend'},
+    {'sym': '0052.TW',  'name': '科技',           'group': 'growth'},
+    {'sym': '0053.TW',  'name': '中型 100',       'group': 'broad'},
+    {'sym': '0055.TW',  'name': '金融',           'group': 'financial'},
+    {'sym': '00692.TW', 'name': '公司治理 100',   'group': 'broad'},
+    {'sym': '00878.TW', 'name': '國泰永續高股息', 'group': 'dividend'},
+    {'sym': '00891.TW', 'name': '中信半導體',     'group': 'growth'},
+    {'sym': '00929.TW', 'name': '復華台灣科技',   'group': 'growth'},
+    {'sym': '00919.TW', 'name': '群益台灣精選高息', 'group': 'dividend'},
+]
+
+tw_radar = []
+for etf in TW_SECTOR_RADAR_ETFS:
+    sym = etf['sym']
+    entry = cache.get(sym)
+    if not entry or not entry.get('data'):
+        tw_radar.append({**etf, 'price': 0, 'changePct': 0, 'distHigh': None, '_failed': True})
+        continue
+    closes = entry['data'].get('closes') or []
+    highs  = entry['data'].get('highs')  or []
+    if len(closes) < 2:
+        tw_radar.append({**etf, 'price': 0, 'changePct': 0, 'distHigh': None, '_failed': True})
+        continue
+    price = closes[-1]
+    prev_close = closes[-2]
+    change_pct = (price - prev_close) / prev_close * 100 if prev_close else 0
+    high52w = max(highs[-252:]) if highs else price
+    dist_high = (price - high52w) / high52w * 100 if high52w else None
+    tw_radar.append({
+        **etf,
+        'price':     round(price, 2),
+        'changePct': round(change_pct, 2),
+        'distHigh':  round(dist_high, 2) if dist_high is not None else None,
+        '_failed':   False,
+    })
+
+TW_RADAR_PATH = DATA_DIR / 'tw_sector_radar.json'
+TW_RADAR_PATH.write_text(json.dumps({
+    'generatedAt': now_ms,
+    'sectors':     tw_radar,
+}, indent=2, ensure_ascii=False))
+print(f"✅ Wrote tw_sector_radar.json ({sum(1 for s in tw_radar if not s['_failed'])}/{len(tw_radar)} TW ETFs)")
