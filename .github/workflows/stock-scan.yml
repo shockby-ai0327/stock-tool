@@ -100,8 +100,9 @@ jobs:
           [ -f data/quote_cache.json ]     && git add data/quote_cache.json     || true
           [ -f data/sector_radar.json ]    && git add data/sector_radar.json    || true
           [ -f data/tw_sector_radar.json ] && git add data/tw_sector_radar.json || true
-          [ -f data/tw_institutions.json ] && git add data/tw_institutions.json || true
-          [ -f data/tw_name_map.json ]     && git add data/tw_name_map.json     || true
+          [ -f data/tw_institutions.json ]        && git add data/tw_institutions.json        || true
+          [ -f data/tw_institutions_history.json ]&& git add data/tw_institutions_history.json|| true
+          [ -f data/tw_name_map.json ]            && git add data/tw_name_map.json            || true
           [ -f data/ohlcv_lite.json ]      && git add data/ohlcv_lite.json      || true
           [ -f data/universe_memory.json ] && git add data/universe_memory.json || true
           [ -f data/universe_static.json ] && git add data/universe_static.json || true

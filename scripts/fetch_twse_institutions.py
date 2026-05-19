@@ -150,6 +150,64 @@ def main():
     # Extract name map from sentinel key
     name_map = by_symbol.pop('__nameMap__', {}) if by_symbol else {}
 
+    # 2026-05-19: 5-day rolling 三大法人 (主力越勢)
+    # Accumulate today + last 4 trading days into a single picture.
+    # Cumulative net flow = trend direction, NOT just today's snapshot.
+    HISTORY_PATH = DATA_DIR / 'tw_institutions_history.json'
+    history = {}
+    if HISTORY_PATH.exists():
+        try:
+            history = json.loads(HISTORY_PATH.read_text())
+        except Exception:
+            history = {}
+
+    # Add today's snapshot to history (keyed by date)
+    if by_symbol:
+        history[date_str] = {sym: v for sym, v in by_symbol.items() if not sym.startswith('__')}
+
+    # Keep last 10 trading days only
+    dates_sorted = sorted(history.keys(), reverse=True)[:10]
+    history = {d: history[d] for d in dates_sorted}
+    HISTORY_PATH.write_text(json.dumps(history, ensure_ascii=False))
+
+    # Compute 5-day rolling cumulative for each ticker
+    last5 = dates_sorted[:5]
+    rolling = {}
+    for sym in by_symbol:
+        if sym.startswith('__'):
+            continue
+        cum_f, cum_t, cum_d, cum_tot = 0, 0, 0, 0
+        days_present = 0
+        for d in last5:
+            day_data = history.get(d, {})
+            if sym in day_data:
+                cum_f   += day_data[sym].get('foreign', 0)
+                cum_t   += day_data[sym].get('investmentTrust', 0)
+                cum_d   += day_data[sym].get('dealer', 0)
+                cum_tot += day_data[sym].get('total', 0)
+                days_present += 1
+        if days_present > 0:
+            # 5-day conviction
+            if cum_tot > 3000000 and cum_f > 0:
+                conv5 = 'strong_accumulating'  # 主力連續吸籌
+            elif cum_tot > 500000:
+                conv5 = 'accumulating'
+            elif cum_tot < -3000000 and cum_f < 0:
+                conv5 = 'strong_distributing'  # 主力連續出貨
+            elif cum_tot < -500000:
+                conv5 = 'distributing'
+            else:
+                conv5 = 'neutral'
+            # Merge into today's snapshot
+            by_symbol[sym]['cum5d'] = {
+                'foreign':         cum_f,
+                'investmentTrust': cum_t,
+                'dealer':          cum_d,
+                'total':           cum_tot,
+                'days':            days_present,
+                'conviction':      conv5,
+            }
+
     out = {
         'generatedAt': int(time.time() * 1000),
         'tradeDate':   date_str,
