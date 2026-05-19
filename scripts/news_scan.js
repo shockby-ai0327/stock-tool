@@ -68,14 +68,19 @@ async function scoreSentiment(symbol, headlines) {
     .map((h, i) => `${i + 1}. ${h.title}`)
     .join('\n');
 
+  // 2026-05-19: TW tickers get Chinese-language headlines from Google News.
+  // Detect by suffix and request Chinese summary output.
+  const isTw = symbol.endsWith('.TW') || symbol.endsWith('.TWO');
+
   const prompt = `Score these recent headlines for ${symbol} as one of: bullish, bearish, mixed, neutral.
-Also write a 20-word summary and identify the most important headline.
+${isTw ? 'Write a 25-word summary in 繁體中文 and pick the most important headline.' : 'Write a 20-word English summary and identify the most important headline.'}
+Headlines may be in English or Chinese — handle both.
 
 Headlines:
 ${numbered}
 
 Return ONLY valid JSON, no markdown:
-{"sentiment": "bullish|bearish|mixed|neutral", "summary": "...", "keyHeadline": "...", "headlineCount": ${headlines.length}}`;
+{"sentiment": "bullish|bearish|mixed|neutral", "summary": "${isTw ? '繁體中文摘要' : 'English summary'}", "keyHeadline": "...", "headlineCount": ${headlines.length}}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
