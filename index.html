@@ -378,6 +378,8 @@ firebase.initializeApp(_fbConfig);
  <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
  <!-- 2026-05-19: 今日待處理（最重要）— 開盤第一眼看的事項清單 -->
  <div id="dash-action-items" style="margin-bottom:20px"></div>
+ <!-- Fix G: 觀察清單 — 你研究過想等的標的（簡版，無 polling） -->
+ <div id="dash-watchlist-simple" style="margin-bottom:20px"></div>
  <div style="margin-bottom:20px">
  <div style="display:flex;gap:8px">
  <input id="dash-search-input" placeholder="搜尋個股（AAPL / 2330.TW）..." style="flex:1;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none" onkeydown="if(event.key==='Enter'){document.getElementById('ticker-input').value=this.value;showPage('stock');analyzeStock()}" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
@@ -1346,11 +1348,43 @@ async function analyzeStock() {
    } catch(e) {}
   })();
  }
- if (catalystBadges.length) {
-  const catBar = '<div id="stock-catalyst-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;align-self:center">催化劑</span>' + catalystBadges.join('') + '</div>';
-  rd.innerHTML = catBar + rd.innerHTML;
+ // Fix B: 催化劑按來源分組 — 防止「5 個 badge = 5 個獨立確認」假象
+ // 把所有 badges 分到 4 個獨立來源中，顯示「N/4 個獨立來源觸發」
+ // catalystBadges 已收集所有 badges，這裡用 scanEntry 重新分組
+ if (scanEntry || catalystBadges.length) {
+  const sources = {
+    momentum:    { label: '💹 價格動能', badges: [], active: false, note: 'RS / 1m/3m return — 高度自相關，視為 1 個來源' },
+    fundamental: { label: '📊 基本面動能', badges: [], active: false, note: 'EPS revision / surprise / 升評 — 同源（盈餘預期）' },
+    institutional:{ label: '🏛 機構流',   badges: [], active: false, note: '內部人 / 三大法人 / 5d 累積 — 真正獨立來源' },
+    catalyst:    { label: '📅 事件 / 型態', badges: [], active: false, note: 'earnings 倒數 / VCP / short interest — 獨立來源' },
+  };
+  // Re-classify each badge by scanning catalystBadges HTML for keywords
+  catalystBadges.forEach(html => {
+    if (/RS\s|動能|加速|momentum/i.test(html)) { sources.momentum.badges.push(html); sources.momentum.active = true; }
+    else if (/EPS|分析師|升評|降評/i.test(html)) { sources.fundamental.badges.push(html); sources.fundamental.active = true; }
+    else if (/內部人|三大法人|機構|主力/i.test(html)) { sources.institutional.badges.push(html); sources.institutional.active = true; }
+    else if (/財報|VCP|空頭|三重共振/i.test(html)) { sources.catalyst.badges.push(html); sources.catalyst.active = true; }
+    else { sources.catalyst.badges.push(html); sources.catalyst.active = true; }
+  });
+  const activeCount = Object.values(sources).filter(s => s.active).length;
+  const totalSources = 4;
+  // Convergence label
+  const convLabel = activeCount >= 3 ? '✓ 真實匯流' : activeCount === 2 ? '○ 部分匯流' : activeCount === 1 ? '⚠ 單一來源' : '';
+  const convColor = activeCount >= 3 ? 'var(--green)' : activeCount === 2 ? 'var(--yellow)' : 'var(--orange)';
+  let catBarHtml = '<div id="stock-catalyst-bar" style="margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)">';
+  catBarHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:11px;color:var(--muted);font-weight:600">催化劑（按獨立來源分組）</span>';
+  if (convLabel) catBarHtml += '<span style="font-size:11px;font-weight:700;color:' + convColor + '">' + convLabel + ' ' + activeCount + '/' + totalSources + ' 來源</span>';
+  catBarHtml += '<span style="font-size:10px;color:var(--muted);cursor:help;margin-left:auto" title="同一來源（如 RS + 1m return）只算 1 個。多訊號同向最常見的原因是「都是 momentum」，不是「多重確認」。3-4 來源同時觸發才算真正匯流。">ⓘ 為何分組</span></div>';
+  Object.values(sources).forEach(s => {
+    if (!s.active) return;
+    catBarHtml += '<div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px;padding:6px 0;border-top:1px solid rgba(255,255,255,.04)">';
+    catBarHtml += '<div style="flex-shrink:0;min-width:100px;font-size:10px;color:var(--muted)" title="' + s.note + '">' + s.label + '</div>';
+    catBarHtml += '<div style="display:flex;flex-wrap:wrap;gap:4px">' + s.badges.join('') + '</div>';
+    catBarHtml += '</div>';
+  });
+  catBarHtml += '</div>';
+  rd.innerHTML = catBarHtml + rd.innerHTML;
  } else {
-  // empty bar exists in case async insider loads → can append there
   rd.innerHTML = '<div id="stock-catalyst-bar" style="display:none"></div>' + rd.innerHTML;
  }
  }
@@ -1383,40 +1417,41 @@ async function analyzeStock() {
  const stars = '★'.repeat(entry.stars) + '☆'.repeat(5 - entry.stars);
  const genAge = ai.generatedAt ? Math.round((Date.now() - ai.generatedAt) / 3600000) : null;
  const ageNote = genAge != null ? (genAge < 1 ? '剛生成' : genAge + ' 小時前') : '';
- const aiCard = '<div class="card" style="border-left:3px solid rgba(99,102,241,.6);margin-top:12px">' +
- '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
- '<div style="font-size:14px;font-weight:700">🤖 Claude AI 前瞻分析</div>' +
- '<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:' +
- (entry.bias==='bullish'?'rgba(34,197,94,.15)':entry.bias==='bearish'?'rgba(239,68,68,.15)':'rgba(245,158,11,.15)') +
- ';color:' + biasColor + '">' + biasLabel + '</span>' +
- '<span style="font-size:13px;color:#fbbf24">' + stars + '</span>' +
- '<span style="font-size:10px;color:var(--muted);margin-left:auto">' + ageNote + ' · 僅供參考</span>' +
+ // Fix F: AI 卡片重構 — 移除星等、降低視覺權重、明標「非獨立訊號」
+ const aiCard = '<div class="card" style="border-left:3px dashed rgba(148,163,184,.5);margin-top:12px;background:rgba(255,255,255,.015)">' +
+ '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">' +
+ '<div style="font-size:13px;font-weight:600;color:var(--muted)">🤖 Claude AI 文字判讀</div>' +
+ '<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,.10);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-weight:600" title="' + signalConfidence('aiAnalysis').replace(/"/g,"&quot;") + '">⚠ 非獨立訊號</span>' +
+ '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:' +
+ (entry.bias==='bullish'?'rgba(34,197,94,.10)':entry.bias==='bearish'?'rgba(239,68,68,.10)':'rgba(148,163,184,.10)') +
+ ';color:' + biasColor + ';font-weight:600">傾向：' + biasLabel + '</span>' +
+ '<span style="font-size:10px;color:var(--muted);margin-left:auto">' + ageNote + '</span>' +
  '</div>' +
- '<div style="display:grid;gap:10px">' +
- '<div style="padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid rgba(99,102,241,.4)">' +
- '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.5px">前瞻展望（30–60 天）</div>' +
+ '<div style="padding:8px 10px;background:rgba(245,158,11,.04);border-radius:6px;font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:10px">⚠ 此段為 Claude 將上方既有 RS / VCP / EPS / 催化劑指標**重新表述**成中文敘事，<b>並未引入任何新資訊或新數據</b>。請勿當作「第 N 個獨立確認」 — 動能訊號全綠時，這裡也會自動跟著綠。</div>' +
+ '<div style="display:grid;gap:8px">' +
+ '<div style="padding:10px 12px;background:rgba(255,255,255,.02);border-radius:6px">' +
+ '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.5px">前瞻展望（30–60 天）</div>' +
  '<div style="font-size:13px;line-height:1.7;color:var(--text)">' + (entry.outlook || '—') + '</div>' +
  '</div>' +
- '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
- '<div style="padding:10px 12px;background:rgba(34,197,94,.04);border-radius:8px;border-left:2px solid rgba(34,197,94,.3)">' +
- '<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;letter-spacing:.5px"> 關鍵催化劑</div>' +
- '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' + (entry.catalyst || '—') + '</div>' +
+ '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+ '<div style="padding:10px;background:rgba(34,197,94,.03);border-radius:6px">' +
+ '<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px"> 關鍵催化劑</div>' +
+ '<div style="font-size:11px;line-height:1.6;color:var(--muted)">' + (entry.catalyst || '—') + '</div>' +
  '</div>' +
- '<div style="padding:10px 12px;background:rgba(239,68,68,.04);border-radius:8px;border-left:2px solid rgba(239,68,68,.3)">' +
- '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px;letter-spacing:.5px"> 主要風險</div>' +
- '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' + (entry.risk || '—') + '</div>' +
+ '<div style="padding:10px;background:rgba(239,68,68,.03);border-radius:6px">' +
+ '<div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px"> 主要風險</div>' +
+ '<div style="font-size:11px;line-height:1.6;color:var(--muted)">' + (entry.risk || '—') + '</div>' +
  '</div>' +
  '</div>' +
  '</div>' +
- '<div style="margin-top:8px;font-size:10px;color:var(--muted);line-height:1.5">⚠ 本分析由 Claude AI 基於掃描時技術與動能數據自動生成，不構成投資建議。每次掃描後更新。</div>' +
  '</div>';
- // Wave 7.1 — inject at TOP of stock page (after header banners), not bottom
- rd.innerHTML = aiCard + rd.innerHTML;
+ // Fix F: AI 卡片改放到頁尾（之前在頂部 — 會被當第 1 個訊號）
+ rd.innerHTML = rd.innerHTML + aiCard;
  } else {
- // Stock not in top 20 leaders — show placeholder at top too
- const placeholder = '<div class="card" style="border-left:3px solid rgba(99,102,241,.2)">' +
- '<div style="font-size:12px;color:var(--muted)">🤖 <b>Claude AI 前瞻分析</b> — 此股尚無 AI 分析（僅 RS 排行榜前 15 名 + 加速發現前 5 名提供）。若此股進入排行榜，下次掃描後將自動生成。</div></div>';
- rd.innerHTML = placeholder + rd.innerHTML;
+ // Stock not in top 20 leaders — placeholder at bottom too
+ const placeholder = '<div class="card" style="border-left:3px dashed rgba(148,163,184,.3);margin-top:12px">' +
+ '<div style="font-size:11px;color:var(--muted)">🤖 此股尚無 AI 文字判讀（僅排行榜前 25 檔生成）</div></div>';
+ rd.innerHTML = rd.innerHTML + placeholder;
  }
  }
  } catch(e) { console.warn('AI analysis load failed:', e.message); }
@@ -2347,12 +2382,33 @@ function renderDecisionCard(ticker, price, ta, cur) {
  // Auto-Kelly from user's journal history
  const j = getJ();
  const kStats = typeof computeJournalKellyStats === 'function' ? computeJournalKellyStats(j) : null;
- let kellyPct = 0.05; // 5% default for new users
+ let rawKelly = 0.05;
  let kellyNote = '預設 5%（歷史交易 < 10 筆）';
  if (kStats && kStats.totalTrades >= 10) {
-  kellyPct = Math.max(0, kStats.halfKelly);
-  kellyNote = `Half Kelly · 勝率 ${(kStats.winRate*100).toFixed(0)}% · 盈虧比 ${kStats.ratio.toFixed(2)}（${kStats.totalTrades} 筆歷史）`;
+  rawKelly = Math.max(0, kStats.halfKelly);
+  kellyNote = `Half Kelly raw · 勝率 ${(kStats.winRate*100).toFixed(0)}% · 盈虧比 ${kStats.ratio.toFixed(2)}（${kStats.totalTrades} 筆歷史）`;
  }
+
+ // Fix D: 樣本封頂 — 樣本不足時強制保守
+ const tradeCount = kStats?.totalTrades || 0;
+ const sampleCap = tradeCount < 10 ? 0.02 :     // 小於 10 筆：cap 2%
+                   tradeCount < 30 ? 0.05 :     // 10-30 筆：cap 5%
+                   tradeCount < 100 ? 0.10 :    // 30-100 筆：cap 10%
+                   0.25;                         // 100+ 筆：full Half Kelly 上限 25%
+ const sampleCapNote = tradeCount < 30 ? `樣本封頂 ${(sampleCap*100).toFixed(0)}%（樣本 ${tradeCount} 筆，需 ≥30 才解封）` : '';
+
+ // Fix C: 規模 multiplier — 熊市自動降倉位
+ const regime = window._marketRegime;
+ let regimeMult = 0.5, regimeNote = '規模 ×0.5（資料載入中）';
+ if (regime) {
+  const ov = regime.overall;
+  if (ov >= 2)        { regimeMult = 1.0; regimeNote = '✓ 強多頭 ×1.0（SPY > 200MA + VIX 低）'; }
+  else if (ov === 1)  { regimeMult = 0.7; regimeNote = '中性多頭 ×0.7'; }
+  else if (ov === 0)  { regimeMult = 0.5; regimeNote = '⚠ 中性 ×0.5'; }
+  else if (ov === -1) { regimeMult = 0.3; regimeNote = '⚠ 偏弱 ×0.3'; }
+  else                { regimeMult = 0.1; regimeNote = '🔴 偏空 ×0.1（建議空手）'; }
+ }
+ const kellyPct = Math.min(rawKelly * regimeMult, sampleCap);
  // Get capital from risk-capital input or fall back to 100k
  const capitalRaw = (typeof localStorage !== 'undefined') ? parseFloat(localStorage.getItem('risk-capital') || '0') : 0;
  const capital = capitalRaw > 0 ? capitalRaw : (isTW ? 1000000 : 100000);
@@ -2385,10 +2441,14 @@ function renderDecisionCard(ticker, price, ta, cur) {
    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px">' +
      // 倉位
      '<div style="padding:12px;background:rgba(99,102,241,.08);border-radius:8px;border-left:3px solid var(--accent)">' +
-       '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">建議倉位（Half Kelly）</div>' +
+       '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">建議倉位 ' + signalConfidenceBadge('kelly') + '</div>' +
        '<div style="font-size:24px;font-weight:700;color:var(--accent)">' + (kellyPct*100).toFixed(1) + '%</div>' +
        '<div style="font-size:12px;color:var(--text);margin-top:4px">' + shares.toLocaleString() + ' 股 · ' + cs + fmtChineseNumberOrCompact(actualPositionValue, ticker) + '</div>' +
-       '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + kellyNote + '</div>' +
+       '<div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5">' +
+         '原始 ' + (rawKelly*100).toFixed(1) + '% · ' + regimeNote +
+         (sampleCapNote ? '<br>' + sampleCapNote : '') +
+         '<br>' + kellyNote +
+       '</div>' +
      '</div>' +
      // 停損
      '<div style="padding:12px;background:rgba(239,68,68,.06);border-radius:8px;border-left:3px solid var(--red)">' +
@@ -3361,6 +3421,68 @@ function newsAnalysis(it) {
 
 // ============ 數字格式化 helpers（萬/億）============
 // 2026-05-19: 台灣使用者習慣的數字單位
+// ============ Fix E: RS 過熱警示 — 防止追高 ============
+// 學術：動量極端值 (top 5%) 後 30 天 mean-reversion 機率高
+function rsLabel(rs) {
+  if (rs == null) return { val: '—', color: 'var(--muted)', warn: '', bg: '' };
+  if (rs >= 99) return { val: rs, color: '#dc2626', warn: '🔴 極端過熱', bg: 'rgba(239,68,68,.15)', desc: '極端過熱（top 1%）— 歷史多為頂部訊號，30 天 mean-revert 機率高' };
+  if (rs >= 95) return { val: rs, color: '#ea580c', warn: '⚠ 過熱',     bg: 'rgba(234,88,12,.12)', desc: '過熱區（top 5%）— 短期回檔機率升高，避免重倉' };
+  if (rs >= 80) return { val: rs, color: '#22c55e', warn: '✓ 強勢',     bg: 'rgba(34,197,94,.08)' };
+  if (rs >= 60) return { val: rs, color: '#eab308', warn: '',           bg: '' };
+  return       { val: rs, color: 'var(--muted)', warn: '⚠ 弱勢',         bg: '' };
+}
+
+// ============ Fix H: 綜合分 → A/B/C/D 等級（消除 false precision）============
+// 87 vs 82 是 noise。改成等級就強迫使用者只用粗分類。
+function compositeGrade(score) {
+  if (score == null) return { letter: '—', color: 'var(--muted)', range: '' };
+  if (score >= 85) return { letter: 'A', color: '#16a34a', range: '85+' };
+  if (score >= 70) return { letter: 'B', color: '#22c55e', range: '70-84' };
+  if (score >= 55) return { letter: 'C', color: '#eab308', range: '55-69' };
+  if (score >= 40) return { letter: 'D', color: '#f97316', range: '40-54' };
+  return            { letter: 'F', color: '#dc2626', range: '<40' };
+}
+
+// ============ Fix A: 信號驗證等級 — 對抗 false precision ============
+// 每個指標附「學術依據」+「我們的實證」雙評等（1-5 星）
+// 用戶看到 4★ Triple-Resonance 會同時看到「實證 1★ - 樣本不足」
+// 直接破壞「精準感」防止 over-confidence
+const SIGNAL_VALIDATION = {
+  'rsRating':     { academic: 5, empirical: 4, note: 'IBD/Jegadeesh 1993 + 30 年實證；近期被套利 edge 縮減' },
+  'rsOverheat':   { academic: 5, empirical: 4, note: '動量極端值 mean-reversion 學術充分（Lehmann 1990）' },
+  'epsRevision':  { academic: 5, empirical: 5, note: 'Stickel 1989, Womack 1996 — 最強 fundamental factor' },
+  'insiderBuy':   { academic: 5, empirical: 4, note: 'Cohen 2012 cluster buying 顯著預測力' },
+  'atrStop':      { academic: 5, empirical: 5, note: 'Van Tharp R-multiple，數十年實證' },
+  'kelly':        { academic: 5, empirical: 4, note: '數學最佳，但樣本需 ≥50 才穩定' },
+  'sectorRS':     { academic: 4, empirical: 3, note: '動能 + 板塊 leadership' },
+  'vcp':          { academic: 3, empirical: 2, note: 'Minervini 方法移植；base-count 演算法未獨立驗證' },
+  'tripleResonance': { academic: 3, empirical: 1, note: '多訊號匯流概念合理，但本系統樣本 N<10，未實證' },
+  'composite':    { academic: 2, empirical: 1, note: '50/30/20 權重憑感覺，未做最佳化回測' },
+  'aiAnalysis':   { academic: 2, empirical: 1, note: 'Claude 文字合成既有資料，**非獨立訊號**' },
+  'newsSentiment': { academic: 2, empirical: 2, note: '新聞情緒通常滯後價格' },
+  'threeInst':    { academic: 3, empirical: 3, note: '外資方向性有效，自營商雜訊大' },
+  'threeInst5d':  { academic: 3, empirical: 2, note: '5 日累積比單日有用，需 30+ 樣本實證' },
+  'gmma':         { academic: 1, empirical: 1, note: '本質為 MA 排列裝飾，邊際 edge ≈ 0' },
+  'volProfile':   { academic: 2, empirical: 1, note: '日線解析度不足，期貨用較佳' },
+  'klinePatterns': { academic: 1, empirical: 1, note: '學術 hit rate ≈ 50%，等同擲硬幣' },
+};
+function signalConfidence(name) {
+  const s = SIGNAL_VALIDATION[name];
+  if (!s) return '';
+  const acad = '★'.repeat(s.academic) + '☆'.repeat(5 - s.academic);
+  const emp  = '★'.repeat(s.empirical) + '☆'.repeat(5 - s.empirical);
+  return `學術 ${acad}\n本系統實證 ${emp}\n${s.note}`;
+}
+function signalConfidenceBadge(name) {
+  const s = SIGNAL_VALIDATION[name];
+  if (!s) return '';
+  // Low confidence (avg < 3) shows orange warning icon
+  const avg = (s.academic + s.empirical) / 2;
+  if (avg < 2.5) return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#f59e0b;font-size:10px;font-weight:700;margin-left:4px">⚠未驗證</span>`;
+  if (avg < 3.5) return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#fbbf24;font-size:10px;font-weight:600;margin-left:4px">實驗中</span>`;
+  return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#22c55e;font-size:10px;font-weight:600;margin-left:4px">✓已驗證</span>`;
+}
+
 function isTw(ticker) { return ticker && (ticker.endsWith('.TW') || ticker.endsWith('.TWO')); }
 function currencySymbol(ticker) { return isTw(ticker) ? 'NT$' : '$'; }
 function fmtChineseNumber(v) {
@@ -7771,6 +7893,7 @@ async function renderDashboard(forceRescan) {
  renderPreMarketCard(marketData);
  fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
  renderActionItems(); // #3 今日待處理
+ renderWatchlistSimple(); // Fix G: 簡版觀察清單
  renderDashHoldings(); // 持倉動態
  // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
  loadMarketNarrative(window._dashboardMarket || 'us');
@@ -8137,6 +8260,104 @@ async function renderUpcomingEvents() {
  '<span>🔴 高影響</span><span>🟡 中影響</span>'+
  '</div>';
  el.innerHTML = html;
+}
+
+// ============ Fix G: 簡版觀察清單 — 你研究過想等的標的 ============
+// 不做 polling、不自動刷新；只在 dashboard 載入時抓一次即時價，
+// 顯示距目標進場價的距離 + 你寫的論點。
+const WATCHLIST_KEY = 'simple-watchlist-v2';
+function getWatchlistSimple() { try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]'); } catch(e) { return []; } }
+function saveWatchlistSimple(list) { localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list)); }
+
+function addWatchSimple() {
+ const ticker = (document.getElementById('wl-ticker').value || '').trim().toUpperCase();
+ const target = parseFloat(document.getElementById('wl-target').value);
+ const stop   = parseFloat(document.getElementById('wl-stop').value);
+ const thesis = (document.getElementById('wl-thesis').value || '').trim();
+ if (!ticker) { alert('請輸入代號'); return; }
+ const list = getWatchlistSimple();
+ if (list.some(w => w.ticker === ticker)) { alert(ticker + ' 已在清單中'); return; }
+ list.push({
+  ticker, target: target || null, stop: stop || null, thesis: thesis,
+  addedAt: new Date().toISOString().slice(0, 10),
+ });
+ saveWatchlistSimple(list);
+ document.getElementById('wl-ticker').value = '';
+ document.getElementById('wl-target').value = '';
+ document.getElementById('wl-stop').value = '';
+ document.getElementById('wl-thesis').value = '';
+ renderWatchlistSimple();
+}
+function removeWatchSimple(ticker) {
+ saveWatchlistSimple(getWatchlistSimple().filter(w => w.ticker !== ticker));
+ renderWatchlistSimple();
+}
+
+async function renderWatchlistSimple() {
+ const el = document.getElementById('dash-watchlist-simple');
+ if (!el) return;
+ const list = getWatchlistSimple();
+
+ // Form (always shown)
+ const formHtml =
+  '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:' + (list.length ? '12px' : '0') + '">' +
+   '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+    '<input id="wl-ticker" placeholder="代號（如 ARWR / 2330.TW）" style="flex:1;min-width:140px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
+    '<input id="wl-target" type="number" step="0.01" placeholder="目標進場價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
+    '<input id="wl-stop" type="number" step="0.01" placeholder="心理停損價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
+   '</div>' +
+   '<div style="display:flex;gap:6px">' +
+    '<input id="wl-thesis" placeholder="進場論點（如：等回測 MA20 + Q2 財報後確認）" style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
+    '<button onclick="addWatchSimple()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">加入</button>' +
+   '</div>' +
+  '</div>';
+
+ if (!list.length) {
+  el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)">' +
+   '<h3 style="margin:0 0 8px 0">👁 我的觀察清單</h3>' +
+   '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">記下你研究過、想等價位或時機進場的標的。無自動刷新，純靜態 — 每次打開首頁更新一次即時價。</div>' +
+   formHtml +
+  '</div>';
+  return;
+ }
+
+ // Fetch current prices for all
+ el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)"><h3>👁 我的觀察清單</h3>' + formHtml +
+  '<div style="text-align:center;color:var(--muted);padding:14px">載入價格中...</div></div>';
+ const prices = {};
+ await Promise.all(list.map(async w => {
+  try { const d = await quickPrice(w.ticker); if (d) prices[w.ticker] = d.price; } catch(e) {}
+ }));
+
+ const rows = list.map(w => {
+  const cur = prices[w.ticker];
+  const t = w.target;
+  const s = w.stop;
+  let distHtml = '<span style="color:var(--muted)">—</span>';
+  let trigger = '';
+  if (cur && t) {
+   const distPct = (cur - t) / t * 100;
+   const color = Math.abs(distPct) <= 3 ? 'var(--green)' : 'var(--muted)';
+   distHtml = '<span style="color:' + color + '">距目標 ' + (distPct >= 0 ? '+' : '') + distPct.toFixed(1) + '%</span>';
+   if (Math.abs(distPct) <= 2) trigger = '<span style="font-size:11px;color:var(--green);font-weight:700;margin-left:6px">✓ 接近</span>';
+   if (cur <= t && t > 0) trigger = '<span style="font-size:11px;color:var(--green);font-weight:700;margin-left:6px">🎯 到價！</span>';
+  }
+  const cs = isTw(w.ticker) ? 'NT$' : '$';
+  return '<div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+   '<div style="flex-shrink:0;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + w.ticker + '\';showPage(\'stock\');analyzeStock()"><b style="color:var(--accent);font-size:15px">' + w.ticker + '</b></div>' +
+   '<div style="flex-shrink:0;font-size:13px">' + (cur ? cs + cur.toFixed(2) : '—') + '</div>' +
+   '<div style="flex-shrink:0">目標 ' + (t ? cs + t.toFixed(2) : '—') + ' · 停損 ' + (s ? cs + s.toFixed(2) : '—') + '</div>' +
+   '<div style="flex-shrink:0;font-size:12px">' + distHtml + trigger + '</div>' +
+   '<div style="flex:1;font-size:11px;color:var(--muted);min-width:200px">' + (w.thesis || '無論點') + '</div>' +
+   '<button onclick="removeWatchSimple(\'' + w.ticker + '\')" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">移除</button>' +
+  '</div>';
+ }).join('');
+
+ el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)">' +
+  '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">👁 我的觀察清單 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">' + list.length + ' 檔</span></h3></div>' +
+  formHtml +
+  '<div>' + rows + '</div>' +
+ '</div>';
 }
 
 // 2026-05-19 #9: 交易模式分析 — 從 journal 找出你的交易壞習慣
@@ -10508,15 +10729,16 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       ? '<span title="VCP 輕度收縮" style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:rgba(20,184,166,.1);color:#5eead4;font-weight:600;cursor:help">VCP</span>'
       : '';
 
-    // AI analysis badge
+    // Fix F: AI 重構 — 移除星等。僅顯示 bias 顏色點 + tooltip。
+    // 「AI 評等」會誤導為獨立確認；改成低調的「AI 文字判讀（同源合成）」標籤。
     const aiCache = window._aiAnalysis;
     const aiEntry = aiCache && aiCache.bySymbol && aiCache.bySymbol.get(r.symbol);
     const aiStarsHtml = aiEntry
       ? (()=>{
-          const biasColor = aiEntry.bias === 'bullish' ? '#22c55e' : aiEntry.bias === 'bearish' ? '#ef4444' : '#f59e0b';
-          const stars = '★'.repeat(aiEntry.stars) + '☆'.repeat(5 - aiEntry.stars);
-          return '<div title="Claude AI 前瞻分析：' + (aiEntry.outlook || '').replace(/"/g, "'") + '" style="font-size:10px;margin-top:3px;color:' + biasColor + ';cursor:help">' +
-            '<span style="opacity:.7">🤖</span> ' + stars + '</div>';
+          const biasColor = aiEntry.bias === 'bullish' ? '#22c55e' : aiEntry.bias === 'bearish' ? '#ef4444' : '#94a3b8';
+          const tooltip = ('Claude 文字判讀（基於已有 RS/VCP/EPS 等資料合成，非獨立訊號）：' + (aiEntry.outlook || '')).replace(/"/g, "'");
+          return '<div title="' + tooltip + '" style="font-size:10px;margin-top:3px;color:var(--muted);cursor:help">' +
+            '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + biasColor + ';margin-right:4px"></span>AI 判讀</div>';
         })()
       : '';
 
@@ -10532,16 +10754,25 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
         stopHtml +
       '</td>' +
-      '<td style="padding:10px 8px;text-align:center">' +
-        '<div style="font-size:22px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.rsRating + '</div>' +
-        '<div style="font-size:10px;color:var(--muted);cursor:help" title="相對強度評等（1-99）：個股 12-1 月報酬率 vs 整體市場百分位。≥80=強勢、≥90=領先群、95+=極少數頂尖。IBD CAN SLIM 經典指標。">RS Rating ⓘ</div>' +
-      '</td>' +
+      // Fix E: RS overheating warning
+      (()=>{
+        const rl = rsLabel(r.rsRating);
+        const warnRow = rl.desc ? '<div style="font-size:9px;color:' + rl.color + ';margin-top:2px;line-height:1.3">' + rl.warn + '</div>' : '';
+        return '<td style="padding:10px 8px;text-align:center' + (rl.bg ? ';background:' + rl.bg : '') + '">' +
+          '<div style="font-size:22px;font-weight:800;color:' + rl.color + ';font-variant-numeric:tabular-nums" title="' + (rl.desc || '相對強度評等') + '">' + r.rsRating + '</div>' +
+          '<div style="font-size:10px;color:var(--muted)">RS</div>' + warnRow +
+        '</td>';
+      })() +
       '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
-      '<td style="padding:10px 8px;text-align:center">' +
-        '<div style="font-size:20px;font-weight:800;color:' + scoreColor + ';font-variant-numeric:tabular-nums">' + r.compositeScore + '</div>' +
-        '<div style="font-size:10px;color:var(--muted);cursor:help" title="綜合分 = RS Rating×50% + 量能擴張×30% + 動量×20%（+ 加速度 ±3 紅利）。≥70 為穩健領袖；≥85 動能爆發。權重為啟發式，非嚴格回測權重。">綜合分 ⓘ</div>' +
-      '</td>' +
+      // Fix H: 綜合分換 A/B/C/D 等級
+      (()=>{
+        const g = compositeGrade(r.compositeScore);
+        return '<td style="padding:10px 8px;text-align:center">' +
+          '<div style="font-size:24px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums" title="綜合分 ' + r.compositeScore + '（範圍 ' + g.range + '）— 權重 50/30/20 為啟發式，未經嚴格回測。當作粗分類用，差 5 分內視為無意義。">' + g.letter + '</div>' +
+          '<div style="font-size:10px;color:var(--muted);cursor:help" title="權重 50/30/20 為啟發式，差 5 分內不視為差距">綜合分</div>' +
+        '</td>';
+      })() +
       '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;white-space:nowrap;font-weight:600">進場指引</button></td>' +
     '</tr>';
   }).join('');
