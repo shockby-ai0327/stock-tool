@@ -375,46 +375,28 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div class="main" style="padding-bottom:44px">
  <div id="page-dashboard" class="page active">
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
- <h2 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-.3px">今日市場總覽</h2>
- <div style="display:flex;gap:6px;font-size:11px">
-  <button id="dash-mode-compact" onclick="setDashboardMode('compact')" style="padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">精簡模式</button>
-  <button id="dash-mode-full" onclick="setDashboardMode('full')" style="padding:5px 10px;border-radius:6px;background:var(--accent);border:1px solid var(--accent);color:#fff;cursor:pointer">完整模式</button>
+ <!-- 2026-05-20: 首頁打掉重練 — Morning Brief 概念
+      砍：精簡/完整模式切換、市場敘事、財經要聞、大盤 KPI 牆、FGI 單卡、行事曆、相關性、回撤
+      留：action items、watchlist、regime、持倉動態、警報、短線追蹤、三共振、RS leader -->
+ <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+ <div>
+ <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-.3px">早安，這是你的 Morning Brief</h2>
+ <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
  </div>
- </div>
- <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
- <!-- 2026-05-19: 今日待處理（最重要）— 開盤第一眼看的事項清單 -->
- <div id="dash-action-items" style="margin-bottom:20px"></div>
- <!-- Fix G: 觀察清單 — 你研究過想等的標的（簡版，無 polling） -->
- <div id="dash-watchlist-simple" style="margin-bottom:20px"></div>
- <div style="margin-bottom:20px">
- <div style="display:flex;gap:8px">
- <input id="dash-search-input" placeholder="搜尋個股（AAPL / 2330.TW）..." style="flex:1;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none" onkeydown="if(event.key==='Enter'){document.getElementById('ticker-input').value=this.value;showPage('stock');analyzeStock()}" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
- <button onclick="document.getElementById('ticker-input').value=document.getElementById('dash-search-input').value;showPage('stock');analyzeStock()" style="padding:10px 18px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-weight:600">搜尋</button>
- </div>
- </div>
- <div id="dash-regime" style="margin-bottom:20px"></div>
- <div class="dash-market-row" id="dash-market-kpis"></div>
- <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
- <div class="card" style="flex:1;min-width:160px;text-align:center" id="dash-fgi-card"></div>
- <div class="card" style="flex:3;min-width:260px" id="dash-market-status"></div>
+ <button class="btn btn-sm" onclick="renderDashboard(true)" style="padding:6px 14px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:8px;font-size:12px;cursor:pointer">🔄 重新整理</button>
  </div>
 
- <!-- 重要行事曆（獨立卡片）-->
- <div class="card" id="dash-events-card" style="margin-bottom:20px">
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
- <div style="font-weight:700;font-size:14px"> 重要行事曆</div>
- <span style="font-size:11px;color:var(--muted)">影響股市的關鍵事件</span>
- </div>
- <div id="dash-events-list" style="font-size:12px"><div style="color:var(--muted)">載入中...</div></div>
- </div>
+ <!-- 1. 大盤環境 — 第一眼就看到「能不能做多」 -->
+ <div id="dash-regime" style="margin-bottom:16px"></div>
 
- <!-- 盤前/盤後市場預測卡片 -->
- <div id="dash-premarket"></div>
- <!-- 持倉動態 -->
+ <!-- 2. 今日待處理（持倉警報 / 停損觸發 / 目標達標）— 最重要的「該行動的事」 -->
+ <div id="dash-action-items" style="margin-bottom:16px"></div>
+
+ <!-- 3. 我的持倉今日健康度 -->
  <div id="dash-holdings"></div>
- <!-- 條件式警報 (Wave 7.2) -->
- <div class="card" id="dash-alerts-card" style="margin-bottom:20px">
+
+ <!-- 4. 條件式警報觸發狀態 -->
+ <div class="card" id="dash-alerts-card" style="margin-bottom:16px">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
  <h3 style="margin:0">🔔 條件式警報</h3>
  <button onclick="showAlertForm()" style="font-size:11px;padding:5px 12px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:#f59e0b;cursor:pointer">+ 新增警報</button>
@@ -423,15 +405,33 @@ firebase.initializeApp(_fbConfig);
  <div id="alerts-active-list" style="font-size:12px"></div>
  <div id="alerts-history-list" style="margin-top:10px;font-size:11px"></div>
  </div>
- <!-- 板塊配置（持倉分散度） -->
- <div id="dash-sector-concentration"></div>
- <!-- 持倉相關性矩陣 -->
- <div id="dash-correlation"></div>
- <!-- 帳戶回撤分析 -->
- <div id="dash-drawdown"></div>
 
- <!-- T交易精選 -->
- <div class="card" style="margin-top:20px">
+ <!-- 5. 我的觀察清單 — 等待 setup 的標的 -->
+ <div id="dash-watchlist-simple" style="margin-bottom:16px"></div>
+
+ <!-- 6. 三重共振雷達 — 你的核心 IP，4 AI 一致認可的差異化 -->
+ <div class="card" id="dash-triple-resonance-card" style="margin-bottom:16px;border-left:3px solid #fbbf24;background:linear-gradient(135deg, rgba(251,191,36,.04) 0%, rgba(0,0,0,0) 100%)">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+ <div>
+ <div style="font-weight:700;font-size:14px;color:#fbbf24">三重共振雷達 — 財報 + VCP + 內部人</div>
+ <div style="font-size:11px;color:var(--muted);margin-top:3px">同時滿足 ≥3 個領先指標的高機率設定（事前可見的爆發條件）</div>
+ </div>
+ <span id="dash-triple-resonance-meta" style="font-size:10px;color:var(--muted)"></span>
+ </div>
+ <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">載入中...</div></div>
+ </div>
+
+ <!-- 7. 動能領袖 RS Leader — 全市場 -->
+ <div class="card" style="margin-bottom:16px">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+ <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場 top</span></div>
+ <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
+ </div>
+ <div id="dash-rsleader-list"><div style="text-align:center;padding:20px;color:var(--muted)">前往掃描器取得最新排行</div></div>
+ </div>
+
+ <!-- 8. 短線追蹤 — MSFT/META/GOOGL（T 評分 <60 已自動 gate） -->
+ <div class="card">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
  <div>
  <div class="section-label" style="margin:0">短線追蹤 — MSFT / META / GOOGL</div>
@@ -444,55 +444,20 @@ firebase.initializeApp(_fbConfig);
  </div>
  </div>
 
- <!-- 今日市場敘事 — Claude AI 生成（Wave 6） -->
- <div class="card" id="dash-narrative-card" style="margin-bottom:20px;border-left:3px solid #6366f1;background:linear-gradient(135deg, rgba(99,102,241,.04) 0%, rgba(0,0,0,0) 100%)">
- <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
- <div style="font-weight:700;font-size:14px;color:#818cf8">🌍 今日市場敘事</div>
- <span id="narrative-regime-badge" style="font-size:11px;padding:2px 8px;border-radius:10px"></span>
- <span id="narrative-meta" style="font-size:10px;color:var(--muted);margin-left:auto"></span>
- </div>
- <div id="narrative-headline" style="font-size:13px;font-weight:600;color:var(--text)">載入中...</div>
- <div id="narrative-body" style="font-size:12px;line-height:1.7;color:var(--muted);margin-top:6px"></div>
- <div id="narrative-rotation" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px"></div>
- <div id="narrative-watch" style="margin-top:8px;font-size:12px"></div>
- </div>
-
- <!-- 三重共振雷達 — 財報 + VCP + 內部人（Wave 2 killer feature） -->
- <div class="card" id="dash-triple-resonance-card" style="margin-bottom:20px;border-left:3px solid #fbbf24;background:linear-gradient(135deg, rgba(251,191,36,.04) 0%, rgba(0,0,0,0) 100%)">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
- <div>
- <div style="font-weight:700;font-size:14px;color:#fbbf24">三重共振雷達 — 財報 + VCP + 內部人</div>
- <div style="font-size:11px;color:var(--muted);margin-top:3px">同時滿足 ≥3 個領先指標的高機率設定（事前可見的爆發條件）</div>
- </div>
- <span id="dash-triple-resonance-meta" style="font-size:10px;color:var(--muted)"></span>
- </div>
- <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">載入中...</div></div>
- </div>
-
- <div class="card">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
- <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場</span></div>
- <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
- </div>
- <div id="dash-rsleader-list"><div style="text-align:center;padding:20px;color:var(--muted)">前往掃描器取得最新排行</div></div>
- </div>
- <div style="text-align:center;margin-top:20px">
- <button class="btn btn-primary" style="padding:10px 28px" onclick="renderDashboard(true)">重新整理</button>
- </div>
-
- <!-- 國際新聞摘要 -->
- <div class="card" id="dash-news-card" style="margin-top:20px">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0;cursor:pointer" onclick="toggleDashNews()">
- <div class="section-label" style="margin:0">財經要聞</div>
- <div style="display:flex;align-items:center;gap:8px">
- <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="event.stopPropagation();renderDashNews(true)">刷新</button>
- <span id="dash-news-toggle-icon" style="color:var(--muted);font-size:12px">▼ 展開</span>
- </div>
- </div>
- <div id="dash-news-body" style="display:none;margin-top:12px">
- <div id="dash-news-list"><div style="text-align:center;padding:20px;color:var(--muted)">載入中...</div></div>
- </div>
- </div>
+ <!-- 隱藏 — 仍保留 DOM 節點供舊邏輯不報錯，但不渲染。未來可逐步清理 caller -->
+ <div id="dash-market-kpis" style="display:none"></div>
+ <div id="dash-fgi-card" style="display:none"></div>
+ <div id="dash-market-status" style="display:none"></div>
+ <div id="dash-premarket" style="display:none"></div>
+ <div id="dash-events-card" style="display:none"><div id="dash-events-list"></div></div>
+ <div id="dash-sector-concentration" style="display:none"></div>
+ <div id="dash-correlation" style="display:none"></div>
+ <div id="dash-drawdown" style="display:none"></div>
+ <div id="dash-news-card" style="display:none"><div id="dash-news-list"></div><div id="dash-news-body"></div><div id="dash-news-toggle-icon"></div></div>
+ <div id="dash-narrative-card" style="display:none"><div id="narrative-regime-badge"></div><div id="narrative-meta"></div><div id="narrative-headline"></div><div id="narrative-body"></div><div id="narrative-rotation"></div><div id="narrative-watch"></div></div>
+ <div id="dash-search-input" style="display:none"></div>
+ <button id="dash-mode-compact" style="display:none"></button>
+ <button id="dash-mode-full" style="display:none"></button>
  </div>
  <div id="page-stock" class="page">
  <div class="search-box">
@@ -10085,27 +10050,10 @@ const COMPACT_HIDE_IDS = [
 function getDashboardMode() {
  try { return localStorage.getItem(DASH_MODE_KEY) || 'full'; } catch(e) { return 'full'; }
 }
-function setDashboardMode(mode) {
- try { localStorage.setItem(DASH_MODE_KEY, mode); } catch(e) {}
- _applyDashboardMode(mode);
-}
-function _applyDashboardMode(mode) {
- mode = mode || getDashboardMode();
- const compactBtn = document.getElementById('dash-mode-compact');
- const fullBtn    = document.getElementById('dash-mode-full');
- if (compactBtn && fullBtn) {
-  const active = 'background:var(--accent);border-color:var(--accent);color:#fff';
-  const idle   = 'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted)';
-  compactBtn.setAttribute('style', 'padding:5px 10px;border-radius:6px;cursor:pointer;' + (mode === 'compact' ? active : idle));
-  fullBtn.setAttribute('style',    'padding:5px 10px;border-radius:6px;cursor:pointer;' + (mode === 'full'    ? active : idle));
- }
- for (const id of COMPACT_HIDE_IDS) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = mode === 'compact' ? 'none' : '';
- }
-}
-// Apply on load
-setTimeout(() => _applyDashboardMode(), 500);
+// 2026-05-20: 砍精簡/完整模式切換 — Gemini 評為「設計師不知所措的鐵證」
+// 改成 opinionated default：固定 Morning Brief 排版。函式保留 no-op 避免舊 caller 報錯。
+function setDashboardMode(mode) { /* deprecated no-op */ }
+function _applyDashboardMode(mode) { /* deprecated no-op */ }
 
 // ── Conditional Alerts (Wave 7.2) ─────────────────────────────────────────
 // User defines conditions; checked every 5 minutes; triggers push + toast.
