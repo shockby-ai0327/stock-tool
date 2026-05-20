@@ -742,11 +742,44 @@ async function pFetch(url, useCache, timeoutMs = 8000, cacheTTL = CACHE_TTL) {
 }
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// 2026-05-20 (安全 #3): XSS 防護 — 對外部來源（RSS 新聞、API 回傳）的字串
+// 在 innerHTML 拼接前一律先過 escapeHtml。
+// 之前 Google News / Finnhub RSS 標題直接拼 innerHTML 等同把 <img onerror=...>
+// 灌進 DOM 即可竊取 localStorage（PAT 已移除但 Firebase token、journal 仍敏感）。
+function escapeHtml(s) {
+ if (s == null) return '';
+ return String(s)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+}
+// 用於 attribute (href, title)：除了 escapeHtml 也要把雙引號處理
+function escapeAttr(s) { return escapeHtml(s); }
+// 安全 href：阻擋 javascript: / data: 等 protocol-based XSS
+function safeHref(s) {
+ if (!s) return '#';
+ const trimmed = String(s).trim();
+ if (/^javascript:|^data:|^vbscript:/i.test(trimmed)) return '#';
+ return escapeAttr(trimmed);
+}
+
+// 2026-05-20 (安全 #5): 頁面關閉時清掉所有已知 interval，避免殭屍 timer
+// 在 SPA 切換 tab 或 reload 時也會觸發 pagehide，比 beforeunload 在 mobile 更可靠
+window.addEventListener('pagehide', () => {
+ ['_newsAutoRefreshTimer','_heatmapTimer','_refreshTimer','_scannerTimer','_countdownTimer','_liveMonitorTimer'].forEach(k => {
+  try { if (window[k]) { clearInterval(window[k]); window[k] = null; } } catch(e) {}
+ });
+});
+
 // ============ FINNHUB (pre-screening, CORS direct — no proxy needed) ============
-// API key stored in localStorage so it's not baked into source
-// User can override via Settings: localStorage.setItem('finnhub_key','YOUR_KEY')
-const FINNHUB_KEY = localStorage.getItem('finnhub_key') || 'd7eufb9r01qi33g7mk90d7eufb9r01qi33g7mk9g';
+// 2026-05-20 (安全 #1): 硬編碼 fallback literal 移除 — 之前的「localStorage 不會 baked into source」
+// 是自欺欺人，任何 view-source 都能拿到 key 盜用 quota。
+// 使用者要用 finnhub: localStorage.setItem('finnhub_key','YOUR_KEY')，否則整個 finnhub 功能跳過。
+const FINNHUB_KEY = localStorage.getItem('finnhub_key') || '';
 async function finnhubQuote(symbol) {
+ if (!FINNHUB_KEY) return null;  // 沒 key 就跳過，不送 request
  const ctrl = new AbortController();
  const tid = setTimeout(() => ctrl.abort(), 5000);
  try {
@@ -3114,13 +3147,17 @@ async function loadNews(cat) {
  let html = summaryHtml + sourceLegend + twFeedLine + '<div class="card" style="padding:0">';
  _newsItems.forEach((it, i) => {
  const trusted = isTrusted(it.source);
+ // 2026-05-20 (安全 #3): RSS 標題 / 描述 / 來源都從外部來，全部 escapeHtml
+ const safeSource = escapeHtml(it.source || '未知來源');
+ const safeTitle  = escapeHtml(it.title);
+ const safeDesc   = escapeHtml((it.desc || '').substring(0, 120)) + ((it.desc || '').length > 120 ? '...' : '');
  const sourceBadge = trusted
- ? '<span style="background:rgba(16,185,129,.12);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> ' + it.source + '</span>'
- : '<span style="background:rgba(255,255,255,.05);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:11px;border:1px solid var(--border)">' + (it.source || '未知來源') + '</span>';
+ ? '<span style="background:rgba(16,185,129,.12);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> ' + safeSource + '</span>'
+ : '<span style="background:rgba(255,255,255,.05);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:11px;border:1px solid var(--border)">' + safeSource + '</span>';
  html += '<div class="news-item" style="' + (!trusted ? 'opacity:0.7' : '') + '" onclick="openNews(' + i + ')">' +
- '<h4>' + it.title + '</h4>' +
+ '<h4>' + safeTitle + '</h4>' +
  '<div class="meta">' + sourceBadge + '<span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div>' +
- '<p>' + it.desc.substring(0, 120) + (it.desc.length > 120 ? '...' : '') + '</p></div>';
+ '<p>' + safeDesc + '</p></div>';
  });
  html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)"> 新聞內容來自 Finnhub、Google News RSS 等財經媒體彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + new Date().toLocaleString('zh-TW') + '</div>';
  div.innerHTML = html;
@@ -3165,11 +3202,13 @@ async function toggleTranslateHeadlines(uid) {
  btn.disabled = true;
  btn.style.opacity = '.6';
 
+ // 2026-05-20 (安全 #3): translateText 從外部 API 來，用 textContent 安全；
+ // 原本 innerHTML 對翻譯 API 被污染或 prompt injection 不設防。
  await Promise.all(items.map(async li => {
  const orig = li.dataset.orig || li.textContent;
- if (!li.dataset.orig) li.dataset.orig = li.innerHTML;
+ if (!li.dataset.orig) li.dataset.orig = li.textContent;  // 存純文字而非 innerHTML
  const translated = await translateText(orig.replace(/<[^>]*>/g, '').trim());
- li.innerHTML = translated;
+ li.textContent = translated;  // 而非 innerHTML
  }));
 
  list.dataset.translated = '1';
@@ -3180,29 +3219,33 @@ async function toggleTranslateHeadlines(uid) {
 
 function openNews(idx) {
  const it = _newsItems[idx]; if (!it) return;
- const analysis = newsAnalysis(it);
+ const analysis = newsAnalysis(it);  // analysis 是內部生成的，安全
  const trusted = isTrusted(it.source);
  const total = _newsItems.length;
+ // 2026-05-20 (安全 #3): 全部來自外部 RSS 的字串先 escape
+ const safeTitle = escapeHtml(it.title);
+ const safeSource = escapeHtml(it.source || '未知');
+ const safeDesc = escapeHtml(it.desc || '（摘要不可用）');
+ const safeLink = safeHref(it.link);
  const srcBadge = trusted
- ? '<span style="background:rgba(16,185,129,.12);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> 核實來源：' + it.source + '</span>'
- : '<span style="background:rgba(255,200,0,.08);color:#f59e0b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> 未核實：' + (it.source||'未知') + '</span>';
+ ? '<span style="background:rgba(16,185,129,.12);color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> 核實來源：' + safeSource + '</span>'
+ : '<span style="background:rgba(255,200,0,.08);color:#f59e0b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600"> 未核實：' + safeSource + '</span>';
  const navBtn = (disabled, label, onclick) =>
  '<button onclick="' + onclick + '" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:' + (disabled ? 'var(--border)' : 'var(--text)') + ';cursor:' + (disabled ? 'default' : 'pointer') + ';font-size:13px"' + (disabled ? ' disabled' : '') + '>' + label + '</button>';
  document.getElementById('news-modal-content').innerHTML =
  '<button class="modal-close" onclick="closeModal()">&times;</button>' +
- // 上下篇導航列
  '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
  navBtn(idx === 0, '← 上一則', 'openNews(' + (idx-1) + ')') +
  '<span style="font-size:12px;color:var(--muted)">' + (idx+1) + ' / ' + total + '</span>' +
  navBtn(idx >= total-1, '下一則 →', 'openNews(' + (idx+1) + ')') +
  '</div>' +
- '<h2 style="margin-bottom:12px;padding-right:30px;font-size:16px;line-height:1.5">' + it.title + '</h2>' +
+ '<h2 style="margin-bottom:12px;padding-right:30px;font-size:16px;line-height:1.5">' + safeTitle + '</h2>' +
  '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
  srcBadge + '<span>' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span>' +
  '</div>' +
  (!trusted ? '<div style="font-size:12px;padding:8px 12px;background:rgba(245,158,11,.06);border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;margin-bottom:14px;color:#f59e0b">此媒體不在核實名單中，內容請自行查證後再作投資判斷。</div>' : '') +
- '<div style="line-height:1.8;margin-bottom:20px">' + (it.desc || '（摘要不可用）') + '</div>' +
- '<div style="margin-bottom:16px"><a href="' + it.link + '" target="_blank" style="color:var(--accent);font-weight:600">前往閱讀完整原文 →</a></div>' +
+ '<div style="line-height:1.8;margin-bottom:20px">' + safeDesc + '</div>' +
+ '<div style="margin-bottom:16px"><a href="' + safeLink + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600">前往閱讀完整原文 →</a></div>' +
  '<div style="border-top:1px solid var(--border);padding-top:16px"><h3 style="color:var(--accent);margin-bottom:12px"> 主題分析與操作參考</h3><div style="line-height:1.9;color:var(--muted)">' + analysis + '</div></div>' +
  '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;font-size:11px;color:var(--muted)">本分析為系統自動生成，僅供參考，不構成投資建議。</div>';
  document.getElementById('news-modal').style.display = 'flex';
@@ -3285,15 +3328,16 @@ function generateMarketSummary(items, cat) {
  const zhPool = cat === 'tw'
  ? [...srcPool.filter(it => TW_SOURCES.has(it.source)), ...srcPool.filter(it => !TW_SOURCES.has(it.source))]
  : srcPool;
+// 2026-05-20 (安全 #3): 標題全部 escapeHtml 防 XSS
  const headlinesZH = zhPool.slice(0, 5).map(it => {
  const isTW = TW_SOURCES.has(it.source);
+ const safeTitle = escapeHtml(it.title);
  const note = (!isTW && cat !== 'tw') ? ' <span style="font-size:10px;color:var(--muted)">(原文)</span>' : '';
- const content = it.title + note;
- // data-orig 供 toggleTranslateHeadlines 儲存原文以便切回
- return '<li data-orig="' + it.title.replace(/"/g,'&quot;') + '" style="margin-bottom:5px;line-height:1.5">' + content + '</li>';
+ const content = safeTitle + note;
+ return '<li data-orig="' + escapeAttr(it.title) + '" style="margin-bottom:5px;line-height:1.5">' + content + '</li>';
  }).join('');
  const headlinesEN = srcPool.slice(0, 5).map(it =>
- '<li style="margin-bottom:5px;line-height:1.5">' + it.title + '</li>').join('');
+ '<li style="margin-bottom:5px;line-height:1.5">' + escapeHtml(it.title) + '</li>').join('');
 
  // 主題標籤：中英並列 e.g. AI / 半導體 (Semiconductors) ×3
  const themeChips = scored.slice(0, 5).map(t =>
@@ -9794,66 +9838,8 @@ async function overlayLivePrices(leaders) {
   return leaders;
 }
 
-// Show PAT setup modal (one-time only, saved to localStorage forever after)
-function showPatSetupModal(onSuccess) {
-  const existing = document.getElementById('pat-setup-modal');
-  if (existing) existing.remove();
-
-  document.body.insertAdjacentHTML('beforeend',
-    '<div id="pat-setup-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">' +
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:460px;padding:24px" onclick="event.stopPropagation()">' +
-      '<div style="font-size:18px;font-weight:800;margin-bottom:6px">🔑 設定 GitHub Token</div>' +
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">' +
-        '只需設定一次，之後按鈕可隨時觸發掃描。<br>' +
-        'Token 儲存在你的瀏覽器本機，不會上傳。' +
-      '</div>' +
-
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;background:rgba(255,255,255,.04);border-radius:8px;padding:12px;line-height:1.8">' +
-        '① 前往 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:#818cf8">github.com/settings/tokens</a><br>' +
-        '② Token name 隨便填，Expiration 選 No expiration<br>' +
-        '③ Repository access → Only select repositories → 選 <b>stock-tool</b><br>' +
-        '④ Permissions → Actions → <b>Read and write</b><br>' +
-        '⑤ 按 Generate token，複製後貼到下方' +
-      '</div>' +
-
-      '<input id="pat-input" type="password" placeholder="github_pat_..." ' +
-        'style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);font-size:13px;margin-bottom:12px;outline:none" />' +
-
-      '<div style="display:flex;gap:8px">' +
-        '<button onclick="_savePat()" style="flex:1;padding:11px;border-radius:8px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;cursor:pointer;font-size:13px;font-weight:700">儲存並立即掃描</button>' +
-        '<button onclick="document.getElementById(\'pat-setup-modal\').remove()" style="padding:11px 18px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:13px">取消</button>' +
-      '</div>' +
-      '<div id="pat-error" style="font-size:12px;color:#ef4444;margin-top:8px;display:none"></div>' +
-    '</div></div>'
-  );
-
-  // Store callback so _savePat can call it
-  window._patSuccessCallback = onSuccess;
-  setTimeout(() => { const el = document.getElementById('pat-input'); if(el) el.focus(); }, 100);
-}
-
-async function _savePat() {
-  const input = document.getElementById('pat-input');
-  const errEl = document.getElementById('pat-error');
-  const token = (input ? input.value : '').trim();
-  if (!token) { if(errEl){errEl.textContent='請貼上 Token';errEl.style.display='';} return; }
-
-  // Quick validation — ping GitHub API
-  if(errEl){errEl.textContent='驗證中...';errEl.style.display='';}
-  try {
-    const res = await fetch('https://api.github.com/repos/shockby-ai0327/stock-tool/actions/workflows', {
-      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
-    });
-    if (res.status === 401) { errEl.textContent='❌ Token 無效，請重新產生'; return; }
-    if (res.status === 403) { errEl.textContent='❌ Token 缺少 Actions 權限，請重新設定'; return; }
-  } catch(e) { errEl.textContent='❌ 網路錯誤：' + e.message; return; }
-
-  localStorage.setItem('gh_pat', token);
-  const modal = document.getElementById('pat-setup-modal');
-  if (modal) modal.remove();
-  showToast('✅ Token 已儲存，正在觸發掃描...');
-  if (typeof window._patSuccessCallback === 'function') window._patSuccessCallback();
-}
+// 2026-05-20 (安全 #2): PAT modal + _savePat 整段移除 — 不再請求 / 儲存 GitHub PAT
+// 「重新整理」改為純讀 GitHub Raw JSON，無需任何 token。cron 已每日 3 次自動跑。
 
 // ── 財報日警示 (Earnings Date Warning) ──────────────────────────────────────
 // Fetches next earnings date for a symbol from Yahoo Finance calendarEvents.
@@ -10401,67 +10387,25 @@ async function triggerGithubScan() {
   }
 }
 
-// GitHub Actions dispatch — called only from ⚙️ settings or explicit advanced use
+// 2026-05-20 (安全 #2): 移除 GitHub PAT 觸發 workflow_dispatch 流程
+// 之前 PAT 存 localStorage 明文 + 任何 XSS 都能竊取 → 配合 PAT 寫權限可推 main 分支劫持 repo。
+// cron 已每天 3 次 (pre-market / midday / near close)，對波段交易足夠。
+// 「⚡ 重新掃描」改成「🔄 從 GitHub 重整」純讀取 JSON，不需要任何 token。
+// 同時清除舊有 PAT 殘留。
+try { localStorage.removeItem('gh_pat'); } catch(e) {}
+
 async function triggerGithubActionsDispatch() {
-  const pat = localStorage.getItem('gh_pat');
-  if (!pat) { showPatSetupModal(() => triggerGithubActionsDispatch()); return; }
-  await _doGithubDispatch(pat);
-}
-
-async function _doGithubDispatch(pat) {
-  // Show spinner on the button
+  // 改為純讀取 — 重新抓 GitHub Raw 的 JSON，等同跑一次 scan 載入流程
   const btns = document.querySelectorAll('[data-rescan-btn]');
-  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 觸發中...'; });
-
+  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 重整中...'; });
   try {
-    const r = await fetch('https://api.github.com/repos/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml/dispatches', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main', inputs: { market: _scannerMarket === 'tw' ? 'tw' : 'us' } }),
-    });
-
-    if (r.status === 204) {
-      showToast('🚀 掃描已觸發！約 3–5 分鐘後自動更新');
-      btns.forEach(b => { b.textContent = '⏳ 掃描中...'; });
-
-      const triggerTime = Date.now();
-      let polls = 0;
-      const pollId = setInterval(async () => {
-        polls++;
-        try {
-          const file = _scannerMarket === 'tw' ? 'tw_scan.json' : 'us_scan.json';
-          const raw = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(8000) });
-          if (!raw.ok) return;
-          const data = await raw.json();
-          const scannedMs = data.scannedAt ? new Date(data.scannedAt).getTime() : 0;
-          if (scannedMs > triggerTime && data.leaders && data.leaders.length > 0) {
-            clearInterval(pollId);
-            showToast('🎉 掃描完成！結果已更新');
-            btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-            window._rsLeaderRunning = false;
-            runRSLeaderScan();
-          }
-        } catch(e) {}
-        if (polls >= 16) {
-          clearInterval(pollId);
-          btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-          showToast('⏱ 等待逾時，請稍後手動重整', 'warn');
-        }
-      }, 30000);
-
-    } else if (r.status === 401) {
-      localStorage.removeItem('gh_pat');
-      btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-      showToast('Token 已失效，改用瀏覽器掃描', 'warn');
-      window._rsLeaderRunning = false;
-      runRSLeaderScan();
-    } else {
-      btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-      showToast('❌ 觸發失敗 HTTP ' + r.status, 'error');
-    }
+    showToast('🔄 從 GitHub 重新載入最新資料... (cron 每日 3 次自動跑)');
+    window._rsLeaderRunning = false;
+    await runRSLeaderScan();
+    btns.forEach(b => { b.disabled = false; b.textContent = '🔄 重新整理'; });
   } catch(e) {
-    btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新掃描'; });
-    showToast('❌ 網路錯誤：' + e.message, 'error');
+    btns.forEach(b => { b.disabled = false; b.textContent = '🔄 重新整理'; });
+    showToast('❌ 重整失敗：' + e.message, 'error');
   }
 }
 
@@ -12272,10 +12216,11 @@ function _renderDashNewsList(items) {
  const el = document.getElementById('dash-news-list');
  if (!el) return;
  if (!items.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">暫無最新新聞</div>'; return; }
+ // 2026-05-20 (安全 #3): RSS title/link/src 全部 escape，避免 XSS
  el.innerHTML = items.map(it =>
  '<div style="padding:8px 0;border-bottom:1px solid var(--border)">' +
- '<a href="' + it.link + '" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-size:13px;font-weight:500;line-height:1.4;display:block;margin-bottom:3px" onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'var(--text)\'">' + it.title + '</a>' +
- '<span style="font-size:11px;color:var(--muted)">' + it.src + (it.pub ? ' · ' + new Date(it.pub).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '') + '</span>' +
+ '<a href="' + safeHref(it.link) + '" target="_blank" rel="noopener noreferrer" style="color:var(--text);text-decoration:none;font-size:13px;font-weight:500;line-height:1.4;display:block;margin-bottom:3px" onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'var(--text)\'">' + escapeHtml(it.title) + '</a>' +
+ '<span style="font-size:11px;color:var(--muted)">' + escapeHtml(it.src) + (it.pub ? ' · ' + new Date(it.pub).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '') + '</span>' +
  '</div>'
  ).join('') + '<div style="text-align:right;margin-top:6px"><button class="btn btn-sm" style="font-size:11px;background:none;border:none;color:var(--accent);padding:2px 4px;cursor:pointer" onclick="showPage(\'news\')">查看全部新聞 →</button></div>';
 }
