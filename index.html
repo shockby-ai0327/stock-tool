@@ -578,6 +578,35 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </div>
  <div id="journal-tab-risk" style="display:none">
  <div id="risk-content"></div>
+ <!-- 2026-05-21 Sprint 5-A: Alpaca paper trading 連線 -->
+ <div id="alpaca-section" class="card" style="margin-top:16px;border-left:3px solid #fbbf24">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+   <h3 style="margin:0">🦙 Alpaca Paper Trading 連線 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">自動同步交易到 journal</span></h3>
+   <span id="alpaca-status" style="font-size:11px;color:var(--muted)">未連線</span>
+  </div>
+  <div id="alpaca-form-container">
+   <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:12px">
+    Alpaca 是美股零佣金券商，有完整 REST API。<b style="color:#fbbf24">先用 Paper Trading（紙上交易）</b>，
+    被偷不會損失錢。Real trading 需要部署 OAuth proxy（見 README）。
+    <br>步驟：① 註冊 <a href="https://app.alpaca.markets/signup" target="_blank" rel="noopener" style="color:#a5b4fc">app.alpaca.markets</a>
+    → ② Paper Trading dashboard → ③ View API Keys → ④ 貼到下方
+   </div>
+   <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px">
+    <input id="alpaca-key" type="password" placeholder="API Key ID (PKxxx...)" style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">
+    <input id="alpaca-secret" type="password" placeholder="Secret Key" style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">
+    <button onclick="connectAlpaca()" style="padding:8px 16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:6px;color:#fbbf24;cursor:pointer;font-size:12px;font-weight:600">連線</button>
+   </div>
+   <div style="font-size:10px;color:#fca5a5;padding:6px 10px;background:rgba(239,68,68,.05);border-radius:4px;border-left:2px solid #ef4444">⚠ Key 存在你瀏覽器本機（localStorage），不會上傳。<b>千萬不要用 Live 帳號 key</b>（XSS 風險）— 只用 Paper Trading key。</div>
+  </div>
+  <div id="alpaca-connected-container" style="display:none">
+   <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><b id="alpaca-account-info"></b></div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button onclick="syncAlpacaToJournal()" style="padding:8px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:6px;color:#22c55e;cursor:pointer;font-size:12px;font-weight:600">⬇ 同步 Alpaca 交易到 Journal</button>
+    <button onclick="disconnectAlpaca()" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px">中斷連線</button>
+   </div>
+   <div id="alpaca-positions" style="margin-top:14px;font-size:12px"></div>
+  </div>
+ </div>
  </div>
  <div id="journal-tab-personal-edge" style="display:none">
  <div id="personal-edge-content"></div>
@@ -3889,6 +3918,171 @@ function _commitJournalEntry(e) {
 }
 // 2026-05-20: 「靜思 30 秒」進場版已整段移除（Gemini + Codex 一致：盤中摩擦力是 UX 殺手）
 // 個人化命中率 + 你為什麼贏/輸 兩個盤後分析功能仍保留（在 持倉管理 → 🎯）
+
+// 2026-05-21 Sprint 5-A: Alpaca Paper Trading 連線
+// 為什麼 paper only：純 client app 把 key 存 localStorage，跟我們剛拔掉的 GitHub PAT 同個風險。
+// Paper 帳號被偷只損失「假錢」，所以可接受。Real trading 必須走 OAuth proxy（見 Sprint 5-B Worker）。
+const ALPACA_KEY = 'alpaca_paper_creds';
+const ALPACA_BASE = 'https://paper-api.alpaca.markets/v2';
+
+function _getAlpacaCreds() {
+ try { return JSON.parse(localStorage.getItem(ALPACA_KEY) || 'null'); } catch(e) { return null; }
+}
+function _saveAlpacaCreds(creds) {
+ try { localStorage.setItem(ALPACA_KEY, JSON.stringify(creds)); } catch(e) {}
+}
+
+async function _alpacaFetch(path) {
+ const creds = _getAlpacaCreds();
+ if (!creds) throw new Error('未連線 Alpaca');
+ const r = await fetch(ALPACA_BASE + path, {
+  headers: {
+   'APCA-API-KEY-ID': creds.key,
+   'APCA-API-SECRET-KEY': creds.secret,
+  },
+  signal: AbortSignal.timeout(10000),
+ });
+ if (r.status === 401 || r.status === 403) throw new Error('Key 無效或權限不足');
+ if (!r.ok) throw new Error('Alpaca API ' + r.status);
+ return r.json();
+}
+
+async function connectAlpaca() {
+ const key = document.getElementById('alpaca-key').value.trim();
+ const secret = document.getElementById('alpaca-secret').value.trim();
+ if (!key || !secret) { alert('請填入 API Key ID 和 Secret Key'); return; }
+ if (!key.startsWith('PK')) { alert('Paper Trading key 應該以 PK 開頭。AK 開頭是 Live key — 請不要在此使用。'); return; }
+ // Try fetch account info to validate
+ const tmpCreds = { key, secret };
+ try {
+  const r = await fetch(ALPACA_BASE + '/account', {
+   headers: { 'APCA-API-KEY-ID': key, 'APCA-API-SECRET-KEY': secret },
+   signal: AbortSignal.timeout(8000),
+  });
+  if (!r.ok) { alert('連線失敗（' + r.status + '）：Key 可能無效'); return; }
+  const acc = await r.json();
+  _saveAlpacaCreds(tmpCreds);
+  document.getElementById('alpaca-key').value = '';
+  document.getElementById('alpaca-secret').value = '';
+  renderAlpacaStatus(acc);
+ } catch(e) {
+  alert('連線失敗：' + e.message);
+ }
+}
+
+function disconnectAlpaca() {
+ if (!confirm('中斷 Alpaca 連線？（key 會從本機清除）')) return;
+ localStorage.removeItem(ALPACA_KEY);
+ renderAlpacaStatus(null);
+}
+
+async function renderAlpacaStatus(account) {
+ const status = document.getElementById('alpaca-status');
+ const formCt = document.getElementById('alpaca-form-container');
+ const connCt = document.getElementById('alpaca-connected-container');
+ if (!account) {
+  // Check if creds exist; if so, fetch account
+  const creds = _getAlpacaCreds();
+  if (!creds) {
+   if (status) status.textContent = '未連線';
+   if (formCt) formCt.style.display = '';
+   if (connCt) connCt.style.display = 'none';
+   return;
+  }
+  try {
+   account = await _alpacaFetch('/account');
+  } catch(e) {
+   if (status) status.innerHTML = '<span style="color:#ef4444">連線失敗：' + escapeHtml(e.message) + '</span>';
+   if (formCt) formCt.style.display = '';
+   if (connCt) connCt.style.display = 'none';
+   return;
+  }
+ }
+ if (status) status.innerHTML = '<span style="color:#22c55e">✓ 已連線（' + account.status + '）</span>';
+ if (formCt) formCt.style.display = 'none';
+ if (connCt) connCt.style.display = '';
+ const info = document.getElementById('alpaca-account-info');
+ if (info) info.textContent = '帳號 ' + (account.account_number || '—') + '　|　現金 $' + Number(account.cash).toLocaleString() + '　|　組合價值 $' + Number(account.portfolio_value).toLocaleString();
+ // Load positions
+ try {
+  const positions = await _alpacaFetch('/positions');
+  const ctn = document.getElementById('alpaca-positions');
+  if (positions.length) {
+   ctn.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">當前持倉（' + positions.length + '）</div>' +
+    '<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse">' +
+    '<thead><tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.08)"><th style="text-align:left;padding:4px 6px">代號</th><th style="text-align:right;padding:4px 6px">數量</th><th style="text-align:right;padding:4px 6px">均價</th><th style="text-align:right;padding:4px 6px">現價</th><th style="text-align:right;padding:4px 6px">市值</th><th style="text-align:right;padding:4px 6px">未實現損益</th></tr></thead><tbody>' +
+    positions.map(p => {
+     const upl = parseFloat(p.unrealized_pl);
+     const uplPct = parseFloat(p.unrealized_plpc) * 100;
+     const uplColor = upl >= 0 ? '#22c55e' : '#ef4444';
+     return '<tr><td style="padding:4px 6px"><b>' + escapeHtml(p.symbol) + '</b></td>' +
+      '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">' + p.qty + '</td>' +
+      '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.avg_entry_price).toFixed(2) + '</td>' +
+      '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.current_price).toFixed(2) + '</td>' +
+      '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.market_value).toFixed(0) + '</td>' +
+      '<td style="text-align:right;padding:4px 6px;color:' + uplColor + ';font-weight:600;font-variant-numeric:tabular-nums">' + (upl >= 0 ? '+' : '') + '$' + upl.toFixed(0) + '<br><span style="font-size:10px">' + (uplPct >= 0 ? '+' : '') + uplPct.toFixed(2) + '%</span></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  } else {
+   ctn.innerHTML = '<div style="color:var(--muted);font-size:11px">當前無持倉</div>';
+  }
+ } catch(e) {}
+}
+
+async function syncAlpacaToJournal() {
+ if (!confirm('同步 Alpaca 已成交訂單到 Journal？\n會自動跳過已存在的紀錄。')) return;
+ try {
+  // Alpaca /v2/orders 取最近 200 筆已成交（filled）的
+  const orders = await _alpacaFetch('/orders?status=filled&limit=200&direction=desc');
+  if (!orders.length) { alert('沒有已成交訂單可同步'); return; }
+  const j = getJ();
+  const existing = new Set(j.filter(e => e.alpacaOrderId).map(e => e.alpacaOrderId));
+  let added = 0, skipped = 0;
+  for (const o of orders) {
+   if (existing.has(o.id)) { skipped++; continue; }
+   const filledQty = parseInt(o.filled_qty);
+   const filledPrice = parseFloat(o.filled_avg_price);
+   if (!filledQty || !filledPrice) continue;
+   const e = {
+    id: Date.now() + Math.floor(Math.random() * 1000) + added,
+    alpacaOrderId: o.id,
+    date: (o.filled_at || o.submitted_at || '').slice(0, 10),
+    ticker: o.symbol,
+    action: o.side === 'buy' ? 'buy' : 'sell',
+    price: filledPrice,
+    qty: filledQty,
+    strategy: 'swing',
+    notes: '[Alpaca 同步] ' + (o.order_type || 'market'),
+   };
+   e.amount = e.price * e.qty;
+   e.fee = 0;  // Alpaca 零佣金
+   e.net = e.action === 'buy' ? e.amount : e.amount;
+   j.unshift(e);
+   added++;
+  }
+  if (added) {
+   j.sort((a, b) => new Date(b.date) - new Date(a.date));
+   saveJ(j);
+   renderJournal();
+   alert('✅ 同步 ' + added + ' 筆 Alpaca 交易（跳過 ' + skipped + ' 筆已存在）');
+  } else {
+   alert('沒有新交易（' + skipped + ' 筆已存在）');
+  }
+ } catch(e) {
+  alert('同步失敗：' + e.message);
+ }
+}
+
+// 進入「風控設定」分頁時自動載入 Alpaca 狀態
+(function _bindAlpacaInit() {
+ const origSwitchJournalTab = window.switchJournalTab;
+ if (typeof origSwitchJournalTab !== 'function') return;
+ window.switchJournalTab = function(tab) {
+  origSwitchJournalTab(tab);
+  if (tab === 'risk') {
+   setTimeout(() => { if (_getAlpacaCreds()) renderAlpacaStatus(null); }, 100);
+  }
+ };
+})();
 
 // 2026-05-21 Sprint 3-A + 4-B: 從券商對帳單 CSV 匯入交易紀錄
 // 支援 6 家券商 preset（自動偵測）：

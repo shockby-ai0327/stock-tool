@@ -1,0 +1,19 @@
+{
+  "name": "stock-tool-vite",
+  "private": true,
+  "version": "0.1.0-migration",
+  "description": "Vite migration scaffold for index.html — gradually move 13k-line inline JS into ES modules",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "firebase": "^10.8.0",
+    "lightweight-charts": "^4.1.0"
+  }
+}

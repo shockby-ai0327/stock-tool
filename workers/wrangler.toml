@@ -1,0 +1,19 @@
+# Cloudflare Worker config for broker OAuth proxy
+# 部署：
+#   1. npm install -g wrangler
+#   2. wrangler login
+#   3. wrangler deploy
+#
+# 部署後在 Cloudflare dashboard 設定 env vars：
+#   - ALPACA_CLIENT_ID, ALPACA_CLIENT_SECRET
+#   - SCHWAB_CLIENT_ID, SCHWAB_CLIENT_SECRET（如要 Schwab）
+#   - ALLOWED_ORIGIN = https://shockby-ai0327.github.io
+
+name = "stock-tool-broker-oauth"
+main = "broker-oauth.js"
+compatibility_date = "2024-09-01"
+
+# 之後改成你自己的 routes 或 custom domain
+# routes = [
+#   { pattern = "broker-oauth.your-domain.com/*", custom_domain = true }
+# ]
