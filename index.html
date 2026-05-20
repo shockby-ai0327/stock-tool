@@ -334,6 +334,7 @@ firebase.initializeApp(_fbConfig);
  <button onclick="showPage('portfolio')">持倉管理</button>
  <button onclick="showPage('market')">市場情報</button>
  <button onclick="showPage('education')">教學</button>
+ <button onclick="showSignalValidationModal()" style="background:transparent;border:1px dashed rgba(255,255,255,.12);color:var(--muted);font-size:11px;padding:6px 10px;margin-top:6px;text-align:left">📊 為什麼這個訊號？</button>
  </nav>
  <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">
    <span id="theme-icon" style="font-size:14px">☀</span>
@@ -1445,13 +1446,18 @@ async function analyzeStock() {
  '</div>' +
  '</div>' +
  '</div>';
- // Fix F: AI 卡片改放到頁尾（之前在頂部 — 會被當第 1 個訊號）
- rd.innerHTML = rd.innerHTML + aiCard;
+ // 2026-05-20 (Option B): AI 卡回中段 — 注入到 #ai-card-slot 而不是 append 頁尾
+ // 保留 Fix F 的「移除星等 + ⚠非獨立訊號 + 黃色 disclaimer」設計
+ const slot = document.getElementById('ai-card-slot');
+ if (slot) slot.outerHTML = aiCard;
+ else rd.innerHTML = rd.innerHTML + aiCard;  // fallback
  } else {
- // Stock not in top 20 leaders — placeholder at bottom too
+ // Stock not in top 20 leaders — placeholder
  const placeholder = '<div class="card" style="border-left:3px dashed rgba(148,163,184,.3);margin-top:12px">' +
  '<div style="font-size:11px;color:var(--muted)">🤖 此股尚無 AI 文字判讀（僅排行榜前 25 檔生成）</div></div>';
- rd.innerHTML = rd.innerHTML + placeholder;
+ const slot2 = document.getElementById('ai-card-slot');
+ if (slot2) slot2.outerHTML = placeholder;
+ else rd.innerHTML = rd.innerHTML + placeholder;
  }
  }
  } catch(e) { console.warn('AI analysis load failed:', e.message); }
@@ -2441,7 +2447,7 @@ function renderDecisionCard(ticker, price, ta, cur) {
    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px">' +
      // 倉位
      '<div style="padding:12px;background:rgba(99,102,241,.08);border-radius:8px;border-left:3px solid var(--accent)">' +
-       '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">建議倉位 ' + signalConfidenceBadge('kelly') + '</div>' +
+       '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">建議倉位</div>' +
        '<div style="font-size:24px;font-weight:700;color:var(--accent)">' + (kellyPct*100).toFixed(1) + '%</div>' +
        '<div style="font-size:12px;color:var(--text);margin-top:4px">' + shares.toLocaleString() + ' 股 · ' + cs + fmtChineseNumberOrCompact(actualPositionValue, ticker) + '</div>' +
        '<div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5">' +
@@ -2515,6 +2521,8 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
 
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
  '<div class="card"><h3> K線走勢圖</h3><div class="tab-bar" style="margin-bottom:8px"><button class="active" onclick="switchStockTF(\'' + ticker + '\',\'6mo\',\'1d\',this)">日線 6M</button><button onclick="switchStockTF(\'' + ticker + '\',\'1mo\',\'1h\',this)">1H 月線</button><button onclick="switchStockTF(\'' + ticker + '\',\'5d\',\'15m\',this)">15m 週線</button><button onclick="switchStockTF(\'' + ticker + '\',\'1d\',\'5m\',this)">5m 日內</button><button onclick="switchStockTF(\'' + ticker + '\',\'2y\',\'1wk\',this)">週線 2Y</button></div><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+ // 2026-05-20 (Option B): AI 卡片放置點 — 介於 K 線圖與決策卡之間（中段，不是頁尾）
+ '<div id="ai-card-slot"></div>' +
  // 2026-05-19: 決策卡 — Kelly + ATR + 1R/2R/3R 一次到位
  renderDecisionCard(ticker, price, ta, cur) +
  // VCP base-count analysis (only show if score ≥ 2)
@@ -3421,13 +3429,22 @@ function newsAnalysis(it) {
 
 // ============ 數字格式化 helpers（萬/億）============
 // 2026-05-19: 台灣使用者習慣的數字單位
-// ============ Fix E: RS 過熱警示 — 防止追高 ============
-// 學術：動量極端值 (top 5%) 後 30 天 mean-reversion 機率高
-function rsLabel(rs) {
+// ============ Fix E (2026-05-20 Option B 淡化): RS 高分區改回綠色 ============
+// 之前 95+ 一律標警示會擋掉 Minervini 風格的真贏家（多數 leader 都在 RS 95-99）。
+// 改為：95-98 仍顯示綠色「✓ 強勢延續中」；只有 **RS=99 + 距 52w 高 <5%** 同時
+// 觸發才標警示（這才是真正的「追頂風險」，光高 RS 不足以警示）。
+// 注意：呼叫端要傳入 distFromHigh（百分比，負數表示低於高點）；不傳則不警示。
+function rsLabel(rs, distFromHigh) {
   if (rs == null) return { val: '—', color: 'var(--muted)', warn: '', bg: '' };
-  if (rs >= 99) return { val: rs, color: '#dc2626', warn: '🔴 極端過熱', bg: 'rgba(239,68,68,.15)', desc: '極端過熱（top 1%）— 歷史多為頂部訊號，30 天 mean-revert 機率高' };
-  if (rs >= 95) return { val: rs, color: '#ea580c', warn: '⚠ 過熱',     bg: 'rgba(234,88,12,.12)', desc: '過熱區（top 5%）— 短期回檔機率升高，避免重倉' };
-  if (rs >= 80) return { val: rs, color: '#22c55e', warn: '✓ 強勢',     bg: 'rgba(34,197,94,.08)' };
+  // 真正的追頂風險訊號：RS=99 且仍貼著 52 週高（< 5% 距離）
+  const isExtremeChase = rs >= 99 && distFromHigh != null && distFromHigh > -5;
+  if (isExtremeChase) {
+    return { val: rs, color: '#ea580c', warn: '⚠ 追頂風險', bg: 'rgba(234,88,12,.10)',
+             desc: 'RS 99 + 距 52w 高 <5% — 短期追高勝率降低，建議等回檔' };
+  }
+  if (rs >= 95) return { val: rs, color: '#16a34a', warn: '✓ 動能延續', bg: 'rgba(34,197,94,.08)',
+                          desc: 'RS 95+ 是動能延續，多數 Minervini 風格贏家落在此區。配合 base + pivot 進場即可。' };
+  if (rs >= 80) return { val: rs, color: '#22c55e', warn: '✓ 強勢',     bg: 'rgba(34,197,94,.06)' };
   if (rs >= 60) return { val: rs, color: '#eab308', warn: '',           bg: '' };
   return       { val: rs, color: 'var(--muted)', warn: '⚠ 弱勢',         bg: '' };
 }
@@ -3474,13 +3491,55 @@ function signalConfidence(name) {
   return `學術 ${acad}\n本系統實證 ${emp}\n${s.note}`;
 }
 function signalConfidenceBadge(name) {
-  const s = SIGNAL_VALIDATION[name];
-  if (!s) return '';
-  // Low confidence (avg < 3) shows orange warning icon
-  const avg = (s.academic + s.empirical) / 2;
-  if (avg < 2.5) return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#f59e0b;font-size:10px;font-weight:700;margin-left:4px">⚠未驗證</span>`;
-  if (avg < 3.5) return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#fbbf24;font-size:10px;font-weight:600;margin-left:4px">實驗中</span>`;
-  return `<span title="${signalConfidence(name).replace(/"/g, '&quot;')}" style="cursor:help;color:#22c55e;font-size:10px;font-weight:600;margin-left:4px">✓已驗證</span>`;
+  // 2026-05-20 (Option B): 不再在每個 badge 上掛標籤（防禦過度，視覺噪音）。
+  // 改為「為什麼這個訊號？」按鈕點開時統一呈現 — 見 showSignalValidationModal()。
+  // 函式保留是為了不破壞舊的呼叫（會 return 空字串 = 無痕回退）。
+  return '';
+}
+
+// 2026-05-20: 集中式信號評等對照表 — 點按鈕才開啟
+function showSignalValidationModal() {
+  const groups = [
+    { title: '🟢 高信心（學術 + 實證皆強）', filter: s => (s.academic + s.empirical) >= 8, color: '#22c55e' },
+    { title: '🟡 中信心（單邊強）',           filter: s => (s.academic + s.empirical) >= 5 && (s.academic + s.empirical) < 8, color: '#eab308' },
+    { title: '🟠 實驗中（樣本不足）',         filter: s => (s.academic + s.empirical) >= 3 && (s.academic + s.empirical) < 5, color: '#f97316' },
+    { title: '🔴 邊際 edge（接近擲硬幣）',     filter: s => (s.academic + s.empirical) < 3, color: '#ef4444' },
+  ];
+  const labels = {
+    rsRating: 'RS Rating', rsOverheat: 'RS 過熱警示', epsRevision: 'EPS 修正動能',
+    insiderBuy: '內部人 cluster 買進', atrStop: 'ATR 停損', kelly: 'Kelly 倉位',
+    sectorRS: '板塊相對強度', vcp: 'VCP 收縮型態', tripleResonance: '三共振 (Triple-Resonance)',
+    composite: '綜合分 (50/30/20)', aiAnalysis: 'AI 文字判讀', newsSentiment: '新聞情緒',
+    threeInst: '三大法人（日）', threeInst5d: '三大法人（5 日累積）',
+    gmma: 'GMMA 多空排列', volProfile: '量價剖面', klinePatterns: 'K 線型態',
+  };
+  let html = '<div id="signal-validation-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+  html += '<div style="background:#0f1623;border-radius:12px;max-width:720px;width:100%;max-height:85vh;overflow:auto;border:1px solid rgba(255,255,255,.1)">';
+  html += '<div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">';
+  html += '<div style="font-size:16px;font-weight:700">📊 為什麼這個訊號？— 信號可信度對照</div>';
+  html += '<button onclick="document.getElementById(\'signal-validation-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>';
+  html += '</div>';
+  html += '<div style="padding:16px 22px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid rgba(255,255,255,.04)">每個訊號有兩個獨立評等：<b style="color:#a5b4fc">學術 ★</b>（30 年以上同儕審查文獻基礎強度）+ <b style="color:#86efac">本系統實證 ★</b>（我們在自己資料上的真實樣本量與表現）。<b>學術 5★ 不代表你下單後就會贏</b> — 它代表這個 effect 在大樣本群體上存在，個股機率分佈仍然是 50% 上下。</div>';
+  html += '<div style="padding:14px 22px">';
+  for (const g of groups) {
+    const items = Object.entries(SIGNAL_VALIDATION).filter(([k, v]) => g.filter(v));
+    if (!items.length) continue;
+    html += '<div style="font-size:13px;font-weight:700;color:' + g.color + ';margin:14px 0 8px">' + g.title + '</div>';
+    html += '<div style="display:grid;gap:6px">';
+    for (const [k, v] of items) {
+      const acad = '★'.repeat(v.academic) + '<span style="opacity:.25">★</span>'.repeat(5 - v.academic);
+      const emp  = '★'.repeat(v.empirical) + '<span style="opacity:.25">★</span>'.repeat(5 - v.empirical);
+      html += '<div style="display:grid;grid-template-columns:160px 1fr;gap:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:6px;font-size:12px">';
+      html += '<div><div style="font-weight:600;color:var(--text);margin-bottom:4px">' + (labels[k] || k) + '</div>';
+      html += '<div style="font-size:10px;color:var(--muted)">學術 ' + acad + '<br>實證 ' + emp + '</div></div>';
+      html += '<div style="color:var(--muted);line-height:1.6;font-size:11px">' + v.note + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '<div style="margin-top:18px;padding:12px;background:rgba(245,158,11,.05);border-radius:6px;font-size:11px;color:var(--muted);line-height:1.6">⚠ <b>提醒</b>：本對照表只反映「群體統計上的可信度」。<b>對你個人是否有效，請看「個人化命中率」分頁</b>（功能上線中） — 那才是你的真實 edge。</div>';
+  html += '</div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
 function isTw(ticker) { return ticker && (ticker.endsWith('.TW') || ticker.endsWith('.TWO')); }
@@ -10754,9 +10813,9 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         '<div style="font-size:12px;color:' + (r.changePct>=0?'var(--green)':'var(--red)') + '">' + pct(r.changePct) + '</div>' +
         stopHtml +
       '</td>' +
-      // Fix E: RS overheating warning
+      // Fix E (淡化版): 只警示 RS=99 + 距 52w 高 <5% 同時觸發
       (()=>{
-        const rl = rsLabel(r.rsRating);
+        const rl = rsLabel(r.rsRating, distFromHigh);
         const warnRow = rl.desc ? '<div style="font-size:9px;color:' + rl.color + ';margin-top:2px;line-height:1.3">' + rl.warn + '</div>' : '';
         return '<td style="padding:10px 8px;text-align:center' + (rl.bg ? ';background:' + rl.bg : '') + '">' +
           '<div style="font-size:22px;font-weight:800;color:' + rl.color + ';font-variant-numeric:tabular-nums" title="' + (rl.desc || '相對強度評等') + '">' + r.rsRating + '</div>' +
@@ -10765,12 +10824,17 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       })() +
       '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
-      // Fix H: 綜合分換 A/B/C/D 等級
+      // 2026-05-20 (Option B): 恢復數字（A/B/C/D 過於粗糙），但加智慧 tooltip
+      // 數字保留資訊量，tooltip 明示「差 5 分內非顯著差異」+ 顏色用級距
       (()=>{
-        const g = compositeGrade(r.compositeScore);
+        const sc = r.compositeScore;
+        const g  = compositeGrade(sc);  // 仍用 grade 取顏色（不顯示字母）
+        const tooltip = sc != null
+          ? '綜合分 ' + sc + '｜權重 50/30/20 為啟發式，未經嚴格回測。\n差 5 分內視為無顯著差異，僅供粗排序使用。'
+          : '無資料';
         return '<td style="padding:10px 8px;text-align:center">' +
-          '<div style="font-size:24px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums" title="綜合分 ' + r.compositeScore + '（範圍 ' + g.range + '）— 權重 50/30/20 為啟發式，未經嚴格回測。當作粗分類用，差 5 分內視為無意義。">' + g.letter + '</div>' +
-          '<div style="font-size:10px;color:var(--muted);cursor:help" title="權重 50/30/20 為啟發式，差 5 分內不視為差距">綜合分</div>' +
+          '<div style="font-size:22px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + tooltip.replace(/"/g,'&quot;') + '">' + (sc != null ? sc : '—') + '</div>' +
+          '<div style="font-size:10px;color:var(--muted);cursor:help" title="差 5 分內非顯著差異">綜合分</div>' +
         '</td>';
       })() +
       '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;white-space:nowrap;font-weight:600">進場指引</button></td>' +
