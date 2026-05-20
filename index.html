@@ -544,6 +544,7 @@ firebase.initializeApp(_fbConfig);
  <button class="active" onclick="switchJournalTab('records')">交易記錄</button>
  <button onclick="switchJournalTab('holdings')">持倉追蹤</button>
  <button onclick="switchJournalTab('risk')">風控設定</button>
+ <button onclick="switchJournalTab('personal-edge')">🎯 個人化命中率</button>
  </div>
  <div id="journal-tab-records">
  <div id="localstorage-notice" style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:12px"><span>資料儲存於本機瀏覽器。建議登入 Google 帳號以跨裝置同步，或定期匯出 CSV 備份。</span><button onclick="document.getElementById('localstorage-notice').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;flex-shrink:0">×</button></div>
@@ -579,6 +580,9 @@ firebase.initializeApp(_fbConfig);
  </div>
  <div id="journal-tab-risk" style="display:none">
  <div id="risk-content"></div>
+ </div>
+ <div id="journal-tab-personal-edge" style="display:none">
+ <div id="personal-edge-content"></div>
  </div>
  </div>
  <div id="page-scanner" class="page">
@@ -1099,13 +1103,15 @@ function switchMarketTab(tab) {
 
 function switchJournalTab(tab) {
  window._lastJournalTab = tab; // remember for next visit
- document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === ['records','holdings','risk'].indexOf(tab)));
- ['records','holdings','risk'].forEach(t => {
+ const tabs = ['records','holdings','risk','personal-edge'];
+ document.querySelectorAll('#journal-tabs button').forEach((b,i) => b.classList.toggle('active', i === tabs.indexOf(tab)));
+ tabs.forEach(t => {
  const el = document.getElementById('journal-tab-' + t);
  if (el) el.style.display = (t === tab) ? '' : 'none';
  });
  if (tab === 'risk') renderRisk();
  if (tab === 'holdings') renderHoldings();
+ if (tab === 'personal-edge') renderPersonalEdge();
 }
 
 function switchIndustryTab(tab) {
@@ -3577,12 +3583,66 @@ function addJournal() {
  const stopVal = parseFloat(document.getElementById('j-stop').value) || null;
  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value, stop: stopVal };
  if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
+ // 2026-05-20 (Option B Feature 3): 進場前「靜思 30 秒」
+ // 對 buy 強制顯示反思介面 + 倒數，避免衝動下單。可關閉設定。
+ // editMode 跳過（編輯舊資料不需反思），sell 跳過（出場決策不在範圍）。
+ if (e.action === 'buy' && !window._editJId && !window._skipReflection) {
+  showStaticReflection(e);
+  return;  // 反思結束後會 call _commitJournalEntry(e)
+ }
+ _commitJournalEntry(e);
+}
+
+// Internal: actual commit logic — separated so static reflection can call it after timer
+function _commitJournalEntry(e) {
  // 2026-05-19: TW 證交稅 (0.3% sell-only) + 手續費 (0.1425% both sides)
  e.amount = e.price * e.qty; e.fee = e.amount * feeForTrade(e.ticker, e.action); e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
  // Wave 5.5 — snapshot RS Rating at entry time (for relative weakness tracking)
  if (e.action === 'buy' && window._rsLeaderCache) {
   const rs = window._rsLeaderCache.find(s => s.symbol === e.ticker);
   if (rs && rs.rsRating != null) e.entryRS = rs.rsRating;
+ }
+ // 2026-05-20 (Option B Feature 1): 完整訊號快照 — 對 buy 才記錄
+ // 用來事後計算「對你個人而言每個訊號的命中率」（取代群體統計）
+ if (e.action === 'buy') {
+  const sig = {};
+  // RS Leader
+  const rs = (window._rsLeaderCache || []).find(s => s.symbol === e.ticker);
+  if (rs) {
+   if (rs.rsRating != null)      sig.rsRating = rs.rsRating;
+   if (rs.compositeScore != null) sig.compositeScore = rs.compositeScore;
+   if (rs.volExpand != null)      sig.volExpand = rs.volExpand;
+   if (rs.vcp && rs.vcp.vcpScore != null) sig.vcpScore = rs.vcp.vcpScore;
+   if (rs.sectorRS != null)       sig.sectorRS = rs.sectorRS;
+   if (rs.high52w && rs.price)    sig.distFromHigh = ((rs.price - rs.high52w) / rs.high52w * 100);
+   if (rs.epsRevision != null)    sig.epsRevision = rs.epsRevision;
+  }
+  // Triple Resonance
+  const tr = (window._tripleResonanceCache || []).find(t => t.symbol === e.ticker);
+  if (tr) {
+   if (tr.score != null) sig.tripleResonance = tr.score;
+   if (tr.stars != null) sig.tripleStars     = tr.stars;
+  }
+  // AI bias
+  if (window._aiAnalysis && window._aiAnalysis.bySymbol) {
+   const ai = window._aiAnalysis.bySymbol.get ? window._aiAnalysis.bySymbol.get(e.ticker) : window._aiAnalysis.bySymbol[e.ticker];
+   if (ai && ai.bias) { sig.aiBias = ai.bias; sig.aiStars = ai.stars; }
+  }
+  // Market regime
+  if (window._marketRegime && window._marketRegime.overall != null) {
+   sig.regimeOverall = window._marketRegime.overall;
+  }
+  // Insider
+  if (window._insiderDataCache && window._insiderDataCache[e.ticker]) {
+   const ins = window._insiderDataCache[e.ticker];
+   if (ins.netShares != null) sig.insiderNetShares = ins.netShares;
+   if (ins.clusterScore != null) sig.insiderCluster = ins.clusterScore;
+  }
+  // News sentiment
+  if (window._newsSentimentCache && window._newsSentimentCache[e.ticker]) {
+   sig.newsSentiment = window._newsSentimentCache[e.ticker].sentiment;
+  }
+  if (Object.keys(sig).length) e.signalSnapshot = sig;
  }
  if (window._editJId) {
  // Edit mode: update existing entry
@@ -3600,6 +3660,165 @@ function addJournal() {
  if (e.action === 'buy') showJournalATRGuide(e.price, e.ticker);
  else { const g = document.getElementById('journal-atr-guide'); if (g) g.style.display = 'none'; }
 }
+// 2026-05-20 (Option B Feature 3): 「靜思 30 秒」反思介面
+// 顯示：當前快照訊號 + 歷史同類訊號勝率 + 倒數 + 確認 / 取消
+function showStaticReflection(e) {
+ // Build snapshot for this potential entry (same logic as in _commitJournalEntry's snapshot block)
+ const sig = {};
+ const rs = (window._rsLeaderCache || []).find(s => s.symbol === e.ticker);
+ if (rs) {
+  if (rs.rsRating != null)      sig.rsRating = rs.rsRating;
+  if (rs.compositeScore != null) sig.compositeScore = rs.compositeScore;
+  if (rs.volExpand != null)      sig.volExpand = rs.volExpand;
+  if (rs.vcp && rs.vcp.vcpScore != null) sig.vcpScore = rs.vcp.vcpScore;
+  if (rs.sectorRS != null)       sig.sectorRS = rs.sectorRS;
+  if (rs.high52w && rs.price)    sig.distFromHigh = ((rs.price - rs.high52w) / rs.high52w * 100);
+  if (rs.epsRevision != null)    sig.epsRevision = rs.epsRevision;
+ }
+ const tr = (window._tripleResonanceCache || []).find(t => t.symbol === e.ticker);
+ if (tr) { if (tr.score != null) sig.tripleResonance = tr.score; if (tr.stars != null) sig.tripleStars = tr.stars; }
+ if (window._aiAnalysis && window._aiAnalysis.bySymbol) {
+  const ai = window._aiAnalysis.bySymbol.get ? window._aiAnalysis.bySymbol.get(e.ticker) : window._aiAnalysis.bySymbol[e.ticker];
+  if (ai && ai.bias) { sig.aiBias = ai.bias; sig.aiStars = ai.stars; }
+ }
+ if (window._marketRegime && window._marketRegime.overall != null) sig.regimeOverall = window._marketRegime.overall;
+ if (window._insiderDataCache && window._insiderDataCache[e.ticker]) {
+  const ins = window._insiderDataCache[e.ticker];
+  if (ins.netShares != null) sig.insiderNetShares = ins.netShares;
+  if (ins.clusterScore != null) sig.insiderCluster = ins.clusterScore;
+ }
+
+ // Compute historical hit rate for similar signal stack
+ const stats = computePersonalSignalStats(getJ());
+ const triggeredSignals = [];
+ for (const k of Object.keys(sig)) {
+  const trig = _signalTriggered(sig, k);
+  if (trig === true) triggeredSignals.push(k);
+ }
+
+ const sigLabels = {
+  rsRating: 'RS Rating ≥80', compositeScore: '綜合分 ≥70', volExpand: '量能放大 ≥1.5x',
+  vcpScore: 'VCP ≥3', sectorRS: '板塊 RS ≥70', distFromHigh: '距 52w 高 <5%',
+  epsRevision: 'EPS 上修', tripleResonance: '三共振 ≥4', aiBias: 'AI 偏多',
+  regimeOverall: '大盤多頭', insiderNetShares: '內部人淨買', insiderCluster: '內部人 cluster',
+ };
+
+ // Estimate hit rate for this signal stack: avg of each triggered signal's hit rate
+ const rates = [];
+ for (const k of triggeredSignals) {
+  const s = stats.bySignal[k];
+  if (s && s.triggered >= 3 && s.triggeredWinRate != null) rates.push(s.triggeredWinRate);
+ }
+ const estHitRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
+ const overallHitRate = stats.closedTrades >= 5 ?
+  (() => {
+   const j = getJ();
+   const k = computeJournalKellyStats(j);
+   return k && k.totalTrades >= 5 ? k.winRate : null;
+  })() : null;
+
+ // Modal HTML
+ const DURATION = 30;
+ let html = '<div id="static-reflection-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px">';
+ html += '<div style="background:#0f1623;border-radius:14px;max-width:560px;width:100%;padding:24px;border:1px solid rgba(255,255,255,.12)">';
+ html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
+ html += '<div style="font-size:22px">🧘</div>';
+ html += '<div><div style="font-size:16px;font-weight:700">靜思 30 秒</div><div style="font-size:11px;color:var(--muted)">下單前最後檢查 — 不是阻止你，是讓你停 30 秒看清楚</div></div>';
+ html += '</div>';
+ html += '<div style="padding:14px;background:rgba(99,102,241,.06);border-radius:10px;margin-bottom:14px">';
+ html += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px"><b>' + e.ticker + '</b>　@ ' + e.price + '　×' + e.qty + ' 股</div>';
+ if (triggeredSignals.length) {
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">當前觸發訊號：</div>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  for (const k of triggeredSignals) {
+   html += '<span style="font-size:11px;padding:3px 8px;background:rgba(34,197,94,.12);color:#22c55e;border-radius:10px">✓ ' + (sigLabels[k] || k) + '</span>';
+  }
+  html += '</div>';
+ } else {
+  html += '<div style="font-size:11px;color:#f59e0b">⚠ 此筆無已快取的系統訊號 — 你是基於什麼進場？請在備註寫清楚。</div>';
+ }
+ html += '</div>';
+
+ if (estHitRate != null && rates.length >= 2) {
+  const color = estHitRate >= 0.6 ? '#22c55e' : estHitRate >= 0.5 ? '#eab308' : '#ef4444';
+  html += '<div style="padding:14px;background:rgba(255,255,255,.02);border-radius:10px;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">過去同類訊號你的歷史勝率</div>';
+  html += '<div style="font-size:28px;font-weight:800;color:' + color + ';font-variant-numeric:tabular-nums">' + (estHitRate * 100).toFixed(0) + '%</div>';
+  html += '<div style="font-size:10px;color:var(--muted);margin-top:4px">基於 ' + rates.length + ' 個觸發訊號的歷史平均</div>';
+  html += '</div>';
+ } else if (overallHitRate != null) {
+  html += '<div style="padding:14px;background:rgba(255,255,255,.02);border-radius:10px;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">你的整體歷史勝率（尚無同類訊號樣本）</div>';
+  html += '<div style="font-size:28px;font-weight:800;color:#a5b4fc;font-variant-numeric:tabular-nums">' + (overallHitRate * 100).toFixed(0) + '%</div>';
+  html += '</div>';
+ } else {
+  html += '<div style="padding:14px;background:rgba(245,158,11,.06);border-radius:10px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">尚無已平倉交易，無歷史勝率參考。請寫清楚你的<b>進場理由</b>、<b>停損價</b>、<b>什麼條件出場</b>。</div>';
+ }
+
+ html += '<div style="padding:10px 14px;background:rgba(255,255,255,.02);border-radius:8px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.8">';
+ html += '想清楚以下三件事：<br>1. 我憑什麼覺得它會漲？<br>2. 錯了會在哪裡停損？跌多少我認賠？<br>3. 對了我準備持有多久？目標多少？';
+ html += '</div>';
+
+ html += '<div style="display:flex;gap:10px;align-items:center">';
+ html += '<button id="reflection-confirm" disabled style="flex:1;padding:12px;background:rgba(34,197,94,.3);border:1px solid rgba(34,197,94,.4);border-radius:8px;color:#22c55e;font-weight:700;cursor:not-allowed;font-size:14px">✓ 確認下單 <span id="reflection-countdown">(' + DURATION + ')</span></button>';
+ html += '<button onclick="cancelStaticReflection()" style="flex:1;padding:12px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:8px;color:#ef4444;font-weight:600;cursor:pointer;font-size:13px">✕ 取消，再想想</button>';
+ html += '</div>';
+ html += '<div style="margin-top:10px;text-align:center"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="reflection-skip-once" style="vertical-align:middle"> 這次先跳過反思（不建議）</label></div>';
+ html += '</div></div>';
+
+ document.body.insertAdjacentHTML('beforeend', html);
+
+ // Stash pending entry
+ window._pendingJournalEntry = e;
+
+ // Skip-once handler
+ const skipBox = document.getElementById('reflection-skip-once');
+ if (skipBox) skipBox.addEventListener('change', function() {
+  if (this.checked) {
+   document.getElementById('static-reflection-modal').remove();
+   window._skipReflection = true;
+   _commitJournalEntry(window._pendingJournalEntry);
+   window._pendingJournalEntry = null;
+   setTimeout(() => { window._skipReflection = false; }, 100);  // reset after this entry
+  }
+ });
+
+ // Countdown
+ let remaining = DURATION;
+ const cdEl = document.getElementById('reflection-countdown');
+ const confirmBtn = document.getElementById('reflection-confirm');
+ const timer = setInterval(() => {
+  remaining--;
+  if (cdEl) cdEl.textContent = '(' + remaining + ')';
+  if (remaining <= 0) {
+   clearInterval(timer);
+   if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.style.background = 'rgba(34,197,94,.6)';
+    confirmBtn.style.cursor = 'pointer';
+    confirmBtn.innerHTML = '✓ 確認下單';
+    confirmBtn.onclick = confirmStaticReflection;
+   }
+   if (cdEl) cdEl.remove();
+  }
+ }, 1000);
+ window._reflectionTimer = timer;
+}
+function confirmStaticReflection() {
+ const modal = document.getElementById('static-reflection-modal');
+ if (modal) modal.remove();
+ if (window._reflectionTimer) { clearInterval(window._reflectionTimer); window._reflectionTimer = null; }
+ const e = window._pendingJournalEntry;
+ window._pendingJournalEntry = null;
+ if (e) _commitJournalEntry(e);
+}
+function cancelStaticReflection() {
+ const modal = document.getElementById('static-reflection-modal');
+ if (modal) modal.remove();
+ if (window._reflectionTimer) { clearInterval(window._reflectionTimer); window._reflectionTimer = null; }
+ window._pendingJournalEntry = null;
+}
+
 function exportJournalCSV() {
  const j = getJ();
  if (!j.length) { alert('尚無交易紀錄'); return; }
@@ -6800,6 +7019,275 @@ function computeJournalKellyStats(j) {
  const kelly = ratio > 0 ? winRate - (1 - winRate) / ratio : 0;
  const halfKelly = Math.max(0, kelly / 2);
  return { totalTrades: trades.length, winRate, avgWin, avgLoss, ratio, kelly, halfKelly };
+}
+
+// 2026-05-20 (Option B Feature 1): 個人化命中率
+// 對每筆已平倉交易，看當時 buy 有哪些訊號被觸發，記錄該訊號下的勝/敗。
+// 結果：對使用者「個人」而言，哪個訊號真有用。
+// 訊號要轉成「布林（觸發 / 未觸發）」才能算命中率 — 用閾值。
+function _signalTriggered(sig, key) {
+ if (!sig || sig[key] == null) return null;  // null = 沒資料
+ const v = sig[key];
+ switch (key) {
+  case 'rsRating':       return v >= 80;
+  case 'compositeScore': return v >= 70;
+  case 'volExpand':      return v >= 1.5;
+  case 'vcpScore':       return v >= 3;
+  case 'sectorRS':       return v >= 70;
+  case 'distFromHigh':   return v >= -5;  // 距高 <5% 視為突破型
+  case 'epsRevision':    return v > 0;
+  case 'tripleResonance':return v >= 4;
+  case 'tripleStars':    return v >= 4;
+  case 'aiBias':         return v === 'bullish';
+  case 'aiStars':        return v >= 4;
+  case 'regimeOverall':  return v >= 1;
+  case 'insiderNetShares': return v > 0;
+  case 'insiderCluster': return v >= 2;
+  case 'newsSentiment':  return v === 'bullish';
+  default: return null;
+ }
+}
+function computePersonalSignalStats(j) {
+ if (!j || !j.length) return { closedTrades: 0, bySignal: {} };
+ const sorted = j.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+ const queues = {};  // ticker -> [{ qty, cost, snapshot, buyId }]
+ const closedTrades = [];  // { ret, snapshot }
+ for (const e of sorted) {
+  if (e.action === 'buy') {
+   if (!queues[e.ticker]) queues[e.ticker] = [];
+   const costPerShare = (e.net || e.price * e.qty) / e.qty;
+   queues[e.ticker].push({ qty: e.qty, cost: costPerShare, snapshot: e.signalSnapshot || null });
+  } else if (e.action === 'sell') {
+   const q = queues[e.ticker] || [];
+   let remaining = e.qty;
+   const proceedsPerShare = (e.net || e.price * e.qty) / e.qty;
+   while (remaining > 0 && q.length) {
+    const lot = q[0];
+    const take = Math.min(remaining, lot.qty);
+    const ret = (proceedsPerShare - lot.cost) / lot.cost;
+    closedTrades.push({ ret, snapshot: lot.snapshot, qty: take });
+    lot.qty -= take;
+    remaining -= take;
+    if (lot.qty <= 0) q.shift();
+   }
+  }
+ }
+ // Aggregate per-signal
+ const signalKeys = ['rsRating','compositeScore','volExpand','vcpScore','sectorRS','distFromHigh','epsRevision','tripleResonance','tripleStars','aiBias','aiStars','regimeOverall','insiderNetShares','insiderCluster','newsSentiment'];
+ const bySignal = {};
+ for (const k of signalKeys) bySignal[k] = { tradesWithData: 0, triggered: 0, triggeredWins: 0, notTriggered: 0, notTriggeredWins: 0, triggeredRetSum: 0, notTriggeredRetSum: 0 };
+ for (const t of closedTrades) {
+  if (!t.snapshot) continue;
+  for (const k of signalKeys) {
+   const trig = _signalTriggered(t.snapshot, k);
+   if (trig === null) continue;
+   bySignal[k].tradesWithData++;
+   if (trig) {
+    bySignal[k].triggered++;
+    bySignal[k].triggeredRetSum += t.ret;
+    if (t.ret > 0) bySignal[k].triggeredWins++;
+   } else {
+    bySignal[k].notTriggered++;
+    bySignal[k].notTriggeredRetSum += t.ret;
+    if (t.ret > 0) bySignal[k].notTriggeredWins++;
+   }
+  }
+ }
+ // Finalize: compute rates & edge
+ for (const k of signalKeys) {
+  const b = bySignal[k];
+  b.triggeredWinRate    = b.triggered    ? b.triggeredWins    / b.triggered    : null;
+  b.notTriggeredWinRate = b.notTriggered ? b.notTriggeredWins / b.notTriggered : null;
+  b.triggeredAvgRet     = b.triggered    ? b.triggeredRetSum    / b.triggered    : null;
+  b.notTriggeredAvgRet  = b.notTriggered ? b.notTriggeredRetSum / b.notTriggered : null;
+  // Personal edge = winRate (signal on) − winRate (signal off). >0 means this signal genuinely helps you.
+  if (b.triggeredWinRate != null && b.notTriggeredWinRate != null) {
+   b.edge = b.triggeredWinRate - b.notTriggeredWinRate;
+  } else b.edge = null;
+ }
+ return { closedTrades: closedTrades.length, bySignal };
+}
+
+// 2026-05-20 (Option B Feature 1+2): 個人化命中率 + 「你為什麼贏/輸」分析
+function renderPersonalEdge() {
+ const el = document.getElementById('personal-edge-content');
+ if (!el) return;
+ const j = getJ();
+ const stats = computePersonalSignalStats(j);
+ const totalEntries = j.filter(e => e.action === 'buy' && e.signalSnapshot).length;
+ if (totalEntries === 0) {
+  el.innerHTML = '<div class="card" style="text-align:center;padding:40px"><div style="font-size:32px;margin-bottom:12px">🎯</div><h3>尚無快照資料</h3><p style="color:var(--muted);line-height:1.7;max-width:520px;margin:14px auto 0;font-size:13px">「個人化命中率」需要先累積帶有訊號快照的交易紀錄。<br>從 <b>2026-05-20</b> 起，每筆「買入」會自動快照當時 RS、VCP、三共振、AI、市場大環境等訊號。<br>結案後（你賣出後），這頁會幫你算出 <b>對你個人</b> 哪個訊號真的有用、哪個沒用。<br><br>下一步：照常使用，先累積 10+ 筆已平倉交易再回來看。</p></div>';
+  return;
+ }
+ if (stats.closedTrades < 5) {
+  el.innerHTML = '<div class="card"><h3>🎯 個人化命中率（資料不足）</h3><p style="color:var(--muted);line-height:1.7">已快照 ' + totalEntries + ' 筆買入訊號，但已平倉交易只有 ' + stats.closedTrades + ' 筆（需 5+ 才開始有意義，30+ 才算可靠）。</p><p style="color:var(--muted);margin-top:8px;font-size:12px">繼續使用就好，賣出後系統會自動計入。</p></div>';
+  return;
+ }
+ // Labels
+ const labels = {
+  rsRating: 'RS Rating ≥ 80',
+  compositeScore: '綜合分 ≥ 70',
+  volExpand: '量能放大 ≥ 1.5x',
+  vcpScore: 'VCP 分數 ≥ 3',
+  sectorRS: '板塊 RS ≥ 70',
+  distFromHigh: '距 52w 高 < 5%',
+  epsRevision: 'EPS 上修',
+  tripleResonance: '三共振 ≥ 4',
+  tripleStars: '三共振 ★ ≥ 4',
+  aiBias: 'AI 偏多',
+  aiStars: 'AI ★ ≥ 4',
+  regimeOverall: '大盤多頭環境',
+  insiderNetShares: '內部人淨買',
+  insiderCluster: '內部人 cluster ≥ 2',
+  newsSentiment: '新聞情緒偏多',
+ };
+ // Rank by edge (best edge first)
+ const rows = Object.entries(stats.bySignal)
+  .filter(([k, v]) => v.tradesWithData >= 3 && v.edge != null)
+  .sort((a, b) => (b[1].edge || 0) - (a[1].edge || 0));
+
+ let html = '<div class="card">';
+ html += '<h3>🎯 你的個人化訊號命中率</h3>';
+ html += '<p style="color:var(--muted);font-size:12px;line-height:1.6">基於 <b>' + stats.closedTrades + '</b> 筆已平倉交易。「Edge」= 訊號觸發時勝率 − 訊號未觸發時勝率。<br>正值 = 這個訊號對<b>你</b>真的有用；負值或趨近 0 = 對你沒區別（即使學術說它有效）。樣本 <30 視為實驗中。</p>';
+ if (!rows.length) {
+  html += '<p style="color:var(--muted);margin-top:12px">尚無足夠樣本可計算 edge（每個訊號需 3+ 觸發 + 3+ 未觸發樣本）。</p>';
+ } else {
+  html += '<div style="overflow-x:auto;margin-top:14px"><table style="width:100%;font-size:12px">';
+  html += '<thead><tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.08)"><th style="text-align:left;padding:8px 6px">訊號</th><th style="text-align:right;padding:8px 6px" title="該訊號觸發的交易數">觸發 N</th><th style="text-align:right;padding:8px 6px">觸發勝率</th><th style="text-align:right;padding:8px 6px">未觸發勝率</th><th style="text-align:right;padding:8px 6px;color:#a5b4fc">你的 Edge</th><th style="text-align:left;padding:8px 6px">解讀</th></tr></thead><tbody>';
+  for (const [k, v] of rows) {
+   const edge = v.edge;
+   const edgePct = (edge * 100).toFixed(1);
+   const edgeColor = edge >= 0.15 ? '#16a34a' : edge >= 0.05 ? '#22c55e' : edge >= -0.05 ? '#eab308' : '#dc2626';
+   const reliable = v.triggered >= 10 && v.notTriggered >= 10;
+   const interp = !reliable ? '樣本不足' :
+                  edge >= 0.20 ? '✓ 強信號（用！）' :
+                  edge >= 0.10 ? '✓ 有效（用）' :
+                  edge >= 0.03 ? '尚可' :
+                  edge >= -0.05 ? '無區別（噪音）' :
+                  '⚠ 反向（避免）';
+   html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">';
+   html += '<td style="padding:8px 6px">' + (labels[k] || k) + '</td>';
+   html += '<td style="text-align:right;padding:8px 6px;font-variant-numeric:tabular-nums">' + v.triggered + ' / ' + (v.triggered + v.notTriggered) + '</td>';
+   html += '<td style="text-align:right;padding:8px 6px;font-variant-numeric:tabular-nums">' + (v.triggeredWinRate != null ? (v.triggeredWinRate * 100).toFixed(0) + '%' : '—') + '</td>';
+   html += '<td style="text-align:right;padding:8px 6px;font-variant-numeric:tabular-nums;color:var(--muted)">' + (v.notTriggeredWinRate != null ? (v.notTriggeredWinRate * 100).toFixed(0) + '%' : '—') + '</td>';
+   html += '<td style="text-align:right;padding:8px 6px;font-weight:700;color:' + edgeColor + ';font-variant-numeric:tabular-nums">' + (edge >= 0 ? '+' : '') + edgePct + '%</td>';
+   html += '<td style="padding:8px 6px;color:' + edgeColor + ';font-size:11px">' + interp + '</td>';
+   html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+ }
+ html += '</div>';
+
+ // Feature 2: 「你為什麼贏 / 輸」自動分析
+ html += renderWinLossAnalysis(j);
+
+ el.innerHTML = html;
+}
+
+// 2026-05-20 (Option B Feature 2): 「你為什麼贏 / 輸」
+// 從已平倉交易中挖出「贏家有但輸家沒有的共同特徵」
+function renderWinLossAnalysis(j) {
+ const sorted = (j || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+ const queues = {};
+ const closed = [];
+ for (const e of sorted) {
+  if (e.action === 'buy') {
+   if (!queues[e.ticker]) queues[e.ticker] = [];
+   const costPerShare = (e.net || e.price * e.qty) / e.qty;
+   queues[e.ticker].push({ qty: e.qty, cost: costPerShare, snapshot: e.signalSnapshot || null, buyDate: e.date, buyTicker: e.ticker });
+  } else if (e.action === 'sell') {
+   const q = queues[e.ticker] || [];
+   let remaining = e.qty;
+   const proceedsPerShare = (e.net || e.price * e.qty) / e.qty;
+   while (remaining > 0 && q.length) {
+    const lot = q[0];
+    const take = Math.min(remaining, lot.qty);
+    const ret = (proceedsPerShare - lot.cost) / lot.cost;
+    const holdingDays = (new Date(e.date) - new Date(lot.buyDate)) / 86400000;
+    closed.push({ ret, snapshot: lot.snapshot, holdingDays, ticker: lot.buyTicker, sellDate: e.date });
+    lot.qty -= take;
+    remaining -= take;
+    if (lot.qty <= 0) q.shift();
+   }
+  }
+ }
+ const wins = closed.filter(t => t.ret > 0);
+ const losses = closed.filter(t => t.ret <= 0);
+ if (wins.length < 3 || losses.length < 3) {
+  return '<div class="card"><h3>📈 你為什麼贏 / 輸（樣本不足）</h3><p style="color:var(--muted);font-size:12px">需要 3+ 贏家 + 3+ 輸家才能比對特徵。目前贏 ' + wins.length + ' / 輸 ' + losses.length + '。</p></div>';
+ }
+ // Compute mean for numeric signals + frequency for categorical
+ const numericKeys = ['rsRating','compositeScore','volExpand','vcpScore','sectorRS','distFromHigh','epsRevision','tripleResonance','regimeOverall'];
+ const avg = (arr, k) => {
+  const vals = arr.map(t => t.snapshot && t.snapshot[k]).filter(v => v != null && !isNaN(v));
+  return vals.length ? { mean: vals.reduce((s, v) => s + v, 0) / vals.length, n: vals.length } : null;
+ };
+ let findings = [];
+ for (const k of numericKeys) {
+  const w = avg(wins, k);
+  const l = avg(losses, k);
+  if (!w || !l || w.n < 3 || l.n < 3) continue;
+  const diff = w.mean - l.mean;
+  const labels2 = {
+   rsRating: 'RS Rating', compositeScore: '綜合分', volExpand: '量能倍數', vcpScore: 'VCP 分',
+   sectorRS: '板塊 RS', distFromHigh: '距 52w 高 %', epsRevision: 'EPS 修正',
+   tripleResonance: '三共振分', regimeOverall: '大盤多頭強度',
+  };
+  findings.push({ key: k, label: labels2[k] || k, winAvg: w.mean, lossAvg: l.mean, diff, n: w.n + l.n });
+ }
+ findings.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+ // Holding days
+ const winHold = wins.reduce((s, t) => s + t.holdingDays, 0) / wins.length;
+ const lossHold = losses.reduce((s, t) => s + t.holdingDays, 0) / losses.length;
+ const winAvgRet = wins.reduce((s, t) => s + t.ret, 0) / wins.length;
+ const lossAvgRet = losses.reduce((s, t) => s + t.ret, 0) / losses.length;
+
+ let html = '<div class="card" style="margin-top:14px">';
+ html += '<h3>📈 你為什麼贏 / 輸 — 自動模式分析</h3>';
+ html += '<p style="color:var(--muted);font-size:12px">比對你的贏家 vs 輸家在進場時的訊號差異 — 找出你的<b>真實 alpha source</b>（不是書上的、是你自己的）。</p>';
+ html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0">';
+ html += '<div style="padding:12px;background:rgba(34,197,94,.06);border-radius:8px;border-left:3px solid #22c55e">';
+ html += '<div style="font-size:11px;color:var(--muted)">贏家：' + wins.length + ' 筆</div>';
+ html += '<div style="font-size:18px;font-weight:700;color:#22c55e">+' + (winAvgRet * 100).toFixed(1) + '%</div>';
+ html += '<div style="font-size:10px;color:var(--muted)">平均持有 ' + winHold.toFixed(0) + ' 天</div></div>';
+ html += '<div style="padding:12px;background:rgba(239,68,68,.06);border-radius:8px;border-left:3px solid #ef4444">';
+ html += '<div style="font-size:11px;color:var(--muted)">輸家：' + losses.length + ' 筆</div>';
+ html += '<div style="font-size:18px;font-weight:700;color:#ef4444">' + (lossAvgRet * 100).toFixed(1) + '%</div>';
+ html += '<div style="font-size:10px;color:var(--muted)">平均持有 ' + lossHold.toFixed(0) + ' 天</div></div>';
+ html += '</div>';
+
+ if (findings.length) {
+  html += '<div style="margin-top:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">關鍵差異（贏家 vs 輸家）</div>';
+  html += '<div style="display:grid;gap:6px">';
+  for (const f of findings.slice(0, 6)) {
+   const helpful = Math.abs(f.diff) > 5 && (f.key === 'rsRating' || f.key === 'compositeScore' || f.key === 'sectorRS' || f.key === 'tripleResonance');
+   const direction = f.diff > 0 ? '↑' : '↓';
+   const color = Math.abs(f.diff) < 2 ? 'var(--muted)' : (f.diff > 0 ? '#22c55e' : '#ef4444');
+   html += '<div style="display:grid;grid-template-columns:140px 1fr 80px;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px;font-size:12px;align-items:center">';
+   html += '<div>' + f.label + '</div>';
+   html += '<div style="color:var(--muted);font-size:11px">贏家平均 <b style="color:#22c55e">' + f.winAvg.toFixed(1) + '</b>　vs　輸家 <b style="color:#ef4444">' + f.lossAvg.toFixed(1) + '</b></div>';
+   html += '<div style="text-align:right;font-weight:700;color:' + color + '">' + direction + ' ' + Math.abs(f.diff).toFixed(1) + '</div>';
+   html += '</div>';
+  }
+  html += '</div></div>';
+
+  // Top-1 insight as text
+  const top = findings[0];
+  if (Math.abs(top.diff) >= 3) {
+   const direction2 = top.diff > 0 ? '高' : '低';
+   html += '<div style="margin-top:14px;padding:12px;background:rgba(99,102,241,.06);border-radius:8px;font-size:12px;line-height:1.7">💡 <b>最大差異</b>：你的贏家通常 <b>' + top.label + '</b> 比輸家' + direction2 + ' ' + Math.abs(top.diff).toFixed(1) + '。下次進場時，這個指標可以當作重要過濾條件。</div>';
+  }
+ } else {
+  html += '<p style="color:var(--muted);font-size:12px">尚無顯著差異，繼續累積樣本。</p>';
+ }
+ // Holding pattern insight
+ if (Math.abs(winHold - lossHold) > 3) {
+  const longer = winHold > lossHold ? '長' : '短';
+  html += '<div style="margin-top:8px;padding:10px 12px;background:rgba(245,158,11,.06);border-radius:6px;font-size:11px;color:var(--muted);line-height:1.6">⏱ <b>持有時間模式</b>：你的贏家平均持有 ' + winHold.toFixed(0) + ' 天，輸家 ' + lossHold.toFixed(0) + ' 天。贏家比輸家' + longer + ' ' + Math.abs(winHold - lossHold).toFixed(0) + ' 天 — ' + (winHold > lossHold ? '你的策略需要時間發酵，提早出場可能砍掉贏家。' : '你的輸家拖太久，可能該更嚴格執行停損。') + '</div>';
+ }
+ html += '</div>';
+ return html;
 }
 
 function getEduLiveHtml() {
