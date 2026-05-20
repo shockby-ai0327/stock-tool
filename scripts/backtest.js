@@ -278,7 +278,8 @@ function computeAllStats(history) {
     const sigs = history.signals.filter(s => s.type === t);
     stats[t] = computeStatsForType(sigs);
   }
-  return { computedAt: Math.floor(Date.now() / 1000), stats };
+  // 2026-05-20: 修「493749 小時前更新」bug — 原本存秒，前端拿 ms 計算 = 1000 倍誤差
+  return { computedAt: Date.now(), stats };
 }
 
 // ── History cap ─────────────────────────────────────────────────────────────

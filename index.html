@@ -24,9 +24,13 @@ body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:v
 .search-box{display:flex;gap:12px;margin-bottom:24px}
 .search-box input{flex:1;padding:14px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;outline:none}
 .search-box input:focus{border-color:var(--accent)}
+/* 2026-05-20: 統一 focus 樣式 — 避免瀏覽器預設黃色 outline 看起來像表單驗證錯誤 */
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:6px}
+input:focus,select:focus,textarea:focus{outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .search-box button{padding:14px 28px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:15px;cursor:pointer;font-weight:600}
 .search-box button:hover{background:#2563eb}
-.card{background:var(--card);border:1px solid var(--border);border-top:1px solid rgba(255,255,255,.05);border-radius:12px;padding:20px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-top:1px solid rgba(255,255,255,.05);border-radius:12px;padding:14px 16px;margin-bottom:12px}
 .card h3{font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600}
 .stock-header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .stock-name{font-size:26px;font-weight:700}
@@ -128,8 +132,8 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .modal-close{float:right;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
 @keyframes alertFlash{0%,100%{border-color:var(--yellow)}50%{border-color:var(--accent);box-shadow:0 0 20px rgba(59,130,246,.3)}}
 .alert-flash{animation:alertFlash 1s infinite}
-/* ── 全站固定免責聲明 bar ── */
-.disclaimer-bar{position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(10,14,23,.94);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:5px 20px;font-size:11px;color:var(--muted);text-align:center;pointer-events:none;line-height:1.4}
+/* ── 免責聲明 bar（2026-05-20: 改為靜態 footer，不再 sticky 擋內容） ── */
+.disclaimer-bar{position:relative;background:transparent;border-top:1px solid var(--border);padding:14px 20px;font-size:11px;color:var(--muted);text-align:center;line-height:1.4;margin-top:40px}
 /* ── Clean typography overrides ── */
 .card h3 { font-size:12px; color:var(--muted); margin-bottom:14px; text-transform:none; letter-spacing:0; font-weight:600; }
 .page > h2 { font-size:18px; font-weight:600; color:var(--text); margin-bottom:20px; letter-spacing:-.2px; }
@@ -142,6 +146,8 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .dash-kpi { padding:12px 14px; }
 .dash-kpi .val { font-size:20px; }
 .dash-kpi .val, .stock-price, .idx-value, .rec-box .rec-price { font-variant-numeric: tabular-nums; }
+/* 2026-05-20: 全站數字統一 tabular-nums，避免對齊飄 */
+table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabular-nums; }
 /* Tab bar refinement */
 .tab-bar button { font-size:12px; padding:7px 14px; border-radius:6px; }
 /* Scan mini rows cleaner */
@@ -428,8 +434,8 @@ firebase.initializeApp(_fbConfig);
  <div class="card" style="margin-top:20px">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
  <div>
- <div class="section-label" style="margin:0">短線精選 — MSFT / META / GOOGL</div>
- <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔（MSFT・META・GOOGL）・每日更新進出區間・1-7天持倉週期</div>
+ <div class="section-label" style="margin:0">短線追蹤 — MSFT / META / GOOGL</div>
+ <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔・每日更新進出區間・<b>T評分 &lt; 60 不建議進場</b>・1-7天持倉週期</div>
  </div>
  <span id="t-review-badge"></span>
  </div>
@@ -1422,8 +1428,12 @@ async function analyzeStock() {
  const biasColor = entry.bias === 'bullish' ? '#22c55e' : entry.bias === 'bearish' ? '#ef4444' : '#f59e0b';
  const biasLabel = entry.bias === 'bullish' ? '偏多' : entry.bias === 'bearish' ? '偏空' : '中性';
  const stars = '★'.repeat(entry.stars) + '☆'.repeat(5 - entry.stars);
- const genAge = ai.generatedAt ? Math.round((Date.now() - ai.generatedAt) / 3600000) : null;
- const ageNote = genAge != null ? (genAge < 1 ? '剛生成' : genAge + ' 小時前') : '';
+ // 2026-05-20: defensive normalize (秒/毫秒) + clamp 異常
+ const aiTsMs = ai.generatedAt ? (ai.generatedAt < 1e12 ? ai.generatedAt * 1000 : ai.generatedAt) : null;
+ const genAge = aiTsMs ? Math.round((Date.now() - aiTsMs) / 3600000) : null;
+ const ageNote = (genAge != null && genAge >= 0 && genAge < 1e5)
+  ? (genAge < 1 ? '剛生成' : genAge + ' 小時前')
+  : '';
  // Fix F: AI 卡片重構 — 移除星等、降低視覺權重、明標「非獨立訊號」
  const aiCard = '<div class="card" style="border-left:3px dashed rgba(148,163,184,.5);margin-top:12px;background:rgba(255,255,255,.015)">' +
  '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">' +
@@ -2395,8 +2405,9 @@ function renderDecisionCard(ticker, price, ta, cur) {
  const j = getJ();
  const kStats = typeof computeJournalKellyStats === 'function' ? computeJournalKellyStats(j) : null;
  let rawKelly = 0.05;
- let kellyNote = '預設 5%（歷史交易 < 10 筆）';
- if (kStats && kStats.totalTrades >= 10) {
+ let kellyNote = '預設 5%（歷史交易 < 20 筆 = 樣本不足，Kelly 公式無意義）';
+ // 2026-05-20 (信任破洞 #3): 提高 Kelly 顯示門檻 10 → 20 筆，少於 20 顯示警示而非計算值
+ if (kStats && kStats.totalTrades >= 20) {
   rawKelly = Math.max(0, kStats.halfKelly);
   kellyNote = `Half Kelly raw · 勝率 ${(kStats.winRate*100).toFixed(0)}% · 盈虧比 ${kStats.ratio.toFixed(2)}（${kStats.totalTrades} 筆歷史）`;
  }
@@ -3583,17 +3594,13 @@ function addJournal() {
  const stopVal = parseFloat(document.getElementById('j-stop').value) || null;
  const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value, stop: stopVal };
  if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
- // 2026-05-20 (Option B Feature 3): 進場前「靜思 30 秒」
- // 對 buy 強制顯示反思介面 + 倒數，避免衝動下單。可關閉設定。
- // editMode 跳過（編輯舊資料不需反思），sell 跳過（出場決策不在範圍）。
- if (e.action === 'buy' && !window._editJId && !window._skipReflection) {
-  showStaticReflection(e);
-  return;  // 反思結束後會 call _commitJournalEntry(e)
- }
+ // 2026-05-20: 砍進場版靜思 30 秒 — Gemini + Codex + UX agent 一致認定
+ // 是 UX 殺手。盤中分秒必爭，30 秒倒數會被秒關，行為金融學 cooling-off
+ // 應該在「盤後覆盤」做，不是進出場當下。entry-time 反思 modal 移除。
  _commitJournalEntry(e);
 }
 
-// Internal: actual commit logic — separated so static reflection can call it after timer
+// Internal: actual commit logic
 function _commitJournalEntry(e) {
  // 2026-05-19: TW 證交稅 (0.3% sell-only) + 手續費 (0.1425% both sides)
  e.amount = e.price * e.qty; e.fee = e.amount * feeForTrade(e.ticker, e.action); e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
@@ -3660,164 +3667,8 @@ function _commitJournalEntry(e) {
  if (e.action === 'buy') showJournalATRGuide(e.price, e.ticker);
  else { const g = document.getElementById('journal-atr-guide'); if (g) g.style.display = 'none'; }
 }
-// 2026-05-20 (Option B Feature 3): 「靜思 30 秒」反思介面
-// 顯示：當前快照訊號 + 歷史同類訊號勝率 + 倒數 + 確認 / 取消
-function showStaticReflection(e) {
- // Build snapshot for this potential entry (same logic as in _commitJournalEntry's snapshot block)
- const sig = {};
- const rs = (window._rsLeaderCache || []).find(s => s.symbol === e.ticker);
- if (rs) {
-  if (rs.rsRating != null)      sig.rsRating = rs.rsRating;
-  if (rs.compositeScore != null) sig.compositeScore = rs.compositeScore;
-  if (rs.volExpand != null)      sig.volExpand = rs.volExpand;
-  if (rs.vcp && rs.vcp.vcpScore != null) sig.vcpScore = rs.vcp.vcpScore;
-  if (rs.sectorRS != null)       sig.sectorRS = rs.sectorRS;
-  if (rs.high52w && rs.price)    sig.distFromHigh = ((rs.price - rs.high52w) / rs.high52w * 100);
-  if (rs.epsRevision != null)    sig.epsRevision = rs.epsRevision;
- }
- const tr = (window._tripleResonanceCache || []).find(t => t.symbol === e.ticker);
- if (tr) { if (tr.score != null) sig.tripleResonance = tr.score; if (tr.stars != null) sig.tripleStars = tr.stars; }
- if (window._aiAnalysis && window._aiAnalysis.bySymbol) {
-  const ai = window._aiAnalysis.bySymbol.get ? window._aiAnalysis.bySymbol.get(e.ticker) : window._aiAnalysis.bySymbol[e.ticker];
-  if (ai && ai.bias) { sig.aiBias = ai.bias; sig.aiStars = ai.stars; }
- }
- if (window._marketRegime && window._marketRegime.overall != null) sig.regimeOverall = window._marketRegime.overall;
- if (window._insiderDataCache && window._insiderDataCache[e.ticker]) {
-  const ins = window._insiderDataCache[e.ticker];
-  if (ins.netShares != null) sig.insiderNetShares = ins.netShares;
-  if (ins.clusterScore != null) sig.insiderCluster = ins.clusterScore;
- }
-
- // Compute historical hit rate for similar signal stack
- const stats = computePersonalSignalStats(getJ());
- const triggeredSignals = [];
- for (const k of Object.keys(sig)) {
-  const trig = _signalTriggered(sig, k);
-  if (trig === true) triggeredSignals.push(k);
- }
-
- const sigLabels = {
-  rsRating: 'RS Rating ≥80', compositeScore: '綜合分 ≥70', volExpand: '量能放大 ≥1.5x',
-  vcpScore: 'VCP ≥3', sectorRS: '板塊 RS ≥70', distFromHigh: '距 52w 高 <5%',
-  epsRevision: 'EPS 上修', tripleResonance: '三共振 ≥4', aiBias: 'AI 偏多',
-  regimeOverall: '大盤多頭', insiderNetShares: '內部人淨買', insiderCluster: '內部人 cluster',
- };
-
- // Estimate hit rate for this signal stack: avg of each triggered signal's hit rate
- const rates = [];
- for (const k of triggeredSignals) {
-  const s = stats.bySignal[k];
-  if (s && s.triggered >= 3 && s.triggeredWinRate != null) rates.push(s.triggeredWinRate);
- }
- const estHitRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
- const overallHitRate = stats.closedTrades >= 5 ?
-  (() => {
-   const j = getJ();
-   const k = computeJournalKellyStats(j);
-   return k && k.totalTrades >= 5 ? k.winRate : null;
-  })() : null;
-
- // Modal HTML
- const DURATION = 30;
- let html = '<div id="static-reflection-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px">';
- html += '<div style="background:#0f1623;border-radius:14px;max-width:560px;width:100%;padding:24px;border:1px solid rgba(255,255,255,.12)">';
- html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
- html += '<div style="font-size:22px">🧘</div>';
- html += '<div><div style="font-size:16px;font-weight:700">靜思 30 秒</div><div style="font-size:11px;color:var(--muted)">下單前最後檢查 — 不是阻止你，是讓你停 30 秒看清楚</div></div>';
- html += '</div>';
- html += '<div style="padding:14px;background:rgba(99,102,241,.06);border-radius:10px;margin-bottom:14px">';
- html += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px"><b>' + e.ticker + '</b>　@ ' + e.price + '　×' + e.qty + ' 股</div>';
- if (triggeredSignals.length) {
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">當前觸發訊號：</div>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-  for (const k of triggeredSignals) {
-   html += '<span style="font-size:11px;padding:3px 8px;background:rgba(34,197,94,.12);color:#22c55e;border-radius:10px">✓ ' + (sigLabels[k] || k) + '</span>';
-  }
-  html += '</div>';
- } else {
-  html += '<div style="font-size:11px;color:#f59e0b">⚠ 此筆無已快取的系統訊號 — 你是基於什麼進場？請在備註寫清楚。</div>';
- }
- html += '</div>';
-
- if (estHitRate != null && rates.length >= 2) {
-  const color = estHitRate >= 0.6 ? '#22c55e' : estHitRate >= 0.5 ? '#eab308' : '#ef4444';
-  html += '<div style="padding:14px;background:rgba(255,255,255,.02);border-radius:10px;margin-bottom:14px">';
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">過去同類訊號你的歷史勝率</div>';
-  html += '<div style="font-size:28px;font-weight:800;color:' + color + ';font-variant-numeric:tabular-nums">' + (estHitRate * 100).toFixed(0) + '%</div>';
-  html += '<div style="font-size:10px;color:var(--muted);margin-top:4px">基於 ' + rates.length + ' 個觸發訊號的歷史平均</div>';
-  html += '</div>';
- } else if (overallHitRate != null) {
-  html += '<div style="padding:14px;background:rgba(255,255,255,.02);border-radius:10px;margin-bottom:14px">';
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">你的整體歷史勝率（尚無同類訊號樣本）</div>';
-  html += '<div style="font-size:28px;font-weight:800;color:#a5b4fc;font-variant-numeric:tabular-nums">' + (overallHitRate * 100).toFixed(0) + '%</div>';
-  html += '</div>';
- } else {
-  html += '<div style="padding:14px;background:rgba(245,158,11,.06);border-radius:10px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">尚無已平倉交易，無歷史勝率參考。請寫清楚你的<b>進場理由</b>、<b>停損價</b>、<b>什麼條件出場</b>。</div>';
- }
-
- html += '<div style="padding:10px 14px;background:rgba(255,255,255,.02);border-radius:8px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.8">';
- html += '想清楚以下三件事：<br>1. 我憑什麼覺得它會漲？<br>2. 錯了會在哪裡停損？跌多少我認賠？<br>3. 對了我準備持有多久？目標多少？';
- html += '</div>';
-
- html += '<div style="display:flex;gap:10px;align-items:center">';
- html += '<button id="reflection-confirm" disabled style="flex:1;padding:12px;background:rgba(34,197,94,.3);border:1px solid rgba(34,197,94,.4);border-radius:8px;color:#22c55e;font-weight:700;cursor:not-allowed;font-size:14px">✓ 確認下單 <span id="reflection-countdown">(' + DURATION + ')</span></button>';
- html += '<button onclick="cancelStaticReflection()" style="flex:1;padding:12px;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:8px;color:#ef4444;font-weight:600;cursor:pointer;font-size:13px">✕ 取消，再想想</button>';
- html += '</div>';
- html += '<div style="margin-top:10px;text-align:center"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="reflection-skip-once" style="vertical-align:middle"> 這次先跳過反思（不建議）</label></div>';
- html += '</div></div>';
-
- document.body.insertAdjacentHTML('beforeend', html);
-
- // Stash pending entry
- window._pendingJournalEntry = e;
-
- // Skip-once handler
- const skipBox = document.getElementById('reflection-skip-once');
- if (skipBox) skipBox.addEventListener('change', function() {
-  if (this.checked) {
-   document.getElementById('static-reflection-modal').remove();
-   window._skipReflection = true;
-   _commitJournalEntry(window._pendingJournalEntry);
-   window._pendingJournalEntry = null;
-   setTimeout(() => { window._skipReflection = false; }, 100);  // reset after this entry
-  }
- });
-
- // Countdown
- let remaining = DURATION;
- const cdEl = document.getElementById('reflection-countdown');
- const confirmBtn = document.getElementById('reflection-confirm');
- const timer = setInterval(() => {
-  remaining--;
-  if (cdEl) cdEl.textContent = '(' + remaining + ')';
-  if (remaining <= 0) {
-   clearInterval(timer);
-   if (confirmBtn) {
-    confirmBtn.disabled = false;
-    confirmBtn.style.background = 'rgba(34,197,94,.6)';
-    confirmBtn.style.cursor = 'pointer';
-    confirmBtn.innerHTML = '✓ 確認下單';
-    confirmBtn.onclick = confirmStaticReflection;
-   }
-   if (cdEl) cdEl.remove();
-  }
- }, 1000);
- window._reflectionTimer = timer;
-}
-function confirmStaticReflection() {
- const modal = document.getElementById('static-reflection-modal');
- if (modal) modal.remove();
- if (window._reflectionTimer) { clearInterval(window._reflectionTimer); window._reflectionTimer = null; }
- const e = window._pendingJournalEntry;
- window._pendingJournalEntry = null;
- if (e) _commitJournalEntry(e);
-}
-function cancelStaticReflection() {
- const modal = document.getElementById('static-reflection-modal');
- if (modal) modal.remove();
- if (window._reflectionTimer) { clearInterval(window._reflectionTimer); window._reflectionTimer = null; }
- window._pendingJournalEntry = null;
-}
+// 2026-05-20: 「靜思 30 秒」進場版已整段移除（Gemini + Codex 一致：盤中摩擦力是 UX 殺手）
+// 個人化命中率 + 你為什麼贏/輸 兩個盤後分析功能仍保留（在 持倉管理 → 🎯）
 
 function exportJournalCSV() {
  const j = getJ();
@@ -6518,11 +6369,21 @@ function renderRegimeBanner() {
      (r.yieldSpread < -0.3 ? ' ⚠ 曲線倒掛' : '') +
      '</span>'
    : '';
- const hmmBadge = r.hmm
-   ? '<span style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);margin-left:8px">' +
-     'HMM: <span style="color:' + r.hmm.stateColor + ';font-weight:700">' + r.hmm.stateName + '</span>' +
-     ' <span style="color:var(--muted)">(' + Math.round(r.hmm.confidence * 100) + '%)</span></span>'
-   : '';
+ // 2026-05-20 (信任破洞 #2 修)：HMM 自打臉的修法 —
+ // 1) HMM 信心 < 60% = 噪音，不顯示
+ // 2) HMM 跟主 trend 一致 = 加強信號，灰色顯示
+ // 3) HMM 跟主 trend 矛盾且信心高 = 顯示「⚠ 模型分歧」單一警示，不要兩個矛盾 label
+ const hmmState = r.hmm && r.hmm.confidence >= 0.6 ? r.hmm : null;  // 只在 ≥60% 才顯示
+ const hmmAgrees = hmmState && (
+   (r.trend === 'bull' && hmmState.state === 0) ||
+   (r.trend === 'neutral' && hmmState.state === 1) ||
+   ((r.trend === 'bear' || r.trend === 'caution') && hmmState.state === 2)
+ );
+ const hmmContradicts = hmmState && !hmmAgrees;
+ const hmmBadge = !hmmState ? ''
+   : hmmContradicts
+   ? '<span title="HMM 隱馬可夫模型偵測到跟趨勢線不同的訊號 — 二次確認或縮小倉位" style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#f59e0b;margin-left:8px;font-weight:600">⚠ 模型分歧（HMM ' + hmmState.stateName + ' ' + Math.round(hmmState.confidence * 100) + '%）</span>'
+   : '<span title="HMM 跟趨勢線一致 — 訊號強化" style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);margin-left:8px">✓ HMM 一致（' + hmmState.stateName + ' ' + Math.round(hmmState.confidence * 100) + '%）</span>';
  el.innerHTML =
  '<div style="padding:12px 16px;border-radius:10px;border:1px solid ' + tc.border + ';background:' + tc.bg + ';display:flex;gap:16px;flex-wrap:wrap;align-items:center">' +
  '<div style="flex:1;min-width:160px">' +
@@ -6970,10 +6831,11 @@ function showEduTab(tab) {
    try {
     const j = getJ();
     const stats = computeJournalKellyStats ? computeJournalKellyStats(j) : null;
-    if (stats && stats.totalTrades >= 10) {
+    // 2026-05-20 (信任破洞 #3): 提高門檻 10 → 20，少於 20 不顯示計算值
+    if (stats && stats.totalTrades >= 20) {
      eduKelly.innerHTML = '📊 你的歷史 ' + stats.totalTrades + ' 筆已平倉交易：勝率 <b>' + (stats.winRate*100).toFixed(0) + '%</b>、盈虧比 <b>' + stats.ratio.toFixed(2) + '</b> → Half Kelly 建議 <b style="color:var(--accent)">' + (stats.halfKelly*100).toFixed(1) + '%</b>/筆';
     } else if (stats && stats.totalTrades > 0) {
-     eduKelly.innerHTML = '📊 已平倉交易 ' + stats.totalTrades + ' 筆（需累積 10+ 才能計算 Kelly）';
+     eduKelly.innerHTML = '📊 已平倉交易 ' + stats.totalTrades + ' 筆（需累積 <b>20+</b> 才能計算 Kelly — 少於 20 筆數學上無意義）';
     } else {
      eduKelly.innerHTML = '📊 尚無已平倉交易，先到風控中心累積歷史資料';
     }
@@ -7119,8 +6981,9 @@ function renderPersonalEdge() {
   el.innerHTML = '<div class="card" style="text-align:center;padding:40px"><div style="font-size:32px;margin-bottom:12px">🎯</div><h3>尚無快照資料</h3><p style="color:var(--muted);line-height:1.7;max-width:520px;margin:14px auto 0;font-size:13px">「個人化命中率」需要先累積帶有訊號快照的交易紀錄。<br>從 <b>2026-05-20</b> 起，每筆「買入」會自動快照當時 RS、VCP、三共振、AI、市場大環境等訊號。<br>結案後（你賣出後），這頁會幫你算出 <b>對你個人</b> 哪個訊號真的有用、哪個沒用。<br><br>下一步：照常使用，先累積 10+ 筆已平倉交易再回來看。</p></div>';
   return;
  }
- if (stats.closedTrades < 5) {
-  el.innerHTML = '<div class="card"><h3>🎯 個人化命中率（資料不足）</h3><p style="color:var(--muted);line-height:1.7">已快照 ' + totalEntries + ' 筆買入訊號，但已平倉交易只有 ' + stats.closedTrades + ' 筆（需 5+ 才開始有意義，30+ 才算可靠）。</p><p style="color:var(--muted);margin-top:8px;font-size:12px">繼續使用就好，賣出後系統會自動計入。</p></div>';
+ // 2026-05-20 (信任破洞 #3): 提高門檻 — 5 筆樣本是擲硬幣等級，需 20+
+ if (stats.closedTrades < 20) {
+  el.innerHTML = '<div class="card"><h3>🎯 個人化命中率（資料不足）</h3><p style="color:var(--muted);line-height:1.7">已快照 ' + totalEntries + ' 筆買入訊號，已平倉交易 <b>' + stats.closedTrades + ' 筆</b>。<br><b>需 20+ 才會顯示</b>（少於 20 筆都是噪音 — 不騙你也不騙自己），30+ 才算可靠。</p><p style="color:var(--muted);margin-top:8px;font-size:12px">繼續使用就好，賣出後系統會自動計入。</p></div>';
   return;
  }
  // Labels
@@ -7213,8 +7076,10 @@ function renderWinLossAnalysis(j) {
  }
  const wins = closed.filter(t => t.ret > 0);
  const losses = closed.filter(t => t.ret <= 0);
- if (wins.length < 3 || losses.length < 3) {
-  return '<div class="card"><h3>📈 你為什麼贏 / 輸（樣本不足）</h3><p style="color:var(--muted);font-size:12px">需要 3+ 贏家 + 3+ 輸家才能比對特徵。目前贏 ' + wins.length + ' / 輸 ' + losses.length + '。</p></div>';
+ // 2026-05-20 (信任破洞 #3): 提高樣本門檻 — 3/3=6 個樣本是擲硬幣等級，
+ // Codex 點出「樣本不足還放 Sharpe」是嚴重信任問題
+ if (wins.length < 10 || losses.length < 10) {
+  return '<div class="card"><h3>📈 你為什麼贏 / 輸（樣本不足）</h3><p style="color:var(--muted);font-size:12px">需要 <b>10+ 贏家 + 10+ 輸家</b>（共 20+ 已平倉）才有統計意義。目前贏 ' + wins.length + ' / 輸 ' + losses.length + '。<br>少於 20 筆任何比對都是噪音，不會顯示。</p></div>';
  }
  // Compute mean for numeric signals + frequency for categorical
  const numericKeys = ['rsRating','compositeScore','volExpand','vcpScore','sectorRS','distFromHigh','epsRevision','tripleResonance','regimeOverall'];
@@ -9267,8 +9132,12 @@ function renderMarketNarrative(data) {
   badgeEl.textContent = regimeLabels[data.regime] || data.regime;
  }
  if (metaEl) {
-  const ageMin = Math.round((Date.now() - data.generatedAt) / 60000);
-  metaEl.textContent = ageMin < 60 ? ageMin + ' 分鐘前生成' : Math.round(ageMin / 60) + ' 小時前生成';
+  // 2026-05-20: defensive — 處理舊資料用秒、新資料用 ms 的情況
+  const tsMs = data.generatedAt ? (data.generatedAt < 1e12 ? data.generatedAt * 1000 : data.generatedAt) : null;
+  const ageMin = tsMs ? Math.round((Date.now() - tsMs) / 60000) : null;
+  metaEl.textContent = (ageMin != null && ageMin >= 0 && ageMin < 1e6)
+   ? (ageMin < 60 ? ageMin + ' 分鐘前生成' : Math.round(ageMin / 60) + ' 小時前生成')
+   : '';
  }
  if (rotateEl) {
   const into = (data.sectorRotation && data.sectorRotation.into) || [];
@@ -9292,14 +9161,19 @@ function renderTripleResonance(candidates, meta) {
   if (!el) return;
 
   if (metaEl) {
+    // 2026-05-20: clamp 異常時間 (NaN, 負, 過大) 避免顯示「493749 小時前」
     if (meta && meta.scannedAt) {
       const t = new Date(meta.scannedAt);
-      const ageMin = Math.round((Date.now() - t.getTime()) / 60000);
-      const ageLabel = ageMin < 60 ? ageMin + ' 分鐘前' : Math.round(ageMin / 60) + ' 小時前';
-      metaEl.textContent = '掃描 ' + ageLabel;
-    } else {
-      metaEl.textContent = '';
-    }
+      const tms = t.getTime();
+      if (!isNaN(tms)) {
+        const ageMin = Math.round((Date.now() - tms) / 60000);
+        if (ageMin >= 0 && ageMin < 1e6) {
+          metaEl.textContent = '掃描 ' + (ageMin < 60 ? ageMin + ' 分鐘前' : Math.round(ageMin / 60) + ' 小時前');
+        } else {
+          metaEl.textContent = '';
+        }
+      } else { metaEl.textContent = ''; }
+    } else { metaEl.textContent = ''; }
   }
 
   if (!candidates || !candidates.length) {
@@ -11775,8 +11649,12 @@ async function renderStrategyPerformance() {
     '</tr>';
   }).join('');
 
-  const generatedAge = stats.computedAt ? Math.round((Date.now() - stats.computedAt) / 60000) : null;
-  const ageLabel = generatedAge != null ? (generatedAge < 60 ? generatedAge + ' 分鐘前' : Math.round(generatedAge / 60) + ' 小時前') : '';
+  // 2026-05-20: 修「493749 小時前更新」 — 舊資料 computedAt 是秒，新資料是 ms。defensive normalize
+  const computedMs = stats.computedAt ? (stats.computedAt < 1e12 ? stats.computedAt * 1000 : stats.computedAt) : null;
+  const generatedAge = computedMs ? Math.round((Date.now() - computedMs) / 60000) : null;
+  const ageLabel = (generatedAge != null && generatedAge >= 0 && generatedAge < 1e6)
+    ? (generatedAge < 60 ? generatedAge + ' 分鐘前' : Math.round(generatedAge / 60) + ' 小時前')
+    : '';
 
   tableDiv.innerHTML =
     '<div style="margin-bottom:12px;padding:10px 14px;background:rgba(99,102,241,.05);border-radius:8px;font-size:12px;line-height:1.7">' +
@@ -12311,7 +12189,29 @@ async function renderDashTTrading() {
  '</div>';
  } else {
  // ── 無持倉模式 ────────────────────────────────────────
- const scoreColor = (ts?.score||0) >= 80 ? 'var(--green)' : (ts?.score||0) >= 65 ? 'var(--yellow)' : 'var(--muted)';
+ // 2026-05-20 (信任破洞 #4): T 評分 < 60 不顯示買區/進場按鈕，避免「評分 44 還推薦」的矛盾
+ const scoreVal = ts?.score || 0;
+ const scoreColor = scoreVal >= 80 ? 'var(--green)' : scoreVal >= 65 ? 'var(--yellow)' : scoreVal >= 60 ? 'var(--orange)' : 'var(--red)';
+ const tooLow = scoreVal < 60;
+ const lowBanner = tooLow
+   ? '<div style="padding:10px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;margin:8px 0;font-size:11px;color:#fca5a5;line-height:1.6">⛔ T評分 ' + scoreVal + '/100 — <b>目前不建議進場</b>。等候評分回升至 60+ 再考慮。買區/進場按鈕已隱藏。</div>'
+   : '';
+ const zones = tooLow ? '' :
+   '<div class="t-zone-row"><span>買區</span><span class="t-zone-val" style="color:var(--green)">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</span></div>' +
+   '<div class="t-zone-row"><span>賣區</span><span class="t-zone-val" style="color:var(--red)">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</span></div>' +
+   '<div class="t-zone-row"><span>停損</span><span class="t-zone-val" style="color:var(--muted)">$' + (ts?.stop||0).toFixed(2) + '</span></div>' +
+   '<div class="t-zone-row"><span>ATR%</span><span class="t-zone-val">' + (ts?.atrPct||0).toFixed(1) + '%</span></div>';
+ const actionRow = tooLow
+   ? '<div style="margin-top:10px"><button class="btn btn-sm" style="width:100%;background:rgba(100,100,100,.15);color:var(--muted);border:1px solid var(--border)" onclick="showTGuide(\'' + stock.symbol + '\')"> 查看為何評分低</button></div>'
+   : '<div id="t-entry-form-' + stock.symbol + '" class="t-entry-form" style="display:none">' +
+     '<input id="t-entry-' + stock.symbol + '" type="number" step="0.01" placeholder="進場價格 (USD)">' +
+     '<button class="btn btn-primary btn-sm" onclick="recordTEntry(\'' + stock.symbol + '\')">確認</button>' +
+     '<button class="btn btn-sm" style="background:rgba(100,100,100,.2)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'none\'">取消</button>' +
+     '</div>' +
+     '<div style="display:flex;gap:8px;margin-top:10px">' +
+     '<button class="btn btn-sm" style="flex:1;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'flex\'"> 記錄進場</button>' +
+     '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')"> 進場指引</button>' +
+     '</div>';
  return '<div class="t-card" id="t-card-' + stock.symbol + '">' +
  '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
  '<div><b style="color:var(--accent);font-size:16px">' + stock.symbol + '</b><span style="color:var(--muted);font-size:12px;margin-left:6px">' + stock.name + '</span></div>' +
@@ -12319,20 +12219,10 @@ async function renderDashTTrading() {
  '<div style="font-size:11px;color:' + (up?'var(--green)':'var(--red)') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '%</div></div>' +
  '</div>' +
  '<div style="font-size:11px;color:var(--muted);margin-bottom:10px"> ' + stock.cycle + '</div>' +
- '<div style="font-size:11px;font-weight:600;color:' + scoreColor + ';margin-bottom:8px">T評分 ' + (ts?.score||0) + '/100 ' + (ts?.label||'—') + '</div>' +
- '<div class="t-zone-row"><span>買區</span><span class="t-zone-val" style="color:var(--green)">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</span></div>' +
- '<div class="t-zone-row"><span>賣區</span><span class="t-zone-val" style="color:var(--red)">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</span></div>' +
- '<div class="t-zone-row"><span>停損</span><span class="t-zone-val" style="color:var(--muted)">$' + (ts?.stop||0).toFixed(2) + '</span></div>' +
- '<div class="t-zone-row"><span>ATR%</span><span class="t-zone-val">' + (ts?.atrPct||0).toFixed(1) + '%</span></div>' +
- '<div id="t-entry-form-' + stock.symbol + '" class="t-entry-form" style="display:none">' +
- '<input id="t-entry-' + stock.symbol + '" type="number" step="0.01" placeholder="進場價格 (USD)">' +
- '<button class="btn btn-primary btn-sm" onclick="recordTEntry(\'' + stock.symbol + '\')">確認</button>' +
- '<button class="btn btn-sm" style="background:rgba(100,100,100,.2)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'none\'">取消</button>' +
- '</div>' +
- '<div style="display:flex;gap:8px;margin-top:10px">' +
- '<button class="btn btn-sm" style="flex:1;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'flex\'"> 記錄進場</button>' +
- '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')"> 進場指引</button>' +
- '</div>' +
+ '<div style="font-size:11px;font-weight:600;color:' + scoreColor + ';margin-bottom:8px">T評分 ' + scoreVal + '/100 ' + (ts?.label||'—') + '</div>' +
+ lowBanner +
+ zones +
+ actionRow +
  '</div>';
  }
  });
