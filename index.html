@@ -607,6 +607,20 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
    <div id="alpaca-positions" style="margin-top:14px;font-size:12px"></div>
   </div>
  </div>
+
+ <!-- 2026-05-21 Sprint 5-D: Alpaca Live Trading（透過 Worker proxy）-->
+ <div id="alpaca-live-section" class="card" style="margin-top:16px;border-left:3px solid #ef4444">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+   <h3 style="margin:0">🔴 Alpaca Live Trading <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">真錢 — Key 存在 Cloudflare Worker，不在前端</span></h3>
+   <span id="alpaca-live-status" style="font-size:11px;color:var(--muted)">檢查中...</span>
+  </div>
+  <div id="alpaca-live-content">
+   <div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">載入中...</div>
+  </div>
+  <div style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.6;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:4px">
+   🔒 安全模型：API key 存在 Cloudflare Worker secrets，前端 view-source 看不到。Worker 限制只接受從你的 GitHub Pages domain 呼叫，且只開放 read-only endpoints（不會被攻擊者下單）。要中斷連線：<code>cd workers && wrangler secret delete ALPACA_LIVE_KEY_ID</code>
+  </div>
+ </div>
  </div>
  <div id="journal-tab-personal-edge" style="display:none">
  <div id="personal-edge-content"></div>
@@ -4079,10 +4093,149 @@ async function syncAlpacaToJournal() {
  window.switchJournalTab = function(tab) {
   origSwitchJournalTab(tab);
   if (tab === 'risk') {
-   setTimeout(() => { if (_getAlpacaCreds()) renderAlpacaStatus(null); }, 100);
+   setTimeout(() => {
+    if (_getAlpacaCreds()) renderAlpacaStatus(null);
+    // 2026-05-21 Sprint 5-D: 同時也載 Live 狀態
+    renderAlpacaLive();
+   }, 100);
   }
  };
 })();
+
+// ─── 2026-05-21 Sprint 5-D: Alpaca Live Trading（透過 Worker proxy） ─────────
+const ALPACA_WORKER_URL = 'https://stock-tool-broker-oauth.7nzgpk2hdz.workers.dev';
+
+async function _liveFetch(endpoint) {
+ const r = await fetch(ALPACA_WORKER_URL + endpoint, { signal: AbortSignal.timeout(15000) });
+ if (!r.ok) {
+  const txt = await r.text();
+  throw new Error('Worker ' + r.status + ': ' + txt.slice(0, 200));
+ }
+ return r.json();
+}
+
+async function renderAlpacaLive() {
+ const status = document.getElementById('alpaca-live-status');
+ const content = document.getElementById('alpaca-live-content');
+ if (!status || !content) return;
+ // Health check first
+ try {
+  const health = await _liveFetch('/health');
+  if (!health.alpaca_keys_configured) {
+   status.innerHTML = '<span style="color:var(--muted)">未配置 Live key</span>';
+   content.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px;line-height:1.7">' +
+    'Worker 部署完成但還沒設 Live API key。<br>步驟：<br>' +
+    '1. <a href="https://app.alpaca.markets/" target="_blank" rel="noopener" style="color:#a5b4fc">app.alpaca.markets</a> → 切到 Live Trading → Generate New Keys<br>' +
+    '2. Terminal 跑：<code style="background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px">cd workers && npx wrangler secret put ALPACA_LIVE_KEY_ID</code><br>' +
+    '3. 再跑：<code style="background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px">npx wrangler secret put ALPACA_LIVE_SECRET</code><br>' +
+    '4. 重新整理本頁' +
+    '</div>';
+   return;
+  }
+ } catch(e) {
+  status.innerHTML = '<span style="color:#ef4444">Worker 連不到</span>';
+  content.innerHTML = '<div style="padding:12px;color:#fca5a5;font-size:12px">無法連線 Worker：' + escapeHtml(e.message) + '<br><br>確認你已部署 Worker：<code>cd workers && wrangler deploy</code></div>';
+  return;
+ }
+ // Fetch account
+ try {
+  const acc = await _liveFetch('/alpaca/account');
+  const accColor = acc.status === 'ACTIVE' ? '#22c55e' : '#f59e0b';
+  status.innerHTML = '<span style="color:' + accColor + '">✓ 已連線（' + acc.status + '）</span>';
+  // Top KPIs
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">' +
+   _liveKpi('帳號', '#' + acc.account_number, 'var(--text)') +
+   _liveKpi('組合價值', '$' + Number(acc.portfolio_value).toLocaleString(undefined, {maximumFractionDigits:2}), 'var(--accent)') +
+   _liveKpi('現金', '$' + Number(acc.cash).toLocaleString(undefined, {maximumFractionDigits:2}), 'var(--muted)') +
+   _liveKpi('購買力', '$' + Number(acc.buying_power).toLocaleString(undefined, {maximumFractionDigits:2}), 'var(--muted)') +
+   '</div>';
+  // Positions
+  try {
+   const positions = await _liveFetch('/alpaca/positions');
+   if (positions.length) {
+    html += '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px">當前持倉（' + positions.length + '）</div>' +
+     '<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse">' +
+     '<thead><tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.08)"><th style="text-align:left;padding:4px 6px">代號</th><th style="text-align:right;padding:4px 6px">數量</th><th style="text-align:right;padding:4px 6px">均價</th><th style="text-align:right;padding:4px 6px">現價</th><th style="text-align:right;padding:4px 6px">市值</th><th style="text-align:right;padding:4px 6px">未實現損益</th></tr></thead><tbody>' +
+     positions.map(p => {
+      const upl = parseFloat(p.unrealized_pl);
+      const uplPct = parseFloat(p.unrealized_plpc) * 100;
+      const uplColor = upl >= 0 ? '#22c55e' : '#ef4444';
+      return '<tr><td style="padding:4px 6px"><b>' + escapeHtml(p.symbol) + '</b></td>' +
+       '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">' + p.qty + '</td>' +
+       '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.avg_entry_price).toFixed(2) + '</td>' +
+       '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.current_price).toFixed(2) + '</td>' +
+       '<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums">$' + Number(p.market_value).toFixed(0) + '</td>' +
+       '<td style="text-align:right;padding:4px 6px;color:' + uplColor + ';font-weight:600;font-variant-numeric:tabular-nums">' + (upl >= 0 ? '+' : '') + '$' + upl.toFixed(0) + '<br><span style="font-size:10px">' + (uplPct >= 0 ? '+' : '') + uplPct.toFixed(2) + '%</span></td></tr>';
+     }).join('') +
+     '</tbody></table></div>';
+   } else {
+    html += '<div style="color:var(--muted);font-size:11px;padding:8px 0">當前無 Live 持倉</div>';
+   }
+  } catch(e) {
+   html += '<div style="color:#fca5a5;font-size:11px">持倉載入失敗：' + escapeHtml(e.message) + '</div>';
+  }
+  // Action buttons
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">' +
+   '<button onclick="syncAlpacaLiveToJournal()" style="padding:8px 14px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:6px;color:#22c55e;cursor:pointer;font-size:12px;font-weight:600">⬇ 同步 Live 訂單到 Journal</button>' +
+   '<button onclick="renderAlpacaLive()" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px">🔄 重新整理</button>' +
+   '</div>';
+  content.innerHTML = html;
+ } catch(e) {
+  status.innerHTML = '<span style="color:#ef4444">API 失敗</span>';
+  content.innerHTML = '<div style="color:#fca5a5;font-size:12px;padding:8px">無法呼叫 Alpaca API：' + escapeHtml(e.message) + '<br><br>可能原因：<br>• Worker secrets 設錯（重新跑 wrangler secret put）<br>• Alpaca Live 帳號未啟用</div>';
+ }
+}
+
+function _liveKpi(label, val, color) {
+ return '<div style="padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px;border:1px solid var(--border)">' +
+  '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">' + label + '</div>' +
+  '<div style="font-size:14px;font-weight:700;color:' + color + ';font-variant-numeric:tabular-nums">' + val + '</div>' +
+  '</div>';
+}
+
+async function syncAlpacaLiveToJournal() {
+ if (!confirm('同步 Live 已成交訂單到 Journal？\n• 會自動跳過已存在紀錄\n• Live 訂單會標記為 [Alpaca Live]')) return;
+ try {
+  const orders = await _liveFetch('/alpaca/orders?status=filled&limit=200&direction=desc');
+  if (!orders.length) { alert('沒有已成交訂單可同步'); return; }
+  const j = getJ();
+  const existing = new Set(j.filter(e => e.alpacaOrderId).map(e => e.alpacaOrderId));
+  let added = 0, skipped = 0;
+  for (const o of orders) {
+   if (existing.has(o.id)) { skipped++; continue; }
+   const filledQty = parseInt(o.filled_qty);
+   const filledPrice = parseFloat(o.filled_avg_price);
+   if (!filledQty || !filledPrice) continue;
+   const e = {
+    id: Date.now() + Math.floor(Math.random() * 1000) + added,
+    alpacaOrderId: o.id,
+    alpacaSource: 'live',
+    date: (o.filled_at || o.submitted_at || '').slice(0, 10),
+    ticker: o.symbol,
+    action: o.side === 'buy' ? 'buy' : 'sell',
+    price: filledPrice,
+    qty: filledQty,
+    strategy: 'swing',
+    notes: '[Alpaca Live] ' + (o.order_type || 'market'),
+   };
+   e.amount = e.price * e.qty;
+   e.fee = 0;
+   e.net = e.amount;
+   j.unshift(e);
+   added++;
+  }
+  if (added) {
+   j.sort((a, b) => new Date(b.date) - new Date(a.date));
+   saveJ(j);
+   renderJournal();
+   alert('✅ 同步 ' + added + ' 筆 Live 交易（跳過 ' + skipped + ' 筆已存在）');
+  } else {
+   alert('沒有新交易（' + skipped + ' 筆已存在）');
+  }
+ } catch(e) {
+  alert('同步失敗：' + e.message);
+ }
+}
 
 // 2026-05-21 Sprint 3-A + 4-B: 從券商對帳單 CSV 匯入交易紀錄
 // 支援 6 家券商 preset（自動偵測）：
