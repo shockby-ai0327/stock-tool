@@ -523,17 +523,22 @@ firebase.initializeApp(_fbConfig);
  <div id="localstorage-notice" style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:12px"><span>資料儲存於本機瀏覽器。建議登入 Google 帳號以跨裝置同步，或定期匯出 CSV 備份。</span><button onclick="document.getElementById('localstorage-notice').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;flex-shrink:0">×</button></div>
  <div class="card">
  <h3>新增交易紀錄</h3>
+ <!-- 2026-05-21 Sprint 2-A: 加 thesis / 失效條件 / R 倍數 / setup 類型，符合波段交易實際決策結構 -->
  <div class="journal-form">
  <div class="form-group"><label>日期</label><input type="date" id="j-date"></div>
  <div class="form-group"><label>股票代號</label><input id="j-ticker" placeholder="AAPL"></div>
  <div class="form-group"><label>買/賣</label><select id="j-action"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
  <div class="form-group"><label>價格</label><input type="number" id="j-price" step="0.01" placeholder="150.00"></div>
  <div class="form-group"><label>數量</label><input type="number" id="j-qty" placeholder="100"></div>
- <div class="form-group"><label>策略</label><select id="j-strategy"><option value="value">價值投資</option><option value="swing">波段交易</option><option value="day">當沖</option><option value="other">其他</option></select></div>
- <div class="form-group"><label>停損價（選填）</label><input type="number" id="j-stop" step="0.01" placeholder="e.g. 125.00"></div>
- <div class="form-group"><label>手續費率</label><input type="text" value="買賣各 0.3%（自動計算）" disabled style="color:var(--orange);font-size:12px"></div>
+ <div class="form-group"><label>Setup 類型</label><select id="j-setup"><option value="">— 選擇 —</option><option value="breakout">突破 (52w 高 / VCP pivot)</option><option value="pullback">回檔 (20MA / 趨勢線)</option><option value="earnings">財報前 (EPS 修正)</option><option value="institutional">法人/內部人</option><option value="bottom">抄底 / 反轉</option><option value="other">其他</option></select></div>
+ <div class="form-group"><label>策略</label><select id="j-strategy"><option value="swing">波段交易</option><option value="value">價值投資</option><option value="day">當沖</option><option value="position">趨勢長線</option><option value="other">其他</option></select></div>
+ <div class="form-group"><label>停損價</label><input type="number" id="j-stop" step="0.01" placeholder="e.g. 125.00（必填）"></div>
+ <div class="form-group"><label>目標價（1R/2R/3R）</label><input type="number" id="j-target" step="0.01" placeholder="e.g. 175.00（選填）"></div>
+ <div class="form-group full"><label>進場 Thesis（為什麼買 — 30 字內）</label><input id="j-thesis" placeholder="例：RS95 + VCP 第 3 base + 量縮 → 等突破 152 進場"></div>
+ <div class="form-group full"><label>失效條件（什麼會讓你出場 — 不是停損，是 thesis 失效）</label><input id="j-invalidate" placeholder="例：跌破 20MA / 量能持續萎縮 / 大盤跌破 200MA"></div>
+ <div class="form-group full"><label>備註</label><textarea id="j-notes" placeholder="其他觀察、心理狀態..."></textarea></div>
  <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addJournal()">新增紀錄</button></div>
- <div class="form-group full"><label>備註</label><textarea id="j-notes" placeholder="交易理由、觀察..."></textarea></div>
+ <div id="j-r-preview" style="grid-column:1/-1;display:none;padding:8px 12px;background:rgba(99,102,241,.06);border-radius:6px;font-size:11px;color:var(--muted);line-height:1.6"></div>
  </div>
  <div id="journal-atr-guide" style="display:none;margin-top:12px;padding:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px">
  <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:10px">進場計算（ATR 參考）</div>
@@ -3662,11 +3667,37 @@ function getJ() { return JSON.parse(localStorage.getItem('stock-journal') || '[]
 function saveJ(d) { localStorage.setItem('stock-journal', JSON.stringify(d)); syncField('journal', d); }
 function addJournal() {
  const stopVal = parseFloat(document.getElementById('j-stop').value) || null;
- const e = { id: Date.now(), date: document.getElementById('j-date').value, ticker: document.getElementById('j-ticker').value.toUpperCase(), action: document.getElementById('j-action').value, price: parseFloat(document.getElementById('j-price').value), qty: parseInt(document.getElementById('j-qty').value), strategy: document.getElementById('j-strategy').value, notes: document.getElementById('j-notes').value, stop: stopVal };
+ // 2026-05-21 Sprint 2-A: 擴充 journal entry 結構
+ const targetVal = parseFloat(document.getElementById('j-target')?.value) || null;
+ const setup = document.getElementById('j-setup')?.value || '';
+ const thesis = document.getElementById('j-thesis')?.value || '';
+ const invalidate = document.getElementById('j-invalidate')?.value || '';
+ const e = {
+  id: Date.now(),
+  date: document.getElementById('j-date').value,
+  ticker: document.getElementById('j-ticker').value.toUpperCase(),
+  action: document.getElementById('j-action').value,
+  price: parseFloat(document.getElementById('j-price').value),
+  qty: parseInt(document.getElementById('j-qty').value),
+  strategy: document.getElementById('j-strategy').value,
+  setup: setup,        // breakout / pullback / earnings / institutional / bottom / other
+  notes: document.getElementById('j-notes').value,
+  stop: stopVal,
+  target: targetVal,
+  thesis: thesis,
+  invalidate: invalidate,
+ };
  if (!e.date || !e.ticker || !e.price || !e.qty) { alert('請填寫完整資料'); return; }
- // 2026-05-20: 砍進場版靜思 30 秒 — Gemini + Codex + UX agent 一致認定
- // 是 UX 殺手。盤中分秒必爭，30 秒倒數會被秒關，行為金融學 cooling-off
- // 應該在「盤後覆盤」做，不是進出場當下。entry-time 反思 modal 移除。
+ // Compute R multiple if buy + has stop
+ if (e.action === 'buy' && e.stop && e.stop < e.price) {
+  e.riskPerShare = e.price - e.stop;
+  e.riskAmount   = e.riskPerShare * e.qty;
+  if (e.target && e.target > e.price) {
+   e.rewardPerShare = e.target - e.price;
+   e.rrRatio = e.rewardPerShare / e.riskPerShare;
+  }
+ }
+ // 2026-05-20: 砍進場版靜思 30 秒（Gemini + Codex）
  _commitJournalEntry(e);
 }
 
@@ -3733,6 +3764,11 @@ function _commitJournalEntry(e) {
  const j = getJ(); j.unshift(e); saveJ(j);
  }
  document.getElementById('j-ticker').value = ''; document.getElementById('j-price').value = ''; document.getElementById('j-qty').value = ''; document.getElementById('j-notes').value = ''; document.getElementById('j-stop').value = '';
+ // 2026-05-21: 重置新增的欄位
+ const _resetIds = ['j-target','j-thesis','j-invalidate'];
+ _resetIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+ const _setup = document.getElementById('j-setup'); if (_setup) _setup.value = '';
+ const rPre = document.getElementById('j-r-preview'); if (rPre) rPre.style.display = 'none';
  renderJournal();
  if (e.action === 'buy') showJournalATRGuide(e.price, e.ticker);
  else { const g = document.getElementById('journal-atr-guide'); if (g) g.style.display = 'none'; }
@@ -3744,12 +3780,17 @@ function exportJournalCSV() {
  const j = getJ();
  if (!j.length) { alert('尚無交易紀錄'); return; }
  const BOM = '﻿';
- const headers = ['日期','代號','動作','價格','數量','金額','手續費','實收/實付','策略','停損價','備註'];
+ // 2026-05-21 Sprint 2-A: CSV 加 setup / thesis / 失效條件 / target / R:R 欄位
+ const headers = ['日期','代號','動作','價格','數量','金額','手續費','實收/實付','策略','Setup類型','停損價','目標價','R:R','進場Thesis','失效條件','備註'];
+ const csvSafe = s => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+ const setupLabels = { breakout:'突破', pullback:'回檔', earnings:'財報前', institutional:'法人/內部人', bottom:'抄底', other:'其他' };
  const rows = j.map(e => [
  e.date, e.ticker, e.action==='buy'?'買入':'賣出',
  e.price, e.qty, (e.amount||0).toFixed(0), (e.fee||0).toFixed(0), (e.net||0).toFixed(0),
- e.strategy, e.stop||'',
- '"'+(e.notes||'').replace(/"/g,'""')+'"'
+ e.strategy, setupLabels[e.setup]||e.setup||'',
+ e.stop||'', e.target||'',
+ e.rrRatio ? e.rrRatio.toFixed(2) : '',
+ csvSafe(e.thesis), csvSafe(e.invalidate), csvSafe(e.notes)
  ].join(','));
  const csv = BOM + [headers.join(','), ...rows].join('\n');
  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
@@ -4744,7 +4785,46 @@ async function _backfillEntryRS() {
  if (updated > 0) saveJ(j);
 }
 
+// 2026-05-21 Sprint 2-A: 進場前 live R-multiple 預覽，幫使用者驗證 R:R 是否合理
+function _bindJournalRPreview() {
+ if (window._jRPreviewBound) return;
+ const ids = ['j-price', 'j-stop', 'j-target', 'j-qty', 'j-action'];
+ const update = () => {
+  const action = document.getElementById('j-action')?.value;
+  const price  = parseFloat(document.getElementById('j-price')?.value) || 0;
+  const stop   = parseFloat(document.getElementById('j-stop')?.value)  || 0;
+  const target = parseFloat(document.getElementById('j-target')?.value) || 0;
+  const qty    = parseInt(document.getElementById('j-qty')?.value)    || 0;
+  const el = document.getElementById('j-r-preview');
+  if (!el) return;
+  if (action !== 'buy' || !price || !stop || stop >= price) { el.style.display = 'none'; return; }
+  const riskPerShare = price - stop;
+  const riskPct = (riskPerShare / price * 100);
+  const riskAmt = riskPerShare * qty;
+  let html = '🛡 風險：每股虧 <b>' + riskPerShare.toFixed(2) + '</b> (' + riskPct.toFixed(1) + '%)' +
+             (qty ? '　|　部位風險 <b>' + riskAmt.toFixed(0) + '</b>' : '');
+  if (target && target > price) {
+   const reward = target - price;
+   const rr = reward / riskPerShare;
+   const rrColor = rr >= 3 ? '#22c55e' : rr >= 2 ? '#22c55e' : rr >= 1.5 ? '#eab308' : '#ef4444';
+   const rrNote = rr >= 3 ? '✓ 優異' : rr >= 2 ? '✓ 良好' : rr >= 1.5 ? '⚠ 勉強' : '🔴 不建議進場';
+   html += '<br>🎯 目標：每股賺 <b>' + reward.toFixed(2) + '</b>　|　R:R = <b style="color:' + rrColor + '">' + rr.toFixed(2) + '</b>　' + rrNote;
+  }
+  if (riskPct > 8) {
+   html += '<br>⚠ 風險 ' + riskPct.toFixed(1) + '% 過高 — 建議用 ATR 縮小停損距離（>8% 已偏離 R 制度）';
+  }
+  el.innerHTML = html;
+  el.style.display = '';
+ };
+ ids.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', update);
+ });
+ window._jRPreviewBound = true;
+}
+
 function renderJournal() {
+ _bindJournalRPreview();  // 2026-05-21: live R 預覽
  const j = getJ(), tb = document.getElementById('journal-body'), emp = document.getElementById('journal-empty'), st = document.getElementById('journal-stats');
  if (!j.length) { tb.innerHTML = ''; emp.style.display = 'block'; st.innerHTML = ''; window._jNotesMap = {}; return; }
  emp.style.display = 'none';
@@ -6618,13 +6698,8 @@ function renderEdgarCard(data) {
 }
 
 
-// 2026-05-19: customPool + watchlist features removed per user feedback ("自選池太雞肋").
-// Stubs kept so external callers (e.g. legacy sync code) don't crash.
-function removeFromCustomPool() {}
-function clearCustomPool() {}
-function importFromWatchlist() {}
-function renderCustomPoolTags() {}
-function addToCustomPool() {}
+// 2026-05-21 Sprint 2-E: 14 個 dead stub function 已驗證無 caller，全部刪除
+// （customPool / watchlist 舊功能殘骸 — 已由 renderWatchlistSimple 取代）
 
 function switchScannerMarket(market) {
   _scannerMarket = market;
@@ -6637,18 +6712,6 @@ function switchScannerMarket(market) {
   if (strat === 'rsleader') runRSLeaderScan();
   else if (strat === 'sector') _showSectorRadarTab();
 }
-
-// Watchlist stubs — feature removed but old syncField('watchlist',...) and
-// startWatchlistRefresh() / loadScanner() etc. still reference these.
-function removeFromWatchlist() {}
-function saveTodayWatchlist() {}
-function startWatchlistRefresh() {}
-function stopWatchlistRefresh() {}
-async function refreshWatchlist() {}
-function renderWatchlist() {}
-function updateWatchlistField() {}
-async function showWatchlistChart() {}
-function triggerAlert() {}
 
 function loadScanner() {
  if (_scannerTimer) clearInterval(_scannerTimer);
@@ -6980,15 +7043,16 @@ function _signalTriggered(sig, key) {
  }
 }
 function computePersonalSignalStats(j) {
- if (!j || !j.length) return { closedTrades: 0, bySignal: {} };
+ if (!j || !j.length) return { closedTrades: 0, bySignal: {}, bySetup: {} };
  const sorted = j.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
- const queues = {};  // ticker -> [{ qty, cost, snapshot, buyId }]
- const closedTrades = [];  // { ret, snapshot }
+ const queues = {};  // ticker -> [{ qty, cost, snapshot, buyId, setup }]
+ const closedTrades = [];  // { ret, snapshot, setup, ticker }
  for (const e of sorted) {
   if (e.action === 'buy') {
    if (!queues[e.ticker]) queues[e.ticker] = [];
    const costPerShare = (e.net || e.price * e.qty) / e.qty;
-   queues[e.ticker].push({ qty: e.qty, cost: costPerShare, snapshot: e.signalSnapshot || null });
+   // 2026-05-21 Sprint 2-B: 帶上 setup 類型，後續計算分類勝率
+   queues[e.ticker].push({ qty: e.qty, cost: costPerShare, snapshot: e.signalSnapshot || null, setup: e.setup || 'unknown' });
   } else if (e.action === 'sell') {
    const q = queues[e.ticker] || [];
    let remaining = e.qty;
@@ -6997,7 +7061,7 @@ function computePersonalSignalStats(j) {
     const lot = q[0];
     const take = Math.min(remaining, lot.qty);
     const ret = (proceedsPerShare - lot.cost) / lot.cost;
-    closedTrades.push({ ret, snapshot: lot.snapshot, qty: take });
+    closedTrades.push({ ret, snapshot: lot.snapshot, qty: take, setup: lot.setup, ticker: e.ticker });
     lot.qty -= take;
     remaining -= take;
     if (lot.qty <= 0) q.shift();
@@ -7037,7 +7101,26 @@ function computePersonalSignalStats(j) {
    b.edge = b.triggeredWinRate - b.notTriggeredWinRate;
   } else b.edge = null;
  }
- return { closedTrades: closedTrades.length, bySignal };
+ // 2026-05-21 Sprint 2-B: 分 setup 類型聚合 — Gemini「告訴我做突破 60%、抄底 10%」
+ const bySetup = {};
+ for (const t of closedTrades) {
+  const k = t.setup || 'unknown';
+  if (!bySetup[k]) bySetup[k] = { trades: 0, wins: 0, retSum: 0, avgRet: 0, winRate: 0, biggestWin: -Infinity, biggestLoss: Infinity };
+  const b = bySetup[k];
+  b.trades++;
+  b.retSum += t.ret;
+  if (t.ret > 0) b.wins++;
+  if (t.ret > b.biggestWin) b.biggestWin = t.ret;
+  if (t.ret < b.biggestLoss) b.biggestLoss = t.ret;
+ }
+ for (const k of Object.keys(bySetup)) {
+  const b = bySetup[k];
+  b.winRate = b.trades ? b.wins / b.trades : 0;
+  b.avgRet  = b.trades ? b.retSum / b.trades : 0;
+  if (b.biggestWin === -Infinity) b.biggestWin = 0;
+  if (b.biggestLoss === Infinity) b.biggestLoss = 0;
+ }
+ return { closedTrades: closedTrades.length, bySignal, bySetup };
 }
 
 // 2026-05-20 (Option B Feature 1+2): 個人化命中率 + 「你為什麼贏/輸」分析
@@ -7111,10 +7194,77 @@ function renderPersonalEdge() {
  }
  html += '</div>';
 
+ // 2026-05-21 Sprint 2-B: 策略分類勝率（突破 vs 抄底 vs 財報 vs VCP）
+ html += renderSetupBreakdown(stats.bySetup || {});
+
  // Feature 2: 「你為什麼贏 / 輸」自動分析
  html += renderWinLossAnalysis(j);
 
  el.innerHTML = html;
+}
+
+// 2026-05-21 Sprint 2-B: 「對你來說，哪一種 setup 真的會賺？」
+// Gemini 抓到：總勝率 40% 無意義；要分類告訴使用者你做突破 60% vs 抄底 10%
+function renderSetupBreakdown(bySetup) {
+ const setupLabels = {
+  breakout:'🚀 突破 (52w 高 / VCP pivot)',
+  pullback:'🪜 回檔 (20MA / 趨勢線)',
+  earnings:'📊 財報前 (EPS 修正)',
+  institutional:'🏦 法人/內部人',
+  bottom:'🪤 抄底 / 反轉',
+  other:'其他',
+  unknown:'未分類（舊資料）',
+ };
+ const entries = Object.entries(bySetup)
+  .filter(([k, v]) => v.trades >= 3)  // 至少 3 筆才顯示
+  .sort((a, b) => b[1].winRate - a[1].winRate);
+ if (!entries.length) {
+  return '<div class="card" style="margin-top:14px"><h3>🎯 你的 Setup 類型勝率</h3><p style="color:var(--muted);font-size:12px">每個 setup 至少需 3 筆已平倉樣本才顯示，10+ 才算可靠。<br><b>從今天起，新增交易記錄時務必填「Setup 類型」</b>，未來才能看出「你做哪種 setup 真的會賺」。</p></div>';
+ }
+ // Compute best vs worst — Gemini 的「告訴我你做突破 60% vs 抄底 10%」核心訴求
+ const best = entries[0][1].winRate >= 0.55 ? entries[0] : null;
+ const worst = entries[entries.length - 1][1].winRate < 0.45 ? entries[entries.length - 1] : null;
+ let html = '<div class="card" style="margin-top:14px">';
+ html += '<h3>🎯 你的 Setup 類型勝率</h3>';
+ html += '<p style="color:var(--muted);font-size:12px;line-height:1.6">每個 setup 至少 3 筆已平倉樣本；<b>10+ 才算可靠，30+ 才能下結論</b>。<br>Edge 來自於知道「<b>對你個人</b>哪種 setup 真的有效」，而不是書上說哪種有效。</p>';
+ if (best && worst && best[0] !== worst[0]) {
+  const winRateDiff = (best[1].winRate - worst[1].winRate) * 100;
+  if (winRateDiff >= 20 && best[1].trades >= 5 && worst[1].trades >= 5) {
+   html += '<div style="margin:12px 0;padding:12px;background:rgba(99,102,241,.06);border-radius:8px;font-size:12px;line-height:1.7">💡 <b>你的 Edge</b>：' +
+           (setupLabels[best[0]] || best[0]) + ' 勝率 <b style="color:#22c55e">' + (best[1].winRate * 100).toFixed(0) + '%</b>' +
+           ' vs ' + (setupLabels[worst[0]] || worst[0]) + ' 勝率 <b style="color:#ef4444">' + (worst[1].winRate * 100).toFixed(0) + '%</b>' +
+           '。差距 ' + winRateDiff.toFixed(0) + '% — <b>下次多做前者、少做後者</b>。</div>';
+  }
+ }
+ html += '<div style="overflow-x:auto;margin-top:12px"><table style="width:100%;font-size:12px;border-collapse:collapse">';
+ html += '<thead><tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.08)">' +
+         '<th style="text-align:left;padding:8px 6px">Setup</th>' +
+         '<th style="text-align:right;padding:8px 6px">筆數</th>' +
+         '<th style="text-align:right;padding:8px 6px">勝率</th>' +
+         '<th style="text-align:right;padding:8px 6px">平均報酬</th>' +
+         '<th style="text-align:right;padding:8px 6px">最大贏</th>' +
+         '<th style="text-align:right;padding:8px 6px">最大輸</th>' +
+         '<th style="text-align:left;padding:8px 6px">結論</th></tr></thead><tbody>';
+ for (const [k, v] of entries) {
+  const reliable = v.trades >= 10;
+  const wColor = v.winRate >= 0.6 ? '#16a34a' : v.winRate >= 0.5 ? '#22c55e' : v.winRate >= 0.4 ? '#eab308' : '#ef4444';
+  const retColor = v.avgRet >= 0.05 ? '#16a34a' : v.avgRet >= 0 ? '#22c55e' : v.avgRet >= -0.05 ? '#eab308' : '#ef4444';
+  const verdict = !reliable ? '樣本不足 (<10)' :
+                  v.winRate >= 0.6 && v.avgRet > 0 ? '✓ 強項 — 多做' :
+                  v.winRate >= 0.5 && v.avgRet > 0 ? '尚可' :
+                  v.winRate < 0.4 || v.avgRet < -0.05 ? '🔴 弱項 — 少碰' : '中等';
+  html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04)' + (!reliable ? ';opacity:.55' : '') + '">';
+  html += '<td style="padding:8px 6px">' + (setupLabels[k] || k) + '</td>';
+  html += '<td style="text-align:right;padding:8px 6px;font-variant-numeric:tabular-nums">' + v.trades + '</td>';
+  html += '<td style="text-align:right;padding:8px 6px;color:' + wColor + ';font-weight:700;font-variant-numeric:tabular-nums">' + (v.winRate * 100).toFixed(0) + '%</td>';
+  html += '<td style="text-align:right;padding:8px 6px;color:' + retColor + ';font-variant-numeric:tabular-nums">' + (v.avgRet >= 0 ? '+' : '') + (v.avgRet * 100).toFixed(1) + '%</td>';
+  html += '<td style="text-align:right;padding:8px 6px;color:#22c55e;font-variant-numeric:tabular-nums">+' + (v.biggestWin * 100).toFixed(1) + '%</td>';
+  html += '<td style="text-align:right;padding:8px 6px;color:#ef4444;font-variant-numeric:tabular-nums">' + (v.biggestLoss * 100).toFixed(1) + '%</td>';
+  html += '<td style="padding:8px 6px;font-size:11px;color:var(--muted)">' + verdict + '</td>';
+  html += '</tr>';
+ }
+ html += '</tbody></table></div></div>';
+ return html;
 }
 
 // 2026-05-20 (Option B Feature 2): 「你為什麼贏 / 輸」
