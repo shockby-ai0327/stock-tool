@@ -446,20 +446,9 @@ firebase.initializeApp(_fbConfig);
  </div>
  </div>
 
- <!-- 隱藏 — 仍保留 DOM 節點供舊邏輯不報錯，但不渲染。未來可逐步清理 caller -->
- <div id="dash-market-kpis" style="display:none"></div>
- <div id="dash-fgi-card" style="display:none"></div>
- <div id="dash-market-status" style="display:none"></div>
- <div id="dash-premarket" style="display:none"></div>
- <div id="dash-events-card" style="display:none"><div id="dash-events-list"></div></div>
- <div id="dash-sector-concentration" style="display:none"></div>
- <div id="dash-correlation" style="display:none"></div>
- <div id="dash-drawdown" style="display:none"></div>
- <div id="dash-news-card" style="display:none"><div id="dash-news-list"></div><div id="dash-news-body"></div><div id="dash-news-toggle-icon"></div></div>
- <div id="dash-narrative-card" style="display:none"><div id="narrative-regime-badge"></div><div id="narrative-meta"></div><div id="narrative-headline"></div><div id="narrative-body"></div><div id="narrative-rotation"></div><div id="narrative-watch"></div></div>
- <div id="dash-search-input" style="display:none"></div>
- <button id="dash-mode-compact" style="display:none"></button>
- <button id="dash-mode-full" style="display:none"></button>
+ <!-- 2026-05-21 Sprint 3-C: 移除舊 dashboard 元素 stubs。
+      dash-correlation / dash-drawdown / dash-sector-concentration 統一搬到「持倉管理」分頁的對應卡片。
+      其他元素（market-kpis / news / narrative）函式已加 null guard，目標不存在就跳過渲染。 -->
  </div>
  <div id="page-stock" class="page">
  <div class="search-box">
@@ -545,9 +534,12 @@ firebase.initializeApp(_fbConfig);
  <div id="journal-atr-content"></div>
  </div>
  </div>
- <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">交易記錄</h3><button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="exportJournalCSV()">匯出 CSV</button></div><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><h3 style="margin:0">交易記錄</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc" onclick="document.getElementById('csv-import-input').click()">📤 從券商對帳單匯入</button><input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importJournalCSV(event)"><button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="exportJournalCSV()">📥 匯出 CSV</button></div></div><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>Setup</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
  </div><!-- end journal-tab-records -->
  <div id="journal-tab-holdings" style="display:none">
+ <!-- 2026-05-21 Sprint 3-C: 從首頁搬遷的分析卡（板塊配置、相關性、回撤分析） -->
+ <div id="dash-sector-concentration"></div>
+ <div id="dash-drawdown"></div>
  <!-- Wave 5.4: Portfolio drawdown analytics -->
  <div id="portfolio-drawdown-card"></div>
  <!-- 2026-05-19 #9: 交易模式分析 -->
@@ -1389,10 +1381,12 @@ async function analyzeStock() {
   // Convergence label
   const convLabel = activeCount >= 3 ? '✓ 真實匯流' : activeCount === 2 ? '○ 部分匯流' : activeCount === 1 ? '⚠ 單一來源' : '';
   const convColor = activeCount >= 3 ? 'var(--green)' : activeCount === 2 ? 'var(--yellow)' : 'var(--orange)';
+  // 2026-05-21 Sprint 3-D: 把分組狀態 stash 到 window 供 modal 取用
+  window._catalystSourcesCache = sources;
   let catBarHtml = '<div id="stock-catalyst-bar" style="margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)">';
   catBarHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:11px;color:var(--muted);font-weight:600">催化劑（按獨立來源分組）</span>';
   if (convLabel) catBarHtml += '<span style="font-size:11px;font-weight:700;color:' + convColor + '">' + convLabel + ' ' + activeCount + '/' + totalSources + ' 來源</span>';
-  catBarHtml += '<span style="font-size:10px;color:var(--muted);cursor:help;margin-left:auto" title="同一來源（如 RS + 1m return）只算 1 個。多訊號同向最常見的原因是「都是 momentum」，不是「多重確認」。3-4 來源同時觸發才算真正匯流。">ⓘ 為何分組</span></div>';
+  catBarHtml += '<button onclick="showCatalystExplainModal()" style="font-size:10px;color:#a5b4fc;cursor:pointer;margin-left:auto;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:4px;padding:3px 8px">📖 解釋這些訊號</button></div>';
   Object.values(sources).forEach(s => {
     if (!s.active) return;
     catBarHtml += '<div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px;padding:6px 0;border-top:1px solid rgba(255,255,255,.04)">';
@@ -2987,6 +2981,8 @@ function isTrusted(source) {
 
 // ============ NEWS ============
 let _newsItems = [];
+// 2026-05-21 Sprint 3-E: LRU bound — 新聞每個 tab 一份，最多 6 個 tab × ~50KB
+const _NEWS_TAB_CACHE_MAX = 6;
 window._newsTabCache = window._newsTabCache || {};
 async function loadNews(cat) {
  const div = document.getElementById('news-content');
@@ -3200,7 +3196,9 @@ async function loadNews(cat) {
 }
 
 // ── 翻譯工具（Google Translate 免費端點，直連無 proxy）
+// 2026-05-21 Sprint 3-E: LRU bound — 上限 200 條，避免長時間使用記憶體飆漲（Plan agent 抓到）
 window._tlCache = {};
+const _TL_CACHE_MAX = 200;
 async function translateText(text) {
  if (!text || text.length < 4) return text;
  if (window._tlCache[text]) return window._tlCache[text];
@@ -3209,6 +3207,12 @@ async function translateText(text) {
  const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
  const d = await r.json();
  const result = d[0].map(t => t[0]).join('');
+ // LRU eviction — 超過上限砍掉最舊的 entry（簡易版：砍前 20%）
+ const keys = Object.keys(window._tlCache);
+ if (keys.length >= _TL_CACHE_MAX) {
+  const dropN = Math.floor(_TL_CACHE_MAX * 0.2);
+  for (let i = 0; i < dropN; i++) delete window._tlCache[keys[i]];
+ }
  window._tlCache[text] = result;
  return result;
  } catch(e) { return text; }
@@ -3605,6 +3609,64 @@ function signalConfidenceBadge(name) {
   return '';
 }
 
+// 2026-05-21 Sprint 3-D: 點 catalyst bar 上的「📖 解釋這些訊號」開啟說明 modal
+function showCatalystExplainModal() {
+ const sources = window._catalystSourcesCache;
+ if (!sources) { alert('催化劑資料尚未載入 — 請先打開個股分析'); return; }
+ const explainers = {
+  momentum: {
+   title: '💹 價格動能',
+   how: 'RS Rating（相對強度 1-99 排名）+ 近 1m/3m 漲幅。三者高度自相關（同一個變數的不同視角）— RS 高的股票通常 1m 漲幅也高。',
+   why: '動能因子是 Jegadeesh-Titman 1993 經典：過去 6-12 個月強勢股未來 3-6 個月持續強勢。但 30 年實證後 edge 縮減，2010 後年化超額報酬從 8% 降到 3% 左右。',
+   pitfall: '⚠ RS 與 1m return、3m return 都會同時觸發 — 看起來 3 個 badge 其實只是 1 個獨立訊號。',
+  },
+  fundamental: {
+   title: '📊 基本面動能',
+   how: 'EPS 修正（分析師上下修最近 30/90 天）+ 財報 surprise + 升降評。',
+   why: 'Stickel 1989、Womack 1996 學術上最強的 fundamental factor。EPS 上修後股價平均超額報酬持續 3-6 個月。',
+   pitfall: '⚠ 上修常已被 priced-in（消息出來時股價已漲）；小型股 EPS 估值散戶常拿不到完整資料。',
+  },
+  institutional: {
+   title: '🏛 機構流',
+   how: '內部人 cluster 買進（SEC Form 4）+ 三大法人（外資/投信/自營商，TWSE T86）+ 5 日累積。',
+   why: 'Cohen 2012 內部人 cluster 買進有顯著預測力。外資對台股方向性也有效（佔台股約 40% 成交量）。',
+   pitfall: '⚠ 單一內部人小額買進無預測力（要 cluster = 多人同時買才有意義）；自營商含避險部位，方向常與多空判斷無關；季底外資調倉不是 alpha。',
+  },
+  catalyst: {
+   title: '📅 事件 / 型態',
+   how: '財報日倒數 + VCP 收縮型態 + short interest + 三重共振（多訊號匯流）。',
+   why: 'Minervini-style 動能交易者公認的「事前可見爆發條件」— 但本系統的 VCP base-count 是啟發式，未獨立驗證。',
+   pitfall: '⚠ 「3 訊號都過」≠「3 個獨立來源」。如果 RS + 1m return + 量能都來自 momentum 家族，那只是 1 個來源不是 3 個。',
+  },
+ };
+ let html = '<div id="catalyst-explain-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+ html += '<div style="background:#0f1623;border-radius:12px;max-width:680px;width:100%;max-height:85vh;overflow:auto;border:1px solid rgba(255,255,255,.1)">';
+ html += '<div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">';
+ html += '<div style="font-size:16px;font-weight:700">📖 催化劑訊號是怎麼算出來的</div>';
+ html += '<button onclick="document.getElementById(\'catalyst-explain-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>';
+ html += '</div>';
+ html += '<div style="padding:16px 22px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid rgba(255,255,255,.04)">每個 badge 都告訴你「現在這檔有某個訊號」。但<b style="color:#fbbf24">多個 badge ≠ 多重確認</b> — 因為許多 badges 來自<b style="color:#fbbf24">同一個底層變數</b>。我們把它們分到 4 個獨立來源，看到 3+ 來源同時觸發才算「真實匯流」。</div>';
+ html += '<div style="padding:14px 22px">';
+ for (const key of Object.keys(sources)) {
+  const s = sources[key];
+  const exp = explainers[key];
+  if (!exp) continue;
+  const activeColor = s.active ? '#22c55e' : 'var(--muted)';
+  html += '<div style="margin-bottom:16px;padding:14px;background:rgba(255,255,255,.02);border-radius:8px;border-left:3px solid ' + activeColor + '">';
+  html += '<div style="font-weight:700;font-size:13px;color:' + activeColor + ';margin-bottom:8px">' + exp.title + (s.active ? ' <span style="font-size:11px;font-weight:400;color:#22c55e">✓ 此股觸發</span>' : ' <span style="font-size:11px;font-weight:400;color:var(--muted)">○ 未觸發</span>') + '</div>';
+  html += '<div style="font-size:11px;line-height:1.7;color:var(--muted);margin-bottom:6px"><b style="color:var(--text)">怎麼算：</b>' + escapeHtml(exp.how) + '</div>';
+  html += '<div style="font-size:11px;line-height:1.7;color:var(--muted);margin-bottom:6px"><b style="color:var(--text)">為什麼：</b>' + escapeHtml(exp.why) + '</div>';
+  html += '<div style="font-size:11px;line-height:1.7;color:#fca5a5;padding:6px 8px;background:rgba(239,68,68,.05);border-radius:4px">' + escapeHtml(exp.pitfall) + '</div>';
+  if (s.active && s.badges.length) {
+   html += '<div style="font-size:10px;color:var(--muted);margin-top:8px">此股觸發的 badges：</div>';
+   html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + s.badges.join('') + '</div>';
+  }
+  html += '</div>';
+ }
+ html += '</div></div></div>';
+ document.body.insertAdjacentHTML('beforeend', html);
+}
+
 // 2026-05-20: 集中式信號評等對照表 — 點按鈕才開啟
 function showSignalValidationModal() {
   const groups = [
@@ -3754,8 +3816,10 @@ function _commitJournalEntry(e) {
    if (tr.stars != null) sig.tripleStars     = tr.stars;
   }
   // AI bias
+  // 2026-05-21 Sprint 3-E: 統一 — bySymbol 永遠是 Map（fetchAIAnalysis line 10073）
+  // 砍掉 Plan agent 點出的「duck-typing 巫術」
   if (window._aiAnalysis && window._aiAnalysis.bySymbol) {
-   const ai = window._aiAnalysis.bySymbol.get ? window._aiAnalysis.bySymbol.get(e.ticker) : window._aiAnalysis.bySymbol[e.ticker];
+   const ai = window._aiAnalysis.bySymbol.get(e.ticker);
    if (ai && ai.bias) { sig.aiBias = ai.bias; sig.aiStars = ai.stars; }
   }
   // Market regime
@@ -3797,6 +3861,143 @@ function _commitJournalEntry(e) {
 }
 // 2026-05-20: 「靜思 30 秒」進場版已整段移除（Gemini + Codex 一致：盤中摩擦力是 UX 殺手）
 // 個人化命中率 + 你為什麼贏/輸 兩個盤後分析功能仍保留（在 持倉管理 → 🎯）
+
+// 2026-05-21 Sprint 3-A: 從券商對帳單 CSV 匯入交易紀錄
+// 支援格式：常見台股券商（元大/凱基/富邦）+ 美股（Schwab/Fidelity/IB）+ 本系統匯出格式
+// 自動偵測欄位（中英文都可），失敗時提示使用者手動 mapping
+async function importJournalCSV(event) {
+ const file = event.target.files?.[0];
+ event.target.value = '';  // 重置以便同檔可重匯
+ if (!file) return;
+ try {
+  const text = await file.text();
+  // 移除 BOM
+  const clean = text.replace(/^﻿/, '');
+  // 偵測分隔符（逗號 / tab）
+  const sep = clean.indexOf('\t') > -1 && clean.indexOf('\t') < clean.indexOf(',', 0) + 50 ? '\t' : ',';
+  const lines = clean.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { alert('CSV 內容太少（需 header + 至少 1 筆）'); return; }
+  // 偵測 header
+  const headers = _parseCsvRow(lines[0], sep).map(h => h.trim().toLowerCase());
+  // 中英文欄位 → 標準欄位 mapping
+  const fieldMap = {
+   date: ['date','日期','成交日期','交易日'],
+   ticker: ['ticker','symbol','代號','股票代號','商品'],
+   action: ['action','side','動作','買賣','b/s','buy/sell'],
+   price: ['price','成交價','單價','price per share'],
+   qty: ['qty','quantity','shares','數量','成交股數'],
+   fee: ['fee','commission','手續費','手續'],
+   stop: ['stop','停損','停損價'],
+   target: ['target','目標','目標價'],
+   setup: ['setup','setup類型','setup 類型'],
+   thesis: ['thesis','理由','進場thesis','進場 thesis'],
+   invalidate: ['invalidate','失效','失效條件'],
+   notes: ['notes','備註','memo'],
+   strategy: ['strategy','策略'],
+  };
+  const colMap = {};
+  for (const [field, alts] of Object.entries(fieldMap)) {
+   for (let i = 0; i < headers.length; i++) {
+    if (alts.includes(headers[i])) { colMap[field] = i; break; }
+   }
+  }
+  if (colMap.date == null || colMap.ticker == null || colMap.action == null || colMap.price == null || colMap.qty == null) {
+   alert('CSV 缺必要欄位（日期/代號/動作/價格/數量）。\n\n抓到的 header：' + headers.join(' | ') + '\n\n請確認券商匯出包含這些欄位，或匯出本系統 CSV 範本參考。');
+   return;
+  }
+  // 解析每行
+  const j = getJ();
+  const existingKeys = new Set(j.map(e => e.date + '|' + e.ticker + '|' + e.action + '|' + e.price + '|' + e.qty));
+  const newEntries = [];
+  const errors = [];
+  for (let i = 1; i < lines.length; i++) {
+   const row = _parseCsvRow(lines[i], sep);
+   if (row.length < 3) continue;
+   const date = _normalizeDate(row[colMap.date]);
+   const ticker = (row[colMap.ticker] || '').trim().toUpperCase();
+   const actionRaw = (row[colMap.action] || '').trim().toLowerCase();
+   const action = /^(b|buy|買|買入)/.test(actionRaw) ? 'buy' : /^(s|sell|賣|賣出)/.test(actionRaw) ? 'sell' : null;
+   const price = parseFloat(row[colMap.price]);
+   const qty = parseInt(row[colMap.qty]);
+   if (!date || !ticker || !action || !price || !qty) {
+    errors.push('行 ' + (i+1) + '：格式不對 → ' + lines[i].slice(0, 80));
+    continue;
+   }
+   const dupKey = date + '|' + ticker + '|' + action + '|' + price + '|' + qty;
+   if (existingKeys.has(dupKey)) continue;  // 重複跳過
+   const e = {
+    id: Date.now() + i,
+    date, ticker, action, price, qty,
+    strategy: row[colMap.strategy] || 'swing',
+    setup: row[colMap.setup] || '',
+    stop: parseFloat(row[colMap.stop]) || null,
+    target: parseFloat(row[colMap.target]) || null,
+    thesis: row[colMap.thesis] || '',
+    invalidate: row[colMap.invalidate] || '',
+    notes: (row[colMap.notes] || '') + ' [CSV 匯入]',
+   };
+   e.amount = e.price * e.qty;
+   e.fee = parseFloat(row[colMap.fee]) || (e.amount * feeForTrade(e.ticker, e.action));
+   e.net = e.action === 'buy' ? e.amount + e.fee : e.amount - e.fee;
+   if (e.action === 'buy' && e.stop && e.stop < e.price) {
+    e.riskPerShare = e.price - e.stop;
+    e.riskAmount = e.riskPerShare * e.qty;
+    if (e.target && e.target > e.price) {
+     e.rewardPerShare = e.target - e.price;
+     e.rrRatio = e.rewardPerShare / e.riskPerShare;
+    }
+   }
+   newEntries.push(e);
+   existingKeys.add(dupKey);
+  }
+  if (!newEntries.length) {
+   alert('沒有新交易可匯入（' + (lines.length - 1) + ' 行皆重複或格式不對' + (errors.length ? '\n\n錯誤：\n' + errors.slice(0,5).join('\n') : '') + '）');
+   return;
+  }
+  // 合併、按日期排序新到舊
+  j.push(...newEntries);
+  j.sort((a, b) => new Date(b.date) - new Date(a.date));
+  saveJ(j);
+  renderJournal();
+  alert('✅ 成功匯入 ' + newEntries.length + ' 筆新交易（跳過 ' + (lines.length - 1 - newEntries.length - errors.length) + ' 筆重複' + (errors.length ? '，' + errors.length + ' 筆格式錯誤' : '') + '）');
+ } catch(e) {
+  alert('❌ 匯入失敗：' + e.message);
+ }
+}
+function _parseCsvRow(line, sep) {
+ const result = [];
+ let cur = '', inQuote = false;
+ for (let i = 0; i < line.length; i++) {
+  const c = line[i];
+  if (c === '"') {
+   if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+   else inQuote = !inQuote;
+  } else if (c === sep && !inQuote) { result.push(cur); cur = ''; }
+  else cur += c;
+ }
+ result.push(cur);
+ return result;
+}
+function _normalizeDate(s) {
+ if (!s) return null;
+ s = s.trim().replace(/\//g, '-');
+ // YYYY-MM-DD already
+ if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+  const [y, m, d] = s.split('-');
+  return y + '-' + m.padStart(2, '0') + '-' + d.padStart(2, '0');
+ }
+ // YYYYMMDD
+ if (/^\d{8}$/.test(s)) return s.slice(0,4) + '-' + s.slice(4,6) + '-' + s.slice(6,8);
+ // MM-DD-YYYY (US)
+ if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
+  const [m, d, y] = s.split('-');
+  return y + '-' + m.padStart(2, '0') + '-' + d.padStart(2, '0');
+ }
+ // Date string parsable by JS
+ const dt = new Date(s);
+ if (!isNaN(dt)) return dt.toISOString().slice(0, 10);
+ return null;
+}
 
 function exportJournalCSV() {
  const j = getJ();
@@ -10330,6 +10531,23 @@ function _getAlerts() {
 }
 function _saveAlerts(arr) {
   try { localStorage.setItem(ALERT_STORE_KEY, JSON.stringify(arr)); } catch(e) {}
+  // 2026-05-21 Sprint 3-B: 警報雲同步 — 用既有 syncField (Firebase Firestore)
+  // 使用者跨裝置登入時自動帶上警報設定
+  try { if (typeof syncField === 'function') syncField('alerts', arr); } catch(e) {}
+}
+// 2026-05-21 Sprint 3-B: 觸發歷史，獨立 store 留 30 天
+const ALERT_HISTORY_KEY = 'stock_alert_history';
+function _getAlertHistory() {
+ try { return JSON.parse(localStorage.getItem(ALERT_HISTORY_KEY) || '[]'); } catch(e) { return []; }
+}
+function _pushAlertHistory(record) {
+ const hist = _getAlertHistory();
+ hist.unshift(record);
+ // 保留 30 天 + 上限 200 筆
+ const cutoff = Date.now() - 30 * 86400000;
+ const trimmed = hist.filter(h => h.ts >= cutoff).slice(0, 200);
+ try { localStorage.setItem(ALERT_HISTORY_KEY, JSON.stringify(trimmed)); } catch(e) {}
+ try { if (typeof syncField === 'function') syncField('alertHistory', trimmed); } catch(e) {}
 }
 
 function showAlertForm() {
@@ -10416,15 +10634,25 @@ function renderAlertsPanel() {
         '</div>'
       ).join('');
   }
-  if (triggered.length) {
-    hist.innerHTML = '<div style="padding-top:8px;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="color:var(--muted);font-weight:600">歷史觸發（最近 ' + triggered.length + '）</span><button onclick="clearTriggeredAlerts()" style="background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer">清除</button></div>' +
-      triggered.map(a =>
-        '<div style="padding:4px 8px;color:var(--muted);font-size:11px">' +
-          '✓ ' + (a.symbol || '') + ' ' + typeLabel[a.type] + ' ' + condLabel[a.condition] + ' ' + a.value +
-          ' <span style="opacity:.6;float:right">' + new Date(a.triggered).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
-        '</div>'
-      ).join('') +
-    '</div>';
+  // 2026-05-21 Sprint 3-B: 30 天觸發歷史（從 _getAlertHistory 拿，跨裝置同步）
+  const fullHist = _getAlertHistory();
+  if (fullHist.length || triggered.length) {
+   const histRows = fullHist.slice(0, 20);
+   hist.innerHTML = '<div style="padding-top:8px;border-top:1px solid var(--border)">' +
+     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+       '<span style="color:var(--muted);font-weight:600">📜 觸發歷史（' + fullHist.length + ' 筆 / 30 天）</span>' +
+       (triggered.length ? '<button onclick="clearTriggeredAlerts()" style="background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer">清作用中</button>' : '') +
+     '</div>' +
+     (histRows.length
+      ? histRows.map(h =>
+         '<div style="padding:4px 8px;color:var(--muted);font-size:11px;display:flex;align-items:center;gap:6px">' +
+           '<span style="color:#22c55e">✓</span>' +
+           '<span>' + escapeHtml(h.msg || '') + '</span>' +
+           '<span style="opacity:.6;margin-left:auto">' + new Date(h.ts).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
+         '</div>'
+        ).join('')
+      : '<div style="color:var(--muted);font-size:11px;padding:4px 8px">尚無歷史觸發</div>') +
+   '</div>';
   } else hist.innerHTML = '';
 }
 
@@ -10504,6 +10732,8 @@ async function checkAlerts() {
       const msg = (a.symbol ? a.symbol + ' ' : '') + typeLabel + ' ' + condLabel + ' ' + a.value + ' (當前 ' + current.toFixed(2) + ')';
       showToast('🔔 ' + msg, 'success');
       try { _sendPushNotification('🔔 警報觸發', msg, a.id); } catch(e) {}
+      // 2026-05-21 Sprint 3-B: 觸發紀錄寫入歷史 store（雲端同步）
+      try { _pushAlertHistory({ ts: Date.now(), id: a.id, symbol: a.symbol||'', type: a.type, msg, value: current }); } catch(e) {}
     }
   }
   if (changed) _saveAlerts(alerts);
