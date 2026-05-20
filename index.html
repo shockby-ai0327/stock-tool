@@ -316,21 +316,37 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
 }
 </style>
 </head>
-<!-- Firebase SDK (compat v10) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script>
-const _fbConfig = {
- apiKey: "AIzaSyDRAwc9YsJmlsEAObLOlQw9iqMj6ijHsH0",
- authDomain: "stocktool-c1430.firebaseapp.com",
- projectId: "stocktool-c1430",
- storageBucket: "stocktool-c1430.firebasestorage.app",
- messagingSenderId: "225598606977",
- appId: "1:225598606977:web:a6d3a8cce5eaf982078780",
- measurementId: "G-70YEHDPLFQ"
-};
-firebase.initializeApp(_fbConfig);
+<!-- 2026-05-21 Sprint 4-A: Firebase compat → modular SDK
+     省 ~200KB (compat 三支載完整 API, modular 只載我們用到的)
+     用 type="module" + ESM CDN，不需要 Vite build
+     暴露到 window._fb 供 inline JS 用（保持 onclick 等舊呼叫風格） -->
+<script type="module">
+ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+   from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+ import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+   from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+ const _fbConfig = {
+  apiKey: "AIzaSyDRAwc9YsJmlsEAObLOlQw9iqMj6ijHsH0",
+  authDomain: "stocktool-c1430.firebaseapp.com",
+  projectId: "stocktool-c1430",
+  storageBucket: "stocktool-c1430.firebasestorage.app",
+  messagingSenderId: "225598606977",
+  appId: "1:225598606977:web:a6d3a8cce5eaf982078780",
+  measurementId: "G-70YEHDPLFQ",
+ };
+ const app = initializeApp(_fbConfig);
+ const auth = getAuth(app);
+ const db = getFirestore(app);
+ // 暴露給 inline JS（避免重寫所有 onclick + 全域呼叫風格）
+ window._fb = {
+  app, auth, db,
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+  doc, getDoc, setDoc, serverTimestamp,
+ };
+ // 通知 inline JS：Firebase 已就緒（init 是 async）
+ window.dispatchEvent(new Event('_fbReady'));
 </script>
 <body>
 <div class="app">
@@ -534,7 +550,19 @@ firebase.initializeApp(_fbConfig);
  <div id="journal-atr-content"></div>
  </div>
  </div>
- <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><h3 style="margin:0">交易記錄</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc" onclick="document.getElementById('csv-import-input').click()">📤 從券商對帳單匯入</button><input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importJournalCSV(event)"><button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="exportJournalCSV()">📥 匯出 CSV</button></div></div><div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>Setup</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
+ <div class="card"
+      ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='rgba(99,102,241,.04)'"
+      ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--card)'"
+      ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='var(--card)';if(event.dataTransfer.files[0])importJournalCSV({target:{files:event.dataTransfer.files,value:''}})">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+   <h3 style="margin:0">交易記錄 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">支援 Schwab / Fidelity / Robinhood / IB / 元大 / 凱基 CSV 直接拖入</span></h3>
+   <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="btn btn-sm" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc" onclick="document.getElementById('csv-import-input').click()">📤 匯入 CSV</button>
+    <input type="file" id="csv-import-input" accept=".csv,.txt" style="display:none" onchange="importJournalCSV(event)">
+    <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--muted)" onclick="exportJournalCSV()">📥 匯出 CSV</button>
+   </div>
+  </div>
+  <div id="journal-stats" style="margin-bottom:16px"></div><div style="overflow-x:auto"><table><thead><tr><th>日期</th><th>代號</th><th>動作</th><th>價格</th><th>數量</th><th>金額</th><th>手續費</th><th>實收/實付</th><th>Setup</th><th>策略</th><th>備註</th><th>停損</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div><div id="journal-empty" style="text-align:center;padding:30px;color:var(--muted)">尚無交易紀錄</div></div>
  </div><!-- end journal-tab-records -->
  <div id="journal-tab-holdings" style="display:none">
  <!-- 2026-05-21 Sprint 3-C: 從首頁搬遷的分析卡（板塊配置、相關性、回撤分析） -->
@@ -3862,49 +3890,103 @@ function _commitJournalEntry(e) {
 // 2026-05-20: 「靜思 30 秒」進場版已整段移除（Gemini + Codex 一致：盤中摩擦力是 UX 殺手）
 // 個人化命中率 + 你為什麼贏/輸 兩個盤後分析功能仍保留（在 持倉管理 → 🎯）
 
-// 2026-05-21 Sprint 3-A: 從券商對帳單 CSV 匯入交易紀錄
-// 支援格式：常見台股券商（元大/凱基/富邦）+ 美股（Schwab/Fidelity/IB）+ 本系統匯出格式
-// 自動偵測欄位（中英文都可），失敗時提示使用者手動 mapping
+// 2026-05-21 Sprint 3-A + 4-B: 從券商對帳單 CSV 匯入交易紀錄
+// 支援 6 家券商 preset（自動偵測）：
+//   - 美股：Schwab / Fidelity / Robinhood / Interactive Brokers
+//   - 台股：元大 / 凱基（後者要先用元大 CSV 工具轉成英文 header）
+// 加上本系統匯出格式 + 完全自訂 header 自動 mapping
 async function importJournalCSV(event) {
  const file = event.target.files?.[0];
- event.target.value = '';  // 重置以便同檔可重匯
+ event.target.value = '';
  if (!file) return;
  try {
   const text = await file.text();
-  // 移除 BOM
   const clean = text.replace(/^﻿/, '');
-  // 偵測分隔符（逗號 / tab）
   const sep = clean.indexOf('\t') > -1 && clean.indexOf('\t') < clean.indexOf(',', 0) + 50 ? '\t' : ',';
   const lines = clean.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { alert('CSV 內容太少（需 header + 至少 1 筆）'); return; }
-  // 偵測 header
   const headers = _parseCsvRow(lines[0], sep).map(h => h.trim().toLowerCase());
-  // 中英文欄位 → 標準欄位 mapping
+
+  // 2026-05-21 Sprint 4-B: 6 家券商 preset 自動偵測
+  // 偵測方式：看 header 中有沒有該券商的「特徵欄位」
+  const BROKER_PRESETS = {
+   'Charles Schwab': {
+    detect: h => h.includes('symbol') && h.includes('action') && h.some(x => x.includes('quantity')),
+    map: { date: 'date', ticker: 'symbol', action: 'action', qty: 'quantity', price: 'price', fee: 'fees & comm' },
+    actionNorm: s => /buy/i.test(s) ? 'buy' : /sell/i.test(s) ? 'sell' : null,
+   },
+   'Fidelity': {
+    detect: h => h.includes('symbol') && h.some(x => x.includes('settlement') || x.includes('run date')),
+    map: { date: 'run date', ticker: 'symbol', action: 'action', qty: 'quantity', price: 'price ($)', fee: 'commission ($)' },
+    actionNorm: s => /bought|buy/i.test(s) ? 'buy' : /sold|sell/i.test(s) ? 'sell' : null,
+   },
+   'Robinhood': {
+    detect: h => h.includes('symbol') && h.includes('side') && h.includes('average price'),
+    map: { date: 'created at', ticker: 'symbol', action: 'side', qty: 'quantity', price: 'average price', fee: 'fees' },
+    actionNorm: s => /buy/i.test(s) ? 'buy' : /sell/i.test(s) ? 'sell' : null,
+   },
+   'Interactive Brokers': {
+    detect: h => h.some(x => x.includes('trades')) || (h.includes('symbol') && h.includes('t. price')),
+    map: { date: 'date/time', ticker: 'symbol', action: 'buy/sell', qty: 'quantity', price: 't. price', fee: 'comm/fee' },
+    actionNorm: s => /buy/i.test(s) ? 'buy' : /sell/i.test(s) ? 'sell' : null,
+   },
+   '元大證券': {
+    detect: h => (h.includes('股票代號') || h.includes('股票代碼')) && (h.includes('委託類別') || h.includes('買賣') || h.includes('成交日期')),
+    map: { date: '成交日期', ticker: '股票代號', action: '買賣', qty: '成交股數', price: '成交價', fee: '手續費' },
+    actionNorm: s => /買/.test(s) ? 'buy' : /賣/.test(s) ? 'sell' : null,
+   },
+   '凱基證券': {
+    detect: h => h.includes('交易日期') && h.includes('商品代碼'),
+    map: { date: '交易日期', ticker: '商品代碼', action: '買賣別', qty: '成交數量', price: '成交價格', fee: '手續費' },
+    actionNorm: s => /買/.test(s) ? 'buy' : /賣/.test(s) ? 'sell' : null,
+   },
+   '本系統匯出': {
+    detect: h => h.includes('代號') && h.includes('動作') && h.includes('停損價'),
+    map: { date: '日期', ticker: '代號', action: '動作', qty: '數量', price: '價格', fee: '手續費', stop: '停損價', target: '目標價', setup: 'setup類型', thesis: '進場thesis', invalidate: '失效條件', notes: '備註', strategy: '策略' },
+    actionNorm: s => /買/.test(s) ? 'buy' : /賣/.test(s) ? 'sell' : null,
+   },
+  };
+  // 偵測 broker
+  let detectedBroker = null;
+  let preset = null;
+  for (const [name, p] of Object.entries(BROKER_PRESETS)) {
+   if (p.detect(headers)) { detectedBroker = name; preset = p; break; }
+  }
+  // Build column map：優先 preset，否則 fallback 通用 fieldMap
+  const colMap = {};
+  if (preset) {
+   for (const [field, headerName] of Object.entries(preset.map)) {
+    const idx = headers.findIndex(h => h === headerName.toLowerCase() || h.includes(headerName.toLowerCase()));
+    if (idx >= 0) colMap[field] = idx;
+   }
+  }
+  // 通用 fallback（含 preset 沒覆蓋到的欄位）
   const fieldMap = {
-   date: ['date','日期','成交日期','交易日'],
-   ticker: ['ticker','symbol','代號','股票代號','商品'],
-   action: ['action','side','動作','買賣','b/s','buy/sell'],
-   price: ['price','成交價','單價','price per share'],
-   qty: ['qty','quantity','shares','數量','成交股數'],
-   fee: ['fee','commission','手續費','手續'],
+   date: ['date','日期','成交日期','交易日','run date','created at','date/time'],
+   ticker: ['ticker','symbol','代號','股票代號','股票代碼','商品代碼','商品'],
+   action: ['action','side','動作','買賣','買賣別','b/s','buy/sell','transaction type'],
+   price: ['price','成交價','成交價格','單價','price per share','average price','t. price','price ($)'],
+   qty: ['qty','quantity','shares','數量','成交股數','成交數量'],
+   fee: ['fee','commission','手續費','手續','fees','fees & comm','comm/fee','commission ($)'],
    stop: ['stop','停損','停損價'],
    target: ['target','目標','目標價'],
    setup: ['setup','setup類型','setup 類型'],
    thesis: ['thesis','理由','進場thesis','進場 thesis'],
    invalidate: ['invalidate','失效','失效條件'],
-   notes: ['notes','備註','memo'],
+   notes: ['notes','備註','memo','description'],
    strategy: ['strategy','策略'],
   };
-  const colMap = {};
   for (const [field, alts] of Object.entries(fieldMap)) {
+   if (colMap[field] != null) continue;
    for (let i = 0; i < headers.length; i++) {
-    if (alts.includes(headers[i])) { colMap[field] = i; break; }
+    if (alts.some(a => headers[i] === a.toLowerCase() || headers[i].includes(a.toLowerCase()))) { colMap[field] = i; break; }
    }
   }
   if (colMap.date == null || colMap.ticker == null || colMap.action == null || colMap.price == null || colMap.qty == null) {
-   alert('CSV 缺必要欄位（日期/代號/動作/價格/數量）。\n\n抓到的 header：' + headers.join(' | ') + '\n\n請確認券商匯出包含這些欄位，或匯出本系統 CSV 範本參考。');
+   alert('CSV 缺必要欄位（日期/代號/動作/價格/數量）。\n\n抓到的 header：' + headers.join(' | ') + '\n\n支援券商：Schwab / Fidelity / Robinhood / IB / 元大 / 凱基 / 本系統匯出格式。\n如為其他券商，請整理 CSV 後重試。');
    return;
   }
+  console.log('[CSV import]', detectedBroker ? '偵測到 ' + detectedBroker : '未識別券商，用通用欄位匹配');
   // 解析每行
   const j = getJ();
   const existingKeys = new Set(j.map(e => e.date + '|' + e.ticker + '|' + e.action + '|' + e.price + '|' + e.qty));
@@ -3915,8 +3997,11 @@ async function importJournalCSV(event) {
    if (row.length < 3) continue;
    const date = _normalizeDate(row[colMap.date]);
    const ticker = (row[colMap.ticker] || '').trim().toUpperCase();
-   const actionRaw = (row[colMap.action] || '').trim().toLowerCase();
-   const action = /^(b|buy|買|買入)/.test(actionRaw) ? 'buy' : /^(s|sell|賣|賣出)/.test(actionRaw) ? 'sell' : null;
+   const actionRaw = (row[colMap.action] || '').trim();
+   // 2026-05-21 Sprint 4-B: 使用 preset 的 actionNorm（券商各有 "Bought"/"BUY"/"買進"/"買" 不同）
+   const action = preset && preset.actionNorm
+    ? preset.actionNorm(actionRaw)
+    : (/^(b|buy|買|買入)/i.test(actionRaw) ? 'buy' : /^(s|sell|賣|賣出)/i.test(actionRaw) ? 'sell' : null);
    const price = parseFloat(row[colMap.price]);
    const qty = parseInt(row[colMap.qty]);
    if (!date || !ticker || !action || !price || !qty) {
@@ -3954,12 +4039,13 @@ async function importJournalCSV(event) {
    alert('沒有新交易可匯入（' + (lines.length - 1) + ' 行皆重複或格式不對' + (errors.length ? '\n\n錯誤：\n' + errors.slice(0,5).join('\n') : '') + '）');
    return;
   }
-  // 合併、按日期排序新到舊
   j.push(...newEntries);
   j.sort((a, b) => new Date(b.date) - new Date(a.date));
   saveJ(j);
   renderJournal();
-  alert('✅ 成功匯入 ' + newEntries.length + ' 筆新交易（跳過 ' + (lines.length - 1 - newEntries.length - errors.length) + ' 筆重複' + (errors.length ? '，' + errors.length + ' 筆格式錯誤' : '') + '）');
+  // 2026-05-21 Sprint 4-B: 顯示偵測到的券商
+  const brokerNote = detectedBroker ? '偵測格式：' + detectedBroker + '\n\n' : '';
+  alert('✅ ' + brokerNote + '成功匯入 ' + newEntries.length + ' 筆新交易（跳過 ' + (lines.length - 1 - newEntries.length - errors.length) + ' 筆重複' + (errors.length ? '，' + errors.length + ' 筆格式錯誤' : '') + '）');
  } catch(e) {
   alert('❌ 匯入失敗：' + e.message);
  }
@@ -12836,37 +12922,46 @@ function initCurrencyUI() {
 }
 
 // ============ FIREBASE AUTH + CLOUD SYNC ============
+// 2026-05-21 Sprint 4-A: 改用 modular SDK，所有呼叫走 window._fb
 let _fbUser = null;
 let _fbDb = null;
 let _fbAuth = null;
 
 function initFirebase() {
- try {
- _fbDb = firebase.firestore();
- _fbAuth = firebase.auth();
- _fbAuth.onAuthStateChanged(async (user) => {
- _fbUser = user;
- if (user) {
- updateAuthUI(user);
- await loadCloudData();
- } else {
- updateAuthUI(null);
+ const _doInit = () => {
+  if (!window._fb) return false;
+  try {
+   _fbDb = window._fb.db;
+   _fbAuth = window._fb.auth;
+   window._fb.onAuthStateChanged(_fbAuth, async (user) => {
+    _fbUser = user;
+    if (user) {
+     updateAuthUI(user);
+     await loadCloudData();
+    } else {
+     updateAuthUI(null);
+    }
+   });
+   return true;
+  } catch(e) { console.warn('Firebase init error:', e); return false; }
+ };
+ // ESM init 是 async — 如果 window._fb 還沒就緒，等 _fbReady 事件
+ if (!_doInit()) {
+  window.addEventListener('_fbReady', _doInit, { once: true });
  }
- });
- } catch(e) { console.warn('Firebase init error:', e); }
 }
 
 function signInWithGoogle() {
- if (!_fbAuth) return;
- const provider = new firebase.auth.GoogleAuthProvider();
- _fbAuth.signInWithPopup(provider).catch(err => {
- alert('登入失敗：' + (err.message || err));
+ if (!_fbAuth || !window._fb) return;
+ const provider = new window._fb.GoogleAuthProvider();
+ window._fb.signInWithPopup(_fbAuth, provider).catch(err => {
+  alert('登入失敗：' + (err.message || err));
  });
 }
 
 function signOutUser() {
- if (!_fbAuth) return;
- _fbAuth.signOut().then(() => setSyncStatus('已登出'));
+ if (!_fbAuth || !window._fb) return;
+ window._fb.signOut(_fbAuth).then(() => setSyncStatus('已登出'));
 }
 
 function updateAuthUI(user) {
@@ -12898,62 +12993,69 @@ function _syncTime() {
 }
 
 async function loadCloudData() {
- if (!_fbUser || !_fbDb) return;
+ if (!_fbUser || !_fbDb || !window._fb) return;
  setSyncStatus(' 載入雲端資料...');
  try {
- const snap = await _fbDb.collection('users').doc(_fbUser.uid).get();
- if (snap.exists) {
- const d = snap.data();
- if (d.journal && Array.isArray(d.journal)) localStorage.setItem('stock-journal', JSON.stringify(d.journal));
- if (d.watchlist && Array.isArray(d.watchlist)) { _todayWatchlist = d.watchlist; localStorage.setItem('scanner-watchlist', JSON.stringify(d.watchlist)); }
- if (d.tHoldings && typeof d.tHoldings === 'object'){ _tHoldings = d.tHoldings; localStorage.setItem('tHoldings', JSON.stringify(d.tHoldings)); }
- if (d.tLastReview) { _tLastReview = d.tLastReview; localStorage.setItem('tLastReview', d.tLastReview); }
- if (d.currency) { _currency = d.currency; localStorage.setItem('pref_currency', d.currency); }
- if (d.fxRate) { _fxRate = parseFloat(d.fxRate); localStorage.setItem('pref_fxrate', String(d.fxRate)); }
- setSyncStatus('已同步（' + _syncTime() + '）');
- initCurrencyUI();
- } else {
- // 首次登入 → 把本機資料上傳雲端
- setSyncStatus(' 首次登入，上傳本機資料...');
- await pushAllToCloud();
- }
+  const userDoc = window._fb.doc(_fbDb, 'users', _fbUser.uid);
+  const snap = await window._fb.getDoc(userDoc);
+  if (snap.exists()) {
+   const d = snap.data();
+   if (d.journal && Array.isArray(d.journal)) localStorage.setItem('stock-journal', JSON.stringify(d.journal));
+   if (d.watchlist && Array.isArray(d.watchlist)) { _todayWatchlist = d.watchlist; localStorage.setItem('scanner-watchlist', JSON.stringify(d.watchlist)); }
+   if (d.tHoldings && typeof d.tHoldings === 'object'){ _tHoldings = d.tHoldings; localStorage.setItem('tHoldings', JSON.stringify(d.tHoldings)); }
+   if (d.tLastReview) { _tLastReview = d.tLastReview; localStorage.setItem('tLastReview', d.tLastReview); }
+   if (d.currency) { _currency = d.currency; localStorage.setItem('pref_currency', d.currency); }
+   if (d.fxRate) { _fxRate = parseFloat(d.fxRate); localStorage.setItem('pref_fxrate', String(d.fxRate)); }
+   // 2026-05-21 Sprint 3-B 補：警報雲同步往返
+   if (d.alerts && Array.isArray(d.alerts)) localStorage.setItem('stock_alerts', JSON.stringify(d.alerts));
+   if (d.alertHistory && Array.isArray(d.alertHistory)) localStorage.setItem('stock_alert_history', JSON.stringify(d.alertHistory));
+   setSyncStatus('已同步（' + _syncTime() + '）');
+   initCurrencyUI();
+  } else {
+   setSyncStatus(' 首次登入，上傳本機資料...');
+   await pushAllToCloud();
+  }
  } catch(e) {
- console.warn('Cloud load error:', e);
- setSyncStatus(' 同步失敗', true);
+  console.warn('Cloud load error:', e);
+  setSyncStatus(' 同步失敗', true);
  }
 }
 
 async function pushAllToCloud() {
- if (!_fbUser || !_fbDb) return;
+ if (!_fbUser || !_fbDb || !window._fb) return;
  try {
- await _fbDb.collection('users').doc(_fbUser.uid).set({
- journal: getJ(),
- watchlist: _todayWatchlist || [],
- tHoldings: _tHoldings || {},
- tLastReview: _tLastReview || '',
- currency: _currency || 'usd',
- fxRate: _fxRate || 32.5,
- updatedAt: firebase.firestore.FieldValue.serverTimestamp()
- }, { merge: true });
- setSyncStatus('已同步（' + _syncTime() + '）');
+  const userDoc = window._fb.doc(_fbDb, 'users', _fbUser.uid);
+  await window._fb.setDoc(userDoc, {
+   journal: getJ(),
+   watchlist: _todayWatchlist || [],
+   tHoldings: _tHoldings || {},
+   tLastReview: _tLastReview || '',
+   currency: _currency || 'usd',
+   fxRate: _fxRate || 32.5,
+   alerts: (typeof _getAlerts === 'function') ? _getAlerts() : [],
+   alertHistory: (typeof _getAlertHistory === 'function') ? _getAlertHistory() : [],
+   updatedAt: window._fb.serverTimestamp(),
+  }, { merge: true });
+  setSyncStatus('已同步（' + _syncTime() + '）');
  } catch(e) {
- console.warn('Cloud push error:', e);
- setSyncStatus(' 同步失敗', true);
+  console.warn('Cloud push error:', e);
+  setSyncStatus(' 同步失敗', true);
  }
 }
 
 async function syncField(field, value) {
- if (!_fbUser || !_fbDb) return;
+ if (!_fbUser || !_fbDb || !window._fb) return;
  setSyncStatus(' 同步中...');
  try {
- await _fbDb.collection('users').doc(_fbUser.uid).set(
- { [field]: value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
- { merge: true }
- );
- setSyncStatus('已同步（' + _syncTime() + '）');
+  const userDoc = window._fb.doc(_fbDb, 'users', _fbUser.uid);
+  await window._fb.setDoc(userDoc,
+   { [field]: value, updatedAt: window._fb.serverTimestamp() },
+   { merge: true }
+  );
+  setSyncStatus('已同步（' + _syncTime() + '）');
  } catch(e) {
- console.warn('Sync error ('+field+'):', e);
- setSyncStatus(' 同步失敗', true);
+  console.warn('Sync error ('+field+'):', e);
+  setSyncStatus(' 同步失敗', true);
  }
 }
 
