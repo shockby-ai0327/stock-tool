@@ -3553,27 +3553,43 @@ function compositeGrade(score) {
 }
 
 // ============ Fix A: 信號驗證等級 — 對抗 false precision ============
-// 每個指標附「學術依據」+「我們的實證」雙評等（1-5 星）
-// 用戶看到 4★ Triple-Resonance 會同時看到「實證 1★ - 樣本不足」
-// 直接破壞「精準感」防止 over-confidence
+// 2026-05-21 Sprint 2-F: 加 sample（系統實際樣本量）+ failureCases（失效情境）
+// Codex：訊號評等若沒有樣本數/失效案例 = AI 信心糖衣
 const SIGNAL_VALIDATION = {
-  'rsRating':     { academic: 5, empirical: 4, note: 'IBD/Jegadeesh 1993 + 30 年實證；近期被套利 edge 縮減' },
-  'rsOverheat':   { academic: 5, empirical: 4, note: '動量極端值 mean-reversion 學術充分（Lehmann 1990）' },
-  'epsRevision':  { academic: 5, empirical: 5, note: 'Stickel 1989, Womack 1996 — 最強 fundamental factor' },
-  'insiderBuy':   { academic: 5, empirical: 4, note: 'Cohen 2012 cluster buying 顯著預測力' },
-  'atrStop':      { academic: 5, empirical: 5, note: 'Van Tharp R-multiple，數十年實證' },
-  'kelly':        { academic: 5, empirical: 4, note: '數學最佳，但樣本需 ≥50 才穩定' },
-  'sectorRS':     { academic: 4, empirical: 3, note: '動能 + 板塊 leadership' },
-  'vcp':          { academic: 3, empirical: 2, note: 'Minervini 方法移植；base-count 演算法未獨立驗證' },
-  'tripleResonance': { academic: 3, empirical: 1, note: '多訊號匯流概念合理，但本系統樣本 N<10，未實證' },
-  'composite':    { academic: 2, empirical: 1, note: '50/30/20 權重憑感覺，未做最佳化回測' },
-  'aiAnalysis':   { academic: 2, empirical: 1, note: 'Claude 文字合成既有資料，**非獨立訊號**' },
-  'newsSentiment': { academic: 2, empirical: 2, note: '新聞情緒通常滯後價格' },
-  'threeInst':    { academic: 3, empirical: 3, note: '外資方向性有效，自營商雜訊大' },
-  'threeInst5d':  { academic: 3, empirical: 2, note: '5 日累積比單日有用，需 30+ 樣本實證' },
-  'gmma':         { academic: 1, empirical: 1, note: '本質為 MA 排列裝飾，邊際 edge ≈ 0' },
-  'volProfile':   { academic: 2, empirical: 1, note: '日線解析度不足，期貨用較佳' },
-  'klinePatterns': { academic: 1, empirical: 1, note: '學術 hit rate ≈ 50%，等同擲硬幣' },
+  'rsRating':     { academic: 5, empirical: 4, sample: '252d backtest N≈600', note: 'IBD/Jegadeesh 1993 + 30 年實證；近期被套利 edge 縮減',
+                    failureCases: '極端過熱（RS=99）後 mean-revert；空頭市場全市場 RS 都低、失去區分力' },
+  'rsOverheat':   { academic: 5, empirical: 4, sample: '252d 約 50 例', note: '動量極端值 mean-reversion 學術充分（Lehmann 1990）',
+                    failureCases: '強趨勢市場 RS 99 可延續數月（Minervini 大贏家）— 警示會擋掉大贏家' },
+  'epsRevision':  { academic: 5, empirical: 5, sample: 'Stickel N=多萬', note: 'Stickel 1989, Womack 1996 — 最強 fundamental factor',
+                    failureCases: '財報後上修常已 priced-in；過小型股 EPS 估值散戶用不到' },
+  'insiderBuy':   { academic: 5, empirical: 4, sample: 'Cohen N=多萬', note: 'Cohen 2012 cluster buying 顯著預測力',
+                    failureCases: '單一內部人小額買進無預測力；CEO 大額買進有時是 PR 操作' },
+  'atrStop':      { academic: 5, empirical: 5, sample: 'Van Tharp 多年驗證', note: 'Van Tharp R-multiple，數十年實證',
+                    failureCases: '低 ATR 個股停損距離過小，盤整時頻繁被洗出場' },
+  'kelly':        { academic: 5, empirical: 4, sample: '需 N≥50 才穩定', note: '數學最佳，但樣本需 ≥50 才穩定',
+                    failureCases: '小樣本下 Kelly 算出來常 >40%，不可信；勝率/盈虧比不穩定時建議用 Half Kelly' },
+  'sectorRS':     { academic: 4, empirical: 3, sample: '252d N≈11 板塊', note: '動能 + 板塊 leadership',
+                    failureCases: 'GICS 板塊太粗（科技股都打包），個股可能跟板塊背離' },
+  'vcp':          { academic: 3, empirical: 2, sample: '本系統樣本 <50', note: 'Minervini 方法移植；base-count 演算法未獨立驗證',
+                    failureCases: '我們的 VCP 偵測演算法是啟發式 — 真實 Minervini VCP 需人工確認 base count 與 pivot' },
+  'tripleResonance': { academic: 3, empirical: 1, sample: '本系統 N<10', note: '多訊號匯流概念合理，但本系統樣本 N<10，未實證',
+                    failureCases: '單一訊號通過容易觸發 — 你需要的不是「3 個都過」而是「3 個獨立來源都過」' },
+  'composite':    { academic: 2, empirical: 1, sample: '權重未經回測', note: '50/30/20 權重憑感覺，未做最佳化回測',
+                    failureCases: '87 vs 82 是噪音；差 5 分內視為平手' },
+  'aiAnalysis':   { academic: 2, empirical: 1, sample: '無回測', note: 'Claude 文字合成既有資料，**非獨立訊號**',
+                    failureCases: '所有指標綠時 AI 必看多；不會帶來新資訊只是文字 wrapper' },
+  'newsSentiment': { academic: 2, empirical: 2, sample: 'N=有限', note: '新聞情緒通常滯後價格',
+                    failureCases: '頭條都是「破紀錄」時通常就是頂部；情緒最差時往往是底' },
+  'threeInst':    { academic: 3, empirical: 3, sample: 'TWSE 公開', note: '外資方向性有效，自營商雜訊大',
+                    failureCases: '自營商買賣含避險部位，方向常與多空判斷無關；季底外資調倉非 alpha' },
+  'threeInst5d':  { academic: 3, empirical: 2, sample: '本系統 5 日累積', note: '5 日累積比單日有用，需 30+ 樣本實證',
+                    failureCases: '個股流通量小時，少量買進就拉高百分比；需配合成交金額看' },
+  'gmma':         { academic: 1, empirical: 1, sample: '無顯著文獻', note: '本質為 MA 排列裝飾，邊際 edge ≈ 0',
+                    failureCases: 'MA 排列只是趨勢的延遲確認，沒提供新資訊' },
+  'volProfile':   { academic: 2, empirical: 1, sample: '本系統未驗證', note: '日線解析度不足，期貨用較佳',
+                    failureCases: '股票市場 OHLCV 沒有 tick 級 volume — VWAP/POC 不精準' },
+  'klinePatterns': { academic: 1, empirical: 1, sample: 'Bulkowski N=多萬', note: '學術 hit rate ≈ 50%，等同擲硬幣',
+                    failureCases: 'Bulkowski 大樣本驗證大多數 K 線型態無預測力；只是 confirmation bias' },
 };
 function signalConfidence(name) {
   const s = SIGNAL_VALIDATION[name];
@@ -3621,11 +3637,17 @@ function showSignalValidationModal() {
     for (const [k, v] of items) {
       const acad = '★'.repeat(v.academic) + '<span style="opacity:.25">★</span>'.repeat(5 - v.academic);
       const emp  = '★'.repeat(v.empirical) + '<span style="opacity:.25">★</span>'.repeat(5 - v.empirical);
+      // 2026-05-21 Sprint 2-F: 加 sample 大小 + 失效情境
       html += '<div style="display:grid;grid-template-columns:160px 1fr;gap:12px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:6px;font-size:12px">';
       html += '<div><div style="font-weight:600;color:var(--text);margin-bottom:4px">' + (labels[k] || k) + '</div>';
-      html += '<div style="font-size:10px;color:var(--muted)">學術 ' + acad + '<br>實證 ' + emp + '</div></div>';
-      html += '<div style="color:var(--muted);line-height:1.6;font-size:11px">' + v.note + '</div>';
+      html += '<div style="font-size:10px;color:var(--muted)">學術 ' + acad + '<br>實證 ' + emp + '</div>';
+      if (v.sample) html += '<div style="font-size:10px;color:var(--muted);margin-top:4px;padding:3px 6px;background:rgba(255,255,255,.03);border-radius:4px">樣本：' + escapeHtml(v.sample) + '</div>';
       html += '</div>';
+      html += '<div style="line-height:1.6;font-size:11px"><div style="color:var(--muted);margin-bottom:6px">' + escapeHtml(v.note) + '</div>';
+      if (v.failureCases) {
+        html += '<div style="padding:6px 8px;background:rgba(239,68,68,.05);border-left:2px solid rgba(239,68,68,.3);border-radius:0 4px 4px 0;font-size:10px;color:#fca5a5;line-height:1.5"><b style="color:#ef4444">⚠ 失效情境：</b>' + escapeHtml(v.failureCases) + '</div>';
+      }
+      html += '</div></div>';
     }
     html += '</div>';
   }
@@ -8961,6 +8983,28 @@ async function renderWatchlistSimple() {
   try { const d = await quickPrice(w.ticker); if (d) prices[w.ticker] = d.price; } catch(e) {}
  }));
 
+ // 2026-05-21 Sprint 2-D: 自動偵測 watchlist 觸發 setup（RS / 量能 / VCP / 三共振）
+ const rsCache = window._rsLeaderCache || [];
+ const trCache = window._tripleResonanceCache || [];
+ const _detectSetup = (ticker) => {
+  const tags = [];
+  const rs = rsCache.find(x => x.symbol === ticker);
+  if (rs) {
+   if (rs.rsRating >= 95) tags.push({ label: 'RS' + rs.rsRating, color: '#16a34a', tooltip: '相對強度 top 5%' });
+   else if (rs.rsRating >= 80) tags.push({ label: 'RS' + rs.rsRating, color: '#22c55e', tooltip: '相對強度 top 20%' });
+   if (rs.volExpand >= 2) tags.push({ label: '量' + rs.volExpand.toFixed(1) + 'x', color: '#f59e0b', tooltip: '量能放大' });
+   else if (rs.volExpand >= 1.5) tags.push({ label: '量' + rs.volExpand.toFixed(1) + 'x', color: '#eab308', tooltip: '量能溫和放大' });
+   if (rs.vcp && rs.vcp.vcpScore >= 3) tags.push({ label: 'VCP' + rs.vcp.vcpScore, color: '#a5b4fc', tooltip: 'VCP 收縮型態' });
+   if (rs.high52w && rs.price) {
+    const distHi = (rs.price - rs.high52w) / rs.high52w * 100;
+    if (distHi >= -5) tags.push({ label: '近高', color: '#22c55e', tooltip: '距 52w 高 < 5%' });
+   }
+   if (rs.epsRevision > 0) tags.push({ label: 'EPS↑', color: '#22c55e', tooltip: 'EPS 上修' });
+  }
+  const tr = trCache.find(x => x.symbol === ticker);
+  if (tr && tr.stars >= 4) tags.push({ label: '三共振' + tr.stars + '★', color: '#fbbf24', tooltip: '三重共振高分' });
+  return tags;
+ };
  const rows = list.map(w => {
   const cur = prices[w.ticker];
   const t = w.target;
@@ -8975,12 +9019,22 @@ async function renderWatchlistSimple() {
    if (cur <= t && t > 0) trigger = '<span style="font-size:11px;color:var(--green);font-weight:700;margin-left:6px">🎯 到價！</span>';
   }
   const cs = isTw(w.ticker) ? 'NT$' : '$';
-  return '<div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
-   '<div style="flex-shrink:0;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + w.ticker + '\';showPage(\'stock\');analyzeStock()"><b style="color:var(--accent);font-size:15px">' + w.ticker + '</b></div>' +
+  // 2026-05-21: setup 觸發 badge — 高亮今天滿足哪些條件
+  const setupTags = _detectSetup(w.ticker);
+  const setupHtml = setupTags.length
+   ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">' +
+     setupTags.map(t => '<span title="' + escapeAttr(t.tooltip) + '" style="font-size:10px;padding:2px 6px;border-radius:8px;background:' + t.color + '22;color:' + t.color + ';font-weight:600;border:1px solid ' + t.color + '44">' + escapeHtml(t.label) + '</span>').join('') +
+     '</div>'
+   : '';
+  const hasHighSignal = setupTags.length >= 3;
+  return '<div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-wrap:wrap' + (hasHighSignal ? ';background:rgba(34,197,94,.04)' : '') + '">' +
+   '<div style="flex-shrink:0;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + w.ticker + '\';showPage(\'stock\');analyzeStock()"><b style="color:var(--accent);font-size:15px">' + w.ticker + '</b>' +
+   (hasHighSignal ? '<div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:2px">⚡ ' + setupTags.length + ' 訊號觸發</div>' : '') +
+   '</div>' +
    '<div style="flex-shrink:0;font-size:13px">' + (cur ? cs + cur.toFixed(2) : '—') + '</div>' +
    '<div style="flex-shrink:0">目標 ' + (t ? cs + t.toFixed(2) : '—') + ' · 停損 ' + (s ? cs + s.toFixed(2) : '—') + '</div>' +
    '<div style="flex-shrink:0;font-size:12px">' + distHtml + trigger + '</div>' +
-   '<div style="flex:1;font-size:11px;color:var(--muted);min-width:200px">' + (w.thesis || '無論點') + '</div>' +
+   '<div style="flex:1;font-size:11px;color:var(--muted);min-width:200px">' + escapeHtml(w.thesis || '無論點') + setupHtml + '</div>' +
    '<button onclick="removeWatchSimple(\'' + w.ticker + '\')" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">移除</button>' +
   '</div>';
  }).join('');
@@ -10938,6 +10992,66 @@ function renderRSLeaderResults(results) {
 }
 
 // ── Per-stock entry guide modal (answers A + C + D in one place) ────────────
+// 2026-05-21 Sprint 2-C: 每檔 inline action summary（買點 / 停損 / R:R / 失效條件 / 下一步）
+// Codex 抓到：不要只給分數，每檔結果都要給明確 action
+function actionSummaryHTML(r) {
+ if (!r || !r.price) return '<span style="color:var(--muted);font-size:11px">—</span>';
+ const sig = _getRSSignal(r);
+ const sigEmoji = sig?.emoji || '';
+ const dist = r.high52w && r.price ? (r.price - r.high52w) / r.high52w * 100 : null;
+ const regime = window._marketRegime;
+ const regimeBlocked = regime && regime.overall <= -2;
+ // ATR or 8% fallback
+ const atr = r.atr || (r.price * 0.025);
+ const stopPrice = (r.price - 1.5 * atr);
+ const targetPrice = (r.price + 3 * atr);  // 1.5 ATR stop, 3 ATR target → R:R = 2.0
+ const riskPct = ((r.price - stopPrice) / r.price * 100);
+ const rr = (targetPrice - r.price) / (r.price - stopPrice);
+ const isTwStock = isTw(r.symbol);
+ const cs = isTwStock ? 'NT$' : '$';
+
+ // Determine action
+ let actionLabel, actionColor, actionNote;
+ if (regimeBlocked) {
+  actionLabel = '⛔ 大盤偏空'; actionColor = '#ef4444';
+  actionNote = '建議空手';
+ } else if (sigEmoji === '✅') {
+  if (r.changePct > 10) {
+   actionLabel = '⏳ 等回測'; actionColor = '#eab308';
+   actionNote = '今日大漲 ' + r.changePct.toFixed(1) + '% 追高滑點大';
+  } else {
+   actionLabel = '✓ 可進場'; actionColor = '#16a34a';
+   actionNote = '量能確認突破';
+  }
+ } else if (sigEmoji === '📍') {
+  actionLabel = '⏳ 等放量'; actionColor = '#eab308';
+  actionNote = '量能 ' + r.volExpand.toFixed(2) + 'x 未達 1.5x';
+ } else if (sigEmoji === '👀') {
+  actionLabel = '👁 觀察'; actionColor = '#a5b4fc';
+  actionNote = '突破 ' + cs + (r.high52w?.toFixed(2) || '—') + ' 後進';
+ } else if (sigEmoji === '🔴') {
+  actionLabel = '🔴 勿進'; actionColor = '#ef4444';
+  actionNote = '訊號偏弱';
+ } else {
+  actionLabel = '— 觀望'; actionColor = 'var(--muted)';
+  actionNote = '距高 ' + (dist != null ? Math.abs(dist).toFixed(1) + '%' : '—');
+ }
+ // 失效條件
+ let invalidateCond;
+ if (regimeBlocked) invalidateCond = '大盤轉強再考慮';
+ else if (dist != null && dist <= -10) invalidateCond = '跌破 ' + cs + (r.price * 0.95).toFixed(2);
+ else invalidateCond = '跌破停損 ' + cs + stopPrice.toFixed(2);
+
+ const rrColor = rr >= 2 ? '#22c55e' : rr >= 1.5 ? '#eab308' : '#ef4444';
+ return '<div style="text-align:left;font-size:10px;line-height:1.6;min-width:140px">' +
+   '<div style="font-weight:700;font-size:11px;color:' + actionColor + ';margin-bottom:3px">' + actionLabel + '</div>' +
+   '<div style="color:var(--muted)">買: <b style="color:var(--text)">' + cs + r.price.toFixed(2) + '</b>　停: <b style="color:#ef4444">' + cs + stopPrice.toFixed(2) + '</b> (-' + riskPct.toFixed(1) + '%)</div>' +
+   '<div style="color:var(--muted)">標: <b style="color:#22c55e">' + cs + targetPrice.toFixed(2) + '</b>　R:R <b style="color:' + rrColor + '">' + rr.toFixed(1) + '</b></div>' +
+   '<div style="color:var(--muted);font-size:9px;margin-top:2px">' + actionNote + '</div>' +
+   '<div style="color:var(--muted);font-size:9px">✕ 失效: ' + invalidateCond + '</div>' +
+ '</div>';
+}
+
 function showRSEntryGuide(symbol) {
   const r = (window._rsLeaderCache || []).find(x => x.symbol === symbol)
          || (window._rsDiscoveryCache || []).find(x => x.symbol === symbol);
@@ -11302,7 +11416,10 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
           '<div style="font-size:10px;color:var(--muted);cursor:help" title="差 5 分內非顯著差異">綜合分</div>' +
         '</td>';
       })() +
-      '<td style="padding:10px 8px;text-align:center"><button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;cursor:pointer;white-space:nowrap;font-weight:600">進場指引</button></td>' +
+      // 2026-05-21 Sprint 2-C: 進場指引欄位加 inline action summary（買/停/R:R/失效）
+      '<td style="padding:10px 8px;text-align:left;vertical-align:top">' + actionSummaryHTML(r) +
+        '<button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="margin-top:6px;font-size:10px;padding:4px 8px;border-radius:5px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;cursor:pointer;white-space:nowrap">詳細指引 →</button>' +
+      '</td>' +
     '</tr>';
   }).join('');
 
@@ -11310,7 +11427,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     (prependHtml || '') +
     _rsRegimeCard() +
     '<div style="margin-bottom:12px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
-      '<span>依綜合分數排列 — RS Rating 越高代表相對大盤動能越強</span>' +
+      '<span>依綜合分數排列 — 每檔附 inline 買點/停損/R:R/失效條件</span>' +
       '<span style="margin-left:auto;opacity:.7">僅顯示 MA50 上方個股</span>' +
     '</div>' +
     '<div class="table-wrap">' +
@@ -11324,7 +11441,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
             '<th class="col-disthi" style="padding:6px 8px;text-align:center">距高點</th>' +
             '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
             '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
-            '<th style="padding:6px 8px;text-align:center">進場指引</th>' +
+            '<th style="padding:6px 8px;text-align:left">Action（買/停/R:R）</th>' +
           '</tr>' +
         '</thead>' +
         '<tbody>' + rows + '</tbody>' +
