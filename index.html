@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>台美股智慧選股工具</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+<!-- 2026-05-20 Day 5-7: TradingView Advanced Charts widget (免費可嵌入) — 取代自畫的 lightweight-charts 主圖 -->
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <style>
 :root{--bg:#0a0e17;--card:#161e2e;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1413,7 +1415,7 @@ async function analyzeStock() {
  allPatterns.map(pDetail).join('') + '</div>';
  rd.innerHTML += patternCard;
  }
- setTimeout(() => renderKline('stock-kline', ohlcv), 50);
+ setTimeout(() => renderKline('stock-kline', ohlcv, ticker), 50);  // 2026-05-20: ticker 用於 TV widget symbol resolution
  // AI Forward Analysis — load from GitHub JSON, inject as card
  (async () => {
  const mkt = ticker.includes('.TW') ? 'tw' : 'us';
@@ -1505,7 +1507,63 @@ async function analyzeStock() {
 }
 
 // ============ K-LINE CHART ============
-function renderKline(id, ohlcv) {
+// 2026-05-20 Day 5-7: TradingView widget — 4 AI 一致認為自畫 K 線輸 TV 100 條街
+// 對 stock-kline 主圖優先用 TV widget；其他地方（指數、教學頁）仍用 lightweight-charts
+function _tickerToTVSymbol(ticker) {
+ if (!ticker) return '';
+ if (ticker.endsWith('.TW'))  return 'TPE:' + ticker.replace('.TW', '');
+ if (ticker.endsWith('.TWO')) return 'TPEX:' + ticker.replace('.TWO', '');
+ if (ticker === '^GSPC') return 'SP:SPX';
+ if (ticker === '^IXIC') return 'NASDAQ:IXIC';
+ if (ticker === '^VIX')  return 'CBOE:VIX';
+ if (ticker === '^TWII') return 'TWSE:TAIEX';
+ if (ticker === '^TNX')  return 'TVC:US10Y';
+ // 美股 / ETF / 債券：讓 TV 自動 resolve（NASDAQ / NYSE / AMEX 都會試）
+ return ticker;
+}
+function renderTVChart(containerId, ticker, interval) {
+ const el = document.getElementById(containerId);
+ if (!el) return false;
+ if (typeof TradingView === 'undefined' || !TradingView.widget) return false;  // 讓 caller fallback
+ el.innerHTML = '';
+ el.style.height = '480px';
+ const themeIsDark = (document.documentElement.getAttribute('data-theme') !== 'light');
+ try {
+  new TradingView.widget({
+   container_id: containerId,
+   symbol: _tickerToTVSymbol(ticker),
+   interval: interval || 'D',
+   timezone: 'Asia/Taipei',
+   theme: themeIsDark ? 'dark' : 'light',
+   style: '1',  // candles
+   locale: 'zh_TW',
+   autosize: true,
+   hide_side_toolbar: false,
+   allow_symbol_change: false,
+   studies: ['MASimple@tv-basicstudies', 'Volume@tv-basicstudies'],
+   toolbar_bg: themeIsDark ? '#0f1623' : '#f7f9fc',
+   enable_publishing: false,
+   hide_top_toolbar: false,
+   withdateranges: true,
+   details: false,
+   hotlist: false,
+   calendar: false,
+   show_popup_button: true,
+   popup_width: '1000',
+   popup_height: '650',
+  });
+  return true;
+ } catch (e) {
+  console.warn('TradingView widget 載入失敗，fallback 到 lightweight-charts:', e.message);
+  return false;
+ }
+}
+
+function renderKline(id, ohlcv, ticker) {
+ // 2026-05-20: stock-kline 主圖優先 TV widget。其他容器仍用 lightweight-charts。
+ if (id === 'stock-kline' && ticker && window._useTVChart !== false) {
+  if (renderTVChart(id, ticker, 'D')) return;  // 成功就回，否則 fallback 到 lightweight-charts
+ }
  const el = document.getElementById(id);
  if (!el || !ohlcv.length) return;
  el.innerHTML = '';
@@ -2535,7 +2593,9 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
  const reasonList = arr => arr.length ? '<div style="margin-top:10px;font-size:12px;line-height:1.8">' + arr.map(r => '<div style="color:var(--muted)">• ' + r + '</div>').join('') + '</div>' : '';
 
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
- '<div class="card"><h3> K線走勢圖</h3><div class="tab-bar" style="margin-bottom:8px"><button class="active" onclick="switchStockTF(\'' + ticker + '\',\'6mo\',\'1d\',this)">日線 6M</button><button onclick="switchStockTF(\'' + ticker + '\',\'1mo\',\'1h\',this)">1H 月線</button><button onclick="switchStockTF(\'' + ticker + '\',\'5d\',\'15m\',this)">15m 週線</button><button onclick="switchStockTF(\'' + ticker + '\',\'1d\',\'5m\',this)">5m 日內</button><button onclick="switchStockTF(\'' + ticker + '\',\'2y\',\'1wk\',this)">週線 2Y</button></div><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+ // 2026-05-20: K 線圖換 TradingView widget — 多時框、指標、繪圖工具、alerts 全由 TV 提供。
+ // 外部 tab-bar / MA legend 移除（TV 自己有），減少 UI 雜訊。
+ '<div class="card"><h3> K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
  // 2026-05-20 (Option B): AI 卡片放置點 — 介於 K 線圖與決策卡之間（中段，不是頁尾）
  '<div id="ai-card-slot"></div>' +
  // 2026-05-19: 決策卡 — Kelly + ATR + 1R/2R/3R 一次到位
@@ -2616,7 +2676,8 @@ function renderBond(ticker, meta, ta, bva, bd, lt, st, cur, price, chg, chgP) {
 
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + ' <span class="bond-badge">債券 ETF</span></div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="font-size:12px;color:var(--accent);margin-top:4px">' + bd.desc + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
  // K-line
- '<div class="card"><h3> K線走勢圖</h3><div class="tab-bar" style="margin-bottom:8px"><button class="active" onclick="switchStockTF(\'' + ticker + '\',\'6mo\',\'1d\',this)">日線 6M</button><button onclick="switchStockTF(\'' + ticker + '\',\'1mo\',\'1h\',this)">1H 月線</button><button onclick="switchStockTF(\'' + ticker + '\',\'5d\',\'15m\',this)">15m 週線</button><button onclick="switchStockTF(\'' + ticker + '\',\'1d\',\'5m\',this)">5m 日內</button><button onclick="switchStockTF(\'' + ticker + '\',\'2y\',\'1wk\',this)">週線 2Y</button></div><div id="stock-kline" class="chart-container"></div><div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:4px"><span><span style="color:#f59e0b">━</span> MA5</span><span><span style="color:#3b82f6">━</span> MA20</span><span><span style="color:#8b5cf6">━</span> MA60</span></div></div>' +
+ // 2026-05-20: 債券 ETF 也用 TradingView widget
+ '<div class="card"><h3> K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
  // Score cards
  '<div class="grid2"><div class="card"><h3>債券投資評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(bva.score) + '">' + (bva.score > 0 ? '+' : '') + bva.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((bva.score + 100) / 2) + '%;background:' + sc(bva.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + bva.verdict + '</div></div></div>' +
  '<div class="card"><h3> 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div></div>' +
@@ -5876,7 +5937,7 @@ async function switchStockTF(ticker, range, interval, btn) {
  }
  }
  el.innerHTML = '';
- renderKline('stock-kline', ohlcv);
+ renderKline('stock-kline', ohlcv, ticker);  // 2026-05-20: ticker for TV widget
  } catch (e) {
  // 2026-05-19: 友善訊息分流 — intraday 沒 fallback, 日線/週線有 OHLCV cache fallback
  const isIntraday = ['5m','15m','1h'].includes(interval);
