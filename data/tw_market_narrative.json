@@ -1,126 +1,127 @@
 {
-  "generatedAt": 1779381675450,
+  "generatedAt": 1779390582591,
   "market": "TW",
-  "scanAt": "2026-05-21T16:31:36.177Z",
+  "scanAt": "2026-05-21T18:59:34.629Z",
   "macros": {
     "spy": {
-      "last": 738.68,
-      "changePct": -0.35
+      "last": 742.32,
+      "changePct": 0.14
     },
     "vix": {
-      "last": 17.27,
-      "changePct": -0.97
+      "last": 17.18,
+      "changePct": -1.49
     },
     "tnx": {
-      "last": 4.6,
-      "changePct": 0.68
+      "last": 4.58,
+      "changePct": 0.09
     },
     "dxy": {
-      "last": 99.38,
-      "changePct": 0.27
+      "last": 99.25,
+      "changePct": 0.15
     }
   },
   "sectorLeaders": [
     {
       "etf": "XLU",
-      "last": 44.9,
-      "changePct": 0.88
+      "last": 44.85,
+      "changePct": 0.78
     },
     {
-      "etf": "XLV",
-      "last": 147.26,
-      "changePct": 0.09
+      "etf": "IBB",
+      "last": 169.19,
+      "changePct": 0.76
     },
     {
-      "etf": "XLK",
-      "last": 177.02,
-      "changePct": -0.06
+      "etf": "XLB",
+      "last": 50.1,
+      "changePct": 0.75
     }
   ],
   "sectorLaggards": [
     {
       "etf": "XLP",
-      "last": 84.24,
-      "changePct": -1.5
+      "last": 84.63,
+      "changePct": -1.05
     },
     {
-      "etf": "GDX",
-      "last": 85.2,
-      "changePct": -1.34
+      "etf": "XLE",
+      "last": 59.17,
+      "changePct": -1.05
     },
     {
       "etf": "IGV",
-      "last": 92.15,
-      "changePct": -1.25
+      "last": 92.38,
+      "changePct": -1.01
     }
   ],
   "gainers": [
     {
       "symbol": "INFQ",
       "name": "Infleqtion, Inc.",
-      "changePct": 29.16
+      "changePct": 33.18
     },
     {
       "symbol": "QBTS",
       "name": "D-Wave Quantum Inc.",
-      "changePct": 25.65
+      "changePct": 30.34
     },
     {
       "symbol": "RGTI",
       "name": "Rigetti Computing, Inc.",
-      "changePct": 25.13
-    },
-    {
-      "symbol": "AAP",
-      "name": "Advance Auto Parts Inc.",
-      "changePct": 19.9
+      "changePct": 27.46
     },
     {
       "symbol": "APLD",
       "name": "Applied Digital Corporation",
-      "changePct": 19.38
+      "changePct": 21.73
+    },
+    {
+      "symbol": "WOLF",
+      "name": "Wolfspeed, Inc.",
+      "changePct": 20.42
     }
   ],
   "losers": [
     {
       "symbol": "INTU",
       "name": "Intuit Inc.",
-      "changePct": -20.39
+      "changePct": -20.08
     },
     {
-      "symbol": "WMT",
-      "name": "Walmart Inc.",
-      "changePct": -7.83
+      "symbol": "SATS",
+      "name": "EchoStar Corporation",
+      "changePct": -7.85
+    },
+    {
+      "symbol": "RKLB",
+      "name": "Rocket Lab Corporation",
+      "changePct": -6.81
     },
     {
       "symbol": "BEKE",
       "name": "KE Holdings Inc",
-      "changePct": -7.25
+      "changePct": -6.83
     },
     {
-      "symbol": "IMVT",
-      "name": "Immunovant, Inc.",
-      "changePct": -6.76
-    },
-    {
-      "symbol": "IBRX",
-      "name": "ImmunityBio, Inc.",
-      "changePct": -7.08
+      "symbol": "WMT",
+      "name": "Walmart Inc.",
+      "changePct": -6.82
     }
   ],
-  "narrative": "美股今日呈現防守性輪動跡象。公用事業(XLU +0.88%)及醫療(XLV +0.09%)領漲，而消費必需品(XLP -1.5%)、礦業(GDX -1.34%)及科技(IGV -1.25%)承壓。10年期公債殖利率上升68個基點至4.6%，暗示升息預期增溫，驅動資金流向防守資產。VIX微跌至17.27，市場波動度仍低。科技股出現極端分化：AI晶片股(INFQ +29.16%、QBTS +25.65%)漲幅驚人，但軟體龍頭INTU慘跌-20.39%。台股也見類似現象，3037.TW相對強度達99創高。",
-  "headline": "大盤小幅下跌，防守性板塊領漲，科技股分化明顯",
+  "narrative": "市場呈現溫和上漲，SPY +0.14%，VIX下跌1.49%反映風險情緒改善。資金流向明確：公用事業(XLU +0.78%)與生技(IBB +0.76%)領漲，而消費必需(XLP -1.05%)與能源(XLE -1.05%)大幅下滑。科技個股高度分化——AI晶片相關個股(INFQ +33.18%、QBTS +30.34%)大漲，但軟體龍頭INTU暴跌-20.08%。台灣電子族群延續強勢(3037.TW RS99、2383.TW RS96)，2308.TW出現四星三重共鳴信號。整體呈現精選成長+防禦的旋轉格局。",
+  "headline": "科技反彈帶動大盤微漲，資金從消費轉向公用事業與生技",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
       "XLU",
-      "XLV"
+      "IBB",
+      "XLB"
     ],
     "outOf": [
+      "XLE",
       "XLP",
-      "GDX",
       "IGV"
     ]
   },
-  "tomorrowWatch": "關注利率走勢及科技股風險回報重新評估，特別是軟體股反彈機會與AI晶片股能否持續上漲"
+  "tomorrowWatch": "密切關注INTU後續動向與台股2308.TW的三重共鳴買點確認，同時警惕消費股與能源股是否觸底反彈"
 }
