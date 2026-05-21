@@ -86,6 +86,12 @@ jobs:
         run: python scripts/fetch_short_interest.py
         continue-on-error: true
 
+      # 2026-05-21 Tier 4: Earnings Whisper（市場真實預期 vs consensus）
+      - name: Fetch US earnings whisper
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/fetch_earnings_whisper.py
+        continue-on-error: true
+
       # 三大法人買賣超 (TWSE public API) — TW-specific institutional flow.
       # MUST run BEFORE enrich_quotes.py tw so that the Chinese 證券名稱 map
       # is available to enrich (yfinance returns English names for TW).
@@ -128,6 +134,7 @@ jobs:
           [ -f data/politician_trades.json ] && git add data/politician_trades.json || true
           [ -f data/retail_sentiment.json ]  && git add data/retail_sentiment.json  || true
           [ -f data/short_interest.json ]    && git add data/short_interest.json    || true
+          [ -f data/earnings_whisper.json ]  && git add data/earnings_whisper.json  || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --autostash 2>&1 | tail -2 || true

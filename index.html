@@ -1332,6 +1332,50 @@ async function analyzeStock() {
     }
    } catch(e) {}
   })();
+
+  // 2026-05-21 Tier 4: Earnings Whisper（市場真實預期）— US only
+  (async () => {
+   try {
+    if (!window._whisperCache) {
+     const r = await fetch(GH_RAW + 'earnings_whisper.json?t=' + Math.floor(Date.now() / 3600000), { signal: AbortSignal.timeout(5000) });
+     if (r.ok) window._whisperCache = (await r.json()).bySymbol || {};
+    }
+    const w = window._whisperCache && window._whisperCache[ticker];
+    if (!w) return;
+    // 計算距報告天數
+    let daysToReport = null;
+    if (w.reportDate) {
+     daysToReport = Math.round((new Date(w.reportDate) - Date.now()) / 86400000);
+    }
+    // 不顯示已過期的（>5 天前已報告）
+    if (daysToReport != null && daysToReport < -5) return;
+    // Badge 樣式根據 conviction
+    const convCfg = {
+     'strong':       { color: '#16a34a', bg: 'rgba(34,197,94,.18)', border: 'rgba(34,197,94,.5)', label: '🎯 財報超預期高機率' },
+     'beat-likely':  { color: '#22c55e', bg: 'rgba(34,197,94,.10)', border: 'rgba(34,197,94,.3)', label: '📊 財報 beat likely' },
+     'neutral':      { color: '#a5b4fc', bg: 'rgba(99,102,241,.08)', border: 'rgba(99,102,241,.3)', label: '📅 財報期' },
+     'miss-likely':  { color: '#ef4444', bg: 'rgba(239,68,68,.10)', border: 'rgba(239,68,68,.3)', label: '⚠ 財報 miss 風險' },
+    };
+    const cfg = convCfg[w.conviction] || convCfg.neutral;
+    const dayLabel = daysToReport == null ? '日期未定'
+      : daysToReport === 0 ? '今日報告'
+      : daysToReport > 0 ? 'T-' + daysToReport
+      : 'T+' + Math.abs(daysToReport) + ' 已報';
+    // Tooltip 完整資訊
+    const tipParts = [];
+    if (w.whisperEPS != null && w.consensusEPS != null) {
+     const diff = w.whisperBeat;
+     tipParts.push('Whisper EPS: $' + w.whisperEPS.toFixed(2) + ' vs Consensus $' + w.consensusEPS.toFixed(2) + (diff != null ? ' (差 ' + (diff > 0 ? '+' : '') + diff.toFixed(2) + ')' : ''));
+    }
+    if (w.beatRate8q != null) tipParts.push('過去 8 季 beat whisper 率：' + (w.beatRate8q * 100).toFixed(0) + '%');
+    if (w.avgSurprise != null) tipParts.push('平均 surprise：' + (w.avgSurprise > 0 ? '+' : '') + w.avgSurprise.toFixed(1) + '%');
+    if (w.reportTime) tipParts.push('報告時段：' + ({ 'AMC': '盤後', 'BMO': '盤前', 'DMH': '盤中' }[w.reportTime] || w.reportTime));
+    const tip = tipParts.join('\n');
+    const whisperBadge = '<span title="' + escapeAttr(tip) + '" style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:' + cfg.bg + ';color:' + cfg.color + ';border:1px solid ' + cfg.border + ';cursor:help">' + cfg.label + ' ' + dayLabel + (w.whisperBeat != null ? ' · whisper ' + (w.whisperBeat > 0 ? '+' : '') + w.whisperBeat.toFixed(2) : '') + '</span>';
+    const catBar = document.getElementById('stock-catalyst-bar');
+    if (catBar) catBar.insertAdjacentHTML('beforeend', whisperBadge);
+   } catch(e) {}
+  })();
  }
  // 2026-05-19: TW 三大法人買賣超 (TWSE) — TW-only catalyst
  if (isTw(ticker)) {
