@@ -10,7 +10,11 @@
 <!-- 2026-05-20 Day 5-7: TradingView Advanced Charts widget (免費可嵌入) — 取代自畫的 lightweight-charts 主圖 -->
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <style>
-:root{--bg:#0a0e17;--card:#161e2e;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316}
+:root{--bg:#0a0e17;--card:#161e2e;--border:#1e2a3a;--text:#e0e6ed;--muted:#7a8ba5;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+/* 2026-05-21: H+E+G 設計 — industrial trading desk palette */
+--mono:'SF Mono','JetBrains Mono','Roboto Mono',Consolas,monospace;
+--amber:#fbbf24;--silver:#9fb1c9;--bg-deep:#0a1628;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .app{display:flex;height:100vh;flex-direction:row}
@@ -150,6 +154,86 @@ th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;le
 .dash-kpi .val, .stock-price, .idx-value, .rec-box .rec-price { font-variant-numeric: tabular-nums; }
 /* 2026-05-20: 全站數字統一 tabular-nums，避免對齊飄 */
 table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabular-nums; }
+
+/* ═════════════════════════════════════════════════════════════════ */
+/* 2026-05-21 設計：H+E+G — industrial trading desk + status stripe + code pill */
+/* ═════════════════════════════════════════════════════════════════ */
+
+/* 卡片頂部色帶 — 區隔 section emotion 不靠 emoji */
+.card-strip{position:relative;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:12px;overflow:hidden}
+.card-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--muted);opacity:.6}
+.card-strip[data-stripe="regime"]::before  {background:#fbbf24}
+.card-strip[data-stripe="action"]::before  {background:#22c55e}
+.card-strip[data-stripe="holdings"]::before{background:#a5b4fc}
+.card-strip[data-stripe="alerts"]::before  {background:#f97316}
+.card-strip[data-stripe="watchlist"]::before{background:#a5b4fc}
+.card-strip[data-stripe="triple"]::before  {background:#fbbf24}
+.card-strip[data-stripe="rsleader"]::before{background:#22c55e}
+.card-strip[data-stripe="tstock"]::before  {background:#9fb1c9}
+.card-strip[data-stripe="warn"]::before    {background:#ef4444}
+
+/* Section label — 取代 emoji 標題 */
+.sl-section{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sl-section h2,.sl-section h3{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);margin:0}
+.sl-section .sl-meta{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;margin-left:auto}
+.sl-section .sl-sub{font-size:11px;color:var(--muted);font-weight:400}
+
+/* 主標題 — 取代「早安 Morning Brief」+ emoji */
+.dash-title{font-size:16px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text)}
+.dash-title-bar{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.dash-title-bar .dash-meta{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.5px}
+
+/* Signal dot — 取代 🎯/🔴/⚠/✓ 等狀態 emoji */
+.sd{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:6px;flex-shrink:0}
+.sd.strong  {background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5)}
+.sd.bull    {background:#22c55e}
+.sd.neutral {background:#fbbf24}
+.sd.weak    {background:#94a3b8}
+.sd.bear    {background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,.4)}
+.sd.empty   {background:transparent;border:1px solid var(--muted)}
+
+/* Code pill — 取代彩色 badge */
+.cp{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.04);color:var(--muted);border:1px solid rgba(255,255,255,.06);cursor:help;line-height:1.4;text-transform:uppercase}
+.cp.bull  {background:rgba(34,197,94,.10);color:#4ade80;border-color:rgba(34,197,94,.25)}
+.cp.amber {background:rgba(251,191,36,.08);color:#fbbf24;border-color:rgba(251,191,36,.25)}
+.cp.bear  {background:rgba(239,68,68,.08);color:#f87171;border-color:rgba(239,68,68,.25)}
+.cp.info  {background:rgba(99,102,241,.08);color:#a5b4fc;border-color:rgba(99,102,241,.25)}
+.cp+.cp{margin-left:4px}
+
+/* Conviction bar — 取代 ★★★★★ 星等 */
+.conv-bar{display:inline-flex;gap:2px;vertical-align:middle}
+.conv-bar i{display:inline-block;width:4px;height:11px;background:rgba(255,255,255,.08);border-radius:1px}
+.conv-bar i.on{background:#fbbf24}
+.conv-bar.strong i.on{background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,.4)}
+.conv-bar.bear i.on{background:#ef4444}
+
+/* Action button — 取代 [BUY ZONE] [⛔ 勿進場] 等多色按鈕 */
+.act{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:3px;text-transform:uppercase;text-decoration:none;cursor:pointer;border:1px solid;background:transparent;line-height:1.6}
+.act.buy   {color:#4ade80;border-color:rgba(34,197,94,.45)}
+.act.buy:hover  {background:rgba(34,197,94,.08)}
+.act.wait  {color:#fbbf24;border-color:rgba(251,191,36,.45)}
+.act.wait:hover {background:rgba(251,191,36,.08)}
+.act.watch {color:#a5b4fc;border-color:rgba(99,102,241,.45)}
+.act.watch:hover{background:rgba(99,102,241,.08)}
+.act.avoid {color:#f87171;border-color:rgba(239,68,68,.45)}
+.act.avoid:hover{background:rgba(239,68,68,.08)}
+.act.ghost {color:var(--muted);border-color:var(--border)}
+.act.ghost:hover{background:rgba(255,255,255,.04);color:var(--text)}
+
+/* Mono number — 取代散落 font-variant-numeric inline */
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Data row — 取代 RS leader 每行的 grid clutter */
+.dr{display:grid;grid-template-columns:auto 1fr auto auto auto auto auto auto;gap:10px;align-items:center;padding:8px 10px;border-radius:5px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+.dr:hover{background:rgba(255,255,255,.025)}
+.dr .rank{color:var(--muted);font-family:var(--mono);font-size:10px;min-width:20px}
+.dr .tk{font-weight:700;font-size:13px;letter-spacing:.5px;min-width:60px}
+.dr .pr{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--text);min-width:80px;text-align:right}
+.dr .pct{font-family:var(--mono);font-variant-numeric:tabular-nums;min-width:60px;text-align:right;font-size:11px}
+.dr .pct.up{color:#4ade80}
+.dr .pct.dn{color:#f87171}
+.dr .col-rs,.dr .col-vol,.dr .col-score{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;min-width:55px;font-size:11px;color:var(--silver)}
+.dr .col-act{justify-self:end;min-width:90px;text-align:right}
 /* Tab bar refinement */
 .tab-bar button { font-size:12px; padding:7px 14px; border-radius:6px; }
 /* Scan mini rows cleaner */
@@ -393,78 +477,96 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </div>
  <div class="main" style="padding-bottom:44px">
  <div id="page-dashboard" class="page active">
- <!-- 2026-05-20: 首頁打掉重練 — Morning Brief 概念
-      砍：精簡/完整模式切換、市場敘事、財經要聞、大盤 KPI 牆、FGI 單卡、行事曆、相關性、回撤
-      留：action items、watchlist、regime、持倉動態、警報、短線追蹤、三共振、RS leader -->
- <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
- <div>
- <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-.3px">早安，這是你的 Morning Brief</h2>
- <div id="dash-timestamp" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
- </div>
- <button class="btn btn-sm" onclick="renderDashboard(true)" style="padding:6px 14px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:8px;font-size:12px;cursor:pointer">🔄 重新整理</button>
+ <!-- 2026-05-21 H+E+G 設計：industrial trading desk + status stripe + code pill -->
+
+ <!-- TITLE BAR -->
+ <div class="dash-title-bar">
+  <div>
+   <div class="dash-title">Morning Brief</div>
+   <div class="dash-meta" id="dash-timestamp"></div>
+  </div>
+  <button class="act ghost" onclick="renderDashboard(true)">refresh</button>
  </div>
 
- <!-- 1. 大盤環境 — 第一眼就看到「能不能做多」 -->
- <div id="dash-regime" style="margin-bottom:16px"></div>
+ <!-- 1. MARKET REGIME -->
+ <section class="card-strip" data-stripe="regime">
+  <div class="sl-section">
+   <h2>Market Regime</h2>
+   <span class="sl-sub">大盤環境決定可否做多</span>
+  </div>
+  <div id="dash-regime"></div>
+ </section>
 
- <!-- 2. 今日待處理（持倉警報 / 停損觸發 / 目標達標）— 最重要的「該行動的事」 -->
- <div id="dash-action-items" style="margin-bottom:16px"></div>
+ <!-- 2. ACTION ITEMS -->
+ <section class="card-strip" data-stripe="action">
+  <div class="sl-section">
+   <h2>Today Action</h2>
+   <span class="sl-sub">停損觸發・目標達標・警報</span>
+  </div>
+  <div id="dash-action-items"></div>
+ </section>
 
- <!-- 3. 我的持倉今日健康度 -->
- <div id="dash-holdings"></div>
+ <!-- 3. HOLDINGS -->
+ <section class="card-strip" data-stripe="holdings">
+  <div class="sl-section">
+   <h2>Holdings</h2>
+   <span class="sl-sub">我的持倉今日健康度</span>
+  </div>
+  <div id="dash-holdings"></div>
+ </section>
 
- <!-- 4. 條件式警報觸發狀態 -->
- <div class="card" id="dash-alerts-card" style="margin-bottom:16px">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
- <h3 style="margin:0">🔔 條件式警報</h3>
- <button onclick="showAlertForm()" style="font-size:11px;padding:5px 12px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:#f59e0b;cursor:pointer">+ 新增警報</button>
- </div>
- <div id="alerts-form-container" style="display:none;margin-bottom:10px"></div>
- <div id="alerts-active-list" style="font-size:12px"></div>
- <div id="alerts-history-list" style="margin-top:10px;font-size:11px"></div>
- </div>
+ <!-- 4. ALERTS -->
+ <section class="card-strip" data-stripe="alerts" id="dash-alerts-card">
+  <div class="sl-section">
+   <h2>Alerts</h2>
+   <span class="sl-sub">條件式警報・每 5 分鐘自動檢查</span>
+   <button class="act ghost" onclick="showAlertForm()">+ alert</button>
+  </div>
+  <div id="alerts-form-container" style="display:none;margin-bottom:10px"></div>
+  <div id="alerts-active-list" style="font-size:12px"></div>
+  <div id="alerts-history-list" style="margin-top:10px;font-size:11px"></div>
+ </section>
 
- <!-- 5. 我的觀察清單 — 等待 setup 的標的 -->
- <div id="dash-watchlist-simple" style="margin-bottom:16px"></div>
+ <!-- 5. WATCHLIST -->
+ <section class="card-strip" data-stripe="watchlist">
+  <div class="sl-section">
+   <h2>Watchlist</h2>
+   <span class="sl-sub">研究過、等價位 / 等 setup 的標的</span>
+  </div>
+  <div id="dash-watchlist-simple"></div>
+ </section>
 
- <!-- 6. 三重共振雷達 — 你的核心 IP，4 AI 一致認可的差異化 -->
- <div class="card" id="dash-triple-resonance-card" style="margin-bottom:16px;border-left:3px solid #fbbf24;background:linear-gradient(135deg, rgba(251,191,36,.04) 0%, rgba(0,0,0,0) 100%)">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
- <div>
- <div style="font-weight:700;font-size:14px;color:#fbbf24">三重共振雷達 — 財報 + VCP + 內部人</div>
- <div style="font-size:11px;color:var(--muted);margin-top:3px">同時滿足 ≥3 個領先指標的高機率設定（事前可見的爆發條件）</div>
- </div>
- <span id="dash-triple-resonance-meta" style="font-size:10px;color:var(--muted)"></span>
- </div>
- <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">載入中...</div></div>
- </div>
+ <!-- 6. TRIPLE RESONANCE -->
+ <section class="card-strip" data-stripe="triple" id="dash-triple-resonance-card">
+  <div class="sl-section">
+   <h2>Triple Resonance</h2>
+   <span class="sl-sub">財報・VCP・內部人 ≥3 訊號匯流</span>
+   <span class="sl-meta" id="dash-triple-resonance-meta"></span>
+  </div>
+  <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;font-family:var(--mono)">scanning…</div></div>
+ </section>
 
- <!-- 7. 動能領袖 RS Leader — 全市場 -->
- <div class="card" style="margin-bottom:16px">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
- <div class="section-label" style="margin-bottom:0">動能領袖 — RS Leader <span style="font-size:10px;font-weight:400;color:var(--muted)">全市場 top</span></div>
- <button class="btn btn-primary btn-sm" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
- </div>
- <div id="dash-rsleader-list"><div style="text-align:center;padding:20px;color:var(--muted)">前往掃描器取得最新排行</div></div>
- </div>
+ <!-- 7. RS LEADER -->
+ <section class="card-strip" data-stripe="rsleader">
+  <div class="sl-section">
+   <h2>RS Leader</h2>
+   <span class="sl-sub">全市場動能排行</span>
+   <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">full list →</button>
+  </div>
+  <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
+ </section>
 
- <!-- 8. 短線追蹤 — MSFT/META/GOOGL（T 評分 <60 已自動 gate） -->
- <div class="card">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
- <div>
- <div class="section-label" style="margin:0">短線追蹤 — MSFT / META / GOOGL</div>
- <div style="font-size:11px;color:var(--muted);margin-top:3px">固定追蹤三檔・每日更新進出區間・<b>T評分 &lt; 60 不建議進場</b>・1-7天持倉週期</div>
- </div>
- <span id="t-review-badge"></span>
- </div>
- <div class="t-stock-grid" id="dash-t-list">
- <div style="text-align:center;padding:20px;color:var(--muted);grid-column:1/-1">載入中...</div>
- </div>
- </div>
-
- <!-- 2026-05-21 Sprint 3-C: 移除舊 dashboard 元素 stubs。
-      dash-correlation / dash-drawdown / dash-sector-concentration 統一搬到「持倉管理」分頁的對應卡片。
-      其他元素（market-kpis / news / narrative）函式已加 null guard，目標不存在就跳過渲染。 -->
+ <!-- 8. T-STOCK -->
+ <section class="card-strip" data-stripe="tstock">
+  <div class="sl-section">
+   <h2>Short-Term Tracking</h2>
+   <span class="sl-sub">MSFT・META・GOOGL · T-score &lt;60 = no entry</span>
+   <span class="sl-meta" id="t-review-badge"></span>
+  </div>
+  <div class="t-stock-grid" id="dash-t-list">
+   <div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;grid-column:1/-1;font-family:var(--mono)">loading…</div>
+  </div>
+ </section>
  </div>
  <div id="page-stock" class="page">
  <div class="search-box">
