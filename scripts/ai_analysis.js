@@ -25,6 +25,9 @@ if (!API_KEY) {
 
 const DELAY = ms => new Promise(r => setTimeout(r, ms));
 
+// 2026-05-21 Level 2: 累積 token 用量，整跑結束時寫進 api_usage.json
+const _runUsage = { input: 0, output: 0, calls: 0, model: 'claude-haiku-4-5' };
+
 // ── Call Claude API directly via fetch ─────────────────────────────────────
 async function callClaude(prompt) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -46,7 +49,40 @@ async function callClaude(prompt) {
     throw new Error(`Claude API ${res.status}: ${err.slice(0, 200)}`);
   }
   const data = await res.json();
+  // 累積 token usage
+  if (data.usage) {
+    _runUsage.input  += data.usage.input_tokens  || 0;
+    _runUsage.output += data.usage.output_tokens || 0;
+    _runUsage.calls++;
+  }
   return data.content[0].text.trim();
+}
+
+// 跑完寫進 data/api_usage.json（每個 script 自己呼叫）
+function _writeUsage(scriptName) {
+  try {
+    const file = join(DATA_DIR, 'api_usage.json');
+    let usage = { months: {}, lastUpdated: 0 };
+    try { usage = JSON.parse(readFileSync(file, 'utf8')); } catch(e) {}
+    const month = new Date().toISOString().slice(0, 7);  // YYYY-MM
+    if (!usage.months[month]) usage.months[month] = { input: 0, output: 0, calls: 0, byScript: {} };
+    const m = usage.months[month];
+    m.input  += _runUsage.input;
+    m.output += _runUsage.output;
+    m.calls  += _runUsage.calls;
+    if (!m.byScript[scriptName]) m.byScript[scriptName] = { input: 0, output: 0, calls: 0 };
+    m.byScript[scriptName].input  += _runUsage.input;
+    m.byScript[scriptName].output += _runUsage.output;
+    m.byScript[scriptName].calls  += _runUsage.calls;
+    // 只保留最近 6 個月
+    const months = Object.keys(usage.months).sort().reverse().slice(0, 6);
+    usage.months = Object.fromEntries(months.map(k => [k, usage.months[k]]));
+    usage.lastUpdated = Date.now();
+    writeFileSync(file, JSON.stringify(usage, null, 2));
+    console.log(`📊 token usage: ${_runUsage.input} in / ${_runUsage.output} out / ${_runUsage.calls} calls`);
+  } catch(e) {
+    console.warn('  writeUsage fail:', e.message);
+  }
 }
 
 // ── Build analysis prompt for a single stock ───────────────────────────────
@@ -233,4 +269,6 @@ const markets = arg === 'all' ? ['us', 'tw'] : [arg];
 for (const m of markets) {
   await analyzeMarket(m);
 }
+// 2026-05-21 Level 2: 寫入 token usage
+_writeUsage('ai_analysis');
 console.log('\nDone.');

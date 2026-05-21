@@ -54,6 +54,29 @@ async function fetchScreenerTop5(scrId) {
   }));
 }
 
+// 2026-05-21 Level 2: token usage 追蹤
+const _runUsage = { input: 0, output: 0, calls: 0 };
+function _writeUsage(scriptName) {
+  try {
+    const file = join(DATA_DIR, 'api_usage.json');
+    let usage = { months: {}, lastUpdated: 0 };
+    try { usage = JSON.parse(readFileSync(file, 'utf8')); } catch(e) {}
+    const month = new Date().toISOString().slice(0, 7);
+    if (!usage.months[month]) usage.months[month] = { input: 0, output: 0, calls: 0, byScript: {} };
+    const m = usage.months[month];
+    m.input += _runUsage.input; m.output += _runUsage.output; m.calls += _runUsage.calls;
+    if (!m.byScript[scriptName]) m.byScript[scriptName] = { input: 0, output: 0, calls: 0 };
+    m.byScript[scriptName].input += _runUsage.input;
+    m.byScript[scriptName].output += _runUsage.output;
+    m.byScript[scriptName].calls += _runUsage.calls;
+    const months = Object.keys(usage.months).sort().reverse().slice(0, 6);
+    usage.months = Object.fromEntries(months.map(k => [k, usage.months[k]]));
+    usage.lastUpdated = Date.now();
+    writeFileSync(file, JSON.stringify(usage, null, 2));
+    console.log(`📊 token usage: ${_runUsage.input} in / ${_runUsage.output} out / ${_runUsage.calls} calls`);
+  } catch(e) { console.warn('  writeUsage fail:', e.message); }
+}
+
 async function callClaude(prompt) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -71,6 +94,11 @@ async function callClaude(prompt) {
   });
   if (!r.ok) throw new Error(`Claude ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const data = await r.json();
+  if (data.usage) {
+    _runUsage.input  += data.usage.input_tokens  || 0;
+    _runUsage.output += data.usage.output_tokens || 0;
+    _runUsage.calls++;
+  }
   return data.content[0].text.trim();
 }
 
@@ -176,4 +204,4 @@ async function main() {
   }
 }
 
-main().catch(e => { console.error(e); process.exit(0); });
+main().then(() => _writeUsage('market_narrative')).catch(e => { console.error(e); _writeUsage('market_narrative'); process.exit(0); });

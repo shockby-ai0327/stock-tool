@@ -441,6 +441,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <button onclick="showPage('market')">市場情報</button>
  <button onclick="showPage('education')">教學</button>
  <button onclick="showSignalValidationModal()" style="background:transparent;border:1px dashed rgba(255,255,255,.12);color:var(--muted);font-size:11px;padding:6px 10px;margin-top:6px;text-align:left">📊 為什麼這個訊號？</button>
+ <button onclick="showApiUsageModal()" style="background:transparent;border:1px dashed rgba(255,255,255,.12);color:var(--muted);font-size:11px;padding:6px 10px;margin-top:4px;text-align:left">💳 <span id="api-usage-mini">API 用量</span></button>
  </nav>
  <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">
    <span id="theme-icon" style="font-size:14px">☀</span>
@@ -3898,6 +3899,120 @@ function showMinerviniIndicatorTips() {
  html += '💡 <b>建議組合</b>：日常分析用「Minervini Ultimate +VCP」，找新標的用「Minervini VCP Scanner」（TV Pine Screener 跑你的 watchlist）。';
  html += '</div>';
  html += '</div></div></div>';
+ document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// 2026-05-21 Level 2: API 用量估算 — 從 data/api_usage.json 讀本月累積，× Claude 價目算成本
+// Anthropic 沒開放「目前餘額」endpoint，只能：
+//   (1) 我們累積的 token 估算
+//   (2) 連結到 console.anthropic.com 看真實
+const _CLAUDE_PRICING = {
+ // 2026 價目（USD per 1M tokens）
+ 'claude-haiku-4-5':   { input: 1.00, output: 5.00 },
+ 'claude-sonnet-4-5':  { input: 3.00, output: 15.00 },
+ 'claude-opus-4-5':    { input: 15.00, output: 75.00 },
+};
+function _calcMonthCost(monthData) {
+ if (!monthData) return { cost: 0, byScript: {} };
+ // 預設都假設是 haiku（我們現在大多數 cron 用 haiku-4-5）
+ const p = _CLAUDE_PRICING['claude-haiku-4-5'];
+ const cost = (monthData.input / 1e6) * p.input + (monthData.output / 1e6) * p.output;
+ const byScript = {};
+ for (const [s, v] of Object.entries(monthData.byScript || {})) {
+  byScript[s] = (v.input / 1e6) * p.input + (v.output / 1e6) * p.output;
+ }
+ return { cost, byScript };
+}
+async function _loadApiUsage() {
+ try {
+  const r = await fetch(GH_RAW + 'api_usage.json?t=' + Math.floor(Date.now() / 1800000), { signal: AbortSignal.timeout(5000) });
+  if (!r.ok) return null;
+  return await r.json();
+ } catch(e) { return null; }
+}
+async function _updateApiUsageMini() {
+ const el = document.getElementById('api-usage-mini');
+ if (!el) return;
+ const usage = await _loadApiUsage();
+ const month = new Date().toISOString().slice(0, 7);
+ const m = usage?.months?.[month];
+ if (m) {
+  const { cost } = _calcMonthCost(m);
+  el.textContent = '本月 $' + cost.toFixed(2);
+ } else {
+  el.textContent = 'API 用量';
+ }
+}
+// 初次載入呼叫一次（dashboard 也會觸發）
+setTimeout(_updateApiUsageMini, 2000);
+window.addEventListener('focus', _updateApiUsageMini);
+
+async function showApiUsageModal() {
+ const old = document.getElementById('api-usage-modal');
+ if (old) { old.remove(); return; }
+ const usage = await _loadApiUsage();
+ const months = Object.keys(usage?.months || {}).sort().reverse().slice(0, 6);
+ const curMonth = new Date().toISOString().slice(0, 7);
+ const cur = usage?.months?.[curMonth];
+ const curCalc = _calcMonthCost(cur);
+
+ let html = '<div id="api-usage-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+ html += '<div style="background:var(--card);border-radius:12px;max-width:600px;width:100%;max-height:85vh;overflow:auto;border:1px solid var(--border)">';
+ html += '<div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">';
+ html += '<div style="font-size:15px;font-weight:700">Anthropic API 用量</div>';
+ html += '<span class="cp amber">本機估算</span>';
+ html += '<button onclick="document.getElementById(\'api-usage-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>';
+ html += '</div>';
+
+ // 本月大數字
+ html += '<div style="padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.04)">';
+ if (cur) {
+  html += '<div class="mono" style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">本月估算成本 · ' + curMonth + '</div>';
+  html += '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">';
+  html += '<div class="mono" style="font-size:32px;font-weight:700;color:var(--text)">$' + curCalc.cost.toFixed(2) + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted);line-height:1.5">' +
+   cur.input.toLocaleString() + ' input · ' + cur.output.toLocaleString() + ' output · ' + cur.calls.toLocaleString() + ' API calls</div>';
+  html += '</div>';
+  if (Object.keys(curCalc.byScript).length) {
+   html += '<div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap">';
+   for (const [name, cost] of Object.entries(curCalc.byScript).sort((a,b) => b[1] - a[1])) {
+    html += '<span class="cp info">' + escapeHtml(name) + ' $' + cost.toFixed(3) + '</span>';
+   }
+   html += '</div>';
+  }
+ } else {
+  html += '<div style="color:var(--muted);font-size:12px;padding:8px 0">本月尚無資料 — 下次 cron 跑完後會出現</div>';
+ }
+ html += '</div>';
+
+ // 歷史月份
+ if (months.length > 1) {
+  html += '<div style="padding:14px 22px">';
+  html += '<div class="mono" style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">歷史月份</div>';
+  for (const mo of months) {
+   if (mo === curMonth) continue;
+   const data = usage.months[mo];
+   const { cost } = _calcMonthCost(data);
+   html += '<div style="display:grid;grid-template-columns:80px 1fr auto;gap:10px;padding:6px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)">' +
+    '<span class="mono" style="color:var(--muted)">' + mo + '</span>' +
+    '<span class="mono" style="color:var(--muted);font-size:10px">' + (data.input + data.output).toLocaleString() + ' tokens · ' + data.calls + ' calls</span>' +
+    '<span class="mono" style="font-weight:700">$' + cost.toFixed(2) + '</span>' +
+   '</div>';
+  }
+  html += '</div>';
+ }
+
+ // 重要說明 + console 連結
+ html += '<div style="padding:14px 22px;background:rgba(99,102,241,.04);border-top:1px solid rgba(99,102,241,.15);font-size:11px;color:var(--muted);line-height:1.7">';
+ html += '⚠ <b style="color:var(--text)">這是本機估算</b>，不是真實餘額。<br>';
+ html += 'Anthropic 沒有公開「目前餘額」API — 真實餘額 + 充值都要去 console。<br><br>';
+ html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+ html += '<a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer" class="act buy" style="text-decoration:none">查看真實餘額 / 充值 →</a>';
+ html += '<a href="https://console.anthropic.com/settings/usage" target="_blank" rel="noopener noreferrer" class="act watch" style="text-decoration:none">真實 usage report →</a>';
+ html += '</div>';
+ html += '</div>';
+
+ html += '</div></div>';
  document.body.insertAdjacentHTML('beforeend', html);
 }
 

@@ -80,7 +80,7 @@ jobs:
           # 2026-05-19 FIX: git add aborts on first missing pathspec, leaving
           # OTHER files unstaged. Add each file individually so missing TW files
           # don't kill US staging.
-          for f in data/us_ai_analysis.json data/tw_ai_analysis.json data/us_market_narrative.json data/tw_market_narrative.json; do
+          for f in data/us_ai_analysis.json data/tw_ai_analysis.json data/us_market_narrative.json data/tw_market_narrative.json data/api_usage.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           git diff --cached --quiet && echo "(no AI changes to commit)" || git commit -m "ai: $(date -u '+%Y-%m-%d %H:%M UTC')"

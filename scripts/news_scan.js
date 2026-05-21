@@ -23,6 +23,29 @@ mkdirSync(DATA_DIR, { recursive: true });
 
 const DELAY = ms => new Promise(r => setTimeout(r, ms));
 
+// 2026-05-21 Level 2: token usage 追蹤
+const _runUsage = { input: 0, output: 0, calls: 0 };
+function _writeUsage(scriptName) {
+  try {
+    const file = join(DATA_DIR, 'api_usage.json');
+    let usage = { months: {}, lastUpdated: 0 };
+    try { usage = JSON.parse(readFileSync(file, 'utf8')); } catch(e) {}
+    const month = new Date().toISOString().slice(0, 7);
+    if (!usage.months[month]) usage.months[month] = { input: 0, output: 0, calls: 0, byScript: {} };
+    const m = usage.months[month];
+    m.input += _runUsage.input; m.output += _runUsage.output; m.calls += _runUsage.calls;
+    if (!m.byScript[scriptName]) m.byScript[scriptName] = { input: 0, output: 0, calls: 0 };
+    m.byScript[scriptName].input += _runUsage.input;
+    m.byScript[scriptName].output += _runUsage.output;
+    m.byScript[scriptName].calls += _runUsage.calls;
+    const months = Object.keys(usage.months).sort().reverse().slice(0, 6);
+    usage.months = Object.fromEntries(months.map(k => [k, usage.months[k]]));
+    usage.lastUpdated = Date.now();
+    writeFileSync(file, JSON.stringify(usage, null, 2));
+    console.log(`📊 token usage: ${_runUsage.input} in / ${_runUsage.output} out / ${_runUsage.calls} calls`);
+  } catch(e) { console.warn('  writeUsage fail:', e.message); }
+}
+
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) {
   console.error('ANTHROPIC_API_KEY not set — skipping news sentiment scan.');
@@ -101,6 +124,12 @@ Return ONLY valid JSON, no markdown:
     throw new Error(`Claude API ${res.status}: ${err.slice(0, 200)}`);
   }
   const data = await res.json();
+  // 2026-05-21 Level 2: 累積 token usage
+  if (data.usage) {
+    _runUsage.input  += data.usage.input_tokens  || 0;
+    _runUsage.output += data.usage.output_tokens || 0;
+    _runUsage.calls++;
+  }
   const raw = data.content?.[0]?.text?.trim() || '';
   const m = raw.match(/\{[\s\S]*\}/);
   if (!m) throw new Error('No JSON in response');
@@ -181,6 +210,7 @@ async function main() {
   const bearish = Object.values(bySymbol).filter(b => b.sentiment === 'bearish').length;
   console.log(`\nSaved → news_sentiment.json (${Object.keys(bySymbol).length} symbols · ${bullish} bullish · ${bearish} bearish)`);
   console.log(`End: ${new Date().toISOString()}`);
+  _writeUsage('news_scan');
 }
 
-main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
+main().catch(e => { console.error('Fatal:', e.message); _writeUsage('news_scan'); process.exit(1); });

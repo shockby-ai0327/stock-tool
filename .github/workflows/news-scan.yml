@@ -73,6 +73,7 @@ jobs:
           [ -f data/tw_news_sentiment.json ] && git add data/tw_news_sentiment.json || true
           [ -f data/us_news_raw.json ]       && git add data/us_news_raw.json       || true
           [ -f data/tw_news_raw.json ]       && git add data/tw_news_raw.json       || true
+          [ -f data/api_usage.json ]         && git add data/api_usage.json         || true
           git diff --cached --quiet || git commit -m "news: $(date -u '+%Y-%m-%d %H:%M UTC')"
           # Push with retry — workflows race on main
           for attempt in 1 2 3 4 5; do
