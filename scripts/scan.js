@@ -16,6 +16,8 @@ import fetch from 'node-fetch';
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+// 2026-05-21 Tier 3: Microsoft Qlib Alpha158 8 個動能因子
+import { computeQlibFactors } from './qlib_factors.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -1176,6 +1178,20 @@ async function scanUS() {
         // Sector ETF + sectorRS are resolved in a post-batch step using Yahoo's
         // assetProfile (industry/sector → ETF) with a 1-year disk cache. See
         // the lookup block right after this scan loop.
+        // 2026-05-21 Tier 3: 計算 Qlib Alpha158 8 個動能因子（OHLCV 此時還在記憶體裡）
+        let qlibScore = null, qlibSubs = null;
+        try {
+          const opens = ohlcv.opens || (ohlcv.meta && ohlcv.meta.opens) || [];
+          // 把分離的 arrays 組成 {o,h,l,c,v} 結構 — Qlib 模組需要
+          if (opens.length === closes.length && closes.length >= 80) {
+            const ohlcvObjs = closes.map((c, i) => ({
+              o: opens[i], h: highs[i], l: lows[i], c, v: volumes[i] || 0,
+            }));
+            const q = computeQlibFactors(ohlcvObjs);
+            if (q) { qlibScore = q.qlibScore; qlibSubs = q.subScores; }
+          }
+        } catch (e) { /* qlib 失敗不影響主流程 */ }
+
         const base = {
           symbol: sym,
           name: meta.shortName || meta.longName || sym,
@@ -1203,6 +1219,9 @@ async function scanUS() {
           vcpPivot:        vcp.pivotPrice ?? null,
           vcpBaseDays:     vcp.baseDays ?? 0,
           vcpPriorPullbackPct: vcp.priorPullbackPct ?? null,
+          // 2026-05-21 Tier 3: Qlib 因子分數（0-99）+ 8 個 sub-scores 供前端顯示
+          qlibScore,
+          qlibSubs,
           isLeader,
           isDiscovery,
           _ret12_1Raw: m.ret12_1, // kept for sectorRS calc below
@@ -1352,6 +1371,7 @@ async function scanUS() {
     // Acceleration bonus: accelerating leaders get +3 to composite
     const accelBonus = r.accel != null ? (r.accel >= 1.2 ? 3 : r.accel < 0.8 ? -3 : 0) : 0;
     r.compositeScore = Math.min(99, Math.round(r.rsRating * 0.50 + volScore * 0.30 + momScore * 0.20) + accelBonus);
+    // qlibScore + qlibSubs 已在主 scan loop 計算過（用當時的 OHLCV）
   });
   leaders.sort((a, b) => b.compositeScore - a.compositeScore);
 

@@ -68,6 +68,24 @@ jobs:
         run: python scripts/enrich_quotes.py us
         continue-on-error: true
 
+      # 2026-05-21 Tier 2-A: 美國國會議員交易（Capitol Trades）— Pelosi 等 buy 訊號
+      - name: Fetch US politician trades (Capitol Trades)
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/fetch_politician_trades.py
+        continue-on-error: true
+
+      # 2026-05-21 Tier 2-B: 散戶情緒（WSB / Stocktwits）
+      - name: Fetch US retail sentiment (WSB + Stocktwits)
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/fetch_retail_sentiment.py
+        continue-on-error: true
+
+      # 2026-05-21 Tier 2-C: Short Interest squeeze 候選
+      - name: Fetch US short interest
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/fetch_short_interest.py
+        continue-on-error: true
+
       # 三大法人買賣超 (TWSE public API) — TW-specific institutional flow.
       # MUST run BEFORE enrich_quotes.py tw so that the Chinese 證券名稱 map
       # is available to enrich (yfinance returns English names for TW).
@@ -106,6 +124,10 @@ jobs:
           [ -f data/ohlcv_lite.json ]      && git add data/ohlcv_lite.json      || true
           [ -f data/universe_memory.json ] && git add data/universe_memory.json || true
           [ -f data/universe_static.json ] && git add data/universe_static.json || true
+          # 2026-05-21 Tier 2: 美股 chip 補強資料
+          [ -f data/politician_trades.json ] && git add data/politician_trades.json || true
+          [ -f data/retail_sentiment.json ]  && git add data/retail_sentiment.json  || true
+          [ -f data/short_interest.json ]    && git add data/short_interest.json    || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --autostash 2>&1 | tail -2 || true

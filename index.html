@@ -2624,7 +2624,7 @@ function renderStock(ticker, meta, ta, va, lt, st, cur, price, chg, chgP) {
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + '</div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
  // 2026-05-20: K 線圖換 TradingView widget — 多時框、指標、繪圖工具、alerts 全由 TV 提供。
  // 外部 tab-bar / MA legend 移除（TV 自己有），減少 UI 雜訊。
- '<div class="card"><h3> K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
+ '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px"><h3 style="margin:0">K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><button onclick="showMinerviniIndicatorTips()" style="font-size:10px;padding:4px 10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:4px;color:#fbbf24;cursor:pointer">📊 推薦疊加：Minervini Trend Template / VCP</button></div><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
  // 2026-05-20 (Option B): AI 卡片放置點 — 介於 K 線圖與決策卡之間（中段，不是頁尾）
  '<div id="ai-card-slot"></div>' +
  // 2026-05-19: 決策卡 — Kelly + ATR + 1R/2R/3R 一次到位
@@ -2706,7 +2706,7 @@ function renderBond(ticker, meta, ta, bva, bd, lt, st, cur, price, chg, chgP) {
  return '<div class="card"><div class="stock-header"><div><div class="stock-name">' + (meta.longName || meta.shortName || ticker) + ' <span class="bond-badge">債券 ETF</span></div><div style="color:var(--muted);font-size:13px">' + ticker + ' · ' + (meta.exchangeName || '') + ' · ' + new Date().toLocaleString('zh-TW') + '</div><div style="font-size:12px;color:var(--accent);margin-top:4px">' + bd.desc + '</div><div style="margin-top:6px">漲跌幅：' + tfBtnHtml('switchTF') + '</div></div><div style="margin-left:auto;text-align:right"><div class="stock-price">' + fp(price) + '</div><span class="stock-change ' + (up ? 'up' : 'down') + '"><span style="font-size:11px;opacity:.7">' + TF_LABELS[_chgTF] + '</span> ' + (up ? '+' : '') + f(chg) + ' (' + (up ? '+' : '') + f(chgP) + '%)</span></div></div></div>' +
  // K-line
  // 2026-05-20: 債券 ETF 也用 TradingView widget
- '<div class="card"><h3> K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
+ '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px"><h3 style="margin:0">K線走勢圖 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px">— TradingView</span></h3><button onclick="showMinerviniIndicatorTips()" style="font-size:10px;padding:4px 10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:4px;color:#fbbf24;cursor:pointer">📊 推薦疊加：Minervini Trend Template / VCP</button></div><div id="stock-kline" class="chart-container" style="height:480px"></div></div>' +
  // Score cards
  '<div class="grid2"><div class="card"><h3>債券投資評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(bva.score) + '">' + (bva.score > 0 ? '+' : '') + bva.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((bva.score + 100) / 2) + '%;background:' + sc(bva.score) + '"></div></div><div style="font-size:14px;color:var(--muted);margin-top:8px">' + bva.verdict + '</div></div></div>' +
  '<div class="card"><h3> 技術面綜合評分</h3><div style="text-align:center;padding:16px"><div style="font-size:48px;font-weight:700;color:' + sc(ta.score) + '">' + (ta.score > 0 ? '+' : '') + ta.score + '</div><div class="progress-bar" style="width:100%;margin:12px 0"><div class="progress-fill" style="width:' + ((ta.score + 100) / 2) + '%;background:' + sc(ta.score) + '"></div></div><span class="signal ' + ta.sig + '">' + sigL[ta.sig] + '</span></div></div></div>' +
@@ -3693,6 +3693,75 @@ function showCatalystExplainModal() {
   }
   html += '</div>';
  }
+ html += '</div></div></div>';
+ document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// 2026-05-21 Tier 1: 推薦使用者在 TradingView widget 加 Minervini 社群指標
+// 我們不能直接幫使用者套（TV widget 需要使用者帳號登入才能加 community indicator），
+// 但可以告訴他在 TV 介面點哪個按鈕、搜尋什麼名字。
+function showMinerviniIndicatorTips() {
+ const indicators = [
+  {
+   name: 'Minervini Ultimate +VCP',
+   author: 'noam73',
+   url: 'https://www.tradingview.com/script/YqIDj8rq-Minervini-Ultimate-VCP/',
+   what: '一張圖直接看 8 項 Trend Template + VCP 偵測，bottom-line 表格化',
+   why: '最全面 — Minervini SEPA 整套打包，省去自己看 5 個指標',
+   tag: '推薦',
+  },
+  {
+   name: 'Mark Minervini Trend Template & SEPA',
+   author: 'vishnuv',
+   url: 'https://in.tradingview.com/script/FBD7SZom-Mark-Minervini-Trend-Template-SEPA/',
+   what: '8 點 Trend Template + Weinstein Stage + VCP + 機構吃貨偵測',
+   why: '含 accumulation 階段判讀 — 比上面多了「機構在不在進場」',
+   tag: '專業',
+  },
+  {
+   name: 'Minervini VCP Scanner',
+   author: 'donaldecotton',
+   url: 'https://www.tradingview.com/script/V2l7sNrH-Minervini-VCP-Scanner/',
+   what: '對整個 watchlist 一次掃 VCP setup，配合 TV 新版 Pine Screener',
+   why: '掃描器用 — 不是單股看，而是找出今天哪幾檔有 VCP',
+   tag: '掃描',
+  },
+  {
+   name: 'VCP Pattern with Pocket Pivots',
+   author: 'ravihls',
+   url: 'https://www.tradingview.com/script/filyLJ1l-VCP-Pattern-with-Pocket-Pivots-by-Mark-Minervini/',
+   what: 'VCP + Pocket Pivot（盤中量爆早期介入訊號）',
+   why: '進場時機更細 — 不是等突破，是 base 內爆量買點',
+   tag: '進場',
+  },
+ ];
+ let html = '<div id="minervini-tips-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+ html += '<div style="background:#0f1623;border-radius:12px;max-width:680px;width:100%;max-height:85vh;overflow:auto;border:1px solid rgba(255,255,255,.1)">';
+ html += '<div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">';
+ html += '<div style="font-size:16px;font-weight:700">📊 在 TradingView 圖上加 Minervini 指標</div>';
+ html += '<button onclick="document.getElementById(\'minervini-tips-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>';
+ html += '</div>';
+ html += '<div style="padding:16px 22px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid rgba(255,255,255,.04)">';
+ html += '<b style="color:#fbbf24">怎麼用</b>：上方 K 線圖右上角點 「<b>Indicators</b>」（fx 按鈕）→ 切到「<b>Community Scripts</b>」分頁 → 搜尋下方任一指標名稱 → 點 ★ 加最愛 → 套用。<br>';
+ html += '套用後該指標會綁定你的 TV 帳號，**之後打開任何股票自動帶上**。免費 TV 帳號每張圖最多 3 個指標。';
+ html += '</div>';
+ html += '<div style="padding:14px 22px">';
+ for (const i of indicators) {
+  const tagColor = { '推薦': '#22c55e', '專業': '#a5b4fc', '掃描': '#fbbf24', '進場': '#f97316' }[i.tag];
+  html += '<div style="margin-bottom:14px;padding:14px;background:rgba(255,255,255,.02);border-radius:8px;border-left:3px solid ' + tagColor + '">';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">';
+  html += '<span style="font-size:10px;padding:2px 8px;background:' + tagColor + '22;color:' + tagColor + ';border-radius:10px;font-weight:600">' + i.tag + '</span>';
+  html += '<b style="font-size:13px">' + escapeHtml(i.name) + '</b>';
+  html += '<span style="font-size:10px;color:var(--muted)">by ' + escapeHtml(i.author) + '</span>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text);margin-bottom:4px">' + escapeHtml(i.what) + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">為什麼用：' + escapeHtml(i.why) + '</div>';
+  html += '<a href="' + safeHref(i.url) + '" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#a5b4fc;text-decoration:none">→ TradingView 頁面（看作者完整說明）</a>';
+  html += '</div>';
+ }
+ html += '<div style="margin-top:14px;padding:12px;background:rgba(99,102,241,.05);border-radius:6px;font-size:11px;color:var(--muted);line-height:1.7">';
+ html += '💡 <b>建議組合</b>：日常分析用「Minervini Ultimate +VCP」，找新標的用「Minervini VCP Scanner」（TV Pine Screener 跑你的 watchlist）。';
+ html += '</div>';
  html += '</div></div></div>';
  document.body.insertAdjacentHTML('beforeend', html);
 }
@@ -11726,16 +11795,27 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       '<td class="col-disthi" style="padding:10px 8px;text-align:center">' + distCell + '</td>' +
       '<td class="col-volume" style="padding:10px 8px;text-align:center;color:' + volColor + ';font-weight:600">' + f(r.volExpand,2) + 'x<div style="font-size:10px;color:var(--muted)">量能</div></td>' +
       // 2026-05-20 (Option B): 恢復數字（A/B/C/D 過於粗糙），但加智慧 tooltip
-      // 數字保留資訊量，tooltip 明示「差 5 分內非顯著差異」+ 顏色用級距
+      // 2026-05-21 Tier 3: 加 Qlib Score 並列顯示 — 系統化 8 因子，跟啟發式 composite 對照
       (()=>{
         const sc = r.compositeScore;
-        const g  = compositeGrade(sc);  // 仍用 grade 取顏色（不顯示字母）
-        const tooltip = sc != null
-          ? '綜合分 ' + sc + '｜權重 50/30/20 為啟發式，未經嚴格回測。\n差 5 分內視為無顯著差異，僅供粗排序使用。'
+        const g  = compositeGrade(sc);
+        const compTooltip = sc != null
+          ? '綜合分 ' + sc + '｜權重 50/30/20 為啟發式，未經嚴格回測。\n差 5 分內視為無顯著差異。'
           : '無資料';
+        const q  = r.qlibScore;
+        const qg = compositeGrade(q);
+        // 兩分歧時 highlight（>15 分差距 = 兩種演算法意見明顯不同）
+        const diff = sc != null && q != null ? Math.abs(sc - q) : 0;
+        const divergeIcon = diff >= 15 ? '<span title="兩演算法意見分歧（差 ' + diff + ' 分），值得人工檢視" style="font-size:9px;color:#f59e0b;margin-left:2px;cursor:help">⚠</span>' : '';
+        const qTooltip = q != null
+          ? 'Qlib Score ' + q + '｜微軟 Alpha158 8 個動能因子 equal-weight\n（KMID / MAX60 / ROC20 / STD20-inv / Vol Ratio / VSUMP / MA align / Accel）'
+          : 'Qlib 因子計算中（需 80+ 日 OHLCV）';
         return '<td style="padding:10px 8px;text-align:center">' +
-          '<div style="font-size:22px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + tooltip.replace(/"/g,'&quot;') + '">' + (sc != null ? sc : '—') + '</div>' +
-          '<div style="font-size:10px;color:var(--muted);cursor:help" title="差 5 分內非顯著差異">綜合分</div>' +
+          '<div style="display:flex;gap:6px;align-items:baseline;justify-content:center">' +
+            '<div style="font-size:22px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + compTooltip.replace(/"/g,'&quot;') + '">' + (sc != null ? sc : '—') + '</div>' +
+            (q != null ? '<div style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">/</div><div style="font-size:14px;font-weight:600;color:' + qg.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + qTooltip.replace(/"/g,'&quot;') + '">' + q + '</div>' : '') + divergeIcon +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--muted);cursor:help" title="綜合分（啟發式）/ Qlib 因子分（系統化）— 對照用">綜合 / Qlib</div>' +
         '</td>';
       })() +
       // 2026-05-21 Sprint 2-C: 進場指引欄位加 inline action summary（買/停/R:R/失效）
