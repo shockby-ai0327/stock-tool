@@ -159,12 +159,14 @@ table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabu
 /* 2026-05-21 設計：H+E+G — industrial trading desk + status stripe + code pill */
 /* ═════════════════════════════════════════════════════════════════ */
 
-/* 2026-05-21 v2: 砍色帶，統一色調 — 訊號顏色集中在 dot/pill/conv-bar */
-.card-strip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:12px}
+/* 2026-05-21 v3: 無邊界 — 砍 border / 砍 background / 加大 section 間距
+   靠 title hairline + 空白自然分隔。padding 集中垂直方向 */
+.card-strip{background:transparent;border:none;border-radius:0;padding:0;margin-bottom:32px}
+.card-strip:last-child{margin-bottom:0}
 
-/* 2026-05-21 v2: Section label — 中文主標 + 英文副字（小寫，作 typographic accent） */
-.sl-section{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.04)}
-.sl-section h2,.sl-section h3{font-size:14px;font-weight:700;color:var(--text);margin:0;letter-spacing:0}
+/* 2026-05-21 v3: Section label — 中文主標 + 英文副字，配合無邊界版面，title hairline 稍微強化 */
+.sl-section{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sl-section h2,.sl-section h3{font-size:15px;font-weight:700;color:var(--text);margin:0;letter-spacing:0}
 .sl-section .sl-en{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
 .sl-section .sl-meta{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;margin-left:auto}
 .sl-section .sl-sub{font-size:11px;color:var(--muted);font-weight:400}
