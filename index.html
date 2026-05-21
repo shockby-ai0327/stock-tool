@@ -491,6 +491,19 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-regime"></div>
  </section>
 
+ <!-- 1.5 MARKET NARRATIVE (Claude AI) -->
+ <section class="card-strip" id="dash-narrative-card">
+  <div class="sl-section">
+   <h2>今日市場敘事</h2><span class="sl-en">market narrative</span>
+   <span class="sl-sub">Claude AI · 每日盤後生成</span>
+   <span class="sl-meta" id="narrative-meta"></span>
+  </div>
+  <div id="narrative-headline" style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:8px">scanning…</div>
+  <div id="narrative-body" style="font-size:12px;color:var(--muted);line-height:1.7"></div>
+  <div id="narrative-rotation" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"></div>
+  <div id="narrative-watch" style="margin-top:8px;font-size:11px"></div>
+ </section>
+
  <!-- 2. ACTION ITEMS -->
  <section class="card-strip">
   <div class="sl-section">
@@ -9858,50 +9871,61 @@ async function loadMarketNarrative(market) {
 }
 
 function renderMarketNarrative(data) {
+ // 2026-05-21 v5: 無 emoji / 用 cp pill / mono meta，跟首頁其他區塊風格一致
  const headEl   = document.getElementById('narrative-headline');
  const bodyEl   = document.getElementById('narrative-body');
- const badgeEl  = document.getElementById('narrative-regime-badge');
  const metaEl   = document.getElementById('narrative-meta');
  const rotateEl = document.getElementById('narrative-rotation');
  const watchEl  = document.getElementById('narrative-watch');
  if (!headEl) return;
  if (!data || !data.narrative || !data.generatedAt) {
   headEl.textContent = 'AI 敘事尚未生成';
-  bodyEl.innerHTML = '<span style="color:var(--muted)">下次掃描+ AI 工作流跑完後會自動產生今日市場敘事。</span>';
-  if (badgeEl) badgeEl.textContent = '';
+  bodyEl.innerHTML = '<span style="color:var(--muted)">下次掃描 + AI 工作流跑完後會自動產生今日市場敘事。</span>';
   if (metaEl) metaEl.textContent = '';
   if (rotateEl) rotateEl.innerHTML = '';
   if (watchEl) watchEl.innerHTML = '';
   return;
  }
- headEl.textContent = data.headline || '';
+ // Regime pill (in front of headline)
+ const regimeMap = {
+  'risk-on':  { cls: 'bull',    label: 'RISK-ON' },
+  'risk-off': { cls: 'bear',    label: 'RISK-OFF' },
+  'rotation': { cls: 'amber',   label: 'ROTATION' },
+  'neutral':  { cls: 'neutral', label: 'NEUTRAL' },
+ };
+ const rg = regimeMap[data.regime] || regimeMap.neutral;
+ headEl.innerHTML = '<span class="cp ' + rg.cls + '" style="margin-right:8px;vertical-align:middle">' + rg.label + '</span>' + escapeHtml(data.headline || '');
  bodyEl.textContent = data.narrative || '';
 
- const regimeColors = { 'risk-on': '#22c55e', 'risk-off': '#ef4444', 'rotation': '#fbbf24', 'neutral': '#94a3b8' };
- const regimeLabels = { 'risk-on': '🟢 風險偏好', 'risk-off': '🔴 避險', 'rotation': '🟡 板塊輪動', 'neutral': '⚪ 中性' };
- const rc = regimeColors[data.regime] || '#94a3b8';
- if (badgeEl) {
-  badgeEl.style.background = rc + '22';
-  badgeEl.style.color = rc;
-  badgeEl.textContent = regimeLabels[data.regime] || data.regime;
- }
  if (metaEl) {
-  // 2026-05-20: defensive — 處理舊資料用秒、新資料用 ms 的情況
   const tsMs = data.generatedAt ? (data.generatedAt < 1e12 ? data.generatedAt * 1000 : data.generatedAt) : null;
   const ageMin = tsMs ? Math.round((Date.now() - tsMs) / 60000) : null;
   metaEl.textContent = (ageMin != null && ageMin >= 0 && ageMin < 1e6)
-   ? (ageMin < 60 ? ageMin + ' 分鐘前生成' : Math.round(ageMin / 60) + ' 小時前生成')
+   ? (ageMin < 60 ? ageMin + 'm ago' : Math.round(ageMin / 60) + 'h ago')
    : '';
  }
  if (rotateEl) {
   const into = (data.sectorRotation && data.sectorRotation.into) || [];
   const outOf = (data.sectorRotation && data.sectorRotation.outOf) || [];
-  rotateEl.innerHTML =
-   (into.length ? '<span style="color:#22c55e">資金流入：</span>' + into.map(s => '<span style="background:rgba(34,197,94,.12);color:#22c55e;padding:2px 8px;border-radius:6px;font-weight:600">' + s + '</span>').join(' ') : '') +
-   (outOf.length ? '<span style="margin-left:8px;color:#ef4444">資金流出：</span>' + outOf.map(s => '<span style="background:rgba(239,68,68,.12);color:#ef4444;padding:2px 8px;border-radius:6px;font-weight:600">' + s + '</span>').join(' ') : '');
+  let html = '';
+  if (into.length) {
+   html += '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-right:6px">流入</span>' +
+    into.map(s => '<span class="cp bull">' + escapeHtml(s) + '</span>').join('');
+  }
+  if (outOf.length) {
+   if (into.length) html += '<span style="display:inline-block;width:8px"></span>';
+   html += '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-right:6px">流出</span>' +
+    outOf.map(s => '<span class="cp bear">' + escapeHtml(s) + '</span>').join('');
+  }
+  rotateEl.innerHTML = html;
  }
  if (watchEl && data.tomorrowWatch) {
-  watchEl.innerHTML = '<span style="padding:8px 12px;background:rgba(99,102,241,.08);border-radius:6px;display:inline-block;color:#a5b4fc;border-left:2px solid #6366f1"><b>📌 明日關注：</b> ' + data.tomorrowWatch + '</span>';
+  watchEl.innerHTML = '<div style="padding:8px 10px;background:rgba(99,102,241,.04);border-radius:4px;font-size:11px;color:var(--muted);line-height:1.6;border-left:2px solid rgba(99,102,241,.4)">' +
+   '<span style="color:#a5b4fc;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-right:4px">明日關注</span>' +
+   escapeHtml(data.tomorrowWatch) +
+  '</div>';
+ } else if (watchEl) {
+  watchEl.innerHTML = '';
  }
 }
 
