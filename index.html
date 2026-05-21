@@ -251,12 +251,14 @@ table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabu
 .dash-kpi .chg{font-size:12px;margin-top:3px}
 .scan-mini-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px}
 .scan-mini-row:last-child{border-bottom:none}
-.t-stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+/* 2026-05-21 v3: T-stock cards 用新 dot/pill/mono 系統 — 無 border 殼，pad 較大 */
+.t-stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 @media(max-width:740px){.t-stock-grid{grid-template-columns:1fr}}
-.t-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
-.t-card.holding{border-color:var(--accent);background:rgba(59,130,246,.06)}
-.t-zone-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--muted)}
-.t-zone-val{font-weight:600;color:var(--text)}
+.t-card{padding:14px 0;border-top:1px solid rgba(255,255,255,.06);transition:opacity .2s}
+.t-card.holding{}
+.t-zone-row{display:grid;grid-template-columns:50px 1fr;gap:8px;font-size:11px;padding:3px 0;align-items:baseline}
+.t-zone-row span:first-child{color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;font-size:10px}
+.t-zone-val{font-weight:600;color:var(--text);font-family:var(--mono);font-variant-numeric:tabular-nums}
 .t-exit-badge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-top:8px;display:inline-block}
 .t-entry-form{display:flex;gap:6px;margin-top:10px;align-items:center}
 .t-entry-form input{flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px}
@@ -1413,7 +1415,12 @@ async function analyzeStock() {
  // Triple-resonance match
  const tripleRes = window._tripleResonanceCache ? window._tripleResonanceCache.find(t => t.symbol === ticker) : null;
  if (tripleRes) {
-  catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(251,191,36,.22),rgba(245,158,11,.15));color:#fbbf24;border:1px solid rgba(251,191,36,.5)" title="' + (tripleRes.reasons || []).join(' · ') + '">🎯 三重共振 ' + '★'.repeat(tripleRes.stars || 3) + '</span>');
+  // 2026-05-21 v3: 換 cp + conv-bar，砍漸層、砍 emoji、砍 ★
+  const stars = tripleRes.stars || 3;
+  let bars = '<span class="conv-bar strong" style="margin-left:4px">';
+  for (let i = 0; i < 5; i++) bars += '<i class="' + (i < stars ? 'on' : '') + '"></i>';
+  bars += '</span>';
+  catalystBadges.push('<span class="cp amber" title="' + escapeAttr((tripleRes.reasons || []).join(' · ')) + '">TRIPLE RES ' + bars + '</span>');
  }
  // Insider buying (US only — load lazily)
  if (!isTw(ticker)) {
@@ -11530,59 +11537,46 @@ function renderRSLeaderResults(results) {
 // Codex 抓到：不要只給分數，每檔結果都要給明確 action
 function actionSummaryHTML(r) {
  if (!r || !r.price) return '<span style="color:var(--muted);font-size:11px">—</span>';
+ // 2026-05-21 v3: emoji 全砍，用 .act ghost button + .cp pill + mono 數字
  const sig = _getRSSignal(r);
  const sigEmoji = sig?.emoji || '';
  const dist = r.high52w && r.price ? (r.price - r.high52w) / r.high52w * 100 : null;
  const regime = window._marketRegime;
  const regimeBlocked = regime && regime.overall <= -2;
- // ATR or 8% fallback
  const atr = r.atr || (r.price * 0.025);
  const stopPrice = (r.price - 1.5 * atr);
- const targetPrice = (r.price + 3 * atr);  // 1.5 ATR stop, 3 ATR target → R:R = 2.0
+ const targetPrice = (r.price + 3 * atr);
  const riskPct = ((r.price - stopPrice) / r.price * 100);
  const rr = (targetPrice - r.price) / (r.price - stopPrice);
- const isTwStock = isTw(r.symbol);
- const cs = isTwStock ? 'NT$' : '$';
+ const cs = isTw(r.symbol) ? 'NT$' : '$';
 
- // Determine action
- let actionLabel, actionColor, actionNote;
+ // Action class for the ghost button
+ let actCls, actLabel, actNote;
  if (regimeBlocked) {
-  actionLabel = '⛔ 大盤偏空'; actionColor = '#ef4444';
-  actionNote = '建議空手';
+  actCls = 'avoid'; actLabel = 'AVOID'; actNote = '大盤偏空，建議空手';
  } else if (sigEmoji === '✅') {
-  if (r.changePct > 10) {
-   actionLabel = '⏳ 等回測'; actionColor = '#eab308';
-   actionNote = '今日大漲 ' + r.changePct.toFixed(1) + '% 追高滑點大';
-  } else {
-   actionLabel = '✓ 可進場'; actionColor = '#16a34a';
-   actionNote = '量能確認突破';
-  }
+  if (r.changePct > 10) { actCls = 'wait'; actLabel = 'WAIT'; actNote = '今日 +' + r.changePct.toFixed(1) + '% 追高滑點大'; }
+  else { actCls = 'buy'; actLabel = 'BUY'; actNote = '量能確認突破'; }
  } else if (sigEmoji === '📍') {
-  actionLabel = '⏳ 等放量'; actionColor = '#eab308';
-  actionNote = '量能 ' + r.volExpand.toFixed(2) + 'x 未達 1.5x';
+  actCls = 'wait'; actLabel = 'WAIT'; actNote = '量 ' + r.volExpand.toFixed(2) + 'x 未達 1.5x';
  } else if (sigEmoji === '👀') {
-  actionLabel = '👁 觀察'; actionColor = '#a5b4fc';
-  actionNote = '突破 ' + cs + (r.high52w?.toFixed(2) || '—') + ' 後進';
+  actCls = 'watch'; actLabel = 'WATCH'; actNote = '破 ' + cs + (r.high52w?.toFixed(2) || '—') + ' 後進';
  } else if (sigEmoji === '🔴') {
-  actionLabel = '🔴 勿進'; actionColor = '#ef4444';
-  actionNote = '訊號偏弱';
+  actCls = 'avoid'; actLabel = 'AVOID'; actNote = '訊號偏弱';
  } else {
-  actionLabel = '— 觀望'; actionColor = 'var(--muted)';
-  actionNote = '距高 ' + (dist != null ? Math.abs(dist).toFixed(1) + '%' : '—');
+  actCls = 'ghost'; actLabel = 'OBSERVE'; actNote = dist != null ? '距高 ' + Math.abs(dist).toFixed(1) + '%' : '—';
  }
- // 失效條件
- let invalidateCond;
- if (regimeBlocked) invalidateCond = '大盤轉強再考慮';
- else if (dist != null && dist <= -10) invalidateCond = '跌破 ' + cs + (r.price * 0.95).toFixed(2);
- else invalidateCond = '跌破停損 ' + cs + stopPrice.toFixed(2);
+ const invalidate = regimeBlocked ? '大盤轉強再考慮'
+  : (dist != null && dist <= -10) ? '跌破 ' + cs + (r.price * 0.95).toFixed(2)
+  : '跌破停損 ' + cs + stopPrice.toFixed(2);
+ const rrPillCls = rr >= 2 ? 'bull' : rr >= 1.5 ? 'amber' : 'bear';
 
- const rrColor = rr >= 2 ? '#22c55e' : rr >= 1.5 ? '#eab308' : '#ef4444';
- return '<div style="text-align:left;font-size:10px;line-height:1.6;min-width:140px">' +
-   '<div style="font-weight:700;font-size:11px;color:' + actionColor + ';margin-bottom:3px">' + actionLabel + '</div>' +
-   '<div style="color:var(--muted)">買: <b style="color:var(--text)">' + cs + r.price.toFixed(2) + '</b>　停: <b style="color:#ef4444">' + cs + stopPrice.toFixed(2) + '</b> (-' + riskPct.toFixed(1) + '%)</div>' +
-   '<div style="color:var(--muted)">標: <b style="color:#22c55e">' + cs + targetPrice.toFixed(2) + '</b>　R:R <b style="color:' + rrColor + '">' + rr.toFixed(1) + '</b></div>' +
-   '<div style="color:var(--muted);font-size:9px;margin-top:2px">' + actionNote + '</div>' +
-   '<div style="color:var(--muted);font-size:9px">✕ 失效: ' + invalidateCond + '</div>' +
+ return '<div style="text-align:left;min-width:150px;line-height:1.5">' +
+   '<div style="margin-bottom:5px"><span class="act ' + actCls + '">' + actLabel + '</span></div>' +
+   '<div class="mono" style="font-size:10px;color:var(--muted)">買 <b style="color:var(--text)">' + cs + r.price.toFixed(2) + '</b> · 停 <b style="color:#f87171">' + cs + stopPrice.toFixed(2) + '</b> (-' + riskPct.toFixed(1) + '%)</div>' +
+   '<div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:3px">標 <b style="color:#4ade80">' + cs + targetPrice.toFixed(2) + '</b> · R:R <span class="cp ' + rrPillCls + '" style="padding:0 4px;font-size:9px">' + rr.toFixed(1) + '</span></div>' +
+   '<div style="color:var(--muted);font-size:9px">' + actNote + '</div>' +
+   '<div style="color:var(--muted);font-size:9px">⨯ 失效: ' + invalidate + '</div>' +
  '</div>';
 }
 
@@ -12926,80 +12920,85 @@ async function renderDashTTrading() {
  await fetchTStockData();
  }
 
+ // 2026-05-21 v3: dot/pill/mono 系統重寫
  const rows = T_STOCKS.map(stock => {
- const d = _tCache.data[stock.symbol];
- if (!d || d.error) return '<div class="t-card"><div style="color:var(--muted);text-align:center;padding:20px">' + stock.symbol + ' 資料載入失敗</div></div>';
- const up = d.changePct >= 0;
- const ts = d.tScore;
- const holding = _tHoldings[stock.symbol];
- const exitSig = calcTExitSignal(stock.symbol, ts, d.ta, d.price);
+  const d = _tCache.data[stock.symbol];
+  if (!d || d.error) return '<div class="t-card"><div style="color:var(--muted);text-align:center;padding:16px;font-family:var(--mono);font-size:11px">' + stock.symbol + ' · data unavailable</div></div>';
+  const up = d.changePct >= 0;
+  const ts = d.tScore;
+  const holding = _tHoldings[stock.symbol];
+  const exitSig = calcTExitSignal(stock.symbol, ts, d.ta, d.price);
 
- if (holding) {
- // ── 持倉模式 ─────────────────────────────────────────
- const entry = parseFloat(holding.entry);
- const exitBgColor = exitSig?.level === 'exit' ? 'rgba(239,68,68,.2)' :
- exitSig?.level === 'warn' ? 'rgba(245,158,11,.2)' :
- exitSig?.level === 'watch' ? 'rgba(245,158,11,.1)' : 'rgba(16,185,129,.1)';
- const pnlColor = (exitSig?.pnlPct||0) >= 0 ? 'var(--green)' : 'var(--red)';
- return '<div class="t-card holding">' +
- '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
- '<div><b style="color:var(--accent);font-size:16px">' + stock.symbol + '</b><span style="color:var(--muted);font-size:12px;margin-left:6px">' + stock.name + '</span></div>' +
- '<div style="text-align:right"><div style="font-size:15px;font-weight:600">$' + d.price.toFixed(2) + '</div>' +
- '<div style="font-size:11px;color:' + (up?'var(--green)':'var(--red)') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '% 今日</div></div>' +
- '</div>' +
- '<div style="display:flex;gap:8px;font-size:12px;margin-bottom:10px">' +
- '<span style="background:rgba(59,130,246,.15);color:var(--accent);padding:2px 8px;border-radius:4px">持倉中</span>' +
- '<span>進場 <b>$' + entry.toFixed(2) + '</b></span>' +
- '<span>第 <b>' + (exitSig?.daysHeld||0) + '</b> 天</span>' +
- '<span style="color:' + pnlColor + '"><b>' + ((exitSig?.pnlPct||0)>=0?'+':'') + (exitSig?.pnlPct||0).toFixed(2) + '%</b></span>' +
- '</div>' +
- '<div style="background:' + exitBgColor + ';border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px">' +
- '<div style="font-weight:600">' + (exitSig?.text||'') + '</div>' +
- '<div style="color:var(--muted);margin-top:4px">RSI ' + (d.ta?.rsi||0).toFixed(0) + ' 距停損 $' + (ts?.stop||0).toFixed(2) + ' (' + (d.price > 0 ? (((d.price-(ts?.stop||0))/d.price*100).toFixed(1)) : '?') + '%)</div>' +
- '</div>' +
- '<div style="display:flex;gap:8px">' +
- '<button class="btn btn-sm" style="flex:1;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="confirmTExit(\'' + stock.symbol + '\')">確認出場</button>' +
- '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')"> 出場分析</button>' +
- '</div>' +
- '</div>';
- } else {
- // ── 無持倉模式 ────────────────────────────────────────
- // 2026-05-20 (信任破洞 #4): T 評分 < 60 不顯示買區/進場按鈕，避免「評分 44 還推薦」的矛盾
- const scoreVal = ts?.score || 0;
- const scoreColor = scoreVal >= 80 ? 'var(--green)' : scoreVal >= 65 ? 'var(--yellow)' : scoreVal >= 60 ? 'var(--orange)' : 'var(--red)';
- const tooLow = scoreVal < 60;
- const lowBanner = tooLow
-   ? '<div style="padding:10px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;margin:8px 0;font-size:11px;color:#fca5a5;line-height:1.6">⛔ T評分 ' + scoreVal + '/100 — <b>目前不建議進場</b>。等候評分回升至 60+ 再考慮。買區/進場按鈕已隱藏。</div>'
-   : '';
- const zones = tooLow ? '' :
-   '<div class="t-zone-row"><span>買區</span><span class="t-zone-val" style="color:var(--green)">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</span></div>' +
-   '<div class="t-zone-row"><span>賣區</span><span class="t-zone-val" style="color:var(--red)">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</span></div>' +
-   '<div class="t-zone-row"><span>停損</span><span class="t-zone-val" style="color:var(--muted)">$' + (ts?.stop||0).toFixed(2) + '</span></div>' +
-   '<div class="t-zone-row"><span>ATR%</span><span class="t-zone-val">' + (ts?.atrPct||0).toFixed(1) + '%</span></div>';
- const actionRow = tooLow
-   ? '<div style="margin-top:10px"><button class="btn btn-sm" style="width:100%;background:rgba(100,100,100,.15);color:var(--muted);border:1px solid var(--border)" onclick="showTGuide(\'' + stock.symbol + '\')"> 查看為何評分低</button></div>'
-   : '<div id="t-entry-form-' + stock.symbol + '" class="t-entry-form" style="display:none">' +
-     '<input id="t-entry-' + stock.symbol + '" type="number" step="0.01" placeholder="進場價格 (USD)">' +
-     '<button class="btn btn-primary btn-sm" onclick="recordTEntry(\'' + stock.symbol + '\')">確認</button>' +
-     '<button class="btn btn-sm" style="background:rgba(100,100,100,.2)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'none\'">取消</button>' +
-     '</div>' +
-     '<div style="display:flex;gap:8px;margin-top:10px">' +
-     '<button class="btn btn-sm" style="flex:1;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'flex\'"> 記錄進場</button>' +
-     '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')"> 進場指引</button>' +
-     '</div>';
- return '<div class="t-card" id="t-card-' + stock.symbol + '">' +
- '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
- '<div><b style="color:var(--accent);font-size:16px">' + stock.symbol + '</b><span style="color:var(--muted);font-size:12px;margin-left:6px">' + stock.name + '</span></div>' +
- '<div style="text-align:right"><div style="font-size:15px;font-weight:600">$' + d.price.toFixed(2) + '</div>' +
- '<div style="font-size:11px;color:' + (up?'var(--green)':'var(--red)') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '%</div></div>' +
- '</div>' +
- '<div style="font-size:11px;color:var(--muted);margin-bottom:10px"> ' + stock.cycle + '</div>' +
- '<div style="font-size:11px;font-weight:600;color:' + scoreColor + ';margin-bottom:8px">T評分 ' + scoreVal + '/100 ' + (ts?.label||'—') + '</div>' +
- lowBanner +
- zones +
- actionRow +
- '</div>';
- }
+  // Header (持倉 / 無持倉共用)
+  const dotCls = holding
+    ? ((exitSig?.level === 'exit') ? 'bear' : (exitSig?.level === 'warn') ? 'weak' : (exitSig?.level === 'watch') ? 'neutral' : 'strong')
+    : ((ts?.score || 0) >= 80 ? 'strong' : (ts?.score || 0) >= 65 ? 'bull' : (ts?.score || 0) >= 60 ? 'neutral' : 'weak');
+  const header =
+   '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+    '<div style="display:flex;align-items:center;gap:8px">' +
+     '<span class="sd ' + dotCls + '"></span>' +
+     '<div><b style="font-size:15px;letter-spacing:.3px">' + stock.symbol + '</b>' +
+     '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + stock.name + ' · ' + stock.cycle + '</div></div>' +
+    '</div>' +
+    '<div style="text-align:right">' +
+     '<div class="mono" style="font-size:14px;font-weight:700">$' + d.price.toFixed(2) + '</div>' +
+     '<div class="mono" style="font-size:10px;color:' + (up?'#4ade80':'#f87171') + '">' + (up?'+':'') + d.changePct.toFixed(2) + '%</div>' +
+    '</div>' +
+   '</div>';
+
+  if (holding) {
+   const entry = parseFloat(holding.entry);
+   const pnl = exitSig?.pnlPct || 0;
+   const pnlColor = pnl >= 0 ? '#4ade80' : '#f87171';
+   const exitCls = exitSig?.level === 'exit' ? 'bear' : exitSig?.level === 'warn' ? 'amber' : exitSig?.level === 'watch' ? 'amber' : 'bull';
+   return '<div class="t-card holding">' +
+    header +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' +
+     '<span class="cp info">HOLDING</span>' +
+     '<span class="mono" style="font-size:10px;color:var(--muted)">entry $' + entry.toFixed(2) + ' · D' + (exitSig?.daysHeld || 0) + '</span>' +
+     '<span class="mono" style="font-size:11px;font-weight:700;color:' + pnlColor + ';margin-left:auto">' + (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%</span>' +
+    '</div>' +
+    '<div style="margin-bottom:10px">' +
+     '<span class="cp ' + exitCls + '">' + (exitSig?.text || '').replace(/[🔴🟡⚠✨👀✓]/g,'').trim() + '</span>' +
+    '</div>' +
+    '<div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:10px">RSI ' + (d.ta?.rsi||0).toFixed(0) + ' · 距停損 ' + (d.price > 0 ? (((d.price-(ts?.stop||0))/d.price*100).toFixed(1)) : '?') + '%</div>' +
+    '<div style="display:flex;gap:6px">' +
+     '<button class="act avoid" style="flex:1" onclick="confirmTExit(\'' + stock.symbol + '\')">確認出場</button>' +
+     '<button class="act watch" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')">出場分析</button>' +
+    '</div>' +
+   '</div>';
+  } else {
+   const scoreVal = ts?.score || 0;
+   const tooLow = scoreVal < 60;
+   const scorePillCls = scoreVal >= 80 ? 'bull' : scoreVal >= 65 ? 'bull' : scoreVal >= 60 ? 'amber' : 'bear';
+   const scorePill = '<span class="cp ' + scorePillCls + '">T-SCORE ' + scoreVal + '/100</span>';
+   const lowBanner = tooLow
+     ? '<div style="padding:8px 10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:4px;margin:8px 0;font-size:11px;color:#fca5a5;line-height:1.5">T評分 ' + scoreVal + ' &lt; 60 — 目前不建議進場。等回升至 60+ 再考慮。</div>'
+     : '';
+   const zones = tooLow ? '' :
+     '<div class="t-zone-row"><span>buy</span><span class="t-zone-val" style="color:#4ade80">$' + (ts?.buyLo||0).toFixed(2) + ' – $' + (ts?.buyHi||0).toFixed(2) + '</span></div>' +
+     '<div class="t-zone-row"><span>sell</span><span class="t-zone-val" style="color:#f87171">$' + (ts?.sellLo||0).toFixed(2) + ' – $' + (ts?.sellHi||0).toFixed(2) + '</span></div>' +
+     '<div class="t-zone-row"><span>stop</span><span class="t-zone-val" style="color:var(--muted)">$' + (ts?.stop||0).toFixed(2) + '</span></div>' +
+     '<div class="t-zone-row"><span>atr%</span><span class="t-zone-val">' + (ts?.atrPct||0).toFixed(1) + '%</span></div>';
+   const actionRow = tooLow
+     ? '<div style="margin-top:12px"><button class="act ghost" style="width:100%" onclick="showTGuide(\'' + stock.symbol + '\')">查看為何評分低</button></div>'
+     : '<div id="t-entry-form-' + stock.symbol + '" class="t-entry-form" style="display:none">' +
+       '<input id="t-entry-' + stock.symbol + '" type="number" step="0.01" placeholder="進場價格 (USD)">' +
+       '<button class="act buy" onclick="recordTEntry(\'' + stock.symbol + '\')">確認</button>' +
+       '<button class="act ghost" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'none\'">取消</button>' +
+       '</div>' +
+       '<div style="display:flex;gap:6px;margin-top:12px">' +
+       '<button class="act buy" style="flex:1" onclick="document.getElementById(\'t-entry-form-' + stock.symbol + '\').style.display=\'flex\'">記錄進場</button>' +
+       '<button class="act watch" style="flex:1" onclick="showTGuide(\'' + stock.symbol + '\')">進場指引</button>' +
+       '</div>';
+   return '<div class="t-card" id="t-card-' + stock.symbol + '">' +
+    header +
+    '<div style="margin-bottom:10px">' + scorePill + '</div>' +
+    lowBanner +
+    zones +
+    actionRow +
+   '</div>';
+  }
  });
  el.innerHTML = rows.join('');
 }
