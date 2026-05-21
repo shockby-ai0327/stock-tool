@@ -9457,98 +9457,96 @@ async function renderWatchlistSimple() {
  if (!el) return;
  const list = getWatchlistSimple();
 
- // Form (always shown)
+ // 2026-05-21 v3: form 簡化、無 emoji、按鈕用 .act
  const formHtml =
-  '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:' + (list.length ? '12px' : '0') + '">' +
+  '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:' + (list.length ? '14px' : '0') + '">' +
    '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-    '<input id="wl-ticker" placeholder="代號（如 ARWR / 2330.TW）" style="flex:1;min-width:140px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
-    '<input id="wl-target" type="number" step="0.01" placeholder="目標進場價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
-    '<input id="wl-stop" type="number" step="0.01" placeholder="心理停損價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
+    '<input id="wl-ticker" placeholder="代號（如 ARWR / 2330.TW）" style="flex:1;min-width:140px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;font-family:var(--mono)">' +
+    '<input id="wl-target" type="number" step="0.01" placeholder="目標進場價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;font-family:var(--mono)">' +
+    '<input id="wl-stop" type="number" step="0.01" placeholder="心理停損價" style="flex:1;min-width:110px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;font-family:var(--mono)">' +
    '</div>' +
    '<div style="display:flex;gap:6px">' +
-    '<input id="wl-thesis" placeholder="進場論點（如：等回測 MA20 + Q2 財報後確認）" style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">' +
-    '<button onclick="addWatchSimple()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">加入</button>' +
+    '<input id="wl-thesis" placeholder="進場論點（等回測 MA20 / Q2 財報後確認）" style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px">' +
+    '<button onclick="addWatchSimple()" class="act watch">加入</button>' +
    '</div>' +
   '</div>';
 
  if (!list.length) {
-  el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)">' +
-   '<h3 style="margin:0 0 8px 0">👁 我的觀察清單</h3>' +
-   '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">記下你研究過、想等價位或時機進場的標的。無自動刷新，純靜態 — 每次打開首頁更新一次即時價。</div>' +
-   formHtml +
-  '</div>';
+  el.innerHTML = formHtml +
+   '<div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6">記錄你研究過、想等價位或時機進場的標的。靜態快照，每次打開首頁更新一次即時價。</div>';
   return;
  }
-
- // Fetch current prices for all
- el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)"><h3>👁 我的觀察清單</h3>' + formHtml +
-  '<div style="text-align:center;color:var(--muted);padding:14px">載入價格中...</div></div>';
+ el.innerHTML = formHtml + '<div style="text-align:center;color:var(--muted);padding:14px;font-size:12px;font-family:var(--mono)">loading prices…</div>';
  const prices = {};
  await Promise.all(list.map(async w => {
   try { const d = await quickPrice(w.ticker); if (d) prices[w.ticker] = d.price; } catch(e) {}
  }));
 
- // 2026-05-21 Sprint 2-D: 自動偵測 watchlist 觸發 setup（RS / 量能 / VCP / 三共振）
+ // 2026-05-21 v3: setup detector 改吐 code pill class，無顏色 inline
  const rsCache = window._rsLeaderCache || [];
  const trCache = window._tripleResonanceCache || [];
  const _detectSetup = (ticker) => {
   const tags = [];
   const rs = rsCache.find(x => x.symbol === ticker);
   if (rs) {
-   if (rs.rsRating >= 95) tags.push({ label: 'RS' + rs.rsRating, color: '#16a34a', tooltip: '相對強度 top 5%' });
-   else if (rs.rsRating >= 80) tags.push({ label: 'RS' + rs.rsRating, color: '#22c55e', tooltip: '相對強度 top 20%' });
-   if (rs.volExpand >= 2) tags.push({ label: '量' + rs.volExpand.toFixed(1) + 'x', color: '#f59e0b', tooltip: '量能放大' });
-   else if (rs.volExpand >= 1.5) tags.push({ label: '量' + rs.volExpand.toFixed(1) + 'x', color: '#eab308', tooltip: '量能溫和放大' });
-   if (rs.vcp && rs.vcp.vcpScore >= 3) tags.push({ label: 'VCP' + rs.vcp.vcpScore, color: '#a5b4fc', tooltip: 'VCP 收縮型態' });
+   if (rs.rsRating >= 95) tags.push({ label: 'RS' + rs.rsRating, cls: 'bull', tip: '相對強度 top 5%' });
+   else if (rs.rsRating >= 80) tags.push({ label: 'RS' + rs.rsRating, cls: 'bull', tip: '相對強度 top 20%' });
+   if (rs.volExpand >= 2) tags.push({ label: 'VOL ' + rs.volExpand.toFixed(1) + 'x', cls: 'amber', tip: '量能放大' });
+   else if (rs.volExpand >= 1.5) tags.push({ label: 'VOL ' + rs.volExpand.toFixed(1) + 'x', cls: 'amber', tip: '量能溫和放大' });
+   if (rs.vcp && rs.vcp.vcpScore >= 3) tags.push({ label: 'VCP-' + rs.vcp.vcpScore, cls: 'info', tip: 'VCP 收縮' });
    if (rs.high52w && rs.price) {
     const distHi = (rs.price - rs.high52w) / rs.high52w * 100;
-    if (distHi >= -5) tags.push({ label: '近高', color: '#22c55e', tooltip: '距 52w 高 < 5%' });
+    if (distHi >= -5) tags.push({ label: 'NEAR HI', cls: 'bull', tip: '距 52w 高 <5%' });
    }
-   if (rs.epsRevision > 0) tags.push({ label: 'EPS↑', color: '#22c55e', tooltip: 'EPS 上修' });
+   if (rs.epsRevision > 0) tags.push({ label: 'EPS+', cls: 'bull', tip: 'EPS 上修' });
   }
   const tr = trCache.find(x => x.symbol === ticker);
-  if (tr && tr.stars >= 4) tags.push({ label: '三共振' + tr.stars + '★', color: '#fbbf24', tooltip: '三重共振高分' });
+  if (tr && tr.stars >= 4) tags.push({ label: 'TR ' + tr.stars + '/5', cls: 'amber', tip: '三重共振' });
   return tags;
  };
+
  const rows = list.map(w => {
   const cur = prices[w.ticker];
   const t = w.target;
   const s = w.stop;
-  let distHtml = '<span style="color:var(--muted)">—</span>';
-  let trigger = '';
+  let distHtml = '<span class="mono" style="color:var(--muted);font-size:11px">—</span>';
+  let dotCls = 'empty';
   if (cur && t) {
    const distPct = (cur - t) / t * 100;
-   const color = Math.abs(distPct) <= 3 ? 'var(--green)' : 'var(--muted)';
-   distHtml = '<span style="color:' + color + '">距目標 ' + (distPct >= 0 ? '+' : '') + distPct.toFixed(1) + '%</span>';
-   if (Math.abs(distPct) <= 2) trigger = '<span style="font-size:11px;color:var(--green);font-weight:700;margin-left:6px">✓ 接近</span>';
-   if (cur <= t && t > 0) trigger = '<span style="font-size:11px;color:var(--green);font-weight:700;margin-left:6px">🎯 到價！</span>';
+   const isHit = cur <= t && t > 0;
+   const isNear = Math.abs(distPct) <= 2;
+   if (isHit) dotCls = 'strong';
+   else if (isNear) dotCls = 'bull';
+   else if (Math.abs(distPct) <= 5) dotCls = 'neutral';
+   else dotCls = 'weak';
+   const distColor = isHit ? '#4ade80' : isNear ? '#4ade80' : 'var(--muted)';
+   distHtml = '<span class="mono" style="color:' + distColor + ';font-size:11px">' + (isHit ? 'AT TARGET' : (distPct >= 0 ? '+' : '') + distPct.toFixed(1) + '%') + '</span>';
   }
   const cs = isTw(w.ticker) ? 'NT$' : '$';
-  // 2026-05-21: setup 觸發 badge — 高亮今天滿足哪些條件
   const setupTags = _detectSetup(w.ticker);
-  const setupHtml = setupTags.length
-   ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">' +
-     setupTags.map(t => '<span title="' + escapeAttr(t.tooltip) + '" style="font-size:10px;padding:2px 6px;border-radius:8px;background:' + t.color + '22;color:' + t.color + ';font-weight:600;border:1px solid ' + t.color + '44">' + escapeHtml(t.label) + '</span>').join('') +
+  const setupPills = setupTags.length
+   ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">' +
+     setupTags.map(t => '<span class="cp ' + t.cls + '" title="' + escapeAttr(t.tip) + '">' + escapeHtml(t.label) + '</span>').join('') +
      '</div>'
    : '';
   const hasHighSignal = setupTags.length >= 3;
-  return '<div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-wrap:wrap' + (hasHighSignal ? ';background:rgba(34,197,94,.04)' : '') + '">' +
-   '<div style="flex-shrink:0;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + w.ticker + '\';showPage(\'stock\');analyzeStock()"><b style="color:var(--accent);font-size:15px">' + w.ticker + '</b>' +
-   (hasHighSignal ? '<div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:2px">⚡ ' + setupTags.length + ' 訊號觸發</div>' : '') +
+  return '<div style="display:grid;grid-template-columns:14px 80px 80px 100px 90px 1fr auto;gap:12px;align-items:center;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.04)' + (hasHighSignal ? ';background:rgba(34,197,94,.03)' : '') + '">' +
+   '<span class="sd ' + dotCls + '"></span>' +
+   '<b style="font-size:13px;letter-spacing:.3px;cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\'' + w.ticker + '\';showPage(\'stock\');analyzeStock()">' + w.ticker + '</b>' +
+   '<span class="mono" style="font-size:12px">' + (cur ? cs + cur.toFixed(2) : '—') + '</span>' +
+   '<span class="mono" style="font-size:10px;color:var(--muted)">→ ' + (t ? cs + t.toFixed(2) : '—') + ' / ' + (s ? cs + s.toFixed(2) : '—') + '</span>' +
+   distHtml +
+   '<div style="min-width:0">' +
+    '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(w.thesis || '無論點') + '</div>' +
+    setupPills +
    '</div>' +
-   '<div style="flex-shrink:0;font-size:13px">' + (cur ? cs + cur.toFixed(2) : '—') + '</div>' +
-   '<div style="flex-shrink:0">目標 ' + (t ? cs + t.toFixed(2) : '—') + ' · 停損 ' + (s ? cs + s.toFixed(2) : '—') + '</div>' +
-   '<div style="flex-shrink:0;font-size:12px">' + distHtml + trigger + '</div>' +
-   '<div style="flex:1;font-size:11px;color:var(--muted);min-width:200px">' + escapeHtml(w.thesis || '無論點') + setupHtml + '</div>' +
-   '<button onclick="removeWatchSimple(\'' + w.ticker + '\')" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">移除</button>' +
+   '<button onclick="removeWatchSimple(\'' + w.ticker + '\')" class="act ghost" style="font-size:9px">移除</button>' +
   '</div>';
  }).join('');
 
- el.innerHTML = '<div class="card" style="border-left:3px solid var(--accent)">' +
-  '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">👁 我的觀察清單 <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">' + list.length + ' 檔</span></h3></div>' +
-  formHtml +
-  '<div>' + rows + '</div>' +
- '</div>';
+ el.innerHTML = formHtml +
+  '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">' + list.length + ' tickers</div>' +
+  '<div>' + rows + '</div>';
 }
 
 // 2026-05-19 #9: 交易模式分析 — 從 journal 找出你的交易壞習慣
@@ -9964,37 +9962,38 @@ function renderTripleResonance(candidates, meta) {
     return;
   }
 
-  const starHtml = (n) => {
-    const filled = Math.min(5, Math.max(1, n));
-    return '<span style="color:#fbbf24;font-weight:700;letter-spacing:1px">' + '★'.repeat(filled) + '</span>';
+  // 2026-05-21 v3: 換成 conv-bar 取代 ★★★★、code pill 取代彩色 badge
+  const convBar = (n) => {
+   const filled = Math.min(5, Math.max(1, n));
+   let html = '<span class="conv-bar strong" title="conviction ' + filled + '/5">';
+   for (let i = 0; i < 5; i++) html += '<i class="' + (i < filled ? 'on' : '') + '"></i>';
+   return html + '</span>';
   };
 
   el.innerHTML = candidates.map((c, i) => {
     const reasonText = (c.reasons || []).slice(0, 4).join(' · ');
-    const earnTag = c.daysToEarnings != null && c.daysToEarnings >= 1 && c.daysToEarnings <= 14
-      ? '<span style="background:rgba(251,191,36,.15);color:#fbbf24;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600">D-' + c.daysToEarnings + '</span>'
-      : '';
-    const discoTag = c.isDiscovery
-      ? '<span style="background:rgba(168,85,247,.12);color:#a855f7;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px">加速</span>'
-      : '';
+    const pills = [];
+    if (c.daysToEarnings != null && c.daysToEarnings >= 1 && c.daysToEarnings <= 14) {
+     pills.push('<span class="cp amber">EARN D-' + c.daysToEarnings + '</span>');
+    }
+    if (c.isDiscovery) pills.push('<span class="cp info">DISCO</span>');
     const priceLine = c.price != null
-      ? '<span style="color:var(--muted);font-size:11px">$' + Number(c.price).toFixed(2) + '</span>'
+      ? '<span class="mono" style="color:var(--silver);font-size:11px">$' + Number(c.price).toFixed(2) + '</span>'
       : '';
-
     return '<div onclick="showStock(\'' + c.symbol + '\')" ' +
-      'style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s" ' +
-      'onmouseover="this.style.background=\'rgba(251,191,36,.06)\'" ' +
-      'onmouseout="this.style.background=\'transparent\'">' +
-      '<span style="color:var(--muted);font-size:11px;min-width:18px;text-align:center">#' + (i + 1) + '</span>' +
-      '<div style="min-width:80px;display:flex;align-items:center;gap:5px">' +
-        '<b style="color:#fbbf24;font-size:14px">' + c.symbol + '</b>' +
-        earnTag + discoTag +
+      'style="display:grid;grid-template-columns:24px 90px 1fr 80px;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer" ' +
+      'onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'transparent\'">' +
+      '<span class="mono" style="color:var(--muted);font-size:10px;text-align:center">#' + (i + 1) + '</span>' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+       '<span class="sd strong"></span>' +
+       '<b style="font-size:14px;letter-spacing:.3px">' + c.symbol + '</b>' +
       '</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + reasonText + '</div>' +
-        '<div style="font-size:10px;color:var(--muted);opacity:.75;margin-top:2px">' + (c.name || '') + ' · ' + priceLine + '</div>' +
+      '<div style="min-width:0">' +
+       '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px">' + pills.join('') + '</div>' +
+       '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + reasonText + '</div>' +
+       '<div style="font-size:10px;color:var(--muted);opacity:.7;margin-top:2px">' + (c.name || '') + (priceLine ? ' · ' + priceLine : '') + '</div>' +
       '</div>' +
-      '<div style="text-align:right;min-width:60px">' + starHtml(c.stars) + '</div>' +
+      '<div style="text-align:right">' + convBar(c.stars) + '</div>' +
       '</div>';
   }).join('');
 }
@@ -10006,15 +10005,19 @@ function renderDashRSLeader(results) {
     el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
     return;
   }
+  // 2026-05-21 v3: dot + mono + cp 系統
   el.innerHTML = results.slice(0,5).map((r, i) => {
     const up = (r.changePct || 0) >= 0;
-    const scoreColor = r.compositeScore >= 70 ? 'var(--green)' : r.compositeScore >= 50 ? 'var(--yellow)' : 'var(--muted)';
-    return '<div class="scan-mini-row" style="cursor:pointer" onclick="showStock(\'' + r.symbol + '\')">' +
-      '<span style="color:var(--muted);font-size:12px;min-width:20px">#' + (i+1) + '</span>' +
-      '<b style="color:var(--accent);min-width:52px">' + r.symbol + '</b>' +
-      '<span style="flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + '</span>' +
-      '<span style="color:' + (up?'var(--green)':'var(--red)') + ';font-size:12px;min-width:48px;text-align:right">' + (up?'+':'') + (r.changePct||0).toFixed(2) + '%</span>' +
-      '<span style="color:' + scoreColor + ';font-size:12px;font-weight:700;min-width:36px;text-align:right">' + (r.compositeScore||0) + '分</span>' +
+    const sc = r.compositeScore || 0;
+    const dotCls = sc >= 75 ? 'strong' : sc >= 60 ? 'bull' : sc >= 45 ? 'neutral' : 'weak';
+    return '<div style="display:grid;grid-template-columns:24px 22px 70px 1fr 70px 50px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer" onclick="showStock(\'' + r.symbol + '\')" ' +
+      'onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'transparent\'">' +
+      '<span class="mono" style="color:var(--muted);font-size:10px;text-align:center">#' + (i+1) + '</span>' +
+      '<span class="sd ' + dotCls + '"></span>' +
+      '<b style="font-size:13px;letter-spacing:.3px">' + r.symbol + '</b>' +
+      '<span style="color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.name || '') + '</span>' +
+      '<span class="mono" style="color:' + (up?'#4ade80':'#f87171') + ';font-size:11px;text-align:right">' + (up?'+':'') + (r.changePct||0).toFixed(2) + '%</span>' +
+      '<span class="mono" style="font-size:12px;font-weight:700;text-align:right">' + sc + '</span>' +
       '</div>';
   }).join('');
 }
@@ -10923,39 +10926,38 @@ function renderAlertsPanel() {
   const typeLabel = { price: '股價', rsi: 'RSI', rsrank: 'RS Rating', vix: 'VIX', portfolio_dd: '帳戶回撤', below_ma: '價格/MA20' };
   const condLabel = { '>': '大於', '<': '小於', 'crosses-above': '向上突破', 'crosses-below': '向下跌破' };
 
+  // 2026-05-21 v3: dot + mono + ghost act 系統
   if (!activeOnes.length) {
-    active.innerHTML = '<div style="color:var(--muted);padding:6px 0">尚無條件式警報（每 5 分鐘自動檢查）</div>';
+    active.innerHTML = '<div style="color:var(--muted);padding:4px 0;font-size:12px">尚無條件式警報・每 5 分鐘自動檢查</div>';
   } else {
-    active.innerHTML = '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px">作用中（' + activeOnes.length + '）</div>' +
+    active.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">作用中 · active ' + activeOnes.length + '</div>' +
       activeOnes.map(a =>
-        '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:4px">' +
-          '<span style="font-size:11px;color:var(--muted);min-width:55px">' + typeLabel[a.type] + '</span>' +
-          (a.symbol ? '<span style="font-weight:600;color:var(--accent);min-width:55px">' + a.symbol + '</span>' : '<span style="min-width:55px"></span>') +
-          '<span style="color:var(--muted);font-size:11px">' + condLabel[a.condition] + '</span>' +
-          '<b style="margin-left:2px">' + a.value + '</b>' +
-          (a.lastValue != null ? '<span style="color:var(--muted);font-size:10px;margin-left:auto">當前 ' + a.lastValue + '</span>' : '<span style="margin-left:auto"></span>') +
-          '<button onclick="deleteAlert(\'' + a.id + '\')" title="刪除" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>' +
+        '<div style="display:grid;grid-template-columns:8px 70px 60px auto 1fr auto auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">' +
+          '<span class="sd neutral"></span>' +
+          '<span style="font-size:11px;color:var(--muted)">' + typeLabel[a.type] + '</span>' +
+          (a.symbol ? '<b style="font-size:12px;letter-spacing:.3px">' + a.symbol + '</b>' : '<span></span>') +
+          '<span class="mono" style="color:var(--muted);font-size:11px">' + condLabel[a.condition] + '</span>' +
+          '<span class="mono" style="font-weight:700">' + a.value + '</span>' +
+          (a.lastValue != null ? '<span class="mono" style="color:var(--muted);font-size:10px">當前 ' + a.lastValue + '</span>' : '<span></span>') +
+          '<button onclick="deleteAlert(\'' + a.id + '\')" title="刪除" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1">×</button>' +
         '</div>'
       ).join('');
   }
-  // 2026-05-21 Sprint 3-B: 30 天觸發歷史（從 _getAlertHistory 拿，跨裝置同步）
   const fullHist = _getAlertHistory();
-  if (fullHist.length || triggered.length) {
+  if (fullHist.length) {
    const histRows = fullHist.slice(0, 20);
-   hist.innerHTML = '<div style="padding-top:8px;border-top:1px solid var(--border)">' +
-     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-       '<span style="color:var(--muted);font-weight:600">📜 觸發歷史（' + fullHist.length + ' 筆 / 30 天）</span>' +
-       (triggered.length ? '<button onclick="clearTriggeredAlerts()" style="background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer">清作用中</button>' : '') +
+   hist.innerHTML = '<div style="padding-top:10px;margin-top:10px;border-top:1px solid rgba(255,255,255,.06)">' +
+     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+       '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase">觸發歷史 · history ' + fullHist.length + ' / 30d</span>' +
+       (triggered.length ? '<button onclick="clearTriggeredAlerts()" class="act ghost" style="font-size:9px">clear</button>' : '') +
      '</div>' +
-     (histRows.length
-      ? histRows.map(h =>
-         '<div style="padding:4px 8px;color:var(--muted);font-size:11px;display:flex;align-items:center;gap:6px">' +
-           '<span style="color:#22c55e">✓</span>' +
-           '<span>' + escapeHtml(h.msg || '') + '</span>' +
-           '<span style="opacity:.6;margin-left:auto">' + new Date(h.ts).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
-         '</div>'
-        ).join('')
-      : '<div style="color:var(--muted);font-size:11px;padding:4px 8px">尚無歷史觸發</div>') +
+     histRows.map(h =>
+        '<div style="display:grid;grid-template-columns:8px 1fr auto;gap:8px;align-items:center;padding:4px 0;color:var(--muted);font-size:11px">' +
+          '<span class="sd bull"></span>' +
+          '<span>' + escapeHtml(h.msg || '') + '</span>' +
+          '<span class="mono" style="opacity:.6">' + new Date(h.ts).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>' +
+        '</div>'
+      ).join('') +
    '</div>';
   } else hist.innerHTML = '';
 }
@@ -11765,33 +11767,43 @@ function showRSEntryGuide(symbol) {
 function _rsRegimeCard() {
   const r = window._marketRegime;
   if (!r) return '';
+  // 2026-05-21 v3: emoji 全砍，用 dot + pill 系統
   const configs = {
-    good:    { color:'#22c55e', bg:'rgba(34,197,94,.07)',   border:'rgba(34,197,94,.2)',   icon:'📈', label:'市場牛市', guide:'可積極進場，以正常倉位執行訊號' },
-    neutral: { color:'#f59e0b', bg:'rgba(245,158,11,.07)',  border:'rgba(245,158,11,.2)',  icon:'📊', label:'市場中性', guide:'謹慎擇優，優先選 ✅ 突破買進 且量能強的股票' },
-    caution: { color:'#f97316', bg:'rgba(249,115,22,.07)',  border:'rgba(249,115,22,.2)',  icon:'⚠️', label:'市場偏弱', guide:'縮小倉位至 50%，嚴格執行止損，不追高' },
-    bear:    { color:'#ef4444', bg:'rgba(239,68,68,.07)',   border:'rgba(239,68,68,.2)',   icon:'🔴', label:'市場偏空', guide:'建議空手觀望，即使有買點訊號也先跳過' },
+    good:    { dot:'strong',  label:'牛市',   guide:'可積極進場，以正常倉位執行訊號' },
+    neutral: { dot:'neutral', label:'中性',   guide:'謹慎擇優，優先選量能強的突破' },
+    caution: { dot:'weak',    label:'偏弱',   guide:'縮小倉位至 50%，嚴格停損，不追高' },
+    bear:    { dot:'bear',    label:'偏空',   guide:'建議空手觀望，買點訊號先跳過' },
   };
   const key = r.overall >= 1 ? 'good' : r.overall === 0 ? 'neutral' : r.overall >= -1 ? 'caution' : 'bear';
   const c = configs[key];
-  const vixBadge = r.vixNow != null
-    ? '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--border)">'
-      + 'VIX ' + r.vixNow.toFixed(0)
-      + (r.vixLevel==='panic'?' 🔴 恐慌':r.vixLevel==='elevated'?' ⚠️ 偏高':' ✓')
-      + '</span>'
-    : '';
-  const spyBadge = r.spyVs200 != null
-    ? '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--border)">'
-      + 'SPY vs 200MA ' + (r.spyVs200>0?'+':'') + r.spyVs200.toFixed(1) + '%'
-      + '</span>'
-    : '';
-  return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;' +
-    'background:' + c.bg + ';border-radius:8px;border:1px solid ' + c.border + '">' +
-    '<div style="font-size:16px">' + c.icon + '</div>' +
-    '<div style="flex:1;min-width:0">' +
-      '<div style="font-size:13px;font-weight:700;color:' + c.color + '">' + c.label + '</div>' +
-      '<div style="font-size:12px;color:var(--text);margin-top:2px">' + c.guide + '</div>' +
+  // VIX pill
+  let vixPill = '';
+  if (r.vixNow != null) {
+   const vCls = r.vixLevel === 'panic' ? 'bear' : r.vixLevel === 'elevated' ? 'amber' : 'bull';
+   const vNote = r.vixLevel === 'panic' ? '恐慌' : r.vixLevel === 'elevated' ? '偏高' : '正常';
+   vixPill = '<span class="cp ' + vCls + '" title="VIX ' + vNote + '">VIX ' + r.vixNow.toFixed(0) + '</span>';
+  }
+  // SPY vs 200MA pill
+  let spyPill = '';
+  if (r.spyVs200 != null) {
+   const sCls = r.spyVs200 > 2 ? 'bull' : r.spyVs200 > -2 ? 'neutral' : 'bear';
+   spyPill = '<span class="cp ' + sCls + '">SPY ' + (r.spyVs200>0?'+':'') + r.spyVs200.toFixed(1) + '% vs 200ma</span>';
+  }
+  // HMM pill (sub-Sprint Day 1-B)
+  let hmmPill = '';
+  if (r.hmm && r.hmm.confidence >= 0.6) {
+   const hmmAgrees = (key === 'good' && r.hmm.state === 0) || (key === 'neutral' && r.hmm.state === 1) || ((key === 'caution' || key === 'bear') && r.hmm.state === 2);
+   if (hmmAgrees) hmmPill = '<span class="cp info" title="HMM 模型跟趨勢一致">HMM ✓ ' + r.hmm.stateName + ' ' + Math.round(r.hmm.confidence * 100) + '%</span>';
+   else hmmPill = '<span class="cp amber" title="HMM 跟趨勢分歧 — 建議縮小倉位">HMM △ ' + r.hmm.stateName + ' ' + Math.round(r.hmm.confidence * 100) + '%</span>';
+  }
+  return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:4px 0">' +
+    '<div style="display:flex;align-items:center;gap:8px;min-width:140px">' +
+     '<span class="sd ' + c.dot + '"></span>' +
+     '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + c.label +
+      '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:6px;letter-spacing:1px;text-transform:uppercase">' + key + '</span></div>' +
+     '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + c.guide + '</div></div>' +
     '</div>' +
-    '<div style="display:flex;gap:6px;flex-wrap:wrap">' + spyBadge + vixBadge + '</div>' +
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:auto">' + spyPill + vixPill + hmmPill + '</div>' +
     '</div>';
 }
 
