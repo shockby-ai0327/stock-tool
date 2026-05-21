@@ -475,19 +475,12 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </div>
  <div class="main" style="padding-bottom:44px">
  <div id="page-dashboard" class="page active">
- <!-- 2026-05-21 v2 設計：統一色調卡片 + 中文主標 + 英文副字、訊號顏色保留 -->
+ <!-- 2026-05-21 v5: 砍 4 個短篇幅區塊（標題列 / 警報 / 觀察清單 / 短線追蹤）
+      只剩 5 個有實質決策價值的區塊：regime / action / holdings / triple / RS leader -->
 
- <!-- TITLE BAR -->
- <div class="dash-title-bar">
-  <div>
-   <div style="display:flex;align-items:baseline;gap:8px">
-    <span class="dash-title">今日總覽</span>
-    <span class="dash-en">Morning Brief</span>
-   </div>
-   <div class="dash-meta" id="dash-timestamp"></div>
-  </div>
-  <button class="act ghost" onclick="renderDashboard(true)">重新整理</button>
- </div>
+ <!-- 隱藏 timestamp / refresh / 警報 / 觀察清單 / T-stock 容器，
+      function 仍會跑（避免 null reference），UI 只是不再渲染 -->
+ <div id="dash-timestamp" style="display:none"></div>
 
  <!-- 1. MARKET REGIME -->
  <section class="card-strip">
@@ -516,28 +509,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-holdings"></div>
  </section>
 
- <!-- 4. ALERTS -->
- <section class="card-strip" id="dash-alerts-card">
-  <div class="sl-section">
-   <h2>條件式警報</h2><span class="sl-en">alerts</span>
-   <span class="sl-sub">每 5 分鐘自動檢查</span>
-   <button class="act ghost" onclick="showAlertForm()" style="margin-left:auto">+ 新增</button>
-  </div>
-  <div id="alerts-form-container" style="display:none;margin-bottom:10px"></div>
-  <div id="alerts-active-list" style="font-size:12px"></div>
-  <div id="alerts-history-list" style="margin-top:10px;font-size:11px"></div>
- </section>
-
- <!-- 5. WATCHLIST -->
- <section class="card-strip">
-  <div class="sl-section">
-   <h2>觀察清單</h2><span class="sl-en">watchlist</span>
-   <span class="sl-sub">研究過、等價位 / 等 setup</span>
-  </div>
-  <div id="dash-watchlist-simple"></div>
- </section>
-
- <!-- 6. TRIPLE RESONANCE -->
+ <!-- 4. TRIPLE RESONANCE -->
  <section class="card-strip" id="dash-triple-resonance-card">
   <div class="sl-section">
    <h2>三重共振雷達</h2><span class="sl-en">triple resonance</span>
@@ -547,7 +519,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;font-family:var(--mono)">scanning…</div></div>
  </section>
 
- <!-- 7. RS LEADER -->
+ <!-- 5. RS LEADER -->
  <section class="card-strip">
   <div class="sl-section">
    <h2>動能領袖</h2><span class="sl-en">RS leader</span>
@@ -557,17 +529,15 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
  </section>
 
- <!-- 8. T-STOCK -->
- <section class="card-strip">
-  <div class="sl-section">
-   <h2>短線追蹤</h2><span class="sl-en">short-term tracking</span>
-   <span class="sl-sub">MSFT・META・GOOGL · T評分 &lt;60 不建議進場</span>
-   <span class="sl-meta" id="t-review-badge"></span>
-  </div>
-  <div class="t-stock-grid" id="dash-t-list">
-   <div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;grid-column:1/-1;font-family:var(--mono)">loading…</div>
-  </div>
- </section>
+ <!-- 隱藏 stub：警報 / 觀察清單 / 短線追蹤 容器仍存在避免 null ref -->
+ <div id="dash-alerts-card" style="display:none">
+  <div id="alerts-form-container"></div>
+  <div id="alerts-active-list"></div>
+  <div id="alerts-history-list"></div>
+ </div>
+ <div id="dash-watchlist-simple" style="display:none"></div>
+ <div id="t-review-badge" style="display:none"></div>
+ <div id="dash-t-list" style="display:none"></div>
  </div>
  <div id="page-stock" class="page">
  <div class="search-box">
