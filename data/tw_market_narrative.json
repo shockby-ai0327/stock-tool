@@ -1,30 +1,30 @@
 {
-  "generatedAt": 1779466669417,
+  "generatedAt": 1779475420396,
   "market": "TW",
-  "scanAt": "2026-05-22T16:06:18.735Z",
+  "scanAt": "2026-05-22T18:34:03.185Z",
   "macros": {
     "spy": {
-      "last": 747.13,
-      "changePct": 0.59
+      "last": 747.43,
+      "changePct": 0.63
     },
     "vix": {
       "last": 16.61,
       "changePct": -0.89
     },
     "tnx": {
-      "last": 4.58,
-      "changePct": -0.13
+      "last": 4.56,
+      "changePct": -0.61
     },
     "dxy": {
-      "last": 99.32,
-      "changePct": 0.13
+      "last": 99.25,
+      "changePct": 0.06
     }
   },
   "sectorLeaders": [
     {
       "etf": "SMH",
-      "last": 579.48,
-      "changePct": 2.04
+      "last": 579.63,
+      "changePct": 2.07
     },
     {
       "etf": "XAR",
@@ -33,20 +33,20 @@
     },
     {
       "etf": "IGV",
-      "last": 94.17,
-      "changePct": 1.82
+      "last": 94.18,
+      "changePct": 1.84
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "GDX",
-      "last": 85.31,
-      "changePct": -0.8
-    },
-    {
       "etf": "XLC",
       "last": 115.57,
-      "changePct": -0.46
+      "changePct": -0.45
+    },
+    {
+      "etf": "GDX",
+      "last": 85.78,
+      "changePct": -0.24
     },
     {
       "etf": "IBB",
@@ -56,60 +56,60 @@
   ],
   "gainers": [
     {
-      "symbol": "RGTI",
-      "name": "Rigetti Computing, Inc.",
-      "changePct": 24.14
-    },
-    {
-      "symbol": "QBTS",
-      "name": "D-Wave Quantum Inc.",
+      "symbol": "NVTS",
+      "name": "Navitas Semiconductor Corporat",
       "changePct": 20.75
-    },
-    {
-      "symbol": "INFQ",
-      "name": "Infleqtion, Inc.",
-      "changePct": 19.05
     },
     {
       "symbol": "BB",
       "name": "BlackBerry Limited",
-      "changePct": 17.67
+      "changePct": 19.71
     },
     {
-      "symbol": "QUBT",
-      "name": "Quantum Computing Inc.",
-      "changePct": 15.95
+      "symbol": "RGTI",
+      "name": "Rigetti Computing, Inc.",
+      "changePct": 18.98
+    },
+    {
+      "symbol": "DELL",
+      "name": "Dell Technologies Inc.",
+      "changePct": 17.37
+    },
+    {
+      "symbol": "IMAX",
+      "name": "Imax Corporation",
+      "changePct": 14.88
     }
   ],
   "losers": [
     {
       "symbol": "FUTU",
       "name": "Futu Holdings Limited",
-      "changePct": -26.54
+      "changePct": -25.86
     },
     {
       "symbol": "CAE",
       "name": "CAE Inc.",
-      "changePct": -13.36
+      "changePct": -14.37
     },
     {
-      "symbol": "BJ",
-      "name": "BJ's Wholesale Club Holdings, ",
-      "changePct": -8.91
+      "symbol": "OCTVV",
+      "name": "Octave Intelligence plc Class ",
+      "changePct": -10.83
     },
     {
-      "symbol": "GKOS",
-      "name": "Glaukos Corporation",
-      "changePct": -8.31
+      "symbol": "TE",
+      "name": "T1 Energy Inc.",
+      "changePct": -10.09
     },
     {
-      "symbol": "TLX",
-      "name": "Telix Pharmaceuticals Limited",
-      "changePct": -7.4
+      "symbol": "CBRS",
+      "name": "Cerebras Systems Inc.",
+      "changePct": -9.53
     }
   ],
-  "narrative": "市場展現溫和風險偏好,SPY上漲0.59%,VIX下跌0.89至16.61,反映情緒穩定。科技板塊(SMH +2.04%、IGV +1.82%)領漲,航太國防(XAR +1.98%)跟進,顯示成長類資產吸引資金。消費通訊(XLC -0.46%)與生技(IBB +0.04%)相對疲弱。10年期殖利率微降至4.58%,支持科技股。台股權值股強勢,3037.TW月漲26.4%、RS值99,2313.TW漲24.94%、加速度1.44倍,2308.TW具四星三共鳴信號。資金流向高動量科技與台灣權值,避開採礦(-0.8%)與衰退股。",
-  "headline": "科技領漲帶動風險偏好,台灣權值股成焦點",
+  "narrative": "今日市場呈現明確的科技驅動行情。SPY上漲0.63%,VIX跌至16.61,反映風險偏好上升。半導體ETF(SMH +2.07%)與航太防衛(XAR +1.98%)領漲,NVDA生態鏈NVTS狂漲20.75%,DELL、IMAX等科技股強勢補漲。10年期美債收益率下跌至4.56%,釋放流動性寬鬆信號。台股權值股崛起,2308.TW、2313.TW等晶圓廠股票RS值破90,三重共振信號亮起。通訊(XLC)與黃金(GDX)表現疲弱,資金明確迴避防禦性資產。",
+  "headline": "科技領漲帶動風險偏好,台股權值股強勢崛起",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
@@ -118,9 +118,10 @@
       "IGV"
     ],
     "outOf": [
+      "XLC",
       "GDX",
-      "XLC"
+      "IBB"
     ]
   },
-  "tomorrowWatch": "密切觀察台灣權值股(特別2308.TW)季報公布與科技股的持續動能能否維持"
+  "tomorrowWatch": "關注台積電權值股能否延續強勢,美債收益率4.56%支撐是否穩固,NVDA財報後續反應"
 }
