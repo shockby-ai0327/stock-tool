@@ -1,127 +1,127 @@
 {
-  "generatedAt": 1779475420396,
+  "generatedAt": 1779484241966,
   "market": "TW",
-  "scanAt": "2026-05-22T18:34:03.185Z",
+  "scanAt": "2026-05-22T21:00:27.920Z",
   "macros": {
     "spy": {
-      "last": 747.43,
-      "changePct": 0.63
+      "last": 745.64,
+      "changePct": 0.39
     },
     "vix": {
-      "last": 16.61,
-      "changePct": -0.89
+      "last": 16.7,
+      "changePct": -0.36
     },
     "tnx": {
       "last": 4.56,
       "changePct": -0.61
     },
     "dxy": {
-      "last": 99.25,
-      "changePct": 0.06
+      "last": 99.32,
+      "changePct": 0.13
     }
   },
   "sectorLeaders": [
     {
-      "etf": "SMH",
-      "last": 579.63,
-      "changePct": 2.07
-    },
-    {
       "etf": "XAR",
-      "last": 271.65,
-      "changePct": 1.98
+      "last": 271.18,
+      "changePct": 1.81
     },
     {
       "etf": "IGV",
-      "last": 94.18,
-      "changePct": 1.84
+      "last": 94.01,
+      "changePct": 1.65
+    },
+    {
+      "etf": "SMH",
+      "last": 576.32,
+      "changePct": 1.49
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "XLC",
-      "last": 115.57,
-      "changePct": -0.45
+      "etf": "GDX",
+      "last": 85.02,
+      "changePct": -1.13
     },
     {
-      "etf": "GDX",
-      "last": 85.78,
-      "changePct": -0.24
+      "etf": "XLC",
+      "last": 115.46,
+      "changePct": -0.55
     },
     {
       "etf": "IBB",
-      "last": 169.13,
-      "changePct": 0.04
+      "last": 168.79,
+      "changePct": -0.16
     }
   ],
   "gainers": [
     {
       "symbol": "NVTS",
       "name": "Navitas Semiconductor Corporat",
-      "changePct": 20.75
-    },
-    {
-      "symbol": "BB",
-      "name": "BlackBerry Limited",
-      "changePct": 19.71
+      "changePct": 19.98
     },
     {
       "symbol": "RGTI",
       "name": "Rigetti Computing, Inc.",
-      "changePct": 18.98
+      "changePct": 19.87
+    },
+    {
+      "symbol": "BB",
+      "name": "BlackBerry Limited",
+      "changePct": 18.95
     },
     {
       "symbol": "DELL",
       "name": "Dell Technologies Inc.",
-      "changePct": 17.37
+      "changePct": 16.77
     },
     {
-      "symbol": "IMAX",
-      "name": "Imax Corporation",
-      "changePct": 14.88
+      "symbol": "AXTI",
+      "name": "AXT Inc",
+      "changePct": 16.37
     }
   ],
   "losers": [
     {
       "symbol": "FUTU",
       "name": "Futu Holdings Limited",
-      "changePct": -25.86
+      "changePct": -27.53
     },
     {
       "symbol": "CAE",
       "name": "CAE Inc.",
-      "changePct": -14.37
+      "changePct": -14.03
     },
     {
-      "symbol": "OCTVV",
-      "name": "Octave Intelligence plc Class ",
-      "changePct": -10.83
+      "symbol": "GKOS",
+      "name": "Glaukos Corporation",
+      "changePct": -13.52
     },
     {
-      "symbol": "TE",
-      "name": "T1 Energy Inc.",
-      "changePct": -10.09
+      "symbol": "FRVO",
+      "name": "Fervo Energy Company",
+      "changePct": -9.76
     },
     {
       "symbol": "CBRS",
       "name": "Cerebras Systems Inc.",
-      "changePct": -9.53
+      "changePct": -8.9
     }
   ],
-  "narrative": "今日市場呈現明確的科技驅動行情。SPY上漲0.63%,VIX跌至16.61,反映風險偏好上升。半導體ETF(SMH +2.07%)與航太防衛(XAR +1.98%)領漲,NVDA生態鏈NVTS狂漲20.75%,DELL、IMAX等科技股強勢補漲。10年期美債收益率下跌至4.56%,釋放流動性寬鬆信號。台股權值股崛起,2308.TW、2313.TW等晶圓廠股票RS值破90,三重共振信號亮起。通訊(XLC)與黃金(GDX)表現疲弱,資金明確迴避防禦性資產。",
-  "headline": "科技領漲帶動風險偏好,台股權值股強勢崛起",
+  "narrative": "今日市場呈現溫和風險偏好，SPY小漲0.39%，VIX下跌至16.7反映風險情緒改善。殖利率下降61bp至4.56%是關鍵驅動力，有利科技股估值。防禦性選擇權成交量下降，確認風險胃口增加。航太防禦(XAR +1.81%)與軟體(IGV +1.65%)領漲，惟能源(GDX -1.13%)與通訊(XLC -0.55%)滯後。台股權值股表現亮眼，尤其2308.TW四星級三重共鳴訊號(盈餘+杯柄型+內部人買進)值得關注。美科技大廠DELL、NVTS強勢上漲，反映AI硬體需求持續。",
+  "headline": "科技領漲帶動溫和上漲，殖利率下降助力風險資產",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
-      "SMH",
       "XAR",
-      "IGV"
+      "IGV",
+      "SMH"
     ],
     "outOf": [
-      "XLC",
       "GDX",
+      "XLC",
       "IBB"
     ]
   },
-  "tomorrowWatch": "關注台積電權值股能否延續強勢,美債收益率4.56%支撐是否穩固,NVDA財報後續反應"
+  "tomorrowWatch": "留意2308.TW三重共鳴訊號與台股權值股能否延續，同步觀測美債殖利率支撐力道"
 }
