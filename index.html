@@ -514,7 +514,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <section class="card-strip" id="dash-narrative-card">
   <div class="sl-section">
    <h2>今日市場敘事</h2><span class="sl-en">market narrative</span>
-   <span class="sl-sub">Claude AI · 每日盤後生成</span>
+   <span class="sl-sub">Claude AI · 每日盤前/盤中/盤後 3 次更新</span>
    <span class="sl-meta" id="narrative-meta"></span>
   </div>
   <div id="narrative-headline" style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:8px">scanning…</div>
@@ -1373,8 +1373,18 @@ async function analyzeStock() {
  const scanEntry = window._rsLeaderCache ? window._rsLeaderCache.find(s => s.symbol === ticker) : null;
  if (scanEntry) {
   if (scanEntry.daysToEarnings != null && scanEntry.daysToEarnings >= 0 && scanEntry.daysToEarnings <= 14) {
-   const urgent = scanEntry.daysToEarnings <= 7;
-   catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:' + (urgent ? 'rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.4)' : 'rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.4)') + '">📅 財報 ' + scanEntry.daysToEarnings + ' 天後</span>');
+   // 2026-05-23: 顯示實際日期（使用者時區），避免時區誤判
+   // earningsDate 是 Unix timestamp（秒），轉成本地日期
+   const days = scanEntry.daysToEarnings;
+   const cls = days <= 3 ? 'bear' : days <= 7 ? 'amber' : 'info';
+   let dateStr = '';
+   if (scanEntry.earningsDate) {
+    const d = new Date(scanEntry.earningsDate * 1000);  // 秒 → ms
+    const weekday = ['日','一','二','三','四','五','六'][d.getDay()];
+    dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '（' + weekday + '）';
+   }
+   // 用 cp pill 系統取代彩色 box，跟 v5 設計一致
+   catalystBadges.push('<span class="cp ' + cls + '" title="財報日期（你本地時區）：' + dateStr + '">EARN T-' + days + (dateStr ? ' · ' + dateStr : '') + '</span>');
   }
   if ((scanEntry.recentUpgrades || []).length >= 1) {
    catalystBadges.push('<span style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.4)">📈 ' + scanEntry.recentUpgrades.length + ' 位分析師升評</span>');
@@ -9817,9 +9827,15 @@ async function renderActionItems() {
   } else if (pnlPct >= 7) {
    items.push({ priority: 4, ticker, code: '1R WATCH', dot: 'neutral', detail: `已獲利 ${pnlPct.toFixed(1)}% — 移動停損至成本可鎖住免賠`, pnlPct });
   }
-  // 3. 財報臨近
+  // 3. 財報臨近 — 顯示實際日期避免時區誤判
   if (sd && sd.daysToEarnings != null && sd.daysToEarnings >= 0 && sd.daysToEarnings <= 7) {
-   items.push({ priority: 2, ticker, code: 'EARN D-' + sd.daysToEarnings, dot: 'neutral', detail: '盤前盤後波動大 — 評估是否減倉或設更緊停損', pnlPct });
+   let dateStr = '';
+   if (sd.earningsDate) {
+    const d = new Date(sd.earningsDate * 1000);
+    const wk = ['日','一','二','三','四','五','六'][d.getDay()];
+    dateStr = ' · ' + (d.getMonth()+1) + '/' + d.getDate() + '(' + wk + ')';
+   }
+   items.push({ priority: 2, ticker, code: 'EARN T-' + sd.daysToEarnings + dateStr, dot: 'neutral', detail: '盤前盤後波動大 — 評估是否減倉或設更緊停損', pnlPct });
   }
   // 4. RS 弱化
   if (sd && sd.rsRating != null) {
@@ -10001,7 +10017,7 @@ function renderMarketNarrative(data) {
   if (watchEl) watchEl.innerHTML = '';
   return;
  }
- // Regime pill (in front of headline)
+ // 2026-05-23: 加 session badge — 看清楚是 pre-market / midday / post-close
  const regimeMap = {
   'risk-on':  { cls: 'bull',    label: 'RISK-ON' },
   'risk-off': { cls: 'bear',    label: 'RISK-OFF' },
@@ -10009,7 +10025,16 @@ function renderMarketNarrative(data) {
   'neutral':  { cls: 'neutral', label: 'NEUTRAL' },
  };
  const rg = regimeMap[data.regime] || regimeMap.neutral;
- headEl.innerHTML = '<span class="cp ' + rg.cls + '" style="margin-right:8px;vertical-align:middle">' + rg.label + '</span>' + escapeHtml(data.headline || '');
+ // Session pill — 顯示這份敘事是「哪個時段生成」
+ const sessionMap = {
+  'pre-market':  { cls: 'info',  label: '盤前 PRE-MKT' },
+  'morning':     { cls: 'amber', label: '盤中早盤 MORNING' },
+  'afternoon':   { cls: 'amber', label: '盤中下午 AFTERNOON' },
+  'post-close':  { cls: 'neutral', label: '盤後 POST-CLOSE' },
+ };
+ const ss = sessionMap[data.sessionShort] || null;
+ const sessionPill = ss ? '<span class="cp ' + ss.cls + '" style="margin-right:6px">' + ss.label + '</span>' : '';
+ headEl.innerHTML = sessionPill + '<span class="cp ' + rg.cls + '" style="margin-right:8px;vertical-align:middle">' + rg.label + '</span>' + escapeHtml(data.headline || '');
  bodyEl.textContent = data.narrative || '';
 
  if (metaEl) {
@@ -10035,8 +10060,10 @@ function renderMarketNarrative(data) {
   rotateEl.innerHTML = html;
  }
  if (watchEl && data.tomorrowWatch) {
+  // 2026-05-23: 「明日關注」label 隨 session 變化（盤前/盤中/盤後不同標題）
+  const watchTitle = data.watchLabel || '明日關注';
   watchEl.innerHTML = '<div style="padding:8px 10px;background:rgba(99,102,241,.04);border-radius:4px;font-size:11px;color:var(--muted);line-height:1.6;border-left:2px solid rgba(99,102,241,.4)">' +
-   '<span style="color:#a5b4fc;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-right:4px">明日關注</span>' +
+   '<span style="color:#a5b4fc;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-right:4px">' + escapeHtml(watchTitle) + '</span>' +
    escapeHtml(data.tomorrowWatch) +
   '</div>';
  } else if (watchEl) {

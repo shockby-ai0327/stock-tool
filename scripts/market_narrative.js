@@ -155,21 +155,68 @@ async function main() {
     '',
     tripleRes.length ? 'Triple-Resonance candidates (earnings + VCP + insider): ' + tripleRes.map(t => t.symbol + ' (' + t.stars + '★)').join(', ') : 'No Triple-Resonance candidates today.',
     '',
-    'In 100-120 words (繁體中文), provide today\'s market narrative:',
-    '1. What\'s the dominant theme/story today?',
-    '2. Is money flowing into risk-on or risk-off?',
-    '3. Which sectors are leading vs lagging? Why might that be?',
-    '4. Bottom line for tomorrow — what should traders be watching?',
-    '',
-    'Return ONLY valid JSON, no markdown:',
-    '{',
-    '  "headline": "<one-line summary in 繁體中文, 15 words max>",',
-    '  "narrative": "<100-120 word analysis in 繁體中文>",',
-    '  "regime": "risk-on" | "risk-off" | "rotation" | "neutral",',
-    '  "sectorRotation": {"into": ["XLK","XLF"], "outOf": ["XLE","XLP"]},',
-    '  "tomorrowWatch": "<one-line actionable item in 繁體中文>"',
-    '}',
   ];
+
+  // 2026-05-23: 時間感知 prompt — pre-market / midday / near-close 不同問法
+  const etNow = new Date(Date.now() - 5 * 3600000);  // 粗略換算 ET（不處理 DST，誤差 1 小時可接受）
+  const etHour = etNow.getUTCHours();
+  let sessionLabel, questionBlock, watchLabel;
+  if (etHour < 9 || (etHour === 9 && etNow.getUTCMinutes() < 30)) {
+    sessionLabel = 'PRE-MARKET (before US open)';
+    questionBlock = [
+      'In 100-120 words (繁體中文), provide PRE-MARKET briefing:',
+      '1. What overnight news / futures move sets up today\'s session?',
+      '2. Pre-market gainers/losers — any major gap movers worth attention?',
+      '3. Key macro events / earnings releases scheduled today?',
+      '4. Risk-on or risk-off setup heading into the open?',
+    ];
+    watchLabel = '今日開盤關注';
+  } else if (etHour < 13) {
+    sessionLabel = 'MORNING SESSION (post-open, first 3.5 hours)';
+    questionBlock = [
+      'In 100-120 words (繁體中文), provide MIDDAY UPDATE:',
+      '1. What has actually played out vs pre-market expectations?',
+      '2. Surprise winners/losers in the first half — why?',
+      '3. Sector rotation visible so far (intraday)?',
+      '4. What to watch for the rest of session?',
+    ];
+    watchLabel = '下午盤關注';
+  } else if (etHour < 16) {
+    sessionLabel = 'AFTERNOON SESSION (last 2 hours before close)';
+    questionBlock = [
+      'In 100-120 words (繁體中文), provide AFTERNOON CHECK-IN:',
+      '1. What\'s today\'s dominant theme/story?',
+      '2. Is money flowing into risk-on or risk-off?',
+      '3. Which sectors are leading vs lagging? Why?',
+      '4. Setup for close — sell-off into close or strong finish?',
+    ];
+    watchLabel = '收盤前關注';
+  } else {
+    sessionLabel = 'POST-CLOSE (market closed)';
+    questionBlock = [
+      'In 100-120 words (繁體中文), provide POST-CLOSE WRAP-UP:',
+      '1. What was today\'s dominant theme/story?',
+      '2. Was money risk-on or risk-off today?',
+      '3. Which sectors led vs lagged? Why?',
+      '4. Bottom line for tomorrow — what should traders watch?',
+    ];
+    watchLabel = '明日關注';
+  }
+
+  promptParts.push('CURRENT SESSION: ' + sessionLabel);
+  promptParts.push('');
+  promptParts.push(...questionBlock);
+  promptParts.push('');
+  promptParts.push('Return ONLY valid JSON, no markdown:');
+  promptParts.push('{');
+  promptParts.push('  "headline": "<one-line summary in 繁體中文, 15 words max>",');
+  promptParts.push('  "narrative": "<100-120 word analysis in 繁體中文>",');
+  promptParts.push('  "regime": "risk-on" | "risk-off" | "rotation" | "neutral",');
+  promptParts.push('  "sectorRotation": {"into": ["XLK","XLF"], "outOf": ["XLE","XLP"]},');
+  promptParts.push('  "session": "' + sessionLabel + '",');
+  promptParts.push('  "watchLabel": "' + watchLabel + '",');
+  promptParts.push('  "tomorrowWatch": "<one-line actionable item in 繁體中文>"');
+  promptParts.push('}');
   const prompt = promptParts.join('\n');
 
   console.log('Calling Claude haiku...');
@@ -183,6 +230,9 @@ async function main() {
       generatedAt: Date.now(),
       market: market.toUpperCase(),
       scanAt: scan.scannedAt,
+      session: sessionLabel,       // 2026-05-23: session 識別供前端顯示
+      sessionShort: sessionLabel.split(' ')[0].toLowerCase(),  // pre-market / morning / afternoon / post-close
+      watchLabel,                  // 適合該 session 的「關注」標題
       macros: { spy, vix, tnx, dxy },
       sectorLeaders: sectorTop3,
       sectorLaggards: sectorBot3,
