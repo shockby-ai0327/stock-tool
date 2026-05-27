@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1779901580746,
+  "generatedAt": 1779910160006,
   "market": "US",
-  "scanAt": "2026-05-27T16:58:38.958Z",
-  "session": "MORNING SESSION (post-open, first 3.5 hours)",
-  "sessionShort": "morning",
-  "watchLabel": "下午盤關注",
+  "scanAt": "2026-05-27T19:21:33.232Z",
+  "session": "AFTERNOON SESSION (last 2 hours before close)",
+  "sessionShort": "afternoon",
+  "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 749.39,
-      "changePct": -0.16
+      "last": 750.53,
+      "changePct": -0.01
     },
     "vix": {
-      "last": 16.64,
-      "changePct": -2.18
+      "last": 16.5,
+      "changePct": -3
     },
     "tnx": {
       "last": 4.48,
-      "changePct": -0.36
+      "changePct": -0.27
     },
     "dxy": {
-      "last": 99.19,
-      "changePct": 0.04
+      "last": 99.2,
+      "changePct": 0.03
     }
   },
   "sectorLeaders": [
     {
       "etf": "XLY",
-      "last": 121.51,
-      "changePct": 1.73
+      "last": 121.38,
+      "changePct": 1.62
     },
     {
       "etf": "XLP",
-      "last": 84.8,
-      "changePct": 1.4
+      "last": 84.74,
+      "changePct": 1.32
     },
     {
-      "etf": "XAR",
-      "last": 279.29,
-      "changePct": 0.99
+      "etf": "XLC",
+      "last": 116.65,
+      "changePct": 0.96
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 86.34,
-      "changePct": -2.44
+      "last": 86.05,
+      "changePct": -2.77
     },
     {
       "etf": "SMH",
-      "last": 590.43,
-      "changePct": -1.94
+      "last": 593.68,
+      "changePct": -1.4
     },
     {
       "etf": "XLE",
-      "last": 57.33,
-      "changePct": -0.9
+      "last": 57.2,
+      "changePct": -1.12
     }
   ],
   "gainers": [
     {
       "symbol": "DY",
       "name": "Dycom Industries, Inc.",
-      "changePct": 31.68
-    },
-    {
-      "symbol": "MANU",
-      "name": "Manchester",
-      "changePct": 16.08
+      "changePct": 24.76
     },
     {
       "symbol": "LUNR",
       "name": "Intuitive Machines, Inc.",
-      "changePct": 15.35
+      "changePct": 13.64
     },
     {
-      "symbol": "APP",
-      "name": "Applovin Corporation",
-      "changePct": 12.33
+      "symbol": "MANU",
+      "name": "Manchester",
+      "changePct": 14
     },
     {
       "symbol": "ANF",
       "name": "Abercrombie & Fitch Company",
-      "changePct": 11.66
+      "changePct": 13.49
+    },
+    {
+      "symbol": "IREN",
+      "name": "IREN LIMITED",
+      "changePct": 12.68
     }
   ],
   "losers": [
     {
       "symbol": "ZS",
       "name": "Zscaler, Inc.",
-      "changePct": -31.17
+      "changePct": -31.57
     },
     {
       "symbol": "WOLF",
       "name": "Wolfspeed, Inc.",
-      "changePct": -17.27
+      "changePct": -17.39
     },
     {
       "symbol": "BRAI",
       "name": "Braiin Limited",
-      "changePct": -16.37
+      "changePct": -13.29
     },
     {
       "symbol": "BSX",
       "name": "Boston Scientific Corporation",
-      "changePct": -11.97
+      "changePct": -11.96
     },
     {
       "symbol": "PDD",
       "name": "PDD Holdings Inc.",
-      "changePct": -11.42
+      "changePct": -11.07
     }
   ],
-  "narrative": "早盤SPY微跌0.16%，但隱含波動率(VIX)下降2.18%至16.64，表明市場恐慌度緩解。消費必需品(XLP +1.4%)和可選消費(XLY +1.73%)領漲，顯示防禦性輪轉。科技股承壓，半導體(SMH -1.94%)和黃金礦業(GDX -2.44%)大幅下跌。個股方面，DY漲31.68%、MANU漲16.08%領漲；ZS跌31.17%、WOLF跌17.27%領跌，反映業績分化。MU(+81.38%,1mo)和BE(+33.05%)等動能股仍受追捧。收益率下降0.36%至4.48%，美元基本持平。",
-  "headline": "消費股領漲，科技股承壓，市場呈現防禦性輪轉",
+  "narrative": "今日市場呈現溫和風險偏好格局。SPY基本持平，VIX下跌3%至16.5，反映恐慌情緒溫和。10Y殖利率下跌27bp至4.48%，暗示資金尋求安全資產。消費類股(XLY +1.62%、XLP +1.32%)領漲，展現防禦與消費復甦雙重驅動。科技分化明顯：SMH跌1.4%，反映芯片板塊承壓；但動能股(VSAT RS97、PL RS98)仍保持強勢。礦業(GDX -2.77%)與能源(XLE -1.12%)大幅回調。LITE與ARWR四星設定值得關注。收盤前預期穩定收盤，成交溫和。",
+  "headline": "消費領導、科技分化，市場溫和風險偏好，收盤前靜觀其變",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
       "XLY",
       "XLP",
-      "XAR"
+      "XLC"
     ],
     "outOf": [
-      "SMH",
+      "XLE",
       "GDX",
-      "XLE"
+      "SMH"
     ]
   },
-  "tomorrowWatch": "留意收益率進一步走勢與科技股反彈能否接住，確認是否進入真實風險資產輪轉或僅為短期修正"
+  "tomorrowWatch": "密切監控LITE/ARWR三重共振訊號與動能股(VSAT/PL)的加速動能是否持續"
 }
