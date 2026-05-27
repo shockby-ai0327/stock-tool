@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1779910291044,
+  "generatedAt": 1779917659703,
   "market": "TW",
-  "scanAt": "2026-05-27T19:21:35.897Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-05-27T21:24:35.643Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 750.56,
-      "changePct": 0
+      "last": 750.46,
+      "changePct": -0.02
     },
     "vix": {
-      "last": 16.52,
-      "changePct": -2.88
+      "last": 16.29,
+      "changePct": -4.23
     },
     "tnx": {
       "last": 4.48,
       "changePct": -0.27
     },
     "dxy": {
-      "last": 99.2,
-      "changePct": 0.03
+      "last": 99.21,
+      "changePct": 0.04
     }
   },
   "sectorLeaders": [
     {
       "etf": "XLY",
-      "last": 121.42,
-      "changePct": 1.65
+      "last": 121.55,
+      "changePct": 1.76
     },
     {
       "etf": "XLP",
-      "last": 84.67,
-      "changePct": 1.24
+      "last": 84.58,
+      "changePct": 1.14
     },
     {
-      "etf": "XLC",
-      "last": 116.6,
-      "changePct": 0.9
+      "etf": "XAR",
+      "last": 278.9,
+      "changePct": 0.85
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 86.04,
-      "changePct": -2.78
-    },
-    {
-      "etf": "SMH",
-      "last": 594.34,
-      "changePct": -1.3
+      "last": 85.44,
+      "changePct": -3.46
     },
     {
       "etf": "XLE",
-      "last": 57.17,
-      "changePct": -1.18
+      "last": 56.99,
+      "changePct": -1.49
+    },
+    {
+      "etf": "SMH",
+      "last": 595.5,
+      "changePct": -1.1
     }
   ],
   "gainers": [
     {
       "symbol": "DY",
       "name": "Dycom Industries, Inc.",
-      "changePct": 25.04
+      "changePct": 25.84
     },
     {
       "symbol": "LUNR",
       "name": "Intuitive Machines, Inc.",
-      "changePct": 13.56
-    },
-    {
-      "symbol": "MANU",
-      "name": "Manchester",
-      "changePct": 14
-    },
-    {
-      "symbol": "ANF",
-      "name": "Abercrombie & Fitch Company",
-      "changePct": 12.86
+      "changePct": 15.72
     },
     {
       "symbol": "IREN",
       "name": "IREN LIMITED",
-      "changePct": 13.32
+      "changePct": 13.48
+    },
+    {
+      "symbol": "MANU",
+      "name": "Manchester",
+      "changePct": 12.68
+    },
+    {
+      "symbol": "PENN",
+      "name": "PENN Entertainment, Inc.",
+      "changePct": 11.9
     }
   ],
   "losers": [
     {
       "symbol": "ZS",
       "name": "Zscaler, Inc.",
-      "changePct": -31.29
+      "changePct": -31.52
     },
     {
       "symbol": "WOLF",
       "name": "Wolfspeed, Inc.",
-      "changePct": -17.22
+      "changePct": -13.93
     },
     {
       "symbol": "BRAI",
       "name": "Braiin Limited",
-      "changePct": -12.81
+      "changePct": -13.61
     },
     {
       "symbol": "BSX",
       "name": "Boston Scientific Corporation",
-      "changePct": -12.19
+      "changePct": -12.46
     },
     {
       "symbol": "PDD",
       "name": "PDD Holdings Inc.",
-      "changePct": -11.25
+      "changePct": -10.38
     }
   ],
-  "narrative": "今日市場呈現消費驅動的溫和風險偏好格局。裁量消費(XLY +1.65%)與必需消費(XLP +1.24%)領漲，反映投資者對經濟韌性的信心。VIX下跌2.88%至16.52，表明恐慌情緒緩解。然而科技晶片(SMH -1.3%)與黃金礦業(GDX -2.78%)走弱，能源(XLE -1.18%)承壓，暗示資金有選擇性流出高風險資產。10Y殖利率下降27bp至4.48%，支持消費股表現。台股領先股2344.TW加速上升(5x)，但缺乏三重共振訊號。收盤前兩小時應留意消費股能否持續帶動大盤。",
-  "headline": "消費股領漲，科技與能源承壓，市場溫和風險偏好",
+  "narrative": "今日美股呈現微幅下跌態勢，惟波動率大幅下滑（VIX -4.23%），反映市場風險偏好溫和回升。消費必需與非必需品領漲（XLP +1.14%、XLY +1.76%），暗示投資者轉向防禦性資產。能源與礦業陷入困境（XLE -1.49%、GDX -3.46%），半導體下滑（SMH -1.1%），顯示成長股承壓。殖利率下降（10Y -0.27%至4.48%）釋放溫和寬鬆訊號。台股電子族群領先全球（2344.TW +62.3% 1M、2408.TW +31.37% 1M），高加速度表現突出，預示科技反彈動能。",
+  "headline": "美股收平，消費領漲，科技與能源承壓，台股電子強勢",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
       "XLY",
       "XLP",
-      "XLC"
+      "XAR"
     ],
     "outOf": [
+      "XLE",
       "GDX",
-      "SMH",
-      "XLE"
+      "SMH"
     ]
   },
-  "tomorrowWatch": "監控ZS超跌反彈力道與科技股能否止穩，留意消費股動能是否延續至明日"
+  "tomorrowWatch": "留意台股電子族群能否延續強勢，以及美股消費防禦輪動是否持續；關注ZS (-31.52%)等科技跌停股是否引發連鎖反應。"
 }
