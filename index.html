@@ -166,6 +166,43 @@ table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabu
 .card-strip{background:transparent;border:none;border-radius:0;padding:0;margin-bottom:32px}
 .card-strip:last-child{margin-bottom:0}
 
+/* ═══════════════════════════════════════════════════════════════ */
+/* 2026-05-23 掃描器大更新：進度條 + 階段狀態 + 失敗詳情             */
+/* ═══════════════════════════════════════════════════════════════ */
+.scan-progress{padding:18px 20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:16px;font-family:var(--mono);font-size:11px}
+.sp-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.sp-title{font-size:13px;font-weight:700;font-family:-apple-system,'Segoe UI','Noto Sans TC',sans-serif;letter-spacing:.2px;color:var(--text)}
+.sp-status{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.sp-percent{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.sp-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:12px;position:relative}
+.sp-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width .4s ease;border-radius:2px}
+.sp-fill.error{background:linear-gradient(90deg,#ef4444,#f97316)}
+.sp-fill.done{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.sp-stage{font-family:var(--mono);font-size:11px;color:#a5b4fc;margin-bottom:10px;letter-spacing:.5px}
+.sp-steps{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:11px}
+.sp-step{display:grid;grid-template-columns:20px 1fr auto auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.sp-step:last-child{border-bottom:none}
+.sp-step .ico{font-size:11px;text-align:center}
+.sp-step .name{font-size:11px}
+.sp-step .detail{font-size:10px;color:var(--muted)}
+.sp-step .time{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sp-step.pending{color:rgba(255,255,255,.25)}
+.sp-step.pending .ico::before{content:'○'}
+.sp-step.doing{color:#fbbf24}
+.sp-step.doing .ico::before{content:'◐';animation:spinpulse 1s infinite linear}
+.sp-step.done{color:#4ade80}
+.sp-step.done .ico::before{content:'●'}
+.sp-step.error{color:#f87171}
+.sp-step.error .ico::before{content:'✕'}
+.sp-step.warn{color:#fbbf24}
+.sp-step.warn .ico::before{content:'!'}
+@keyframes spinpulse{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
+.sp-failure{margin-top:12px;padding:10px 12px;background:rgba(239,68,68,.04);border-left:2px solid #ef4444;border-radius:0 4px 4px 0;font-size:11px;color:#fca5a5;line-height:1.6}
+.sp-failure .label{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#ef4444;margin-right:6px;font-weight:700}
+.sp-actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.sp-success-banner{padding:10px 12px;background:rgba(34,197,94,.04);border-left:2px solid #22c55e;border-radius:0 4px 4px 0;margin-top:8px;font-size:11px;color:#86efac}
+.sp-success-banner .label{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#22c55e;margin-right:6px;font-weight:700}
+
 /* 2026-05-21 v3: Section label — 中文主標 + 英文副字，配合無邊界版面，title hairline 稍微強化 */
 .sl-section{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sl-section h2,.sl-section h3{font-size:15px;font-weight:700;color:var(--text);margin:0;letter-spacing:0}
@@ -11450,11 +11487,168 @@ function _stopLiveMonitor() {
   if (_countdownTimer)   { clearInterval(_countdownTimer);   _countdownTimer   = null; }
 }
 
+// 2026-05-23 掃描器大更新：可重用 ScanProgress 元件
+// 用法：
+//   const sp = new ScanProgress('scanner-table', '美股 RS Leader 掃描');
+//   const s1 = sp.addStage('連線 GitHub Raw');
+//   sp.start(s1); ... sp.finish(s1, '1.2 KB');
+//   const s2 = sp.addStage('載入 us_scan.json');
+//   sp.start(s2); ... sp.fail(s2, 'HTTP 404', '排程尚未跑完今日掃描');
+//   sp.success('共找到 25 檔 RS Leader');  // 全綠收尾
+//   sp.close();  // 移除元件，恢復正常 render
+class ScanProgress {
+ constructor(containerId, title) {
+  this.containerId = containerId;
+  this.title = title;
+  this.stages = [];
+  this.errors = [];
+  this.startTime = Date.now();
+  this.status = 'running';  // running / done / error / aborted
+  this.successBanner = null;
+ }
+ addStage(name, total = null) {
+  this.stages.push({ name, status: 'pending', start: null, end: null, current: 0, total, detail: '', reason: '' });
+  this.render();
+  return this.stages.length - 1;
+ }
+ start(idx, detail = '') {
+  if (!this.stages[idx]) return;
+  this.stages[idx].status = 'doing';
+  this.stages[idx].start = Date.now();
+  this.stages[idx].detail = detail;
+  this.render();
+ }
+ progress(idx, current, total = null, detail = '') {
+  if (!this.stages[idx]) return;
+  this.stages[idx].current = current;
+  if (total != null) this.stages[idx].total = total;
+  if (detail) this.stages[idx].detail = detail;
+  this.render();
+ }
+ finish(idx, detail = '') {
+  if (!this.stages[idx]) return;
+  this.stages[idx].status = 'done';
+  this.stages[idx].end = Date.now();
+  if (detail) this.stages[idx].detail = detail;
+  this.render();
+ }
+ fail(idx, reason, detail = '') {
+  if (!this.stages[idx]) return;
+  this.stages[idx].status = 'error';
+  this.stages[idx].end = Date.now();
+  this.stages[idx].reason = reason;
+  this.stages[idx].detail = detail;
+  this.errors.push({ stage: idx, name: this.stages[idx].name, reason, detail });
+  this.status = 'error';
+  this.render();
+ }
+ warn(idx, detail = '') {
+  if (!this.stages[idx]) return;
+  this.stages[idx].status = 'warn';
+  this.stages[idx].end = Date.now();
+  this.stages[idx].detail = detail;
+  this.render();
+ }
+ success(banner) {
+  this.status = 'done';
+  this.successBanner = banner;
+  this.render();
+ }
+ setActions(actionsHTML) {
+  this.actionsHTML = actionsHTML;
+  this.render();
+ }
+ close() {
+  const el = document.getElementById(this.containerId);
+  if (el) el.innerHTML = '';
+ }
+ _calcPercent() {
+  const total = this.stages.length || 1;
+  let done = 0;
+  for (const s of this.stages) {
+   if (s.status === 'done' || s.status === 'warn') done += 1;
+   else if (s.status === 'error') done += 1;
+   else if (s.status === 'doing' && s.total) done += s.current / s.total;
+   else if (s.status === 'doing') done += 0.3;
+  }
+  return Math.min(100, Math.round(done / total * 100));
+ }
+ _fmtTime(ms) {
+  if (ms == null) return '';
+  if (ms < 1000) return ms + 'ms';
+  return (ms / 1000).toFixed(1) + 's';
+ }
+ render() {
+  const el = document.getElementById(this.containerId);
+  if (!el) return;
+  const pct = this._calcPercent();
+  const statusLabel = this.status === 'error' ? 'failed'
+                  : this.status === 'done'    ? 'completed'
+                  : '掃描中 · scanning';
+  const fillClass = this.status === 'error' ? 'error' : this.status === 'done' ? 'done' : '';
+  const currentStage = this.stages.find(s => s.status === 'doing');
+  const stageTxt = currentStage
+    ? `階段 ${this.stages.indexOf(currentStage)+1}/${this.stages.length} · ${currentStage.name}` +
+      (currentStage.total ? ` (${currentStage.current}/${currentStage.total})` : '')
+    : (this.status === 'done' ? `${this.stages.length} 階段完成 · ${this._fmtTime(Date.now() - this.startTime)}` : '');
+  let html = '<div class="scan-progress">';
+  html += '<div class="sp-header">';
+  html += '<div><div class="sp-title">' + escapeHtml(this.title) + '</div>';
+  html += '<div class="sp-status">' + statusLabel + '</div></div>';
+  html += '<div class="sp-percent">' + pct + '%</div>';
+  html += '</div>';
+  html += '<div class="sp-bar"><div class="sp-fill ' + fillClass + '" style="width:' + pct + '%"></div></div>';
+  if (stageTxt) html += '<div class="sp-stage">' + escapeHtml(stageTxt) + '</div>';
+  html += '<div class="sp-steps">';
+  for (const s of this.stages) {
+   const elapsed = s.start ? this._fmtTime((s.end || Date.now()) - s.start) : '';
+   const subProg = s.status === 'doing' && s.total ? ` ${s.current}/${s.total}` : '';
+   html += '<div class="sp-step ' + s.status + '">';
+   html += '<span class="ico"></span>';
+   html += '<span class="name">' + escapeHtml(s.name) + subProg + '</span>';
+   html += '<span class="detail">' + escapeHtml(s.detail || '') + '</span>';
+   html += '<span class="time">' + elapsed + '</span>';
+   html += '</div>';
+  }
+  html += '</div>';
+  // Errors prominently shown
+  for (const e of this.errors) {
+   html += '<div class="sp-failure"><span class="label">FAILED</span>';
+   html += '<b>' + escapeHtml(e.name) + '</b> · ' + escapeHtml(e.reason);
+   if (e.detail) html += '<br><span style="color:var(--muted);font-size:10px">' + escapeHtml(e.detail) + '</span>';
+   html += '</div>';
+  }
+  if (this.status === 'done' && this.successBanner) {
+   html += '<div class="sp-success-banner"><span class="label">OK</span>' + escapeHtml(this.successBanner) + '</div>';
+  }
+  if (this.actionsHTML) {
+   html += '<div class="sp-actions">' + this.actionsHTML + '</div>';
+  }
+  html += '</div>';
+  // 真正掛上 DOM
+  // 如果 scanner-table 已有「掃描結果」內容，把進度條 prepend 在最前面
+  const existingResults = el.querySelector('.table-wrap, .rs-leader-table');
+  if (this.status === 'done' && existingResults) {
+   // 完成後保留結果，progress 縮到上方薄條
+   const oldProgress = el.querySelector('.scan-progress');
+   if (oldProgress) oldProgress.outerHTML = html;
+   else el.insertAdjacentHTML('afterbegin', html);
+  } else {
+   el.innerHTML = html;
+  }
+ }
+}
+
 async function runRSLeaderScan() {
   if (window._rsLeaderRunning) return;
   window._rsLeaderRunning = true;
   const tableDiv = document.getElementById('scanner-table');
 
+  // 2026-05-23: 用 ScanProgress 取代純文字 setMsg
+  const sp = new ScanProgress('scanner-table',
+    _scannerMarket === 'tw' ? '台股 RS Leader 掃描' : '美股 RS Leader 掃描');
+  window._currentScanProgress = sp;
+  // Legacy: setMsg 仍保留供尚未改造的內部呼叫（slow path 內部）
   const setMsg = msg => {
     if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
   };
@@ -11462,34 +11656,68 @@ async function runRSLeaderScan() {
   try { // ← wraps BOTH fast + slow path — _rsLeaderRunning always resets
 
   // ── FAST PATH: try pre-computed JSON from GitHub Actions ──────────────
-  // Skipped when user hits ⚡ 重新掃描 (force fresh browser scan)
   const forceSlowPath = window._rsLeaderForceSlowPath;
   window._rsLeaderForceSlowPath = false;
 
-  setMsg(forceSlowPath ? '⚡ 即時掃描中，請稍候（約 30-60 秒）...' : '讀取伺服器預算排行...');
-  const precomputed = forceSlowPath ? null : await fetchPrecomputedScan(_scannerMarket);
+  // 2026-05-23 進度階段（fast path）
+  const stFetchJson  = sp.addStage('連線 GitHub Raw + 下載掃描資料');
+  const stParseData  = sp.addStage('解析排行 + 三共振 + 加速發現');
+  const stLivePrice  = sp.addStage('覆蓋即時報價', 0);
+  const stRender     = sp.addStage('渲染表格 + 啟動即時監控');
+
+  if (forceSlowPath) {
+   // 走 slow path 跳過 fast 階段，標 warn
+   sp.warn(stFetchJson, '使用者強制走即時掃描');
+   sp.warn(stParseData, '略過');
+   sp.warn(stLivePrice, '略過');
+   sp.warn(stRender, '略過');
+  }
+  sp.start(stFetchJson);
+  let precomputed = null;
+  try {
+   precomputed = forceSlowPath ? null : await fetchPrecomputedScan(_scannerMarket);
+   if (forceSlowPath) {/* warn 已標 */}
+   else if (precomputed && precomputed.data) sp.finish(stFetchJson, (precomputed.data.leaders?.length || 0) + ' 檔 leaders');
+   else sp.fail(stFetchJson, '伺服器資料尚未就緒', '此次將改走即時掃描（30-60 秒）');
+  } catch (e) {
+   sp.fail(stFetchJson, '連線失敗：' + e.message.slice(0, 60), '改走即時掃描');
+  }
 
   if (precomputed && precomputed.data && precomputed.data.leaders.length > 0) {
     const { data, stale } = precomputed;
     const leaders = data.leaders;
     const ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
 
-    // Overlay live prices (only 15-25 stocks, very fast)
-    setMsg('更新即時報價...');
-    await overlayLivePrices(leaders);
-
-    // Cache leaders + discoveries; overlay live prices on discoveries too
+    sp.start(stParseData);
     window._rsLeaderCache    = leaders;
     window._rsDiscoveryCache = data.discoveries || [];
     window._tripleResonanceCache = data.tripleResonance || [];
     window._scanMetaCache = { scannedAt: data.scannedAt };
-    window._rsDiff = null; // clear diff on fresh load (not a manual refresh)
-    if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
+    window._rsDiff = null;
+    sp.finish(stParseData,
+      leaders.length + ' L · ' +
+      (data.discoveries?.length || 0) + ' D · ' +
+      (data.tripleResonance?.length || 0) + ' TR · ' +
+      ageMin + 'm ago' + (stale ? ' (stale)' : ''));
+
+    sp.start(stLivePrice, '抓 ' + Math.min(25, leaders.length) + ' 檔最新價');
+    sp.progress(stLivePrice, 0, Math.min(25, leaders.length));
+    try {
+      await overlayLivePrices(leaders);
+      sp.progress(stLivePrice, leaders.length);
+      if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
+      sp.finish(stLivePrice, 'Yahoo Finance 即時報價');
+    } catch (e) {
+      sp.warn(stLivePrice, '部分失敗：' + e.message.slice(0, 50));
+    }
+
+    sp.start(stRender);
     renderDashRSLeader(leaders.slice(0, 5));
     renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
-
-    // Render with metadata banner (show top 15 in main view)
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
+    sp.finish(stRender, '顯示 top 15');
+
+    sp.success(leaders.length + ' 檔 RS Leader · ' + (ageMin < 60 ? ageMin + ' 分鐘前掃' : Math.round(ageMin/60) + ' 小時前掃') + (stale ? ' · 資料偏舊' : ''));
 
     // Start live 60s price monitor for intraday use
     _startLiveMonitor();
@@ -11513,40 +11741,64 @@ async function runRSLeaderScan() {
   }
 
   // ── SLOW PATH: browser-side scan (fallback when JSON not yet available) ──
+  // 2026-05-23: 給 slow path 新增獨立階段
+  const stPool       = sp.addStage('建立掃描池（dynamic pool from Yahoo screeners）');
+  const stPrefilter  = sp.addStage('批次報價預篩（過濾低動能股）');
+  const stBenchmark  = sp.addStage('Benchmark 6 個月報酬計算');
+  const stOhlcv      = sp.addStage('深度掃描 OHLCV', 0);
+  const stCompute    = sp.addStage('計算 RS Rating + 綜合分');
 
   let pool, bench;
   if (_scannerMarket === 'tw') {
     pool = getTwScanPool().slice(0, 40);
     bench = '0050.TW';
-    setMsg('動能領袖掃描中，約需 30–60 秒…');
+    sp.start(stPool);
+    sp.finish(stPool, 'TW universe ' + pool.length + ' 檔');
+    sp.warn(stPrefilter, '台股略過 prefilter');
   } else {
     bench = 'SPY';
+    sp.start(stPool);
+    let rawPool;
+    try {
+      rawPool = await buildDynamicScanPool((msg) => {
+        sp.progress(stPool, 0, null, (msg || '').replace(/<[^>]*>/g, '').slice(0, 40));
+      });
+      sp.finish(stPool, rawPool.length + ' 檔 (S&P500 + Russell)');
+    } catch (e) {
+      sp.fail(stPool, '無法建立 universe：' + e.message.slice(0, 50));
+      throw e;
+    }
 
-    // ── Stage 1: dynamic pool from Yahoo screeners (all cap sizes) ──
-    const rawPool = await buildDynamicScanPool(setMsg);
-
-    // ── Stage 2: batch quote pre-filter (2 API calls, ~1 sec) ──
-    // Shrinks pool from ~150 to top 65 by 52W momentum BEFORE expensive OHLCV calls.
-    // This is the key rate-limit mitigation: 150 OHLCV calls → ~7 batches.
-    setMsg('第二階段：批次報價預篩 ' + rawPool.length + ' 檔（1-2 秒）…<br><span style="font-size:12px">過濾低動能股，保留 52 週強勢候選</span>');
-    pool = await batchQuotePreFilter(rawPool, 65);
-
-    const cacheAge = _screenerCache.ts ? Math.round((Date.now() - _screenerCache.ts) / 60000) : 0;
-    const cacheNote = cacheAge > 1 ? ' · 篩選池快取 ' + cacheAge + ' 分' : '';
-    setMsg('第三階段：深度掃描 <strong style="color:var(--text)">' + pool.length + '</strong> 檔 52W 強勢股' + cacheNote + '<br><span style="font-size:12px">約需 30–45 秒，請稍候</span>');
+    sp.start(stPrefilter, rawPool.length + ' → 預篩到 top 65');
+    try {
+      pool = await batchQuotePreFilter(rawPool, 65);
+      sp.finish(stPrefilter, '保留 ' + pool.length + ' 檔 52W 強勢候選');
+    } catch (e) {
+      sp.warn(stPrefilter, '預篩部分失敗，仍繼續：' + e.message.slice(0, 40));
+      pool = rawPool.slice(0, 65);
+    }
   }
 
-  // Benchmark 6M return
+  // 2026-05-23 進度：benchmark 階段
+  sp.start(stBenchmark, bench + ' 6mo');
   let spyReturn = 0;
+  let benchOk = false;
   try {
     const spyChart = await yfChart(bench, '6mo', '1d', 8000);
     const spyCloses = spyChart.indicators.quote[0].close.filter(v => v != null);
-    if (spyCloses.length >= 2) spyReturn = (spyCloses[spyCloses.length-1] - spyCloses[0]) / spyCloses[0] * 100;
+    if (spyCloses.length >= 2) {
+     spyReturn = (spyCloses[spyCloses.length-1] - spyCloses[0]) / spyCloses[0] * 100;
+     benchOk = true;
+    }
   } catch(e) {}
+  if (benchOk) sp.finish(stBenchmark, bench + ' 6m ' + (spyReturn>=0?'+':'') + spyReturn.toFixed(1) + '%');
+  else sp.warn(stBenchmark, '抓不到 benchmark，rs6m 將為 raw return');
 
+  sp.start(stOhlcv, pool.length + ' 檔，每批 10 並行');
   const results = [];
   const BATCH = 10;
   let scanned = 0;
+  let failedCount = 0;
   for (let i = 0; i < pool.length; i += BATCH) {
     const batch = pool.slice(i, i + BATCH);
     const settled = await Promise.allSettled(batch.map(async sym => {
@@ -11558,10 +11810,9 @@ async function runRSLeaderScan() {
         if (closes.length < 50) return null;
         const price = chart.meta.regularMarketPrice || closes[closes.length-1];
         const avgVol20 = vols.slice(-20).reduce((a,b)=>a+(b||0),0)/20;
-        // Liquidity filter: skip micro-caps / thinly-traded names
         if (_scannerMarket !== 'tw' && avgVol20 < 200000) return null;
         const ma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
-        if (price < ma50) return null; // must be above MA50
+        if (price < ma50) return null;
         const ret6m = (closes[closes.length-1] - closes[0]) / closes[0] * 100;
         const rs6m = ret6m - spyReturn;
         const avgVol5 = vols.slice(-5).reduce((a,b)=>a+(b||0),0)/5;
@@ -11570,36 +11821,41 @@ async function runRSLeaderScan() {
         return { symbol: sym, name: chart.meta.shortName || sym, price, changePct, ret6m, rs6m, volExpand, ma50, closes };
       } catch(e) { return null; }
     }));
-    settled.forEach(s => { if (s.status === 'fulfilled' && s.value) results.push(s.value); });
+    settled.forEach(s => {
+     if (s.status === 'fulfilled' && s.value) results.push(s.value);
+     else if (s.status === 'rejected') failedCount++;
+    });
     scanned += batch.length;
-    const pct = Math.round(scanned / pool.length * 100);
-    const filled = Math.round(pct / 5);
-    const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
-    setMsg(bar + ' ' + pct + '%<br><span style="font-size:12px;color:var(--muted)">已掃 ' + scanned + ' / ' + pool.length + ' 檔 · 符合條件 ' + results.length + ' 檔</span>');
+    sp.progress(stOhlcv, scanned, pool.length, '已掃 ' + scanned + ' · 符合 ' + results.length + ' · 失敗 ' + failedCount);
+  }
+  if (failedCount > pool.length * 0.3) {
+   sp.warn(stOhlcv, failedCount + '/' + pool.length + ' 檔失敗（可能 Yahoo 限流）');
+  } else {
+   sp.finish(stOhlcv, results.length + ' 檔通過 MA50 + 流動性篩選');
   }
 
   if (results.length === 0) {
-    setMsg('<div style="font-size:14px;margin-bottom:6px">目前無符合條件的動能領袖</div><div style="font-size:12px">所有候選股皆位於 MA50 之下，市場可能整體偏弱。請等待市場環境改善或切換至其他策略。</div>');
-    return; // finally will reset flag
+    sp.fail(stCompute, '無符合條件的動能領袖', '所有候選股皆位於 MA50 之下，市場可能整體偏弱');
+    return;
   }
 
-  // RS Rating percentile rank across full scanned universe
+  sp.start(stCompute);
   calcRSRatings(results);
-
-  // Composite score: RS 50% + Volume expansion 30% + momentum tilt 20%
   results.forEach(r => {
     const volScore = Math.min(99, Math.round(r.volExpand * 33));
-    const momScore = Math.min(99, Math.max(1, Math.round(50 + r.rs6m * 0.8))); // rs6m → 0-99 tilt
+    const momScore = Math.min(99, Math.max(1, Math.round(50 + r.rs6m * 0.8)));
     r.compositeScore = Math.round(r.rsRating * 0.50 + volScore * 0.30 + momScore * 0.20);
   });
-
   results.sort((a, b) => b.compositeScore - a.compositeScore);
   const top25 = results.slice(0, 25);
   const top15 = top25.slice(0, 15);
+  sp.finish(stCompute, 'top ' + top25.length + ' / ' + results.length + ' 候選');
 
-  window._rsLeaderCache = top25; // full list for breakout filter
+  window._rsLeaderCache = top25;
   renderDashRSLeader(top25.slice(0, 5));
   renderRSLeaderResults(top15);
+  sp.success(top25.length + ' 檔 RS Leader · 即時掃描完成 · ' +
+   Math.round((Date.now() - sp.startTime) / 1000) + ' 秒');
 
   // Non-blocking Reddit enrichment
   if (_scannerMarket !== 'tw') {
