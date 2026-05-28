@@ -203,6 +203,16 @@ table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabu
 .sp-success-banner{padding:10px 12px;background:rgba(34,197,94,.04);border-left:2px solid #22c55e;border-radius:0 4px 4px 0;margin-top:8px;font-size:11px;color:#86efac}
 .sp-success-banner .label{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#22c55e;margin-right:6px;font-weight:700}
 
+/* 2026-05-29 Toast mode — 懸浮右上角，供首頁刷新等場景用 */
+#scan-toast-container{position:fixed;top:72px;right:20px;width:380px;max-width:calc(100vw - 40px);max-height:80vh;overflow:auto;z-index:9000;animation:sp-toast-in .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.5);border-radius:8px}
+#scan-toast-container.closing{animation:sp-toast-out .3s ease forwards}
+#scan-toast-container .scan-progress{margin-bottom:0;background:var(--card)}
+#scan-toast-container .sp-close{position:absolute;top:8px;right:10px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;z-index:2}
+#scan-toast-container .sp-close:hover{color:var(--text)}
+@keyframes sp-toast-in{from{transform:translateX(440px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes sp-toast-out{from{transform:translateX(0);opacity:1}to{transform:translateX(440px);opacity:0}}
+@media (max-width:740px){#scan-toast-container{top:auto;bottom:20px;right:20px;left:20px;width:auto}}
+
 /* 2026-05-21 v3: Section label — 中文主標 + 英文副字，配合無邊界版面，title hairline 稍微強化 */
 .sl-section{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sl-section h2,.sl-section h3{font-size:15px;font-weight:700;color:var(--text);margin:0;letter-spacing:0}
@@ -575,7 +585,8 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div class="sl-section">
    <h2>動能領袖</h2><span class="sl-en">RS leader</span>
    <span class="sl-sub">全市場動能排行</span>
-   <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)" style="margin-left:auto">完整排行 →</button>
+   <button class="act ghost" onclick="refreshDashboardData()" style="margin-left:auto" title="重新拉伺服器排行 + 即時報價">重新整理</button>
+   <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
   </div>
   <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
  </section>
@@ -9987,11 +9998,25 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
+// 2026-05-29: 首頁手動「重新整理」— 強制清快取 + 跑 triggerGithubScan (toast 進度條)
+async function refreshDashboardData() {
+ // 清掉所有 RS Leader 快取，強迫從 GitHub Raw 重新拉
+ window._rsLeaderCache = null;
+ window._tripleResonanceCache = null;
+ window._scanMetaCache = null;
+ // 用 toast-mode 進度條的 triggerGithubScan（同一份邏輯）
+ try {
+  await triggerGithubScan();
+ } catch(e) {
+  showToast('❌ 重新整理失敗：' + e.message, 'error');
+ }
+}
+
 async function quickDashboardScan(force) {
  const rsEl = document.getElementById('dash-rsleader-list');
 
- // If already cached from scanner tab, use that immediately
- if (window._rsLeaderCache && window._rsLeaderCache.length) {
+ // 2026-05-29: 加上 force 參數 — true 時跳過快取直接重抓
+ if (!force && window._rsLeaderCache && window._rsLeaderCache.length) {
    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
    // Also render triple-resonance (cached from same JSON fetch)
    renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
@@ -11232,6 +11257,7 @@ setTimeout(() => { try { renderAlertsPanel(); checkAlerts(); } catch(e) {} }, 20
 
 // ⚡ 重新整理 — force-reload GitHub JSON + live prices + rank-diff display.
 // Reliable during market hours (no Yahoo rate-limit issues from browser scan).
+// 2026-05-29: 改用 ScanProgress (toast mode) 顯示明確進度條，取代純 setMsg + showToast
 async function triggerGithubScan() {
   if (window._rsLeaderRunning) {
     showToast('更新進行中，請稍候...', 'warn');
@@ -11246,32 +11272,42 @@ async function triggerGithubScan() {
   const btns = document.querySelectorAll('[data-rescan-btn]');
   btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 更新中...'; });
 
-  const tableDiv = document.getElementById('scanner-table');
-  const setMsg = msg => {
-    if (tableDiv) tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);line-height:2">' + msg + '</div>';
-  };
+  const market = _scannerMarket || 'us';
+  const marketLabel = market === 'tw' ? '台股' : '美股';
+
+  // 建 toast-mode ScanProgress（浮在右上角，不蓋掉表格內容）
+  const sp = new ScanProgress(null, marketLabel + ' RS Leader 重新整理', 'toast');
+  window._currentToastProgress = sp;
+
+  const stFetch    = sp.addStage('連線 GitHub Raw + 抓最新 JSON');
+  const stDiff     = sp.addStage('比對排名變化（新上榜 / 大幅移動）');
+  const stLivePrc  = sp.addStage('覆蓋即時報價');
+  const stRender   = sp.addStage('渲染表格 + 啟動即時監控');
 
   try {
-    setMsg('重新拉取伺服器排行...');
-    // Force cache-bust: bypass any in-memory / CDN cache
-    const market = _scannerMarket || 'us';
+    // ── Stage 1: fetch JSON ────────────────────────────────────────────────
+    sp.start(stFetch, '正在抓 GitHub Raw...');
     const file = market === 'tw' ? 'tw_scan.json' : 'us_scan.json';
-    const res = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(10000) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (!data.leaders || !data.leaders.length) throw new Error('empty response');
+    let data, ageMin, stale;
+    try {
+     // Force cache-bust: bypass any in-memory / CDN cache
+     const res = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(10000) });
+     if (!res.ok) throw new Error('HTTP ' + res.status);
+     data = await res.json();
+     if (!data.leaders || !data.leaders.length) throw new Error('伺服器回傳空資料');
+     ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
+     stale  = ageMin > 15 * 60;
+     const ageLabel = ageMin < 60 ? ageMin + ' 分鐘前' : Math.round(ageMin/60) + ' 小時前';
+     sp.finish(stFetch, data.leaders.length + ' 檔 leaders · 掃描於 ' + ageLabel);
+    } catch (e) {
+     sp.fail(stFetch, e.message.slice(0, 80), '請檢查網路或稍後再試');
+     throw e;
+    }
 
     const leaders = data.leaders;
-    const ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
-    const stale  = ageMin > 15 * 60;
 
-    setMsg('更新即時報價...');
-    await overlayLivePrices(leaders);
-
-    window._rsDiscoveryCache = data.discoveries || [];
-    if (window._rsDiscoveryCache.length) await overlayLivePrices(window._rsDiscoveryCache);
-
-    // ── Rank-change diff ───────────────────────────────────────────────────
+    // ── Stage 2: rank-change diff ──────────────────────────────────────────
+    sp.start(stDiff);
     const currTop = leaders.slice(0, 15).map(r => r.symbol);
     const diff = {};
     currTop.forEach((sym, i) => {
@@ -11279,37 +11315,66 @@ async function triggerGithubScan() {
       diff[sym] = { prev: prevRank === -1 ? null : prevRank + 1, curr: i + 1 };
     });
     window._rsDiff = diff;
+    const newEntries = currTop.filter(s => prevSymbols.length > 0 && !prevSymbols.includes(s));
+    const bigMovers  = currTop.filter(s => diff[s] && diff[s].prev && Math.abs(diff[s].prev - diff[s].curr) >= 3);
+    const diffLabel = prevSymbols.length === 0 ? '首次載入'
+      : newEntries.length > 0 ? '新上榜 ' + newEntries.length + ' 檔'
+      : bigMovers.length > 0  ? '大幅移動 ' + bigMovers.length + ' 檔'
+      : '排名穩定';
+    sp.finish(stDiff, diffLabel);
 
+    // ── Stage 3: live prices ───────────────────────────────────────────────
+    sp.start(stLivePrc, '抓 ' + leaders.length + ' 檔即時報價...');
+    try {
+     await overlayLivePrices(leaders);
+     window._rsDiscoveryCache = data.discoveries || [];
+     if (window._rsDiscoveryCache.length) {
+      await overlayLivePrices(window._rsDiscoveryCache);
+     }
+     sp.finish(stLivePrc, leaders.length + ' 檔 + 發現 ' + (window._rsDiscoveryCache.length || 0) + ' 檔');
+    } catch (e) {
+     // 報價失敗不致命 — 用快取價繼續
+     sp.warn(stLivePrc, '報價更新失敗，用快取價：' + e.message.slice(0, 60));
+    }
+
+    // ── Stage 4: render + monitor ──────────────────────────────────────────
+    sp.start(stRender);
     window._rsLeaderCache = leaders;
     window._tripleResonanceCache = data.tripleResonance || [];
     window._scanMetaCache = { scannedAt: data.scannedAt };
     renderDashRSLeader(leaders.slice(0, 5));
     renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
-
-    // Summary toast
-    const newEntries = currTop.filter(s => prevSymbols.length > 0 && !prevSymbols.includes(s));
-    const bigMovers  = currTop.filter(s => diff[s] && diff[s].prev && Math.abs(diff[s].prev - diff[s].curr) >= 3);
-    const changeDesc = prevSymbols.length === 0
-      ? '首次載入'
-      : newEntries.length > 0 ? '🆕 新上榜：' + newEntries.slice(0, 3).join('、')
-      : bigMovers.length > 0  ? '大幅移動 ' + bigMovers.length + ' 檔'
-      : '排名穩定，報價已更新';
-    showToast('✅ 已更新 · ' + changeDesc);
-
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
     _startLiveMonitor();
     _renderMarketThermo().catch(() => {});
+    sp.finish(stRender, '完成');
+
+    // ── Success banner + auto close ───────────────────────────────────────
+    const ageHr = ageMin / 60;
+    if (ageHr >= 24) {
+     // 資料超過 24 小時太舊 — 改顯示警告 + 行動按鈕
+     sp.fail(stRender, '⚠ 資料超過 24 小時未更新（' + Math.round(ageHr) + ' 小時前）',
+       '伺服器 cron 可能卡死，建議手動觸發 GitHub Actions workflow');
+     sp.setActions('<a href="https://github.com/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml" target="_blank" class="act buy" style="text-decoration:none">前往手動觸發 →</a>');
+    } else {
+     const ageLabel = ageMin < 60 ? ageMin + 'm 前' : Math.round(ageHr) + 'h 前';
+     sp.success(diffLabel + ' · 報價已更新 · 掃描於 ' + ageLabel);
+     sp.autoCloseAfter(5000); // 5 秒後自動消失
+    }
+
+    // 後續 enrich 不阻塞，完成後刷新 table 即可
     _enrichWithEarnings(leaders.slice(0, 15)).then(() => {
       renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
     }).catch(() => {});
 
   } catch(e) {
-    showToast('❌ 更新失敗：' + e.message, 'error');
-    // Restore previous view
+    // 已在對應階段標 fail，這裡不再重複 toast。errors 區塊已顯示。
+    // 還是恢復舊資料 view
     if (window._rsLeaderCache && window._rsLeaderCache.length) {
       renderRSLeaderResultsPrecomputed(window._rsLeaderCache.slice(0, 15),
         { scannedAt: new Date(Date.now() - 60000).toISOString(), universeSize: null }, 0, true);
     }
+    sp.setActions('<button class="act ghost" onclick="window._currentToastProgress && window._currentToastProgress.close()">關閉</button>');
   } finally {
     window._rsLeaderRunning = false;
     btns.forEach(b => { b.disabled = false; b.textContent = '⚡ 重新整理'; });
@@ -11497,14 +11562,29 @@ function _stopLiveMonitor() {
 //   sp.success('共找到 25 檔 RS Leader');  // 全綠收尾
 //   sp.close();  // 移除元件，恢復正常 render
 class ScanProgress {
- constructor(containerId, title) {
-  this.containerId = containerId;
+ constructor(containerId, title, mode = 'inline') {
+  // 2026-05-29: mode = 'inline' (預設, 用 containerId 的元素)
+  //            mode = 'toast'  (建立 #scan-toast-container 浮在右上角)
+  this.mode = mode;
+  this.containerId = mode === 'toast' ? 'scan-toast-container' : containerId;
+  this.originalContainerId = containerId;
   this.title = title;
   this.stages = [];
   this.errors = [];
   this.startTime = Date.now();
   this.status = 'running';  // running / done / error / aborted
   this.successBanner = null;
+  this.autoCloseTimer = null;
+  if (mode === 'toast') this._ensureToastContainer();
+ }
+ _ensureToastContainer() {
+  let el = document.getElementById('scan-toast-container');
+  if (!el) {
+   el = document.createElement('div');
+   el.id = 'scan-toast-container';
+   document.body.appendChild(el);
+  }
+  el.classList.remove('closing');
  }
  addStage(name, total = null) {
   this.stages.push({ name, status: 'pending', start: null, end: null, current: 0, total, detail: '', reason: '' });
@@ -11559,8 +11639,20 @@ class ScanProgress {
   this.render();
  }
  close() {
+  if (this.autoCloseTimer) { clearTimeout(this.autoCloseTimer); this.autoCloseTimer = null; }
   const el = document.getElementById(this.containerId);
-  if (el) el.innerHTML = '';
+  if (!el) return;
+  if (this.mode === 'toast') {
+   // 帶動畫淡出
+   el.classList.add('closing');
+   setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+  } else {
+   el.innerHTML = '';
+  }
+ }
+ autoCloseAfter(ms) {
+  if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+  this.autoCloseTimer = setTimeout(() => this.close(), ms);
  }
  _calcPercent() {
   const total = this.stages.length || 1;
@@ -11591,7 +11683,10 @@ class ScanProgress {
     ? `階段 ${this.stages.indexOf(currentStage)+1}/${this.stages.length} · ${currentStage.name}` +
       (currentStage.total ? ` (${currentStage.current}/${currentStage.total})` : '')
     : (this.status === 'done' ? `${this.stages.length} 階段完成 · ${this._fmtTime(Date.now() - this.startTime)}` : '');
-  let html = '<div class="scan-progress">';
+  let html = '<div class="scan-progress" style="position:relative">';
+  if (this.mode === 'toast') {
+   html += '<button class="sp-close" title="關閉" onclick="(window._currentToastProgress && window._currentToastProgress.close())">×</button>';
+  }
   html += '<div class="sp-header">';
   html += '<div><div class="sp-title">' + escapeHtml(this.title) + '</div>';
   html += '<div class="sp-status">' + statusLabel + '</div></div>';
@@ -11626,15 +11721,20 @@ class ScanProgress {
   }
   html += '</div>';
   // 真正掛上 DOM
-  // 如果 scanner-table 已有「掃描結果」內容，把進度條 prepend 在最前面
-  const existingResults = el.querySelector('.table-wrap, .rs-leader-table');
-  if (this.status === 'done' && existingResults) {
-   // 完成後保留結果，progress 縮到上方薄條
-   const oldProgress = el.querySelector('.scan-progress');
-   if (oldProgress) oldProgress.outerHTML = html;
-   else el.insertAdjacentHTML('afterbegin', html);
-  } else {
+  if (this.mode === 'toast') {
+   // Toast 模式直接覆寫 container（已是浮動容器）
    el.innerHTML = html;
+  } else {
+   // Inline 模式：如果 scanner-table 已有「掃描結果」內容，把進度條 prepend 在最前面
+   const existingResults = el.querySelector('.table-wrap, .rs-leader-table');
+   if (this.status === 'done' && existingResults) {
+    // 完成後保留結果，progress 縮到上方薄條
+    const oldProgress = el.querySelector('.scan-progress');
+    if (oldProgress) oldProgress.outerHTML = html;
+    else el.insertAdjacentHTML('afterbegin', html);
+   } else {
+    el.innerHTML = html;
+   }
   }
  }
 }
