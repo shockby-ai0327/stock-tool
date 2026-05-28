@@ -11717,7 +11717,28 @@ async function runRSLeaderScan() {
     renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, stale);
     sp.finish(stRender, '顯示 top 15');
 
-    sp.success(leaders.length + ' 檔 RS Leader · ' + (ageMin < 60 ? ageMin + ' 分鐘前掃' : Math.round(ageMin/60) + ' 小時前掃') + (stale ? ' · 資料偏舊' : ''));
+    // 2026-05-29: 資料新鮮度警示 — 超過 24 小時就提示，> 12 小時也 warn
+    const ageHr = ageMin / 60;
+    const ageLabel = ageMin < 60 ? ageMin + ' 分鐘前'
+                   : ageHr < 24 ? Math.round(ageHr) + ' 小時前'
+                   : Math.round(ageHr / 24) + ' 天前';
+    sp.success(leaders.length + ' 檔 RS Leader · 掃描於 ' + ageLabel);
+    if (ageHr >= 24) {
+     // 額外警示 banner
+     const isWeekend = [0, 6].includes(new Date().getDay());
+     const reason = isWeekend ? '週末市場休市，等下個交易日 cron 跑' : 'GitHub Actions cron 可能被擠掉了';
+     sp.fail(stRender,
+      '⚠ 資料超過 24 小時未更新（' + ageLabel + '）',
+      reason + '。建議手動觸發 workflow：' +
+      'GitHub repo → Actions → Stock RS Leader Scan → Run workflow');
+     // 加 action 按鈕跳到 GitHub
+     sp.setActions(
+      '<a href="https://github.com/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml" target="_blank" rel="noopener noreferrer" class="act buy" style="text-decoration:none">前往手動觸發 →</a>' +
+      '<button onclick="renderRSLeaderResultsPrecomputed && window._rsLeaderCache && renderRSLeaderResultsPrecomputed(window._rsLeaderCache.slice(0,15), {scannedAt: new Date(Date.now() - ' + (ageMin*60000) + ').toISOString()}, ' + ageMin + ', true)" class="act ghost">繼續用舊資料</button>'
+     );
+    } else if (ageHr >= 12) {
+     sp.warn(stRender, '資料偏舊（' + ageLabel + '）— 收盤後 cron 應該很快補上');
+    }
 
     // Start live 60s price monitor for intraday use
     _startLiveMonitor();

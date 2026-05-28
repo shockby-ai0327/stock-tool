@@ -2,9 +2,11 @@ name: Stock RS Leader Scan
 
 on:
   schedule:
-    - cron: '25 13 * * 1-5'   # 09:25 ET pre-market
-    - cron: '0  17 * * 1-5'   # 13:00 ET midday
-    - cron: '30 19 * * 1-5'   # 15:30 ET near close
+    # 2026-05-29: 改成非整點分鐘避免 GitHub Actions high-load 時段
+    # 原本 25/0/30 太靠近整點被擠掉好幾次（2026-05-28 全天 skip）
+    - cron: '17 13 * * 1-5'   # 09:17 ET pre-market（離整點 17 分）
+    - cron: '47 16 * * 1-5'   # 12:47 ET midday-ish（離整點 47 分）
+    - cron: '38 19 * * 1-5'   # 15:38 ET near close（離整點 38 分）
 
   workflow_dispatch:
     inputs:
