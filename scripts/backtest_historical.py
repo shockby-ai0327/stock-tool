@@ -164,86 +164,134 @@ def build_signals(close, vol, spy_close):
     return leader, rs12_1, ret12_1
 
 
-# ── Trade simulation ─────────────────────────────────────────────────────────
-def simulate(close, high, low, op, leader, rs12_1, spy_close):
+# ── Trade simulation (generalized exit-policy lab) ──────────────────────────
+# config keys:
+#   name, policy: 'fixed' | 'trailing' | 'ma_exit'
+#   fixed:    stop, target, timeout
+#   trailing: trail, timeout              (no target — let winners run)
+#   ma_exit:  ma_period, disaster, timeout
+#   regime_gate: bool                     (only enter when SPY >= its 200d MA)
+# r_unit = initial risk fraction (for R-multiple); comparison uses %/CAGR/DSR.
+def simulate(close, high, low, op, leader, rs12_1, spy_close, config, ma_cache):
     idx = close.index
     n = len(idx)
-    spy_ma200 = spy_close.rolling(200).mean()
+    cols = list(close.columns)
+    ci = {s: k for k, s in enumerate(cols)}
+    C = close.values; H = high.values; L = low.values; O = op.values
+    Lmask = leader.values
+    RS = rs12_1.values
+    spy_px_arr = spy_close.values
+    spy_ma200 = spy_close.rolling(200).mean().values
 
-    open_until = {}   # symbol -> exit bar index (to avoid pyramiding same name)
+    policy = config["policy"]
+    timeout = config.get("timeout", TIMEOUT_DAYS)
+    regime_gate = config.get("regime_gate", False)
+    if policy == "fixed":
+        r_unit = config["stop"]
+    elif policy == "trailing":
+        r_unit = config["trail"]
+    else:
+        r_unit = config["disaster"]
+    ma_arr = ma_cache.get(config.get("ma_period")) if policy == "ma_exit" else None
+
+    open_until = {}
     trades = []
-    rebal_dates = list(range(RS_LOOKBACK + 1, n - 1, REBALANCE_DAYS))
+    rebal_dates = range(RS_LOOKBACK + 1, n - 1, REBALANCE_DAYS)
 
     for ti in rebal_dates:
-        date = idx[ti]
-        row_leader = leader.iloc[ti]
-        leaders = row_leader[row_leader].index
-        if len(leaders) == 0:
+        spy_ma = spy_ma200[ti]
+        uptrend = bool(not np.isnan(spy_ma) and spy_px_arr[ti] >= spy_ma)
+        if regime_gate and not uptrend:
             continue
-        # rank by rs12_1 desc, take top N
-        rs_row = rs12_1.iloc[ti].reindex(leaders).dropna()
-        if rs_row.empty:
+
+        leader_cols = np.where(Lmask[ti])[0]
+        if leader_cols.size == 0:
             continue
-        top = rs_row.sort_values(ascending=False).head(TOP_N)
+        rs_vals = RS[ti, leader_cols]
+        ok = ~np.isnan(rs_vals)
+        leader_cols, rs_vals = leader_cols[ok], rs_vals[ok]
+        if leader_cols.size == 0:
+            continue
+        order = np.argsort(rs_vals)[::-1][:TOP_N]
 
-        # regime at entry: SPY above its 200d MA?
-        spy_px = spy_close.iloc[ti]
-        spy_ma = spy_ma200.iloc[ti]
-        uptrend = bool(pd.notna(spy_ma) and spy_px >= spy_ma)
-
-        for sym, rsval in top.items():
-            # skip if a trade in this symbol is still open
+        for k in order:
+            col = leader_cols[k]
+            sym = cols[col]
             if open_until.get(sym, -1) >= ti:
                 continue
             entry_i = ti + 1
             if entry_i >= n:
                 continue
-            entry_px = op[sym].iloc[entry_i]
-            if not (pd.notna(entry_px) and entry_px > 0):
-                entry_px = close[sym].iloc[ti]
-            if not (pd.notna(entry_px) and entry_px > 0):
+            entry_px = O[entry_i, col]
+            if not (entry_px > 0):
+                entry_px = C[ti, col]
+            if not (entry_px > 0) or np.isnan(entry_px):
                 continue
-            target = entry_px * (1 + TARGET_PCT)
-            stop   = entry_px * (1 - STOP_PCT)
 
-            exit_i, exit_px, outcome = None, None, None
-            last = min(entry_i + TIMEOUT_DAYS, n - 1)
-            for j in range(entry_i, last + 1):
-                hi = high[sym].iloc[j]
-                lo = low[sym].iloc[j]
-                oo = op[sym].iloc[j]
-                if pd.isna(hi) or pd.isna(lo):
-                    continue
-                # same-day both touched → stop first (conservative)
-                if lo <= stop:
-                    exit_px = min(oo, stop) if pd.notna(oo) and oo < stop else stop
-                    exit_i, outcome = j, "stop"
-                    break
-                if hi >= target:
-                    exit_px = max(oo, target) if pd.notna(oo) and oo > target else target
-                    exit_i, outcome = j, "target"
-                    break
+            last = min(entry_i + timeout, n - 1)
+            exit_i = exit_px = outcome = None
+
+            if policy == "fixed":
+                stop = entry_px * (1 - config["stop"])
+                target = entry_px * (1 + config["target"])
+                for j in range(entry_i, last + 1):
+                    lo, hi, oo = L[j, col], H[j, col], O[j, col]
+                    if np.isnan(lo) or np.isnan(hi):
+                        continue
+                    if lo <= stop:
+                        exit_px = min(oo, stop) if (oo == oo and oo < stop) else stop
+                        exit_i, outcome = j, "stop"; break
+                    if hi >= target:
+                        exit_px = max(oo, target) if (oo == oo and oo > target) else target
+                        exit_i, outcome = j, "target"; break
+
+            elif policy == "trailing":
+                trail = config["trail"]
+                peak = entry_px
+                stop_level = entry_px * (1 - trail)
+                for j in range(entry_i, last + 1):
+                    lo, hi, oo = L[j, col], H[j, col], O[j, col]
+                    if np.isnan(lo) or np.isnan(hi):
+                        continue
+                    if lo <= stop_level:
+                        exit_px = min(oo, stop_level) if (oo == oo and oo < stop_level) else stop_level
+                        exit_i, outcome = j, "trail"; break
+                    if hi > peak:
+                        peak = hi
+                        stop_level = max(stop_level, peak * (1 - trail))
+
+            else:  # ma_exit
+                disaster = entry_px * (1 - config["disaster"])
+                for j in range(entry_i, last + 1):
+                    lo, cl, oo = L[j, col], C[j, col], O[j, col]
+                    ma = ma_arr[j, col]
+                    if np.isnan(lo) or np.isnan(cl):
+                        continue
+                    if lo <= disaster:
+                        exit_px = min(oo, disaster) if (oo == oo and oo < disaster) else disaster
+                        exit_i, outcome = j, "stop"; break
+                    if not np.isnan(ma) and cl < ma:
+                        exit_px = cl; exit_i, outcome = j, "ma"; break
+
             if exit_i is None:
                 exit_i = last
-                exit_px = close[sym].iloc[last]
+                exit_px = C[last, col]
                 outcome = "timeout"
-                if pd.isna(exit_px):
+                if np.isnan(exit_px):
                     continue
 
             ret = (exit_px - entry_px) / entry_px - COST_BPS / 10000.0
-            hold = exit_i - entry_i
             trades.append({
                 "symbol": sym,
                 "entry_date": str(idx[entry_i].date()),
                 "exit_date": str(idx[exit_i].date()),
-                "entry_i": entry_i,
-                "exit_i": exit_i,
-                "ret": ret,
-                "r_multiple": ret / STOP_PCT,   # R = risk per trade = 8%
-                "hold": hold,
+                "entry_i": int(entry_i), "exit_i": int(exit_i),
+                "ret": float(ret),
+                "r_multiple": float(ret / r_unit),
+                "hold": int(exit_i - entry_i),
                 "outcome": outcome,
                 "uptrend": uptrend,
-                "rs": float(rsval),
+                "rs": float(rs_vals[k]),
             })
             open_until[sym] = exit_i
     return trades, idx
@@ -337,7 +385,7 @@ def pct(arr, p):
     return float(np.percentile(arr, p)) if len(arr) else None
 
 
-def compute_stats(trades, idx, close, spy_close):
+def compute_stats(trades, idx, close, spy_close, n_trials=DSR_TRIALS, config=None):
     rets = np.array([t["ret"] for t in trades])
     rmult = np.array([t["r_multiple"] for t in trades])
     holds = np.array([t["hold"] for t in trades])
@@ -363,7 +411,8 @@ def compute_stats(trades, idx, close, spy_close):
 
     psr, dsr = (None, None)
     if ann_sharpe is not None:
-        psr, dsr = deflated_sharpe(daily, ann_sharpe, DSR_TRIALS)
+        psr, dsr = deflated_sharpe(daily, ann_sharpe, n_trials)
+    exp_r = round(float(rmult.mean()), 3) if n else None
 
     # Monte Carlo: BLOCK-bootstrap the daily portfolio-return series (not trade
     # returns — those overlap in time; compounding N of them sequentially is
@@ -428,11 +477,11 @@ def compute_stats(trades, idx, close, spy_close):
              for i in range(0, len(eq), step)]
 
     # Honest verdict
-    verdict = build_verdict(n, win_rate, expectancy, ann_sharpe, dsr, cagr, spy_cagr, regime)
+    verdict = build_verdict(n, win_rate, expectancy, exp_r, dsr, cagr, spy_cagr, regime)
 
     return {
         "params": {
-            "target": TARGET_PCT, "stop": STOP_PCT, "timeoutDays": TIMEOUT_DAYS,
+            "config": (config or {}),
             "rebalanceDays": REBALANCE_DAYS, "topN": TOP_N, "costBps": COST_BPS,
             "rsLookback": RS_LOOKBACK, "rsSkip": RS_SKIP,
             "startDate": str(idx[0].date()), "endDate": str(idx[-1].date()),
@@ -444,19 +493,16 @@ def compute_stats(trades, idx, close, spy_close):
             "avgWinPct": round(avg_win * 100, 2),
             "avgLossPct": round(avg_loss * 100, 2),
             "expectancyPct": round(expectancy * 100, 3),
-            "expectancyR": round(float(rmult.mean()), 3) if n else None,
+            "expectancyR": exp_r,
             "profitFactor": round(profit_factor, 2) if profit_factor else None,
             "annSharpe": round(ann_sharpe, 2) if ann_sharpe is not None else None,
-            "psr": psr, "dsr": dsr, "dsrTrialsAssumed": DSR_TRIALS,
+            "psr": psr, "dsr": dsr, "dsrTrialsAssumed": n_trials,
             "maxDrawdownPct": round(mdd * 100, 1),
             "avgHoldDays": int(holds.mean()) if n else None,
             "totalReturnPct": round(total_ret * 100, 1),
             "cagr": round(cagr * 100, 2) if cagr is not None else None,
-            "outcomes": {
-                "target": sum(1 for t in trades if t["outcome"] == "target"),
-                "stop": sum(1 for t in trades if t["outcome"] == "stop"),
-                "timeout": sum(1 for t in trades if t["outcome"] == "timeout"),
-            },
+            "outcomes": {k: sum(1 for t in trades if t["outcome"] == k)
+                         for k in sorted(set(t["outcome"] for t in trades))} if n else {},
         },
         "monteCarlo": {
             "finalReturnP5": round(pct(mc_final, 5) * 100, 1) if len(mc_final) else None,
@@ -487,7 +533,7 @@ def compute_stats(trades, idx, close, spy_close):
     }
 
 
-def build_verdict(n, win_rate, expectancy, sharpe, dsr, cagr, spy_cagr, regime):
+def build_verdict(n, win_rate, expectancy, exp_r, dsr, cagr, spy_cagr, regime):
     if n < 30:
         return f"樣本僅 {n} 筆，不足以下結論。需要更長歷史或更大宇宙。"
     parts = []
@@ -541,28 +587,99 @@ def main():
     print("  reconstructing signals...")
     leader, rs12_1, ret12_1 = build_signals(close, vol, spy_close)
 
-    print("  simulating trades...")
-    trades, idx = simulate(close, high, low, op, leader, rs12_1, spy_close)
-    print(f"  generated {len(trades)} trades")
+    # MA cache for ma_exit policies
+    ma_cache = {20: close.rolling(20).mean().values,
+                50: close.rolling(50).mean().values}
 
-    print("  computing stats...")
-    stats = compute_stats(trades, idx, close, spy_close)
-    stats["computedAt"] = int(time.time() * 1000)
-    stats["universeSize"] = int(close.shape[1])
-    stats["signal"] = "rs_leader"
+    # ── Exit-policy lab: theory-driven configs (kept small to limit data-snooping) ──
+    configs = [
+        {"name": "baseline", "label": "基準 8%停損/15%目標", "policy": "fixed",
+         "stop": 0.08, "target": 0.15, "timeout": 60},
+        {"name": "wider", "label": "寬 12%停損/30%目標", "policy": "fixed",
+         "stop": 0.12, "target": 0.30, "timeout": 90},
+        {"name": "trail10", "label": "10% 移動停損(讓利潤奔跑)", "policy": "trailing",
+         "trail": 0.10, "timeout": 120},
+        {"name": "trail15", "label": "15% 移動停損", "policy": "trailing",
+         "trail": 0.15, "timeout": 120},
+        {"name": "ma_exit", "label": "跌破 20日均線出場", "policy": "ma_exit",
+         "ma_period": 20, "disaster": 0.15, "timeout": 120},
+        {"name": "trail15_regime", "label": "15%移動停損 + 僅多頭進場", "policy": "trailing",
+         "trail": 0.15, "timeout": 120, "regime_gate": True},
+    ]
+    n_trials = max(DSR_TRIALS, len(configs) + 14)  # honest haircut for everything tried
 
+    results = {}
+    for cfg in configs:
+        print(f"  simulating [{cfg['name']}]...")
+        trades, idx = simulate(close, high, low, op, leader, rs12_1, spy_close, cfg, ma_cache)
+        st = compute_stats(trades, idx, close, spy_close, n_trials=n_trials, config=cfg)
+        st["label"] = cfg["label"]
+        results[cfg["name"]] = st
+        o = st["overall"]
+        print(f"    N={o['nTrades']} win {o['winRate']*100:.1f}% exp {o['expectancyPct']:.2f}% "
+              f"PF {o['profitFactor']} Sharpe {o['annSharpe']} DSR {o['dsr']} "
+              f"CAGR {o['cagr']}% maxDD {o['maxDrawdownPct']}%")
+
+    spy_cagr = results["baseline"]["benchmark"]["spyCagr"]
+
+    # Variant comparison summary (lightweight)
+    variants = []
+    for cfg in configs:
+        o = results[cfg["name"]]["overall"]
+        beats = (o["cagr"] is not None and spy_cagr is not None and o["cagr"] > spy_cagr)
+        robust = (o["dsr"] is not None and o["dsr"] >= 0.90)
+        variants.append({
+            "name": cfg["name"], "label": cfg["label"],
+            "nTrades": o["nTrades"], "winRate": o["winRate"],
+            "expectancyPct": o["expectancyPct"], "profitFactor": o["profitFactor"],
+            "annSharpe": o["annSharpe"], "dsr": o["dsr"],
+            "cagr": o["cagr"], "maxDrawdownPct": o["maxDrawdownPct"],
+            "beatsSPY": beats, "robust": robust,
+            "tradeable": bool(beats and robust),
+        })
+
+    # Pick best variant by DSR (honest robustness), tie-broken by excess CAGR
+    best = max(variants, key=lambda v: ((v["dsr"] or 0), (v["cagr"] or -99)))
+    headline = results["baseline"]            # what's live now
+    headline_best = results[best["name"]]     # best discovered config (full detail)
+
+    # Overall lab verdict
+    any_tradeable = any(v["tradeable"] for v in variants)
+    if any_tradeable:
+        tv = [v for v in variants if v["tradeable"]]
+        names = "、".join(v["label"] for v in tv)
+        lab_verdict = (f"✓ 找到 {len(tv)} 個「贏過 SPY 且 DSR≥0.90」的配置：{names}。"
+                       f"最穩健的是「{best['label']}」(DSR {best['dsr']}, CAGR {best['cagr']}% vs SPY {spy_cagr}%)。"
+                       " 注意：這仍是樣本內、且有倖存者偏差 → 下一步該樣本外驗證。")
+    else:
+        beats_only = [v for v in variants if v["beatsSPY"]]
+        if beats_only:
+            b = max(beats_only, key=lambda v: v["cagr"] or -99)
+            lab_verdict = (f"⚠ 沒有任何配置同時「贏過 SPY 且 DSR≥0.90」。"
+                           f"最接近的「{b['label']}」CAGR {b['cagr']}% 略勝 SPY {spy_cagr}%，"
+                           f"但 DSR 僅 {b['dsr']} —— 換出場救不起來，這個 edge 站不住。")
+        else:
+            lab_verdict = (f"⨯ 6 種出場全部輸給單純買 SPY({spy_cagr}%)。"
+                           " 換出場法救不了 RS Leader —— 問題出在「選股訊號本身沒有 edge」，不是出場。"
+                           " 結論：別用這套選股，把工具價值轉向風控/紀律/不輸給自己。")
+
+    out = {
+        "computedAt": int(time.time() * 1000),
+        "universeSize": int(close.shape[1]),
+        "signal": "rs_leader",
+        "labVerdict": lab_verdict,
+        "anyTradeable": any_tradeable,
+        "variants": variants,
+        "bestVariant": best["name"],
+        "baseline": headline,        # full detail — matches the live signal
+        "best": headline_best,       # full detail — best discovered config
+        "spyCagr": spy_cagr,
+    }
     out_path = os.path.join(DATA_DIR, "backtest_historical.json")
     with open(out_path, "w") as f:
-        json.dump(stats, f, indent=2, ensure_ascii=False)
-    print(f"  wrote {out_path}")
-
-    o = stats["overall"]
-    print(f"\n  N={o['nTrades']} · win {o['winRate']*100:.1f}% · "
-          f"exp {o['expectancyPct']:.2f}% ({o['expectancyR']}R) · "
-          f"PF {o['profitFactor']} · Sharpe {o['annSharpe']} · "
-          f"DSR {o['dsr']} · maxDD {o['maxDrawdownPct']}%")
-    print(f"  CAGR {o['cagr']}% vs SPY {stats['benchmark']['spyCagr']}%")
-    print(f"  VERDICT: {stats['verdict']}")
+        json.dump(out, f, indent=2, ensure_ascii=False)
+    print(f"\n  wrote {out_path}")
+    print(f"\n  LAB VERDICT: {lab_verdict}")
     print(f"End: {datetime.now(timezone.utc).isoformat()}")
 
 
