@@ -530,6 +530,9 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
       function 仍會跑（避免 null reference），UI 只是不再渲染 -->
  <div id="dash-timestamp" style="display:none"></div>
 
+ <!-- 0. CALM HERO — 設計 A：平常安靜，一眼回答「我今天該幹嘛」，誠實打底 -->
+ <section class="card-strip" id="dash-calm-hero" style="margin-bottom:20px"></section>
+
  <!-- 1. MARKET REGIME -->
  <section class="card-strip">
   <div class="sl-section">
@@ -7156,6 +7159,8 @@ async function fetchMarketRegime() {
    const dRegimeDiv = document.getElementById('dash-regime');
    if (dRegimeDiv && typeof _rsRegimeCard === 'function') dRegimeDiv.innerHTML = _rsRegimeCard();
  } catch(e) {}
+ // 2026-05-29: regime 載入完，刷新 Calm Hero 的環境判讀
+ try { if (typeof renderCalmHero === 'function') renderCalmHero(); } catch(e) {}
  // FRED 殖利率曲線（非阻塞）
  fetchFredMacro().then(fred => {
    if (!window._marketRegime) return;
@@ -9998,6 +10003,62 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
+// 2026-05-29 設計 A：Calm Hero — 平常安靜，一眼回答「我今天該幹嘛」，誠實打底。
+// 核心 = 品質×動能交集（高 RS 且基本面穩健），多數日子可能是「空手」。
+function renderCalmHero() {
+  const el = document.getElementById('dash-calm-hero');
+  if (!el) return;
+  const regime = window._marketRegime;
+  const leaders = window._rsLeaderCache || [];
+  const fund = window._fundamentals || {};
+
+  // 大盤環境判讀 → 今日可否做多
+  let regimeLine, regimeColor, canLong = true;
+  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 歷史上虧損集中期，傾向空手/大幅減碼'; regimeColor = 'var(--red)'; canLong = false; }
+  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 降低主動交易、提高標準'; regimeColor = 'var(--yellow)'; canLong = false; }
+  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 環境允許做多，但仍只碰品質×動能'; regimeColor = 'var(--green)'; }
+  else { regimeLine = '大盤中性 — 中性偏謹慎'; regimeColor = 'var(--muted)'; }
+
+  const hasFund = Object.keys(fund).length > 0;
+  const qPicks = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'quality');
+  const trapCount = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'trap').length;
+
+  let stateBig, stateSub = '';
+  if (!leaders.length) { stateBig = '載入排行中…'; }
+  else if (!hasFund) { stateBig = '品質資料載入中…'; }
+  else if (!canLong) { stateBig = '今日傾向空手'; stateSub = '大盤環境不利，主動交易期望值低 —— 保留資金本身就是一個決策。'; }
+  else if (qPicks.length === 0) { stateBig = '今日 0 檔品質×動能設定'; stateSub = '高動能名字目前沒有基本面穩健的 —— 空手等更好機會，不勉強進場。'; }
+  else { stateBig = '今日 ' + qPicks.length + ' 檔通過品質×動能'; stateSub = '技術強 + 有獲利/現金流，值得進一步研究（這是研究起點，不是買進訊號）。'; }
+
+  let picksHtml = '';
+  if (canLong && hasFund && qPicks.length) {
+    picksHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">' + qPicks.slice(0, 6).map(r => {
+      const sig = (typeof _getRSSignal === 'function') ? _getRSSignal(r) : null;
+      const sigTxt = sig ? '<div style="font-size:10px;color:' + sig.color + ';margin-top:2px">' + sig.label + '</div>' : '';
+      return '<button onclick="showStock(\'' + r.symbol + '\')" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
+        '<div style="font-weight:700;font-size:14px">' + r.symbol + ' <span style="font-size:10px;color:#22c55e">✓獲利</span></div>' +
+        '<div class="mono" style="font-size:11px;color:var(--muted)">$' + (r.price ? r.price.toFixed(2) : '—') + ' · RS ' + (r.rsRating || '—') + '</div>' + sigTxt +
+      '</button>';
+    }).join('') + '</div>';
+  }
+  const trapNote = (hasFund && trapCount > 0) ? '<span style="color:var(--muted)"> · 已標出 ' + trapCount + ' 檔燒錢陷阱</span>' : '';
+
+  el.innerHTML =
+    '<div style="padding:18px 20px;background:linear-gradient(135deg,rgba(255,255,255,.03),transparent);border:1px solid var(--border);border-radius:12px">' +
+      '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">' +
+        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)">今日 · TODAY</span>' +
+        '<span style="font-size:11px;color:' + regimeColor + '">● ' + regimeLine + '</span>' +
+      '</div>' +
+      '<div style="font-size:22px;font-weight:700;margin:4px 0 2px">' + escapeHtml(stateBig) + '</div>' +
+      (stateSub ? '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + escapeHtml(stateSub) + trapNote + '</div>' : '') +
+      picksHtml +
+      '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
+        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：我們測過的機械選股訊號都贏不過它。本工具的工作 = <b style="color:var(--text)">幫你避開地雷、不輸給自己、誠實追蹤</b> —— 不是假裝有明牌。' +
+        '<a onclick="showPage(\'scanner\')" style="color:var(--accent);cursor:pointer;margin-left:6px">看完整排行 →</a>' +
+      '</div>' +
+    '</div>';
+}
+
 // 2026-05-29: 首頁手動「重新整理」— 智能選擇行為
 //   有快取 → 報價更新（秒速）
 //   無快取 → 重抓排行（含 toast 進度條）
@@ -10022,6 +10083,7 @@ async function quickDashboardScan(force) {
    renderDashRSLeader(window._rsLeaderCache.slice(0, 5));
    // Also render triple-resonance (cached from same JSON fetch)
    renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
+   _hydrateCalmHero();
    return;
  }
 
@@ -10041,6 +10103,7 @@ async function quickDashboardScan(force) {
      window._scanMetaCache = { scannedAt: precomputed.data.scannedAt };
      renderDashRSLeader(leaders.slice(0, 5));
      renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
+     _hydrateCalmHero();
      return;
    }
  } catch(e) {}
@@ -10049,6 +10112,15 @@ async function quickDashboardScan(force) {
  if (rsEl) rsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新 RS Leader 排行</div>';
  // Also fallback the triple-resonance card
  renderTripleResonance(null, null);
+ _hydrateCalmHero();
+}
+
+// 2026-05-29: 載入 fundamentals（若還沒）後渲染 Calm Hero；資料到齊再重渲一次
+function _hydrateCalmHero() {
+  renderCalmHero();
+  if (!window._fundamentals) {
+    _loadFundamentals().then(() => renderCalmHero()).catch(() => {});
+  }
 }
 
 // ── Market Narrative (Wave 6) — daily AI commentary on the macro picture ──
