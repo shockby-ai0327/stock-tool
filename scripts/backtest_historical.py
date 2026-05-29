@@ -706,6 +706,7 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
               "O": op.values, "cols": cols}
     # indicators
     ma5 = close.rolling(5).mean().values
+    ma50 = close.rolling(50).mean().values
     ma200 = close.rolling(200).mean().values
     hi252 = high.rolling(252).max().values
     avgvol5 = vol.rolling(5).mean().values
@@ -713,6 +714,7 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
     volexp = np.divide(avgvol5, avgvol20, out=np.ones_like(avgvol5), where=avgvol20 > 0)
     rsi2 = _rsi(close, 2).values
     C = panels["C"]
+    vol_arr = vol.values
     dollarvol = avgvol20 * C   # liquidity / market-cap proxy (days × syms)
     Lmask = leader.values
     RS = rs12_1.values
@@ -740,6 +742,22 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
             return None, None
         return lc, volexp[ti, lc]
 
+    def e_pead(ti):
+        # PEAD proxy: large single-day jump + volume spike = likely earnings beat.
+        # Buy next bar, ride the post-earnings drift. No earnings calendar needed.
+        if ti < 1:
+            return None, None
+        prev = C[ti - 1]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            gap = C[ti] / prev - 1.0
+            volspk = vol_arr[ti] / avgvol20[ti]
+        mask = (gap >= 0.06) & (volspk >= 2.5) & (C[ti] > ma50[ti])
+        mask = np.nan_to_num(mask, nan=False).astype(bool)
+        lc = np.where(mask)[0]
+        if lc.size == 0:
+            return None, None
+        return lc, gap[lc]  # rank by gap magnitude
+
     strategies = [
         {"name": "mom_long", "label": "學術動能(月換·持有3月)", "entry": e_mom,
          "rebal": 21, "topn": 25, "exit": {"policy": "time", "timeout": 63, "disaster": 0.25}},
@@ -747,6 +765,8 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
          "rebal": 5, "topn": 10, "exit": {"policy": "ma_reclaim", "reclaim_ma": "ma5", "timeout": 10, "disaster": 0.10}},
         {"name": "breakout52", "label": "52週新高突破", "entry": e_breakout,
          "rebal": 5, "topn": 15, "exit": {"policy": "trail", "trail": 0.15, "timeout": 120, "disaster": 0.15}},
+        {"name": "pead", "label": "財報跳空漂移(代理)", "entry": e_pead,
+         "rebal": 1, "topn": 20, "exit": {"policy": "trail", "trail": 0.12, "timeout": 50, "disaster": 0.12}},
     ]
 
     split = RS_LOOKBACK + int((n - RS_LOOKBACK) * 0.6)  # 60% in-sample
