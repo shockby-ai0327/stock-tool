@@ -10225,7 +10225,8 @@ function renderCalmHero() {
   else { regimeLine = '大盤中性 — 中性偏謹慎'; regimeColor = 'var(--muted)'; }
 
   const hasFund = Object.keys(fund).length > 0;
-  const qPicks = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'quality');
+  const qPicks = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'quality')
+    .sort((a, b) => (typeof _signalAlignment === 'function' ? _signalAlignment(b).count - _signalAlignment(a).count : 0));
   const trapCount = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'trap').length;
 
   let stateBig, stateSub = '';
@@ -12991,6 +12992,34 @@ function _qualityBadge(symbol) {
   return '';
 }
 
+// 2026-05-29 Phase 2+7：訊號對齊綜合（誠實版信心引擎 + 交叉驗證）
+// 數「幾個獨立來源同時看好」—— 對齊越多 = 越值得優先研究。
+// 關鍵誠實：這「不是」勝率/機率。機械訊號已證明無單獨 edge;這只是綜合度,
+// 是否真能預測報酬,要等前向追蹤(diligence_scorecard / signal_history)累積夠資料才能校準。
+function _signalAlignment(r) {
+  const sym = r.symbol;
+  const fund = (window._fundamentals || {})[sym];
+  const trSet = new Set((window._tripleResonanceCache || []).map(t => t.symbol));
+  const items = [
+    { name: '動能 RS≥85', on: (r.rsRating || 0) >= 85 },
+    { name: 'VCP 底部型態', on: (r.vcpScore || 0) >= 2 },
+    { name: '基本面獲利', on: !!(fund && fund.flag === 'quality') },
+    { name: '財報催化≤14天', on: r.daysToEarnings != null && r.daysToEarnings >= 0 && r.daysToEarnings <= 14 },
+    { name: '分析師上修', on: (r.recentUpgrades || 0) >= 1 || (r.epsRevision || 0) > 0 },
+    { name: '三共振命中', on: trSet.has(sym) },
+  ];
+  return { count: items.filter(i => i.on).length, total: items.length, items };
+}
+function _alignBadge(r) {
+  const a = _signalAlignment(r);
+  if (a.count < 2) return '';   // <2 不顯示，避免雜訊
+  const onList = a.items.filter(i => i.on).map(i => i.name).join('、');
+  const color = a.count >= 4 ? '#22c55e' : a.count >= 3 ? '#818cf8' : 'var(--muted)';
+  const tip = ('訊號對齊 ' + a.count + '/' + a.total + '：' + onList +
+    '。對齊越多 = 越多獨立來源同時看好，優先研究。注意：這是綜合度，尚未經前向驗證，不等於勝率。').replace(/"/g, "'");
+  return '<span title="' + tip + '" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.06);color:' + color + ';font-weight:700;cursor:help">⊕' + a.count + '/' + a.total + '</span>';
+}
+
 function _renderRSLeaderTable(results, tableDiv, prependHtml) {
   const f = (v, d=2) => (v == null ? 'N/A' : Number(v).toFixed(d));
   const pct = v => (v >= 0 ? '+' : '') + f(v, 1) + '%';
@@ -13072,7 +13101,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + _alignBadge(r) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
         sigHtml + earnHtml + aiStarsHtml +
       '</td>' +
