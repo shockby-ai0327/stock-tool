@@ -9998,13 +9998,15 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
-// 2026-05-29: 首頁手動「重新整理」— 強制清快取 + 跑 triggerGithubScan (toast 進度條)
+// 2026-05-29: 首頁手動「重新整理」— 智能選擇行為
+//   有快取 → 報價更新（秒速）
+//   無快取 → 重抓排行（含 toast 進度條）
 async function refreshDashboardData() {
- // 清掉所有 RS Leader 快取，強迫從 GitHub Raw 重新拉
- window._rsLeaderCache = null;
- window._tripleResonanceCache = null;
- window._scanMetaCache = null;
- // 用 toast-mode 進度條的 triggerGithubScan（同一份邏輯）
+ if (window._rsLeaderCache && window._rsLeaderCache.length) {
+  // 已有快取 → 只刷報價（保留排行，避免重打 GitHub Raw 拿到一樣的 JSON）
+  return refreshPricesOnly();
+ }
+ // 無快取 → 重抓排行
  try {
   await triggerGithubScan();
  } catch(e) {
@@ -11381,6 +11383,80 @@ async function triggerGithubScan() {
   }
 }
 
+// 2026-05-29: 報價更新 — 只刷已快取 leaders 的即時價，秒速。不重抓 JSON、不重算排行。
+// 用途：你只想看「現在這 15-25 檔的當下價」，不在乎排名變化。
+async function refreshPricesOnly() {
+  if (window._rsLeaderRunning) {
+    showToast('更新進行中，請稍候...', 'warn');
+    return;
+  }
+  const leaders = window._rsLeaderCache;
+  if (!leaders || !leaders.length) {
+    showToast('沒有快取的 leaders — 請先「重抓排行」', 'warn');
+    return;
+  }
+  window._rsLeaderRunning = true;
+
+  const market = _scannerMarket || 'us';
+  const marketLabel = market === 'tw' ? '台股' : '美股';
+  const sp = new ScanProgress(null, marketLabel + ' · 即時報價更新', 'toast');
+  window._currentToastProgress = sp;
+
+  const stPrice = sp.addStage('刷新 ' + leaders.length + ' 檔 leader 即時報價', leaders.length);
+  const stRender = sp.addStage('重新渲染表格');
+
+  try {
+    sp.start(stPrice);
+    await overlayLivePrices(leaders);
+    if (window._rsDiscoveryCache && window._rsDiscoveryCache.length) {
+      await overlayLivePrices(window._rsDiscoveryCache);
+    }
+    window._lastLiveRefreshAt = Date.now();
+    sp.finish(stPrice, leaders.length + ' 檔 + 發現 ' + (window._rsDiscoveryCache?.length || 0) + ' 檔 報價刷新');
+
+    sp.start(stRender);
+    const meta = window._scanMetaCache || { scannedAt: new Date().toISOString() };
+    const ageMin = Math.round((Date.now() - new Date(meta.scannedAt).getTime()) / 60000);
+    const stale = ageMin > 30;
+    renderDashRSLeader(leaders.slice(0, 5));
+    renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), meta, ageMin, stale);
+    sp.finish(stRender);
+
+    sp.success(leaders.length + ' 檔報價已更新 · 排名仍是 ' + (ageMin < 60 ? ageMin + ' 分鐘前' : Math.round(ageMin/60) + ' 小時前') + ' 的');
+    sp.autoCloseAfter(4000);
+  } catch(e) {
+    sp.fail(stPrice, '報價刷新失敗：' + e.message.slice(0, 80), '可能是 Yahoo rate-limit，請稍後再試');
+    sp.setActions('<button class="act ghost" onclick="window._currentToastProgress && window._currentToastProgress.close()">關閉</button>');
+  } finally {
+    window._rsLeaderRunning = false;
+  }
+}
+
+// 2026-05-29: 完整重掃 — 開 GitHub Actions workflow_dispatch 頁，唯一能拿到「當下排行」的方法。
+// 為何不直接 API 觸發？因為要 PAT 寫權限存 localStorage 是大安全洞（見 2026-05-20 註記）。
+function openFullRescanWorkflow() {
+  const market = _scannerMarket || 'us';
+  const url = 'https://github.com/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml';
+
+  // 開分頁
+  window.open(url, '_blank');
+
+  // 同時用 toast 教學使用者怎麼觸發
+  const sp = new ScanProgress(null, '完整重掃 · 操作說明', 'toast');
+  window._currentToastProgress = sp;
+  const st1 = sp.addStage('已開啟 GitHub Actions 頁面');
+  const st2 = sp.addStage('在新分頁點「Run workflow」按鈕');
+  const st3 = sp.addStage('選 market = ' + market + '（或 all），按綠色 Run');
+  const st4 = sp.addStage('等 5-10 分鐘 → 回本頁按「重抓排行」');
+  sp.finish(st1, '網址: actions/workflows/stock-scan.yml');
+  sp.start(st2);
+  sp.setActions(
+    '<a href="' + url + '" target="_blank" class="act buy" style="text-decoration:none">重新打開 GitHub Actions 頁面 →</a>' +
+    '<button class="act ghost" onclick="window._currentToastProgress && window._currentToastProgress.close()">知道了</button>'
+  );
+  // 不 autoClose — 讓使用者讀完
+}
+
 // 2026-05-20 (安全 #2): 移除 GitHub PAT 觸發 workflow_dispatch 流程
 // 之前 PAT 存 localStorage 明文 + 任何 XSS 都能竊取 → 配合 PAT 寫權限可推 main 分支劫持 repo。
 // cron 已每天 3 次 (pre-market / midday / near close)，對波段交易足夠。
@@ -12010,30 +12086,69 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
   const universeLabel = meta.universeSize
     ? '全市場 ' + meta.universeSize + ' 檔掃描池（S&P500 + 中小型成長股 + 動能 ETF 持股）'
     : '預算排行';
-  const freshLabel = stale
-    ? '<span style="color:var(--yellow)">⚠ 資料較舊（' + ageMin + ' 分鐘前）</span>'
-    : '<span style="color:var(--green)">● 伺服器掃描（' + (ageMin < 2 ? '剛更新' : ageMin + ' 分鐘前') + '）</span>';
   const scanTime = meta.scannedAt ? new Date(meta.scannedAt).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'}) : '';
   const liveRefreshedAt = window._lastLiveRefreshAt
-    ? ' · 報價刷新 ' + new Date(window._lastLiveRefreshAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})
-    : '';
+    ? new Date(window._lastLiveRefreshAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})
+    : null;
+
+  // 2026-05-29: 4-tier 資料新鮮度警示
+  //   fresh   < 30 min        → green, 一切正常
+  //   caution 30 min - 4 hr   → yellow, 「排名不是當下，但報價可即時刷」
+  //   warn    4 - 24 hr       → red, 「你看到的不是當下行情」
+  //   error   > 24 hr         → red + workflow link, 「cron 卡死」
+  const ageHr = ageMin / 60;
+  let tier, bannerBg, bannerBorder, badge, badgeColor, statusLine;
+  const ageLabel = ageMin < 60 ? ageMin + ' 分鐘前'
+                 : ageHr < 24 ? Math.round(ageHr * 10) / 10 + ' 小時前'
+                              : Math.round(ageHr / 24) + ' 天前';
+  if (ageMin > 24 * 60) {
+   tier = 'error'; bannerBg = 'rgba(239,68,68,.12)'; bannerBorder = 'rgba(239,68,68,.45)';
+   badge = '⨯ 資料異常'; badgeColor = '#ef4444';
+   statusLine = '伺服器掃描 ' + ageLabel + ' — cron 可能卡死，請手動觸發 GitHub Actions';
+  } else if (ageMin > 4 * 60) {
+   tier = 'warn'; bannerBg = 'rgba(239,68,68,.08)'; bannerBorder = 'rgba(239,68,68,.3)';
+   badge = '⚠ 資料過舊'; badgeColor = '#ef4444';
+   statusLine = '伺服器掃描 ' + ageLabel + ' · 你看到的不是當下行情，建議完整重掃';
+  } else if (ageMin > 30) {
+   tier = 'caution'; bannerBg = 'rgba(245,158,11,.08)'; bannerBorder = 'rgba(245,158,11,.35)';
+   badge = '⚠ 排名稍舊'; badgeColor = '#f59e0b';
+   statusLine = '伺服器掃描 ' + ageLabel + ' · 排名未重算，但報價可即時刷';
+  } else {
+   tier = 'fresh'; bannerBg = 'rgba(34,197,94,.08)'; bannerBorder = 'rgba(34,197,94,.3)';
+   badge = '● 資料新鮮'; badgeColor = '#22c55e';
+   statusLine = '伺服器掃描 ' + (ageMin < 2 ? '剛更新' : ageLabel);
+  }
+  if (liveRefreshedAt) statusLine += ' · 報價刷新 ' + liveRefreshedAt;
+
+  // 顯眼的「完整重掃」按鈕：tier=warn/error 時用紅色強調
+  const fullRescanBtnCls = (tier === 'warn' || tier === 'error')
+    ? 'background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.45);color:#fca5a5'
+    : 'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted)';
 
   const banner =
     '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;' +
-    'background:rgba(59,130,246,.08);border-radius:8px;border:1px solid rgba(59,130,246,.2)">' +
+    'background:' + bannerBg + ';border-radius:8px;border:1px solid ' + bannerBorder + '">' +
       '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:12px;color:var(--accent);font-weight:600">🖥 GitHub Actions 預算排行</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · 掃描 ' + scanTime + liveRefreshedAt + ' · ' + freshLabel + '</div>' +
+        '<div style="font-size:12px;font-weight:600;color:' + badgeColor + '">' + badge + ' · GitHub Actions 預算排行</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · ' + statusLine + '</div>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
+      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">' +
         '<span id="live-countdown" style="font-size:11px;color:var(--muted)"></span>' +
-        '<button id="notif-toggle-btn" onclick="_initPushNotifications()" title="開啟買點推播通知（視窗切換到其他頁面時彈出）" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.4);color:#f59e0b;background:rgba(245,158,11,.08);cursor:pointer;white-space:nowrap">🔔 開啟通知</button>' +
-        '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 12px;border-radius:6px;' +
-        'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;cursor:pointer;white-space:nowrap" ' +
-        'title="重新拉取伺服器最新排行 + 更新即時報價（秒速完成）">' +
-        '⚡ 重新整理</button>' +
-        '<button onclick="triggerGithubActionsDispatch()" title="觸發 GitHub Actions 完整重新掃描全市場（需設定 Token）" style="font-size:13px;padding:5px 8px;border-radius:6px;' +
-        'background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);cursor:pointer">☁️</button>' +
+        '<button id="notif-toggle-btn" onclick="_initPushNotifications()" title="開啟買點推播通知" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.4);color:#f59e0b;background:rgba(245,158,11,.08);cursor:pointer;white-space:nowrap">🔔 通知</button>' +
+        // 報價更新：只刷已快取 leaders 的即時價，秒速
+        '<button onclick="refreshPricesOnly()" style="font-size:11px;padding:5px 10px;border-radius:6px;' +
+        'background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#86efac;cursor:pointer;white-space:nowrap" ' +
+        'title="只刷新已快取的 15-25 檔 leader 即時報價（~5 秒）。排名不會改變。">' +
+        '報價更新</button>' +
+        // 重抓排行：拉伺服器最新 JSON（cron 產生的）
+        '<button data-rescan-btn onclick="triggerGithubScan()" style="font-size:11px;padding:5px 10px;border-radius:6px;' +
+        'background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;cursor:pointer;white-space:nowrap" ' +
+        'title="重新拉伺服器排行 JSON（cron 產出的快取，不一定是當下）">' +
+        '重抓排行</button>' +
+        // 完整重掃：開 GitHub Actions workflow_dispatch 頁，唯一拿到當下排行的方法
+        '<button onclick="openFullRescanWorkflow()" title="開 GitHub Actions 頁面手動觸發完整重新掃描（唯一能拿到當下排行的方法，5-10 分鐘）" ' +
+        'style="font-size:11px;padding:5px 10px;border-radius:6px;' + fullRescanBtnCls + ';cursor:pointer;white-space:nowrap">' +
+        '完整重掃 →</button>' +
       '</div>' +
     '</div>';
 
