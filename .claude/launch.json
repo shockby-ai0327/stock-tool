@@ -4,7 +4,7 @@
     {
       "name": "stock-tool",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "python3 -m http.server 8080 --directory /Users/rich/Desktop/ai"],
+      "runtimeArgs": ["-c", "exec python3 -I -c \"import os,http.server,socketserver; os.chdir('/Users/rich/Desktop/ai'); socketserver.TCPServer(('',8080),http.server.SimpleHTTPRequestHandler).serve_forever()\""],
       "port": 8080
     },
     {
