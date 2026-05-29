@@ -560,6 +560,15 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-holdings"></div>
  </section>
 
+ <!-- 3.2 行為教練 — 從交易日誌偵測壞習慣（散戶真正的 edge：不輸給自己） -->
+ <section class="card-strip" id="dash-behavior-card" style="display:none">
+  <div class="sl-section">
+   <h2>行為教練</h2><span class="sl-en">behavioral coach</span>
+   <span class="sl-sub">從你的交易紀錄抓出虧損習慣</span>
+  </div>
+  <div id="dash-behavior"></div>
+ </section>
+
  <!-- 3.5 MARKET NARRATIVE (Claude AI) -->
  <section class="card-strip" id="dash-narrative-card">
   <div class="sl-section">
@@ -9224,6 +9233,7 @@ async function renderDashboard(forceRescan) {
  renderActionItems(); // #3 今日待處理
  renderWatchlistSimple(); // Fix G: 簡版觀察清單
  renderDashHoldings(); // 持倉動態
+ try { renderBehaviorCoach(); } catch(e) {} // Phase 4 行為教練
  // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
  loadMarketNarrative(window._dashboardMarket || 'us');
  // 6. T交易精選（15 分鐘快取，獨立載入）
@@ -9927,6 +9937,101 @@ async function renderActionItems() {
    ).join('') +
    (items.length > 8 ? '<div style="text-align:center;font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono);letter-spacing:1px">+ ' + (items.length - 8) + ' more</div>' : '') +
   '</div>';
+}
+
+// 2026-05-29 Phase 4：行為教練 — 從交易日誌偵測虧損習慣（散戶真正的 edge）
+// 用 FIFO 配對買賣得出已實現交易，偵測學界最常見的散戶錯誤。
+function analyzeBehavior(j) {
+  const sorted = [...j].filter(e => e.ticker && e.qty && e.price).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const queues = {}; const closed = [];
+  for (const e of sorted) {
+    if (e.action === 'buy') {
+      (queues[e.ticker] = queues[e.ticker] || []).push({ qty: e.qty, cost: (e.net || e.price * e.qty) / e.qty, date: e.date });
+    } else if (e.action === 'sell') {
+      let rem = e.qty; const proceeds = (e.net || e.price * e.qty) / e.qty; const q = queues[e.ticker] || [];
+      while (rem > 0 && q.length) {
+        const lot = q[0]; const take = Math.min(rem, lot.qty);
+        const retPct = lot.cost > 0 ? (proceeds - lot.cost) / lot.cost * 100 : 0;
+        const holdDays = lot.date ? Math.max(0, Math.round((new Date(e.date) - new Date(lot.date)) / 864e5)) : null;
+        closed.push({ ticker: e.ticker, retPct, holdDays, sellDate: e.date });
+        lot.qty -= take; rem -= take; if (lot.qty <= 0) q.shift();
+      }
+    }
+  }
+  const n = closed.length;
+  if (n < 8) return { insufficient: true, n };
+  const wins = closed.filter(t => t.retPct > 0), losses = closed.filter(t => t.retPct <= 0);
+  const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+  const winHold = mean(wins.map(t => t.holdDays).filter(d => d != null));
+  const lossHold = mean(losses.map(t => t.holdDays).filter(d => d != null));
+  const avgWin = mean(wins.map(t => t.retPct));
+  const avgLoss = mean(losses.map(t => t.retPct)); // negative
+  const winRate = wins.length / n;
+  const bigLosses = losses.filter(t => t.retPct < -15).length;
+  // trades per month
+  const span = (new Date(closed[n - 1].sellDate) - new Date(sorted[0].date)) / 864e5 / 30.4;
+  const perMonth = span > 0.3 ? (sorted.length / span) : sorted.length;
+
+  const findings = [];
+  // 1. 處置效應：賣太早、凹太久（Odean 最經典的散戶虧損來源）
+  if (wins.length >= 3 && losses.length >= 3 && winHold > 0 && lossHold > 0 && winHold < lossHold * 0.75) {
+    findings.push({ sev: 'high', title: '處置效應：賣太早、凹太久',
+      detail: '你賺錢平均只抱 ' + Math.round(winHold) + ' 天就跑，虧錢卻抱 ' + Math.round(lossHold) + ' 天。這是學界記錄最普遍的散戶虧損來源 —— 砍掉獲利、讓虧損坐大。',
+      fix: '讓贏家奔跑（用移動停損而非看到獲利就跑）；虧損到設定的失效條件就無條件出場。' });
+  }
+  // 2. 風報比為負：平均虧損 > 平均獲利
+  if (Math.abs(avgLoss) > avgWin && avgWin > 0) {
+    findings.push({ sev: 'high', title: '風報比是負的',
+      detail: '平均獲利 +' + avgWin.toFixed(1) + '% 但平均虧損 ' + avgLoss.toFixed(1) + '% —— 賠的比賺的大。即使勝率 ' + (winRate * 100).toFixed(0) + '%，長期仍難賺。',
+      fix: '進場前就定好停損與目標，確保 R:R ≥ 2；達標分批出、破停損全出。' });
+  }
+  // 3. 停損紀律不足
+  if (bigLosses / n >= 0.2) {
+    findings.push({ sev: 'mid', title: '停損紀律不足',
+      detail: n + ' 筆裡有 ' + bigLosses + ' 筆虧超過 15%（' + Math.round(bigLosses / n * 100) + '%）。少數大虧會吃掉多數小賺。',
+      fix: '每筆進場同時掛停損（建議 -8% 或跌破結構）；不要「再等等看」。' });
+  }
+  // 4. 過度交易
+  if (perMonth >= 20) {
+    findings.push({ sev: 'mid', title: '過度交易',
+      detail: '月均約 ' + Math.round(perMonth) + ' 筆交易。成本、滑價、與失誤都隨次數放大；研究顯示散戶交易越頻繁、報酬越差。',
+      fix: '只在 regime 允許 + 品質×動能設定出現時出手；多數時間空手是對的。' });
+  }
+  return { insufficient: false, n, winRate, avgWin, avgLoss, winHold, lossHold, perMonth: Math.round(perMonth), findings };
+}
+
+function renderBehaviorCoach() {
+  const card = document.getElementById('dash-behavior-card');
+  const el = document.getElementById('dash-behavior');
+  if (!card || !el) return;
+  let r;
+  try { r = analyzeBehavior(getJ()); } catch (e) { return; }
+  if (!r || r.insufficient) {
+    // 不足 8 筆已實現交易 → 安靜（設計 A：沒話說就不佔版面）
+    if (r && r.n > 0) {
+      card.style.display = '';
+      el.innerHTML = '<div style="padding:14px 16px;color:var(--muted);font-size:12px">已實現交易僅 ' + r.n + ' 筆，累積到 8 筆以上才能可靠分析你的習慣。繼續記錄。</div>';
+    } else {
+      card.style.display = 'none';
+    }
+    return;
+  }
+  card.style.display = '';
+  const sevColor = { high: '#ef4444', mid: '#f59e0b' };
+  let html = '<div style="padding:4px 0 12px;font-size:12px;color:var(--muted)">' +
+    '基於 ' + r.n + ' 筆已實現交易 · 勝率 ' + (r.winRate * 100).toFixed(0) + '% · 平均賺 +' + r.avgWin.toFixed(1) + '% / 賠 ' + r.avgLoss.toFixed(1) + '% · 月均 ' + r.perMonth + ' 筆</div>';
+  if (!r.findings.length) {
+    html += '<div style="padding:14px 16px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;color:#86efac;font-size:13px">✓ 目前沒偵測到明顯的虧損習慣 —— 你的紀律不錯，繼續保持。</div>';
+  } else {
+    html += r.findings.map(f =>
+      '<div style="padding:12px 14px;margin-bottom:8px;background:rgba(255,255,255,.02);border-left:3px solid ' + (sevColor[f.sev] || 'var(--muted)') + ';border-radius:6px">' +
+        '<div style="font-weight:700;font-size:13px;color:' + (sevColor[f.sev] || 'var(--text)') + ';margin-bottom:4px">' + escapeHtml(f.title) + '</div>' +
+        '<div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:5px">' + escapeHtml(f.detail) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);line-height:1.6">→ ' + escapeHtml(f.fix) + '</div>' +
+      '</div>'
+    ).join('');
+  }
+  el.innerHTML = html;
 }
 
 async function renderDashHoldings() {
