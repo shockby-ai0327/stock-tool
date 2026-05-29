@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps
+      - name: Install Node deps
         run: npm install node-fetch
         working-directory: scripts
 
@@ -33,13 +33,26 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/ai_diligence.js
 
+      # 前向追蹤:給過去每個論點打分(vs SPY),測信心是否預測表現
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install yfinance pandas
+
+      - name: Grade past theses (forward-tracker)
+        run: python scripts/grade_diligence.py
+        continue-on-error: true
+
       - name: Commit results
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          [ -f data/ai_diligence.json ] && git add data/ai_diligence.json || true
-          [ -f data/cik_map.json ]      && git add data/cik_map.json      || true
-          [ -f data/api_usage.json ]    && git add data/api_usage.json    || true
+          [ -f data/ai_diligence.json ]       && git add data/ai_diligence.json       || true
+          [ -f data/diligence_scorecard.json ] && git add data/diligence_scorecard.json || true
+          [ -f data/cik_map.json ]            && git add data/cik_map.json            || true
+          [ -f data/api_usage.json ]          && git add data/api_usage.json          || true
           git diff --cached --quiet || git commit -m "ai-diligence: $(date -u '+%Y-%m-%d %H:%M UTC')"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --autostash 2>&1 | tail -2 || true
