@@ -1,5 +1,5 @@
 {
-  "computedAt": 1780034843050,
+  "computedAt": 1780035423970,
   "universeSize": 1083,
   "signal": "rs_leader",
   "labVerdict": "⨯ 6 種出場全部輸給單純買 SPY(18.0%)。 換出場法救不了 RS Leader —— 問題出在「選股訊號本身沒有 edge」，不是出場。 結論：別用這套選股，把工具價值轉向風控/紀律/不輸給自己。",
@@ -1333,5 +1333,103 @@
     "verdict": "勝率 37.6%、每筆期望 0.41%（0.05R）。 但 Deflated Sharpe 僅 0.64（<0.90）—— 扣掉多重測試偏差後，這個 edge 不夠穩健，很可能是運氣。 且年化報酬（10.9%）並未勝過單純買 SPY（18.0%）—— 承擔個股風險卻沒拿到溢酬。",
     "label": "基準 8%停損/15%目標"
   },
-  "spyCagr": 18.0
+  "spyCagr": 18.0,
+  "strategyLab": {
+    "split_date": "2024-05-28",
+    "spyCagr": 18.0,
+    "strategies": [
+      {
+        "name": "mom_long",
+        "label": "學術動能(月換·持有3月)",
+        "nTrades": 837,
+        "winRate": 0.4755,
+        "expectancyPct": 6.483,
+        "profitFactor": 1.66,
+        "annSharpe": 0.48,
+        "dsr": 0.1968,
+        "cagr": 1.91,
+        "maxDrawdownPct": -47.6,
+        "beatsSPY": false,
+        "robust": false,
+        "persists": true,
+        "tradeable": false,
+        "inSample": {
+          "n": 513,
+          "winRate": 0.4444,
+          "expectancyPct": 2.05,
+          "profitFactor": 1.2
+        },
+        "outOfSample": {
+          "n": 324,
+          "winRate": 0.5247,
+          "expectancyPct": 13.501,
+          "profitFactor": 2.41
+        }
+      },
+      {
+        "name": "meanrev",
+        "label": "均值回歸(RSI2超賣)",
+        "nTrades": 2441,
+        "winRate": 0.6305,
+        "expectancyPct": 0.07,
+        "profitFactor": 1.04,
+        "annSharpe": -4.07,
+        "dsr": 0.0,
+        "cagr": -44.39,
+        "maxDrawdownPct": -97.0,
+        "beatsSPY": false,
+        "robust": false,
+        "persists": false,
+        "tradeable": false,
+        "inSample": {
+          "n": 1469,
+          "winRate": 0.6229,
+          "expectancyPct": -0.011,
+          "profitFactor": 0.99
+        },
+        "outOfSample": {
+          "n": 972,
+          "winRate": 0.642,
+          "expectancyPct": 0.194,
+          "profitFactor": 1.11
+        }
+      },
+      {
+        "name": "breakout52",
+        "label": "52週新高突破",
+        "nTrades": 1695,
+        "winRate": 0.4248,
+        "expectancyPct": 1.157,
+        "profitFactor": 1.21,
+        "annSharpe": -1.09,
+        "dsr": 0.0,
+        "cagr": -1.66,
+        "maxDrawdownPct": -30.8,
+        "beatsSPY": false,
+        "robust": false,
+        "persists": true,
+        "tradeable": false,
+        "inSample": {
+          "n": 965,
+          "winRate": 0.4093,
+          "expectancyPct": 0.449,
+          "profitFactor": 1.08
+        },
+        "outOfSample": {
+          "n": 730,
+          "winRate": 0.4452,
+          "expectancyPct": 2.092,
+          "profitFactor": 1.41
+        }
+      }
+    ],
+    "indexTiming": {
+      "cagr": 10.01,
+      "annSharpe": 1.17,
+      "maxDrawdownPct": -19.8,
+      "pctTimeInMarket": 68.5,
+      "beatsSPYrisk": true
+    },
+    "verdict": "⨯ 4 個不同假設都不算數(全期贏SPY+DSR≥0.9+樣本外持續，無一全中)。連全期都沒人贏過 SPY。 指數擇時(SPY>200MA)：CAGR 10.01% vs 買進持有 SPY 18.0%，但最大回撤只有 -19.8%(買進持有約 -24%)——降回撤是它唯一的價值。"
+  }
 }
