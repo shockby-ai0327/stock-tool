@@ -1,5 +1,5 @@
 {
-  "computedAt": 1780035423970,
+  "computedAt": 1780036287473,
   "universeSize": 1083,
   "signal": "rs_leader",
   "labVerdict": "⨯ 6 種出場全部輸給單純買 SPY(18.0%)。 換出場法救不了 RS Leader —— 問題出在「選股訊號本身沒有 edge」，不是出場。 結論：別用這套選股，把工具價值轉向風控/紀律/不輸給自己。",
@@ -1369,29 +1369,29 @@
       {
         "name": "meanrev",
         "label": "均值回歸(RSI2超賣)",
-        "nTrades": 2441,
-        "winRate": 0.6305,
-        "expectancyPct": 0.07,
-        "profitFactor": 1.04,
-        "annSharpe": -4.07,
+        "nTrades": 2437,
+        "winRate": 0.6307,
+        "expectancyPct": 0.048,
+        "profitFactor": 1.03,
+        "annSharpe": -4.32,
         "dsr": 0.0,
-        "cagr": -44.39,
-        "maxDrawdownPct": -97.0,
+        "cagr": -45.86,
+        "maxDrawdownPct": -97.5,
         "beatsSPY": false,
         "robust": false,
-        "persists": false,
+        "persists": true,
         "tradeable": false,
         "inSample": {
-          "n": 1469,
-          "winRate": 0.6229,
-          "expectancyPct": -0.011,
-          "profitFactor": 0.99
+          "n": 1467,
+          "winRate": 0.6251,
+          "expectancyPct": 0.003,
+          "profitFactor": 1.0
         },
         "outOfSample": {
-          "n": 972,
-          "winRate": 0.642,
-          "expectancyPct": 0.194,
-          "profitFactor": 1.11
+          "n": 970,
+          "winRate": 0.6392,
+          "expectancyPct": 0.117,
+          "profitFactor": 1.07
         }
       },
       {
@@ -1429,6 +1429,47 @@
       "maxDrawdownPct": -19.8,
       "pctTimeInMarket": 68.5,
       "beatsSPYrisk": true
+    },
+    "sizeTranche": {
+      "label": "學術動能(月換·持有3月)",
+      "buckets": [
+        {
+          "tranche": "Q1 最小",
+          "n": 168,
+          "medianDollarVolM": 6.6,
+          "winRate": 0.4405,
+          "expectancyPct": 6.289
+        },
+        {
+          "tranche": "Q2",
+          "n": 167,
+          "medianDollarVolM": 32.4,
+          "winRate": 0.4192,
+          "expectancyPct": 1.858
+        },
+        {
+          "tranche": "Q3",
+          "n": 167,
+          "medianDollarVolM": 86.6,
+          "winRate": 0.503,
+          "expectancyPct": 8.07
+        },
+        {
+          "tranche": "Q4",
+          "n": 167,
+          "medianDollarVolM": 266.4,
+          "winRate": 0.503,
+          "expectancyPct": 7.734
+        },
+        {
+          "tranche": "Q5 最大",
+          "n": 168,
+          "medianDollarVolM": 1053.3,
+          "winRate": 0.5119,
+          "expectancyPct": 8.453
+        }
+      ],
+      "edgeConcentratesInSmall": false
     },
     "verdict": "⨯ 4 個不同假設都不算數(全期贏SPY+DSR≥0.9+樣本外持續，無一全中)。連全期都沒人贏過 SPY。 指數擇時(SPY>200MA)：CAGR 10.01% vs 買進持有 SPY 18.0%，但最大回撤只有 -19.8%(買進持有約 -24%)——降回撤是它唯一的價值。"
   }
