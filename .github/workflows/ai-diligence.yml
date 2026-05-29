@@ -1,0 +1,48 @@
+name: AI Due-Diligence Analyst
+
+# 研究 edge 路徑(Phase 5):對掃描器 top names 做 SEC EDGAR 深度研究,
+# Claude 產出「可證偽框架」(多空論點/失效條件/該查證的問題),存持久記憶供日後自我打分。
+# 成本:~8 檔 × 幾分錢 Haiku。一週一次足矣(研究框架不需天天重產)。
+on:
+  schedule:
+    - cron: '41 8 * * 6'   # 每週六 08:41 UTC(美股休市,接在回測之後)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diligence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm install node-fetch
+        working-directory: scripts
+
+      - name: Run AI due-diligence
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/ai_diligence.js
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/ai_diligence.json ] && git add data/ai_diligence.json || true
+          [ -f data/cik_map.json ]      && git add data/cik_map.json      || true
+          [ -f data/api_usage.json ]    && git add data/api_usage.json    || true
+          git diff --cached --quiet || git commit -m "ai-diligence: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 2))
+          done
