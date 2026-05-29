@@ -1,0 +1,42 @@
+name: Historical Backtest (RS Leader)
+
+# 重活：下載 1200+ 檔 × 6 年 OHLCV，point-in-time 重建訊號回測。
+# 訊號定義固定、只有 trailing window 緩慢推移，所以一週跑一次足矣。
+on:
+  schedule:
+    - cron: '23 7 * * 6'   # 每週六 07:23 UTC（台灣週六下午，美股休市）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install yfinance pandas numpy
+
+      - name: Run historical backtest
+        run: python scripts/backtest_historical.py
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/backtest_historical.json ] && git add data/backtest_historical.json || true
+          git diff --cached --quiet || git commit -m "backtest-historical: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 2))
+          done
