@@ -107,6 +107,13 @@ jobs:
         run: python scripts/enrich_quotes.py tw
         continue-on-error: true
 
+      # 2026-05-29 品質閘門:抓 leaders 獲利/現金流,標記動能陷阱
+      # (回測+AI盡調證明高RS名字常是燒錢虧損公司=動能陷阱)
+      - name: Fetch fundamentals quality gate (US)
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: python scripts/fetch_fundamentals.py
+        continue-on-error: true
+
       - name: Save OHLCV cache
         if: always()
         uses: actions/cache/save@v4
@@ -137,6 +144,7 @@ jobs:
           [ -f data/retail_sentiment.json ]  && git add data/retail_sentiment.json  || true
           [ -f data/short_interest.json ]    && git add data/short_interest.json    || true
           [ -f data/earnings_whisper.json ]  && git add data/earnings_whisper.json  || true
+          [ -f data/fundamentals.json ]      && git add data/fundamentals.json      || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --autostash 2>&1 | tail -2 || true

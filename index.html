@@ -12293,6 +12293,12 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
       }
     }).catch(() => {});
   }
+  // 2026-05-29 品質閘門：背景載入 fundamentals，完成後重渲染加上基本面旗標
+  if (!window._fundamentals) {
+    _loadFundamentals().then(() => {
+      if (window._fundamentals) renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale);
+    }).catch(() => {});
+  }
 
   const universeLabel = meta.universeSize
     ? '全市場 ' + meta.universeSize + ' 檔掃描池（S&P500 + 中小型成長股 + 動能 ETF 持股）'
@@ -12681,6 +12687,32 @@ function _getRSSignal(r) {
   }
 }
 
+// 2026-05-29 品質閘門：讀 fundamentals.json，每檔 leader 標基本面旗標。
+// 回測+AI盡調證明高RS名字常是燒錢虧損公司（動能陷阱）→ 給使用者一眼可見的警示。
+async function _loadFundamentals() {
+  try {
+    const r = await fetch(GH_RAW + 'fundamentals.json?t=' + Math.floor(Date.now() / 600000));
+    if (!r.ok) return;
+    const data = await r.json();
+    window._fundamentals = data.bySymbol || {};
+    window._fundamentalsMeta = { generatedAt: data.generatedAt, counts: data.counts };
+  } catch (e) {}
+}
+function _qualityBadge(symbol) {
+  const f = window._fundamentals && window._fundamentals[symbol];
+  if (!f || !f.flag || f.flag === 'unknown') return '';
+  const ni = f.netIncomeM != null ? f.netIncomeM + 'M' : '?';
+  const fc = f.fcfM != null ? f.fcfM + 'M' : '?';
+  const pm = f.profitMargin != null ? f.profitMargin + '%' : '?';
+  if (f.flag === 'trap')
+    return '<span title="基本面：不賺錢且燒現金 — 動能陷阱風險高（淨利 ' + ni + ' · 自由現金流 ' + fc + '）。回測證明這類名字易爆。" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.18);color:#f87171;font-weight:700;cursor:help">⚠ 燒錢</span>';
+  if (f.flag === 'quality')
+    return '<span title="基本面穩健：有獲利且自由現金流為正（利潤率 ' + pm + '）。技術強+基本面穩=品質×動能。" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(34,197,94,.15);color:#22c55e;font-weight:700;cursor:help">✓ 獲利</span>';
+  if (f.flag === 'watch')
+    return '<span title="基本面混合：獲利與自由現金流其中一項為正（淨利 ' + ni + ' · FCF ' + fc + '）" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600;cursor:help">○ 混合</span>';
+  return '';
+}
+
 function _renderRSLeaderTable(results, tableDiv, prependHtml) {
   const f = (v, d=2) => (v == null ? 'N/A' : Number(v).toFixed(d));
   const pct = v => (v >= 0 ? '+' : '') + f(v, 1) + '%';
@@ -12762,7 +12794,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
         sigHtml + earnHtml + aiStarsHtml +
       '</td>' +
