@@ -624,12 +624,45 @@ def sim_strategy(panels, entry_fn, rebal, exit_cfg, topn, t0, t1):
                 if np.isnan(xpx):
                     continue
             ret = (xpx - entry_px) / entry_px - COST_BPS / 10000.0
-            trades.append({"symbol": sym, "entry_i": int(ei), "exit_i": int(xi),
+            trades.append({"symbol": sym, "col": col, "entry_i": int(ei), "exit_i": int(xi),
                            "ret": float(ret), "r_multiple": float(ret / r_unit),
                            "hold": int(xi - ei), "outcome": out, "uptrend": True,
                            "rs": float(scores[k])})
             open_until[sym] = xi
     return trades
+
+
+def size_tranche_analysis(trades, dollarvol, label):
+    """Bucket a strategy's trades by entry-time dollar-volume quintile.
+    Tests the hypothesis: does edge concentrate in smaller / less-liquid names?
+    (Dollar-volume = avgVol20 × close is a market-cap/liquidity proxy.)"""
+    rows = []
+    for t in trades:
+        dv = dollarvol[t["entry_i"], t["col"]]
+        if dv == dv and dv > 0:  # not NaN
+            rows.append((dv, t["ret"]))
+    if len(rows) < 50:
+        return {"insufficient": True, "n": len(rows)}
+    rows.sort(key=lambda x: x[0])
+    dvs = np.array([r[0] for r in rows]); rets = np.array([r[1] for r in rows])
+    qs = np.quantile(dvs, [0.2, 0.4, 0.6, 0.8])
+    edges = [-np.inf] + list(qs) + [np.inf]
+    names = ["Q1 最小", "Q2", "Q3", "Q4", "Q5 最大"]
+    out = []
+    for k in range(5):
+        m = (dvs > edges[k]) & (dvs <= edges[k + 1])
+        if m.sum() >= 10:
+            out.append({
+                "tranche": names[k],
+                "n": int(m.sum()),
+                "medianDollarVolM": round(float(np.median(dvs[m])) / 1e6, 1),
+                "winRate": round(float((rets[m] > 0).mean()), 4),
+                "expectancyPct": round(float(rets[m].mean()) * 100, 3),
+            })
+    # Is the smallest tranche meaningfully better than the largest?
+    edge_in_small = (len(out) == 5 and out[0]["expectancyPct"] > out[4]["expectancyPct"]
+                     and out[0]["expectancyPct"] > 0)
+    return {"label": label, "buckets": out, "edgeConcentratesInSmall": edge_in_small}
 
 
 def subset_metrics(trades, lo, hi):
@@ -680,6 +713,7 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
     volexp = np.divide(avgvol5, avgvol20, out=np.ones_like(avgvol5), where=avgvol20 > 0)
     rsi2 = _rsi(close, 2).values
     C = panels["C"]
+    dollarvol = avgvol20 * C   # liquidity / market-cap proxy (days × syms)
     Lmask = leader.values
     RS = rs12_1.values
     panels["ma5"] = ma5
@@ -720,9 +754,12 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
     spy_cagr_full = None
 
     out = []
+    tranche = None
     for s in strategies:
         trades = sim_strategy(panels, s["entry"], s["rebal"], s["exit"], s["topn"],
                               RS_LOOKBACK + 1, n)
+        if s["name"] == "mom_long":
+            tranche = size_tranche_analysis(trades, dollarvol, s["label"])
         st = compute_stats(trades, idx, close, spy_close, n_trials=n_trials, config={"strategy": s["name"]})
         spy_cagr_full = st["benchmark"]["spyCagr"]
         o = st["overall"]
@@ -758,8 +795,16 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
                       else "連全期都沒人贏過 SPY。")
                    + f" 指數擇時(SPY>200MA)：CAGR {timing['cagr']}% vs 買進持有 SPY {spy_cagr_full}%，"
                    + f"但最大回撤只有 {timing['maxDrawdownPct']}%(買進持有約 -24%)——降回撤是它唯一的價值。")
+    # Size-tranche honesty check: did momentum work better in smaller names?
+    if tranche and not tranche.get("insufficient") and tranche.get("edgeConcentratesInSmall"):
+        b = tranche["buckets"]
+        verdict += (f" ◆ 但規模分層有線索：最小規模層期望值 {b[0]['expectancyPct']}% "
+                    f"vs 最大層 {b[4]['expectancyPct']}% —— edge 確實偏向小型股，"
+                    f"值得建專屬小型股宇宙重測。")
+
     return {"split_date": split_date, "spyCagr": spy_cagr_full,
-            "strategies": out, "indexTiming": timing, "verdict": verdict}
+            "strategies": out, "indexTiming": timing,
+            "sizeTranche": tranche, "verdict": verdict}
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
