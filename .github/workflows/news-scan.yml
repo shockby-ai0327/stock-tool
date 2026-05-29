@@ -17,10 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # Only run when the triggering scan succeeded (or manual)
+    # 2026-05-29: 只在「cron 自動掃描」或「手動 dispatch news-scan」時跑 AI 串接。
+    # 若上游 stock-scan 是被「手動 workflow_dispatch」觸發的（= 使用者按網站「完整重掃」），
+    # 則跳過 AI（news/ai_analysis/narrative）→ 手動重掃只重算排名，不打 Claude API = $0。
+    # AI 分析維持 cron 一天 3 次自動更新即可。
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'schedule')
 
     steps:
       - name: Checkout (latest — scan just committed)

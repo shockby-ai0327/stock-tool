@@ -10560,6 +10560,11 @@ async function batchQuotePreFilter(symbols, topN = 65) {
 // Raw URL pattern for this repo's data directory
 const GH_RAW = 'https://raw.githubusercontent.com/shockby-ai0327/stock-tool/main/data/';
 const SCAN_JSON_MAX_AGE_MS = 15 * 60 * 60 * 1000; // treat JSON stale after 15h (3 auto-runs/day, max gap ~8h)
+// 2026-05-29: GitHub repo 座標 — 供「完整重掃」全自動觸發 workflow_dispatch 用
+const GH_OWNER = 'shockby-ai0327';
+const GH_REPO  = 'stock-tool';
+const GH_SCAN_WORKFLOW = 'stock-scan.yml';
+const GH_TOKEN_KEY = 'gh_actions_token'; // localStorage key（fine-grained, 僅 Actions 權限）
 
 async function fetchPrecomputedScan(market) {
   try {
@@ -11434,27 +11439,233 @@ async function refreshPricesOnly() {
 
 // 2026-05-29: 完整重掃 — 開 GitHub Actions workflow_dispatch 頁，唯一能拿到「當下排行」的方法。
 // 為何不直接 API 觸發？因為要 PAT 寫權限存 localStorage 是大安全洞（見 2026-05-20 註記）。
+// 2026-05-29: 「完整重掃」入口 — 有 token 走全自動，沒 token 開設定教學
 function openFullRescanWorkflow() {
+  const token = (() => { try { return localStorage.getItem(GH_TOKEN_KEY); } catch(e) { return null; } })();
+  if (token) return triggerFullRescanAuto(token);
+  return showRescanTokenModal();
+}
+
+// 全自動完整重掃：API 觸發 workflow_dispatch → 輪詢 run 狀態 → 完成自動抓新 JSON 刷新表格
+// 手動觸發 = scan-only（news-scan.yml 看 event != schedule 會跳過 AI 串接 → 此次掃描 $0）
+async function triggerFullRescanAuto(token) {
+  if (window._rsLeaderRunning) { showToast('更新進行中，請稍候...', 'warn'); return; }
+  window._rsLeaderRunning = true;
+
   const market = _scannerMarket || 'us';
-  const url = 'https://github.com/shockby-ai0327/stock-tool/actions/workflows/stock-scan.yml';
-
-  // 開分頁
-  window.open(url, '_blank');
-
-  // 同時用 toast 教學使用者怎麼觸發
-  const sp = new ScanProgress(null, '完整重掃 · 操作說明', 'toast');
+  const marketLabel = market === 'tw' ? '台股' : '美股';
+  const sp = new ScanProgress(null, marketLabel + ' · 完整重掃（全自動）', 'toast');
   window._currentToastProgress = sp;
-  const st1 = sp.addStage('已開啟 GitHub Actions 頁面');
-  const st2 = sp.addStage('在新分頁點「Run workflow」按鈕');
-  const st3 = sp.addStage('選 market = ' + market + '（或 all），按綠色 Run');
-  const st4 = sp.addStage('等 5-10 分鐘 → 回本頁按「重抓排行」');
-  sp.finish(st1, '網址: actions/workflows/stock-scan.yml');
-  sp.start(st2);
-  sp.setActions(
-    '<a href="' + url + '" target="_blank" class="act buy" style="text-decoration:none">重新打開 GitHub Actions 頁面 →</a>' +
-    '<button class="act ghost" onclick="window._currentToastProgress && window._currentToastProgress.close()">知道了</button>'
-  );
-  // 不 autoClose — 讓使用者讀完
+
+  const stTrigger = sp.addStage('API 觸發 GitHub Actions workflow');
+  const stQueue   = sp.addStage('等待 workflow 排隊 + 執行', 100);
+  const stFetch   = sp.addStage('抓取新掃描結果 JSON');
+  const stRender  = sp.addStage('渲染表格');
+
+  // 記錄觸發前的 scannedAt，用來判定「新資料是否到位」
+  const beforeScannedAt = window._scanMetaCache?.scannedAt
+    ? new Date(window._scanMetaCache.scannedAt).getTime() : 0;
+  const triggerTime = Date.now();
+  const apiBase = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO;
+  const headers = { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' };
+
+  try {
+    // ── Stage 1: dispatch ──────────────────────────────────────────────────
+    sp.start(stTrigger);
+    let res;
+    try {
+      res = await fetch(apiBase + '/actions/workflows/' + GH_SCAN_WORKFLOW + '/dispatches', {
+        method: 'POST', headers,
+        body: JSON.stringify({ ref: 'main', inputs: { market } }),
+        signal: AbortSignal.timeout(15000)
+      });
+    } catch (e) {
+      sp.fail(stTrigger, '無法連線 GitHub API：' + e.message.slice(0,60), '檢查網路後重試');
+      throw e;
+    }
+    if (res.status === 401 || res.status === 403) {
+      sp.fail(stTrigger, 'Token 無效或權限不足（HTTP ' + res.status + '）',
+        'token 需 fine-grained + 這個 repo 的 Actions 讀寫權限。點下方重設。');
+      sp.setActions('<button class="act buy" onclick="window._currentToastProgress.close();showRescanTokenModal()">重設 Token →</button>');
+      window._rsLeaderRunning = false; return;
+    }
+    if (res.status !== 204) {
+      const txt = await res.text().catch(()=> '');
+      sp.fail(stTrigger, 'GitHub 回傳 HTTP ' + res.status, txt.slice(0,120) || '未知錯誤');
+      window._rsLeaderRunning = false; return;
+    }
+    sp.finish(stTrigger, 'workflow_dispatch 已送出 · market=' + market);
+
+    // ── Stage 2: poll run status ───────────────────────────────────────────
+    sp.start(stQueue, '尋找 workflow run...');
+    const maxWaitMs = 13 * 60 * 1000; // 13 分鐘上限
+    const pollEvery = 15000;
+    let runId = null, runConclusion = null, elapsed = 0;
+    // 先等幾秒讓 run 註冊
+    await new Promise(r => setTimeout(r, 4000));
+    while (Date.now() - triggerTime < maxWaitMs) {
+      let runs = null;
+      try {
+        const rr = await fetch(apiBase + '/actions/workflows/' + GH_SCAN_WORKFLOW + '/runs?event=workflow_dispatch&per_page=5',
+          { headers, signal: AbortSignal.timeout(12000) });
+        if (rr.ok) runs = (await rr.json()).workflow_runs || [];
+      } catch(e) {/* 暫時性失敗，下輪再試 */}
+
+      const run = runs && runs.find(r => new Date(r.created_at).getTime() >= triggerTime - 60000);
+      elapsed = Math.round((Date.now() - triggerTime) / 1000);
+      if (run) {
+        runId = run.id;
+        const statusZh = run.status === 'queued' ? '排隊中' : run.status === 'in_progress' ? '執行中' : run.status;
+        // 進度估算：queued ~15%, in_progress 用時間推到 ~90%, completed 100
+        let pct = run.status === 'queued' ? 15
+                : run.status === 'completed' ? 100
+                : Math.min(90, 20 + Math.round(elapsed / (8*60) * 70)); // 假設 ~8 分鐘
+        sp.progress(stQueue, pct, 100, statusZh + ' · 已等 ' + elapsed + 's');
+        if (run.status === 'completed') { runConclusion = run.conclusion; break; }
+      } else {
+        sp.progress(stQueue, 8, 100, '等 run 出現... ' + elapsed + 's');
+      }
+      await new Promise(r => setTimeout(r, pollEvery));
+    }
+
+    if (runConclusion == null) {
+      sp.fail(stQueue, '等待逾時（' + Math.round((Date.now()-triggerTime)/60000) + ' 分鐘）',
+        'workflow 可能還在跑。稍後按「重抓排行」即可拿到結果。');
+      sp.setActions('<a href="https://github.com/' + GH_OWNER + '/' + GH_REPO + '/actions/workflows/' + GH_SCAN_WORKFLOW + '" target="_blank" class="act ghost" style="text-decoration:none">看 Actions 頁 →</a>');
+      window._rsLeaderRunning = false; return;
+    }
+    if (runConclusion !== 'success') {
+      sp.fail(stQueue, 'workflow 結束但未成功（' + runConclusion + '）', '可到 Actions 頁看 log');
+      sp.setActions('<a href="https://github.com/' + GH_OWNER + '/' + GH_REPO + '/actions/runs/' + runId + '" target="_blank" class="act ghost" style="text-decoration:none">看 run log →</a>');
+      window._rsLeaderRunning = false; return;
+    }
+    sp.finish(stQueue, 'workflow 成功 · ' + Math.round((Date.now()-triggerTime)/1000) + 's');
+
+    // ── Stage 3: fetch fresh JSON（克服 raw CDN 快取延遲，輪詢到 scannedAt 變新） ──
+    sp.start(stFetch, '抓新 JSON（避開 CDN 快取）...');
+    const file = market === 'tw' ? 'tw_scan.json' : 'us_scan.json';
+    let data = null;
+    for (let i = 0; i < 8; i++) {
+      try {
+        const jr = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(10000) });
+        if (jr.ok) {
+          const j = await jr.json();
+          const sa = j.scannedAt ? new Date(j.scannedAt).getTime() : 0;
+          if (sa > beforeScannedAt) { data = j; break; }
+        }
+      } catch(e) {}
+      sp.progress(stFetch, Math.round((i+1)/8*100), 100, 'CDN 快取更新中... 第 ' + (i+1) + ' 次');
+      await new Promise(r => setTimeout(r, 10000));
+    }
+    if (!data) {
+      sp.warn(stFetch, '新 JSON 還沒上 CDN，稍後按「重抓排行」即可');
+      sp.setActions('<button class="act buy" onclick="window._currentToastProgress.close();triggerGithubScan()">重抓排行 →</button>');
+      window._rsLeaderRunning = false; return;
+    }
+    sp.finish(stFetch, (data.leaders?.length || 0) + ' 檔 leaders');
+
+    // ── Stage 4: render ────────────────────────────────────────────────────
+    sp.start(stRender);
+    const leaders = data.leaders || [];
+    try { await overlayLivePrices(leaders); } catch(e) {}
+    window._rsLeaderCache = leaders;
+    window._rsDiscoveryCache = data.discoveries || [];
+    window._tripleResonanceCache = data.tripleResonance || [];
+    window._scanMetaCache = { scannedAt: data.scannedAt };
+    window._lastLiveRefreshAt = Date.now();
+    const ageMin = Math.round((Date.now() - new Date(data.scannedAt).getTime()) / 60000);
+    renderDashRSLeader(leaders.slice(0, 5));
+    renderTripleResonance(window._tripleResonanceCache, window._scanMetaCache);
+    renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), data, ageMin, false);
+    _startLiveMonitor();
+    sp.finish(stRender);
+    sp.success('完整重掃完成 · ' + leaders.length + ' 檔當下排名 · 全程 ' + Math.round((Date.now()-triggerTime)/60000) + ' 分鐘');
+    sp.autoCloseAfter(6000);
+  } catch(e) {
+    // 個別階段已標 fail
+  } finally {
+    window._rsLeaderRunning = false;
+  }
+}
+
+// Token 設定 modal — 教使用者開 fine-grained token + 貼上 + 移除
+function showRescanTokenModal() {
+  const old = document.getElementById('rescan-token-modal');
+  if (old) { old.remove(); return; }
+  const existing = (() => { try { return localStorage.getItem(GH_TOKEN_KEY); } catch(e) { return null; } })();
+  const tokenCreateUrl = 'https://github.com/settings/personal-access-tokens/new';
+
+  let html = '<div id="rescan-token-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+  html += '<div style="background:var(--card);border-radius:12px;max-width:560px;width:100%;max-height:88vh;overflow:auto;border:1px solid var(--border)">';
+  html += '<div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">';
+  html += '<div style="font-size:15px;font-weight:700">完整重掃 · 一鍵自動化設定</div>';
+  html += '<span class="cp ' + (existing ? 'bull' : 'amber') + '">' + (existing ? '已設定' : '未設定') + '</span>';
+  html += '<button onclick="document.getElementById(\'rescan-token-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>';
+  html += '</div>';
+
+  // 說明 + 步驟
+  html += '<div style="padding:18px 22px;font-size:12px;color:var(--muted);line-height:1.8">';
+  html += '貼上一個 GitHub <b style="color:var(--text)">fine-grained token</b> 後，「完整重掃」就能一鍵觸發 + 自動等結果，不用再開分頁手動點。<br><br>';
+  html += '<b style="color:var(--text)">開 token 步驟（只授權這一個 repo、只給 Actions 權限）：</b><br>';
+  html += '<div style="margin-top:6px;padding-left:2px">';
+  html += '1. 點下方按鈕開 GitHub token 頁<br>';
+  html += '2. Repository access → <b style="color:var(--text)">Only select repositories</b> → 選 <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">' + GH_REPO + '</code><br>';
+  html += '3. Permissions → Repository permissions → <b style="color:var(--text)">Actions</b> 設為 <b style="color:var(--text)">Read and write</b><br>';
+  html += '4. Expiration 建議設 90 天，Generate token，複製貼到下面<br>';
+  html += '</div>';
+  html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;color:#86efac;font-size:11px">';
+  html += '<b>為何安全：</b>這種 token 就算外洩，最多只能觸發這個 repo 的掃描（頂多多燒一點 API 預算），<b>不能</b>碰你的程式碼、讀不到任何 secret、碰不到其他 repo。跟 2020 那種能劫持 repo 的 classic PAT 完全不同等級。';
+  html += '</div>';
+  html += '<div style="margin-top:8px;padding:8px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#fbbf24;font-size:11px">';
+  html += 'token 只存在你這台瀏覽器的 localStorage，不會上傳、不會進原始碼。但別在公用電腦設定。';
+  html += '</div>';
+  html += '</div>';
+
+  // 輸入區
+  html += '<div style="padding:0 22px 18px">';
+  html += '<a href="' + tokenCreateUrl + '" target="_blank" rel="noopener noreferrer" class="act buy" style="text-decoration:none;display:inline-block;margin-bottom:12px">開 GitHub Token 設定頁 →</a>';
+  html += '<input id="rescan-token-input" type="password" placeholder="貼上 github_pat_... " value="' + (existing ? '' : '') + '" ' +
+    'style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;margin-bottom:10px">';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  html += '<button class="act buy" onclick="_saveRescanToken()">儲存並測試</button>';
+  if (existing) html += '<button class="act ghost" onclick="_removeRescanToken()">移除已存的 token</button>';
+  html += '</div>';
+  html += '<div id="rescan-token-msg" style="margin-top:10px;font-size:11px"></div>';
+  // 逃生口：不想設 token 就手動開 Actions 頁（舊行為）
+  html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted)">';
+  html += '不想存 token？<a href="https://github.com/' + GH_OWNER + '/' + GH_REPO + '/actions/workflows/' + GH_SCAN_WORKFLOW + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">手動開 Actions 頁自己點 Run →</a>（一樣免費，只是要多幾個手動步驟）';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function _saveRescanToken() {
+  const input = document.getElementById('rescan-token-input');
+  const msg = document.getElementById('rescan-token-msg');
+  const token = (input?.value || '').trim();
+  if (!token) { if (msg) msg.innerHTML = '<span style="color:#f59e0b">請先貼上 token</span>'; return; }
+  if (msg) msg.innerHTML = '<span style="color:var(--muted)">驗證中...</span>';
+  // 測試：讀 repo（fine-grained 帶 Actions 權限也能讀 repo metadata）
+  try {
+    const r = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO,
+      { headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(12000) });
+    if (r.status === 401) { if (msg) msg.innerHTML = '<span style="color:#ef4444">token 無效（401）— 請確認複製完整</span>'; return; }
+    if (!r.ok && r.status !== 403) { if (msg) msg.innerHTML = '<span style="color:#ef4444">驗證失敗 HTTP ' + r.status + '</span>'; return; }
+    // 通過（200 = 能讀 repo；403 可能是權限剛好但 metadata 受限，仍允許存，觸發時再驗）
+    try { localStorage.setItem(GH_TOKEN_KEY, token); } catch(e) {}
+    if (msg) msg.innerHTML = '<span style="color:#22c55e">✓ 已儲存！「完整重掃」現在會一鍵自動跑。</span>';
+    setTimeout(() => { const m = document.getElementById('rescan-token-modal'); if (m) m.remove(); }, 1400);
+  } catch(e) {
+    if (msg) msg.innerHTML = '<span style="color:#ef4444">連線失敗：' + escapeHtml(e.message.slice(0,60)) + '</span>';
+  }
+}
+
+function _removeRescanToken() {
+  try { localStorage.removeItem(GH_TOKEN_KEY); } catch(e) {}
+  const m = document.getElementById('rescan-token-modal'); if (m) m.remove();
+  showToast('已移除 token — 完整重掃改回手動開頁模式');
 }
 
 // 2026-05-20 (安全 #2): 移除 GitHub PAT 觸發 workflow_dispatch 流程
