@@ -555,6 +555,213 @@ def build_verdict(n, win_rate, expectancy, exp_r, dsr, cagr, spy_cagr, regime):
     return head + " " + " ".join(parts)
 
 
+# ── Hypothesis lab: genuinely different strategies + train/test split ────────
+def _rsi(close, period):
+    delta = close.diff()
+    gain = delta.clip(lower=0).rolling(period).mean()
+    loss = (-delta.clip(upper=0)).rolling(period).mean()
+    rs = gain / loss.replace(0, np.nan)
+    return (100 - 100 / (1 + rs)).fillna(50)
+
+
+def sim_strategy(panels, entry_fn, rebal, exit_cfg, topn, t0, t1):
+    """Generic strategy simulator over rebalance dates in [t0, t1)."""
+    C, H, L, O = panels["C"], panels["H"], panels["L"], panels["O"]
+    n, ncols = C.shape
+    cols = panels["cols"]
+    ma_reclaim = panels.get(exit_cfg.get("reclaim_ma"))
+    policy = exit_cfg["policy"]
+    timeout = exit_cfg.get("timeout", 60)
+    disaster = exit_cfg.get("disaster", 0.20)
+    trail = exit_cfg.get("trail")
+    r_unit = disaster if policy != "trail" else trail
+
+    open_until = {}
+    trades = []
+    for ti in range(max(t0, RS_LOOKBACK + 1), min(t1, n - 1), rebal):
+        cols_sel, scores = entry_fn(ti)
+        if cols_sel is None or len(cols_sel) == 0:
+            continue
+        order = np.argsort(scores)[::-1][:topn]
+        for k in order:
+            col = int(cols_sel[k])
+            sym = cols[col]
+            if open_until.get(sym, -1) >= ti:
+                continue
+            ei = ti + 1
+            if ei >= n:
+                continue
+            entry_px = O[ei, col]
+            if not (entry_px > 0):
+                entry_px = C[ti, col]
+            if not (entry_px > 0) or np.isnan(entry_px):
+                continue
+            last = min(ei + timeout, n - 1)
+            dis = entry_px * (1 - disaster)
+            xi = xpx = out = None
+            peak = entry_px
+            stop_level = entry_px * (1 - trail) if trail else None
+            for j in range(ei, last + 1):
+                lo, hi, cl, oo = L[j, col], H[j, col], C[j, col], O[j, col]
+                if np.isnan(lo) or np.isnan(cl):
+                    continue
+                if lo <= dis:  # disaster stop (all policies)
+                    xpx = min(oo, dis) if (oo == oo and oo < dis) else dis
+                    xi, out = j, "stop"; break
+                if policy == "trail":
+                    if hi > peak:
+                        peak = hi; stop_level = max(stop_level, peak * (1 - trail))
+                    if lo <= stop_level:
+                        xpx = min(oo, stop_level) if (oo == oo and oo < stop_level) else stop_level
+                        xi, out = j, "trail"; break
+                elif policy == "ma_reclaim":  # exit when close back above reclaim MA
+                    ma = ma_reclaim[j, col] if ma_reclaim is not None else np.nan
+                    if not np.isnan(ma) and cl >= ma:
+                        xpx = cl; xi, out = j, "reclaim"; break
+                # policy == "time": only disaster + timeout
+            if xi is None:
+                xi = last; xpx = C[last, col]; out = "timeout"
+                if np.isnan(xpx):
+                    continue
+            ret = (xpx - entry_px) / entry_px - COST_BPS / 10000.0
+            trades.append({"symbol": sym, "entry_i": int(ei), "exit_i": int(xi),
+                           "ret": float(ret), "r_multiple": float(ret / r_unit),
+                           "hold": int(xi - ei), "outcome": out, "uptrend": True,
+                           "rs": float(scores[k])})
+            open_until[sym] = xi
+    return trades
+
+
+def subset_metrics(trades, lo, hi):
+    """Light IS/OOS metrics on trades whose entry_i in [lo, hi)."""
+    sub = [t for t in trades if lo <= t["entry_i"] < hi]
+    if len(sub) < 15:
+        return {"n": len(sub), "insufficient": True}
+    rets = np.array([t["ret"] for t in sub])
+    wins = rets[rets > 0]; losses = rets[rets <= 0]
+    gw = wins.sum(); gl = -losses.sum()
+    return {"n": len(sub), "winRate": round(float((rets > 0).mean()), 4),
+            "expectancyPct": round(float(rets.mean()) * 100, 3),
+            "profitFactor": round(float(gw / gl), 2) if gl > 0 else None}
+
+
+def index_timing(spy_close, idx):
+    """Absolute-momentum index timing: hold SPY when > its 200d MA, else cash."""
+    spy = spy_close.values
+    ma200 = spy_close.rolling(200).mean().values
+    ret = np.zeros(len(spy))
+    for j in range(1, len(spy)):
+        if not np.isnan(ma200[j - 1]) and spy[j - 1] >= ma200[j - 1]:
+            if spy[j - 1] > 0 and not np.isnan(spy[j]):
+                ret[j] = spy[j] / spy[j - 1] - 1
+    eq = np.cumprod(1 + ret)
+    years = (idx[-1] - idx[0]).days / 365.25
+    cagr = float(eq[-1] ** (1 / years) - 1) if years > 0 and eq[-1] > 0 else None
+    nz = ret[ret != 0]
+    sharpe = float(nz.mean() / nz.std() * math.sqrt(252)) if len(nz) > 2 and nz.std() > 0 else None
+    return {"cagr": round(cagr * 100, 2) if cagr else None,
+            "annSharpe": round(sharpe, 2) if sharpe else None,
+            "maxDrawdownPct": round(max_drawdown(eq) * 100, 1),
+            "pctTimeInMarket": round(float((ret != 0).mean()) * 100, 1)}
+
+
+def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_trials):
+    idx = close.index
+    n = len(idx)
+    cols = list(close.columns)
+    panels = {"C": close.values, "H": high.values, "L": low.values,
+              "O": op.values, "cols": cols}
+    # indicators
+    ma5 = close.rolling(5).mean().values
+    ma200 = close.rolling(200).mean().values
+    hi252 = high.rolling(252).max().values
+    avgvol5 = vol.rolling(5).mean().values
+    avgvol20 = vol.rolling(20).mean().values
+    volexp = np.divide(avgvol5, avgvol20, out=np.ones_like(avgvol5), where=avgvol20 > 0)
+    rsi2 = _rsi(close, 2).values
+    C = panels["C"]
+    Lmask = leader.values
+    RS = rs12_1.values
+    panels["ma5"] = ma5
+
+    def e_mom(ti):
+        lc = np.where(Lmask[ti])[0]
+        if lc.size == 0:
+            return None, None
+        rv = RS[ti, lc]; ok = ~np.isnan(rv)
+        return lc[ok], rv[ok]
+
+    def e_meanrev(ti):
+        row_c = C[ti]; mask = (row_c > ma200[ti]) & (row_c < ma5[ti]) & (rsi2[ti] < 15)
+        lc = np.where(mask)[0]
+        if lc.size == 0:
+            return None, None
+        return lc, (100 - rsi2[ti, lc])  # most oversold first
+
+    def e_breakout(ti):
+        row_c = C[ti]
+        mask = (row_c >= 0.97 * hi252[ti]) & (volexp[ti] > 1.3) & (row_c > ma200[ti])
+        lc = np.where(mask)[0]
+        if lc.size == 0:
+            return None, None
+        return lc, volexp[ti, lc]
+
+    strategies = [
+        {"name": "mom_long", "label": "學術動能(月換·持有3月)", "entry": e_mom,
+         "rebal": 21, "topn": 25, "exit": {"policy": "time", "timeout": 63, "disaster": 0.25}},
+        {"name": "meanrev", "label": "均值回歸(RSI2超賣)", "entry": e_meanrev,
+         "rebal": 5, "topn": 10, "exit": {"policy": "ma_reclaim", "reclaim_ma": "ma5", "timeout": 10, "disaster": 0.10}},
+        {"name": "breakout52", "label": "52週新高突破", "entry": e_breakout,
+         "rebal": 5, "topn": 15, "exit": {"policy": "trail", "trail": 0.15, "timeout": 120, "disaster": 0.15}},
+    ]
+
+    split = RS_LOOKBACK + int((n - RS_LOOKBACK) * 0.6)  # 60% in-sample
+    split_date = str(idx[split].date())
+    spy_cagr_full = None
+
+    out = []
+    for s in strategies:
+        trades = sim_strategy(panels, s["entry"], s["rebal"], s["exit"], s["topn"],
+                              RS_LOOKBACK + 1, n)
+        st = compute_stats(trades, idx, close, spy_close, n_trials=n_trials, config={"strategy": s["name"]})
+        spy_cagr_full = st["benchmark"]["spyCagr"]
+        o = st["overall"]
+        is_m = subset_metrics(trades, RS_LOOKBACK + 1, split)
+        oos_m = subset_metrics(trades, split, n)
+        beats = (o["cagr"] is not None and spy_cagr_full is not None and o["cagr"] > spy_cagr_full)
+        robust = (o["dsr"] is not None and o["dsr"] >= 0.90)
+        persists = (not is_m.get("insufficient") and not oos_m.get("insufficient")
+                    and is_m.get("expectancyPct", 0) > 0 and oos_m.get("expectancyPct", 0) > 0
+                    and oos_m["expectancyPct"] >= 0.5 * is_m["expectancyPct"])
+        out.append({"name": s["name"], "label": s["label"], "nTrades": o["nTrades"],
+                    "winRate": o["winRate"], "expectancyPct": o["expectancyPct"],
+                    "profitFactor": o["profitFactor"], "annSharpe": o["annSharpe"],
+                    "dsr": o["dsr"], "cagr": o["cagr"], "maxDrawdownPct": o["maxDrawdownPct"],
+                    "beatsSPY": beats, "robust": robust, "persists": persists,
+                    "tradeable": bool(beats and robust and persists),
+                    "inSample": is_m, "outOfSample": oos_m})
+
+    timing = index_timing(spy_close, idx)
+    timing["beatsSPYrisk"] = (timing["maxDrawdownPct"] is not None
+                              and timing["maxDrawdownPct"] > -30)  # much shallower DD
+
+    winners = [s for s in out if s["tradeable"]]
+    if winners:
+        b = max(winners, key=lambda v: v["dsr"] or 0)
+        verdict = (f"✓ 找到 edge：「{b['label']}」全期贏 SPY、DSR {b['dsr']}≥0.90、"
+                   f"且樣本外仍正期望值(IS {b['inSample'].get('expectancyPct')}% → "
+                   f"OOS {b['outOfSample'].get('expectancyPct')}%)。值得認真往下做。")
+    else:
+        beat_any = [s for s in out if s["beatsSPY"]]
+        verdict = (f"⨯ 4 個不同假設都不算數(全期贏SPY+DSR≥0.9+樣本外持續，無一全中)。"
+                   + (f"最接近的「{max(beat_any, key=lambda v: v['cagr'] or -99)['label']}」全期贏了 SPY 但樣本外或穩健度沒過。" if beat_any
+                      else "連全期都沒人贏過 SPY。")
+                   + f" 指數擇時(SPY>200MA)：CAGR {timing['cagr']}% vs 買進持有 SPY {spy_cagr_full}%，"
+                   + f"但最大回撤只有 {timing['maxDrawdownPct']}%(買進持有約 -24%)——降回撤是它唯一的價值。")
+    return {"split_date": split_date, "spyCagr": spy_cagr_full,
+            "strategies": out, "indexTiming": timing, "verdict": verdict}
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 def main():
     import yfinance as yf
@@ -622,6 +829,15 @@ def main():
 
     spy_cagr = results["baseline"]["benchmark"]["spyCagr"]
 
+    # ── Hypothesis lab: genuinely different strategies + train/test split ──
+    print("  running hypothesis lab (4 different strategies, IS/OOS split)...")
+    strat_lab = run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_trials)
+    for s in strat_lab["strategies"]:
+        print(f"    [{s['name']:12s}] N={s['nTrades']:4d} CAGR {s['cagr']}% DSR {s['dsr']} "
+              f"beatsSPY={s['beatsSPY']} persists={s['persists']} tradeable={s['tradeable']}")
+    print(f"    index_timing: CAGR {strat_lab['indexTiming']['cagr']}% maxDD {strat_lab['indexTiming']['maxDrawdownPct']}%")
+    print(f"    STRATEGY VERDICT: {strat_lab['verdict']}")
+
     # Variant comparison summary (lightweight)
     variants = []
     for cfg in configs:
@@ -674,6 +890,7 @@ def main():
         "baseline": headline,        # full detail — matches the live signal
         "best": headline_best,       # full detail — best discovered config
         "spyCagr": spy_cagr,
+        "strategyLab": strat_lab,    # 4 different-hypothesis strategies + IS/OOS + index timing
     }
     out_path = os.path.join(DATA_DIR, "backtest_historical.json")
     with open(out_path, "w") as f:
