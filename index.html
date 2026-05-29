@@ -10108,6 +10108,106 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
+// 2026-05-29 Phase 6+8：進場決策助手 — 部位大小 + 元大下單單 + 進場前檢查表 + 集中度 + 海外所得稅
+// 把「該不該進、進多少、怎麼下單」收成一個工具。固定分數風險法(每筆只賭帳戶的 R%)。
+function showEntryPlanner(symbol, prefillEntry) {
+  const old = document.getElementById('entry-planner-modal');
+  if (old) old.remove();
+  const acct = Number(localStorage.getItem('account-size-usd')) || 30000;
+  const riskPct = Number(localStorage.getItem('risk-per-trade-pct')) || 1;
+  const entry = Number(prefillEntry) || 0;
+  const html =
+    '<div id="entry-planner-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">' +
+    '<div style="background:var(--card);border-radius:12px;max-width:520px;width:100%;max-height:90vh;overflow:auto;border:1px solid var(--border)">' +
+      '<div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px">' +
+        '<div style="font-size:15px;font-weight:700">進場決策助手 · ' + escapeHtml(symbol || '') + '</div>' +
+        '<button onclick="document.getElementById(\'entry-planner-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>' +
+      '</div>' +
+      '<div style="padding:18px 20px">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">' +
+          _epInput('ep-acct', '帳戶資金 (USD)', acct) +
+          _epInput('ep-risk', '每筆風險 %', riskPct) +
+          _epInput('ep-entry', '進場價 $', entry || '') +
+          _epInput('ep-stoppct', '停損 %', 8) +
+        '</div>' +
+        '<div style="margin:6px 0 2px"><label style="font-size:11px;color:var(--muted)">代號</label>' +
+          '<input id="ep-sym" value="' + escapeHtml(symbol || '') + '" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);box-sizing:border-box;margin-top:3px"></div>' +
+        '<button onclick="_epCompute()" class="act buy" style="width:100%;margin-top:12px">計算部位 + 產生下單單</button>' +
+        '<div id="ep-result" style="margin-top:14px"></div>' +
+      '</div>' +
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(_epCompute, 50);
+}
+function _epInput(id, label, val) {
+  return '<div><label style="font-size:11px;color:var(--muted)">' + label + '</label>' +
+    '<input id="' + id + '" type="number" value="' + val + '" oninput="_epCompute()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);box-sizing:border-box;margin-top:3px;font-family:var(--mono)"></div>';
+}
+function _epCompute() {
+  const acct = Number(document.getElementById('ep-acct')?.value) || 0;
+  const riskPct = Number(document.getElementById('ep-risk')?.value) || 0;
+  const entry = Number(document.getElementById('ep-entry')?.value) || 0;
+  const stopPct = Number(document.getElementById('ep-stoppct')?.value) || 0;
+  const sym = (document.getElementById('ep-sym')?.value || '').toUpperCase();
+  const el = document.getElementById('ep-result');
+  if (!el) return;
+  try { localStorage.setItem('account-size-usd', acct); localStorage.setItem('risk-per-trade-pct', riskPct); } catch (e) {}
+  if (!(acct > 0 && riskPct > 0 && entry > 0 && stopPct > 0)) { el.innerHTML = '<div style="color:var(--muted);font-size:12px">填入帳戶、風險%、進場價、停損% 即可計算</div>'; return; }
+
+  const riskUsd = acct * riskPct / 100;
+  const stopPrice = entry * (1 - stopPct / 100);
+  const riskPerShare = entry - stopPrice;
+  const shares = Math.floor(riskUsd / riskPerShare);
+  const posUsd = shares * entry;
+  const posPct = posUsd / acct * 100;
+  const target2R = entry + 2 * riskPerShare;
+  const target3R = entry + 3 * riskPerShare;
+
+  // 進場前檢查表
+  const regime = window._marketRegime;
+  const fund = (window._fundamentals || {})[sym];
+  const j = (typeof getJ === 'function') ? getJ() : [];
+  const open = (typeof calcOpenPositions === 'function') ? calcOpenPositions(j) : [];
+  const totalCost = open.reduce((s, [, p]) => s + p.totalCost, 0);
+  const sameName = open.find(([t]) => t === sym);
+  const checks = [];
+  const ck = (ok, txt, warn) => checks.push({ ok, txt, warn: warn || '' });
+  ck(!(regime && regime.overall <= -1), '大盤環境允許做多', regime && regime.overall <= -1 ? '大盤偏弱 — 歷史虧損集中期,考慮不進或減碼' : '');
+  if (fund) ck(fund.flag !== 'trap', '基本面非燒錢陷阱（' + fund.flag + '）', fund.flag === 'trap' ? '這檔不賺錢且燒現金 — 動能陷阱風險高' : '');
+  ck(posPct <= 25, '單一部位 ≤ 25% 帳戶（此單 ' + posPct.toFixed(0) + '%）', posPct > 25 ? '部位過大,單一失敗傷害過重' : '');
+  ck(!sameName, '尚未持有此標的', sameName ? '已持有 — 加碼會放大集中度與相關性' : '');
+  ck(posPct > 0 && shares > 0, '部位大小算得出來', shares <= 0 ? '停損太寬或風險太小,股數為 0' : '');
+  const passed = checks.filter(c => c.ok).length;
+  const csSym = sym || '標的';
+
+  const ticket =
+    '代號 ' + csSym + '\n' +
+    '動作 買進\n' +
+    '股數 ' + shares + ' 股\n' +
+    '限價 $' + entry.toFixed(2) + '\n' +
+    '停損 $' + stopPrice.toFixed(2) + '（-' + stopPct + '%）\n' +
+    '目標 $' + target2R.toFixed(2) + '（2R）／ $' + target3R.toFixed(2) + '（3R）';
+
+  el.innerHTML =
+    '<div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:14px;margin-bottom:12px">' +
+      '<div class="mono" style="font-size:13px;line-height:1.9">' +
+        '買進 <b style="font-size:18px">' + shares + '</b> 股 · 部位 <b>$' + Math.round(posUsd).toLocaleString() + '</b>（帳戶 ' + posPct.toFixed(1) + '%）<br>' +
+        '風險上限 <b style="color:#f87171">$' + Math.round(riskUsd).toLocaleString() + '</b>（' + riskPct + '% 帳戶 = 1R）· 停損 $' + stopPrice.toFixed(2) +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">進場前檢查表 · ' + passed + '/' + checks.length + '</div>' +
+    checks.map(c =>
+      '<div style="font-size:12px;line-height:1.7;color:' + (c.ok ? '#86efac' : '#f87171') + '">' + (c.ok ? '✓ ' : '✗ ') + escapeHtml(c.txt) +
+      (c.warn ? '<span style="color:var(--muted);display:block;margin-left:16px;font-size:11px">' + escapeHtml(c.warn) + '</span>' : '') + '</div>'
+    ).join('') +
+    '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px">元大下單單（複製貼上）</div>' +
+    '<textarea readonly onclick="this.select()" style="width:100%;height:118px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;resize:none">' + ticket + '</textarea>' +
+    '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(' + JSON.stringify(ticket) + ');showToast&&showToast(\'已複製下單單\')" class="act ghost" style="margin-top:8px">複製下單單</button>' +
+    '<div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+      '<b style="color:#fbbf24">海外所得稅提醒</b>：美股屬海外所得,計入個人基本所得額。全戶海外所得年度合計 <b>NT$100 萬以上</b>才需計入;基本所得額有 <b>NT$750 萬免稅額</b>(2025 年度)。實際依國稅局規定,大額獲利建議諮詢會計師。' +
+    '</div>';
+}
+
 // 2026-05-29 設計 A：Calm Hero — 平常安靜，一眼回答「我今天該幹嘛」，誠實打底。
 // 核心 = 品質×動能交集（高 RS 且基本面穩健），多數日子可能是「空手」。
 function renderCalmHero() {
@@ -10140,9 +10240,10 @@ function renderCalmHero() {
     picksHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">' + qPicks.slice(0, 6).map(r => {
       const sig = (typeof _getRSSignal === 'function') ? _getRSSignal(r) : null;
       const sigTxt = sig ? '<div style="font-size:10px;color:' + sig.color + ';margin-top:2px">' + sig.label + '</div>' : '';
-      return '<button onclick="showStock(\'' + r.symbol + '\')" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
+      return '<button onclick="showEntryPlanner(\'' + r.symbol + '\',' + (r.price || 0) + ')" title="規劃進場：部位大小 + 下單單 + 檢查表" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
         '<div style="font-weight:700;font-size:14px">' + r.symbol + ' <span style="font-size:10px;color:#22c55e">✓獲利</span></div>' +
         '<div class="mono" style="font-size:11px;color:var(--muted)">$' + (r.price ? r.price.toFixed(2) : '—') + ' · RS ' + (r.rsRating || '—') + '</div>' + sigTxt +
+        '<div style="font-size:10px;color:var(--accent);margin-top:3px">規劃進場 →</div>' +
       '</button>';
     }).join('') + '</div>';
   }
