@@ -786,11 +786,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-16T12:27:35.009Z",
       "entryPrice": 14.06,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 12.9352,
       "target": 16.169,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-16_HPE",
@@ -1530,11 +1530,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-18T14:48:23.146Z",
       "entryPrice": 13.59,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 12.5028,
       "target": 15.6285,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-18_LFUS",
@@ -2346,11 +2346,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-19T00:04:36.817Z",
       "entryPrice": 13.96,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 12.8432,
       "target": 16.054,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-19_SG",
@@ -3798,11 +3798,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-21T16:31:33.519Z",
       "entryPrice": 14.69,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 13.5148,
       "target": 16.8935,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-21_SQNS",
@@ -4398,11 +4398,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-22T16:06:16.086Z",
       "entryPrice": 17.58,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 16.1736,
       "target": 20.217,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-22_SG",
@@ -4926,11 +4926,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-25T16:08:54.803Z",
       "entryPrice": 17.49,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 16.0908,
       "target": 20.1135,
-      "status": "open"
+      "status": "hit_target"
     },
     {
       "id": "discovery_2026-05-25_SG",
@@ -5910,11 +5910,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-27T16:58:38.958Z",
       "entryPrice": 23.99,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 22.0708,
       "target": 27.5885,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "discovery_2026-05-27_RGTI",
@@ -6510,11 +6510,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-28T16:39:52.648Z",
       "entryPrice": 25.25,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 23.23,
       "target": 29.0375,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "discovery_2026-05-28_RGTI",
@@ -7338,11 +7338,11 @@
       "symbol": "RDW",
       "triggeredAt": "2026-05-29T03:33:11.427Z",
       "entryPrice": 25.9,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 20.68,
+      "exitDate": "2026-06-01T22:33:13.021Z",
       "stopLoss": 23.828,
       "target": 29.785,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "discovery_2026-05-29_RGTI",
@@ -8698,6 +8698,30 @@
       "exitDate": null,
       "stopLoss": 23.5796,
       "target": 29.4745,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-06-01_COHR",
+      "type": "rs_leader",
+      "symbol": "COHR",
+      "triggeredAt": "2026-06-01T22:29:19.877Z",
+      "entryPrice": 362.9,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 333.868,
+      "target": 417.335,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-06-01_COHR",
+      "type": "vcp_breakout",
+      "symbol": "COHR",
+      "triggeredAt": "2026-06-01T22:29:19.877Z",
+      "entryPrice": 362.9,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 333.868,
+      "target": 417.335,
       "status": "open"
     }
   ]
