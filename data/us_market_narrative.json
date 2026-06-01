@@ -1,7 +1,7 @@
 {
-  "generatedAt": 1780347655241,
+  "generatedAt": 1780353450633,
   "market": "US",
-  "scanAt": "2026-06-01T20:52:47.982Z",
+  "scanAt": "2026-06-01T22:29:19.877Z",
   "session": "POST-CLOSE (market closed)",
   "sessionShort": "post-close",
   "watchLabel": "明日關注",
@@ -19,8 +19,8 @@
       "changePct": 0.49
     },
     "dxy": {
-      "last": 99.19,
-      "changePct": 0.28
+      "last": 99.18,
+      "changePct": 0.27
     }
   },
   "sectorLeaders": [
@@ -91,14 +91,14 @@
       "changePct": -17.11
     },
     {
-      "symbol": "RDW",
-      "name": "Redwire Corporation",
-      "changePct": -15.83
-    },
-    {
       "symbol": "NUVL",
       "name": "Nuvalent, Inc.",
       "changePct": -15.74
+    },
+    {
+      "symbol": "RDW",
+      "name": "Redwire Corporation",
+      "changePct": -15.83
     },
     {
       "symbol": "RKLB",
@@ -111,14 +111,13 @@
       "changePct": -14.31
     }
   ],
-  "narrative": "今日市場呈現溫和風險偏好態勢。科技股(IGV +5.94%)與軟體股(XLK +2.48%)領漲，反映對AI與科技創新的持續看好。能源股小幅上漲(XLE +1.79%)，而公用事業與黃金股承壓(XLU -2.97%、GDX -3.14%)，顯示資金流向風險資產。VIX小幅上揚至16.05，暗示市場維持謹慎。10年期公債殖利率升至4.47%，美元指數穩健。龍頭個股MU與PL動能強勁(1個月漲幅90.98%與25.91%)，彰顯成長股吸引力。明日焦點為Fed政策訊號與企業財報表現。",
-  "headline": "科技領漲、公用事業走弱，市場溫和風險偏好",
-  "regime": "risk-on",
+  "narrative": "今日市場呈現典型的科技領航格局。IGV大漲5.94%、XLK上升2.48%，反映AI與軟體需求強勁，MDB、TWLO等雲端股表現亮眼。美債10Y殖利率升至4.47%，打壓XLU公用事業(-2.97%)與能源相關族群。VIX小幅升4.77%至16.05，反映市場略顯謹慎但未見極端風險厭惡。VIX與股市同向上升，暗示波動率在正常區間內。三大指標MU(RS96)、PL(RS98)動能強勁，UCTT、WULF三重共振股值得留意。",
+  "headline": "科技領漲帶動溫和上漲，美債殖利率走升壓低公用事業",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
       "IGV",
-      "XLK",
-      "XLE"
+      "XLK"
     ],
     "outOf": [
       "XLU",
@@ -126,5 +125,5 @@
       "XAR"
     ]
   },
-  "tomorrowWatch": "留意MU、PL等動能股能否延續漲勢，兼監控10Y殖利率與Fed訊號對成長股的影響"
+  "tomorrowWatch": "留意MU、PL高動能延續性，關注美債殖利率4.47%支撐位是否續漲，以及UCTT、WULF財報驚喜能否帶動盤面。"
 }
