@@ -1,18 +1,18 @@
 {
-  "generatedAt": 1780341455716,
+  "generatedAt": 1780347793755,
   "market": "TW",
-  "scanAt": "2026-06-01T19:06:46.722Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-01T20:52:50.646Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 759.47,
-      "changePct": 0.4
+      "last": 758.54,
+      "changePct": 0.27
     },
     "vix": {
-      "last": 15.73,
-      "changePct": 2.68
+      "last": 16.05,
+      "changePct": 4.77
     },
     "tnx": {
       "last": 4.47,
@@ -20,48 +20,48 @@
     },
     "dxy": {
       "last": 99.19,
-      "changePct": 0.28
+      "changePct": 0.29
     }
   },
   "sectorLeaders": [
     {
       "etf": "IGV",
-      "last": 107.88,
-      "changePct": 6.11
+      "last": 107.7,
+      "changePct": 5.94
     },
     {
       "etf": "XLK",
-      "last": 195.84,
-      "changePct": 2.52
+      "last": 195.76,
+      "changePct": 2.48
     },
     {
       "etf": "XLE",
-      "last": 57.26,
-      "changePct": 1.71
+      "last": 57.3,
+      "changePct": 1.79
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 87.04,
-      "changePct": -2.73
+      "last": 86.68,
+      "changePct": -3.14
     },
     {
       "etf": "XLU",
-      "last": 43.26,
-      "changePct": -2.6
+      "last": 43.1,
+      "changePct": -2.97
     },
     {
       "etf": "XAR",
-      "last": 281.3,
-      "changePct": -2.33
+      "last": 280,
+      "changePct": -2.78
     }
   ],
   "gainers": [
     {
       "symbol": "FLNC",
       "name": "Fluence Energy, Inc.",
-      "changePct": 47.62
+      "changePct": 43.8
     },
     {
       "symbol": "TMHC",
@@ -69,62 +69,60 @@
       "changePct": 22.31
     },
     {
-      "symbol": "TWLO",
-      "name": "Twilio Inc.",
-      "changePct": 20.34
-    },
-    {
       "symbol": "MDB",
       "name": "MongoDB, Inc.",
-      "changePct": 20.35
+      "changePct": 20.36
     },
     {
-      "symbol": "AAOI",
-      "name": "Applied Optoelectronics, Inc.",
-      "changePct": 19.79
+      "symbol": "TWLO",
+      "name": "Twilio Inc.",
+      "changePct": 19.36
+    },
+    {
+      "symbol": "SKM",
+      "name": "SK Telecom Co., Ltd.",
+      "changePct": 18.99
     }
   ],
   "losers": [
     {
       "symbol": "PSNY",
       "name": "Polestar Automotive Holding UK",
-      "changePct": -16.14
+      "changePct": -17.11
     },
     {
       "symbol": "RDW",
       "name": "Redwire Corporation",
-      "changePct": -15.93
+      "changePct": -15.83
     },
     {
       "symbol": "NUVL",
       "name": "Nuvalent, Inc.",
-      "changePct": -13.52
+      "changePct": -15.74
     },
     {
       "symbol": "RKLB",
       "name": "Rocket Lab Corporation",
-      "changePct": -13.27
+      "changePct": -14.7
     },
     {
-      "symbol": "WOLF",
-      "name": "Wolfspeed, Inc.",
-      "changePct": -11.77
+      "symbol": "PLBL",
+      "name": "Polibeli Group Ltd",
+      "changePct": -14.31
     }
   ],
-  "narrative": "今日主軸為科技領跑、週期性輪動。IGV漲6.11%、XLK漲2.52%主導，反映軟體及晶片強勢；10Y殖利率升至4.47%壓制公用事業(XLU -2.6%)及礦業(GDX -2.73%)。台股強勢領先者(2337.TW、2344.TW、6770.TW)顯示亞洲科技買盤熱絡。VIX小升至15.73，風險情緒溫和偏正。下午最後兩小時應觀察科技能否維持漲勢，以及殖利率是否繼續攀升引發獲利了結。資金整體風險開胃，但需防守位置。",
-  "headline": "科技領漲、利率上升壓制公用事業，下午收盤前謹慎樂觀",
+  "narrative": "今日市場呈現風險偏好態勢，科技股(IGV +5.94%)領漲，軟體與半導體族群強勁。VIX小幅上升至16.05反映波動率溫和，美債殖利率微升至4.47%。台股權值股表現亮眼，6770.TW與2344.TW月線漲幅逾60%，RS強度達86-92，加速倍數達5倍，顯示強勁動能。能源與公用事業回檔(-2.97%至-3.14%)，反映資金流向科技成長股。大型個股漲跌互見，FLNC飆漲43.8%，但PSNY、RDW等跌幅超15%。",
+  "headline": "科技領漲帶動風險偏好，台股權值股強勢反彈",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "XLK",
-      "IGV",
-      "XLE"
+      "IGV"
     ],
     "outOf": [
       "XLU",
-      "GDX",
-      "XAR"
+      "GDX"
     ]
   },
-  "tomorrowWatch": "監控2337.TW、2344.TW是否能突破1月高點，殖利率4.5%整數關鍵支撐點"
+  "tomorrowWatch": "密切追蹤台股權值股動能能否延續，同時留意2337.TW與2308.TW三星共振信號買點"
 }
