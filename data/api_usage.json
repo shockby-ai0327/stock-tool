@@ -1,14 +1,24 @@
 {
   "months": {
     "2026-06": {
-      "input": 13002,
-      "output": 4371,
-      "calls": 40,
+      "input": 42980,
+      "output": 24241,
+      "calls": 82,
       "byScript": {
         "news_scan": {
           "input": 13002,
           "output": 4371,
           "calls": 40
+        },
+        "ai_analysis": {
+          "input": 28622,
+          "output": 18996,
+          "calls": 40
+        },
+        "market_narrative": {
+          "input": 1356,
+          "output": 874,
+          "calls": 2
         }
       }
     },
@@ -40,5 +50,5 @@
       }
     }
   },
-  "lastUpdated": 1780341157135
+  "lastUpdated": 1780341455717
 }
