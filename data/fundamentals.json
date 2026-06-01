@@ -1,9 +1,9 @@
 {
-  "generatedAt": 1780347347361,
+  "generatedAt": 1780353164282,
   "counts": {
     "quality": 13,
-    "watch": 12,
-    "trap": 15
+    "watch": 13,
+    "trap": 14
   },
   "bySymbol": {
     "PL": {
@@ -42,18 +42,6 @@
       "netIncomeM": -34.0,
       "fcfM": 255.0
     },
-    "RVMD": {
-      "flag": "trap",
-      "qualityScore": 0,
-      "profitable": false,
-      "fcfPositive": false,
-      "profitMargin": 0.0,
-      "operatingMargin": 0.0,
-      "revenueGrowth": null,
-      "earningsGrowth": null,
-      "netIncomeM": -1372.0,
-      "fcfM": -606.0
-    },
     "ONCY": {
       "flag": "trap",
       "qualityScore": 0,
@@ -66,17 +54,29 @@
       "netIncomeM": -29.0,
       "fcfM": -10.0
     },
-    "TTMI": {
-      "flag": "watch",
-      "qualityScore": 70,
-      "profitable": true,
+    "RVMD": {
+      "flag": "trap",
+      "qualityScore": 0,
+      "profitable": false,
       "fcfPositive": false,
-      "profitMargin": 6.3,
-      "operatingMargin": 8.6,
-      "revenueGrowth": 30.4,
-      "earningsGrowth": 51.6,
-      "netIncomeM": 195.0,
-      "fcfM": -55.0
+      "profitMargin": 0.0,
+      "operatingMargin": 0.0,
+      "revenueGrowth": null,
+      "earningsGrowth": null,
+      "netIncomeM": -1372.0,
+      "fcfM": -606.0
+    },
+    "CIFR": {
+      "flag": "trap",
+      "qualityScore": 0,
+      "profitable": false,
+      "fcfPositive": false,
+      "profitMargin": 0.0,
+      "operatingMargin": -249.4,
+      "revenueGrowth": -28.8,
+      "earningsGrowth": null,
+      "netIncomeM": -898.0,
+      "fcfM": -2948.0
     },
     "WULF": {
       "flag": "trap",
@@ -90,17 +90,17 @@
       "netIncomeM": -1028.0,
       "fcfM": -284.0
     },
-    "CIFR": {
-      "flag": "trap",
-      "qualityScore": 0,
-      "profitable": false,
+    "TTMI": {
+      "flag": "watch",
+      "qualityScore": 70,
+      "profitable": true,
       "fcfPositive": false,
-      "profitMargin": 0.0,
-      "operatingMargin": -249.4,
-      "revenueGrowth": -28.8,
-      "earningsGrowth": null,
-      "netIncomeM": -898.0,
-      "fcfM": -2948.0
+      "profitMargin": 6.3,
+      "operatingMargin": 8.6,
+      "revenueGrowth": 30.4,
+      "earningsGrowth": 51.6,
+      "netIncomeM": 195.0,
+      "fcfM": -55.0
     },
     "IREN": {
       "flag": "watch",
@@ -138,18 +138,6 @@
       "netIncomeM": -311.0,
       "fcfM": -301.0
     },
-    "LUNR": {
-      "flag": "trap",
-      "qualityScore": 15,
-      "profitable": false,
-      "fcfPositive": false,
-      "profitMargin": -32.7,
-      "operatingMargin": -10.3,
-      "revenueGrowth": 198.7,
-      "earningsGrowth": null,
-      "netIncomeM": -110.0,
-      "fcfM": -32.0
-    },
     "CENX": {
       "flag": "watch",
       "qualityScore": 70,
@@ -161,6 +149,18 @@
       "earningsGrowth": 1009.8,
       "netIncomeM": 349.0,
       "fcfM": -86.0
+    },
+    "LUNR": {
+      "flag": "trap",
+      "qualityScore": 15,
+      "profitable": false,
+      "fcfPositive": false,
+      "profitMargin": -32.7,
+      "operatingMargin": -10.3,
+      "revenueGrowth": 198.7,
+      "earningsGrowth": null,
+      "netIncomeM": -110.0,
+      "fcfM": -32.0
     },
     "UCTT": {
       "flag": "trap",
@@ -186,18 +186,6 @@
       "netIncomeM": -55.0,
       "fcfM": 172.0
     },
-    "URGN": {
-      "flag": "trap",
-      "qualityScore": 15,
-      "profitable": false,
-      "fcfPositive": false,
-      "profitMargin": -94.8,
-      "operatingMargin": -39.8,
-      "revenueGrowth": 151.6,
-      "earningsGrowth": null,
-      "netIncomeM": -133.0,
-      "fcfM": -109.0
-    },
     "APLD": {
       "flag": "trap",
       "qualityScore": 15,
@@ -210,29 +198,17 @@
       "netIncomeM": -120.0,
       "fcfM": -1497.0
     },
-    "DELL": {
-      "flag": "watch",
-      "qualityScore": 70,
-      "profitable": true,
+    "URGN": {
+      "flag": "trap",
+      "qualityScore": 15,
+      "profitable": false,
       "fcfPositive": false,
-      "profitMargin": 6.3,
-      "operatingMargin": 8.3,
-      "revenueGrowth": 87.5,
-      "earningsGrowth": 282.5,
-      "netIncomeM": 8409.0,
-      "fcfM": -128.0
-    },
-    "BE": {
-      "flag": "quality",
-      "qualityScore": 100,
-      "profitable": true,
-      "fcfPositive": true,
-      "profitMargin": 0.2,
-      "operatingMargin": 9.6,
-      "revenueGrowth": 130.4,
+      "profitMargin": -94.8,
+      "operatingMargin": -39.8,
+      "revenueGrowth": 151.6,
       "earningsGrowth": null,
-      "netIncomeM": 6.0,
-      "fcfM": 266.0
+      "netIncomeM": -133.0,
+      "fcfM": -109.0
     },
     "CIEN": {
       "flag": "quality",
@@ -246,17 +222,17 @@
       "netIncomeM": 229.0,
       "fcfM": 699.0
     },
-    "RKLB": {
-      "flag": "trap",
-      "qualityScore": 15,
-      "profitable": false,
+    "DELL": {
+      "flag": "watch",
+      "qualityScore": 70,
+      "profitable": true,
       "fcfPositive": false,
-      "profitMargin": -26.9,
-      "operatingMargin": -22.4,
-      "revenueGrowth": 63.5,
-      "earningsGrowth": null,
-      "netIncomeM": -183.0,
-      "fcfM": -215.0
+      "profitMargin": 6.3,
+      "operatingMargin": 8.3,
+      "revenueGrowth": 87.5,
+      "earningsGrowth": 282.5,
+      "netIncomeM": 8409.0,
+      "fcfM": -128.0
     },
     "LRCX": {
       "flag": "quality",
@@ -270,6 +246,18 @@
       "netIncomeM": 6708.0,
       "fcfM": 4352.0
     },
+    "BE": {
+      "flag": "quality",
+      "qualityScore": 100,
+      "profitable": true,
+      "fcfPositive": true,
+      "profitMargin": 0.2,
+      "operatingMargin": 9.6,
+      "revenueGrowth": 130.4,
+      "earningsGrowth": null,
+      "netIncomeM": 6.0,
+      "fcfM": 266.0
+    },
     "NRGV": {
       "flag": "trap",
       "qualityScore": 15,
@@ -281,6 +269,18 @@
       "earningsGrowth": null,
       "netIncomeM": -116.0,
       "fcfM": -66.0
+    },
+    "RKLB": {
+      "flag": "trap",
+      "qualityScore": 15,
+      "profitable": false,
+      "fcfPositive": false,
+      "profitMargin": -26.9,
+      "operatingMargin": -22.4,
+      "revenueGrowth": 63.5,
+      "earningsGrowth": null,
+      "netIncomeM": -183.0,
+      "fcfM": -215.0
     },
     "LITE": {
       "flag": "quality",
@@ -294,17 +294,17 @@
       "netIncomeM": 439.0,
       "fcfM": 93.0
     },
-    "AAOI": {
-      "flag": "trap",
-      "qualityScore": 15,
-      "profitable": false,
+    "COHR": {
+      "flag": "watch",
+      "qualityScore": 70,
+      "profitable": true,
       "fcfPositive": false,
-      "profitMargin": -8.5,
-      "operatingMargin": -8.6,
-      "revenueGrowth": 51.4,
+      "profitMargin": 7.1,
+      "operatingMargin": 13.6,
+      "revenueGrowth": 20.5,
       "earningsGrowth": null,
-      "netIncomeM": -43.0,
-      "fcfM": -446.0
+      "netIncomeM": 401.0,
+      "fcfM": -198.0
     },
     "OKTA": {
       "flag": "quality",
@@ -390,17 +390,17 @@
       "netIncomeM": 191.0,
       "fcfM": 115.0
     },
-    "BBAR": {
-      "flag": "watch",
-      "qualityScore": 70,
+    "IBM": {
+      "flag": "quality",
+      "qualityScore": 100,
       "profitable": true,
-      "fcfPositive": false,
-      "profitMargin": 7.1,
-      "operatingMargin": 14.4,
-      "revenueGrowth": 26.1,
-      "earningsGrowth": -5.7,
-      "netIncomeM": 224406.0,
-      "fcfM": null
+      "fcfPositive": true,
+      "profitMargin": 15.6,
+      "operatingMargin": 13.8,
+      "revenueGrowth": 9.5,
+      "earningsGrowth": 14.2,
+      "netIncomeM": 10733.0,
+      "fcfM": 13081.0
     },
     "ESTC": {
       "flag": "quality",
@@ -414,17 +414,17 @@
       "netIncomeM": 368.0,
       "fcfM": 462.0
     },
-    "IBM": {
-      "flag": "quality",
-      "qualityScore": 100,
+    "BBAR": {
+      "flag": "watch",
+      "qualityScore": 70,
       "profitable": true,
-      "fcfPositive": true,
-      "profitMargin": 15.6,
-      "operatingMargin": 13.8,
-      "revenueGrowth": 9.5,
-      "earningsGrowth": 14.2,
-      "netIncomeM": 10733.0,
-      "fcfM": 13081.0
+      "fcfPositive": false,
+      "profitMargin": 7.1,
+      "operatingMargin": 14.4,
+      "revenueGrowth": 26.1,
+      "earningsGrowth": -5.7,
+      "netIncomeM": 224406.0,
+      "fcfM": null
     },
     "RGTI": {
       "flag": "trap",
