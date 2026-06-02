@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1780423495275,
+  "generatedAt": 1780431174142,
   "market": "US",
-  "scanAt": "2026-06-02T17:56:54.551Z",
+  "scanAt": "2026-06-02T20:04:16.003Z",
   "session": "AFTERNOON SESSION (last 2 hours before close)",
   "sessionShort": "afternoon",
   "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 758.91,
-      "changePct": 0.05
+      "last": 759.55,
+      "changePct": 0.13
     },
     "vix": {
-      "last": 15.96,
-      "changePct": -0.56
+      "last": 15.81,
+      "changePct": -1.5
     },
     "tnx": {
       "last": 4.45,
       "changePct": -0.45
     },
     "dxy": {
-      "last": 99.28,
-      "changePct": 0.08
+      "last": 99.2,
+      "changePct": 0
     }
   },
   "sectorLeaders": [
     {
       "etf": "SMH",
-      "last": 625.62,
-      "changePct": 2.93
+      "last": 632.21,
+      "changePct": 4.01
     },
     {
       "etf": "XLU",
       "last": 43.9,
-      "changePct": 1.84
+      "changePct": 1.87
     },
     {
-      "etf": "XLE",
-      "last": 58.08,
-      "changePct": 1.35
+      "etf": "GDX",
+      "last": 88.04,
+      "changePct": 1.57
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "IGV",
-      "last": 104.05,
-      "changePct": -3.39
+      "etf": "IBB",
+      "last": 164.19,
+      "changePct": -3.06
     },
     {
-      "etf": "IBB",
-      "last": 164.11,
-      "changePct": -3.1
+      "etf": "IGV",
+      "last": 104.78,
+      "changePct": -2.71
     },
     {
       "etf": "XLC",
-      "last": 114.02,
-      "changePct": -1.38
+      "last": 113.58,
+      "changePct": -1.76
     }
   ],
   "gainers": [
     {
       "symbol": "LEGN",
       "name": "Legend Biotech Corporation",
-      "changePct": 39.79
+      "changePct": 42.22
     },
     {
       "symbol": "MRVL",
       "name": "Marvell Technology, Inc.",
-      "changePct": 28.95
+      "changePct": 32.52
     },
     {
       "symbol": "AEHR",
       "name": "Aehr Test Systems",
-      "changePct": 20.23
+      "changePct": 20.7
+    },
+    {
+      "symbol": "HPE",
+      "name": "Hewlett Packard Enterprise Com",
+      "changePct": 19.47
     },
     {
       "symbol": "PENG",
       "name": "Penguin Solutions, Inc.",
-      "changePct": 18.77
-    },
-    {
-      "symbol": "COHR",
-      "name": "Coherent Corp.",
-      "changePct": 17.39
+      "changePct": 18.32
     }
   ],
   "losers": [
     {
       "symbol": "ABVX",
       "name": "Abivax SA",
-      "changePct": -41.63
+      "changePct": -44.1
     },
     {
       "symbol": "CELC",
       "name": "Celcuity Inc.",
-      "changePct": -24.04
+      "changePct": -25.65
     },
     {
       "symbol": "PRAX",
       "name": "Praxis Precision Medicines, In",
-      "changePct": -17.32
+      "changePct": -23
     },
     {
-      "symbol": "NU",
-      "name": "Nu Holdings Ltd.",
-      "changePct": -11.66
+      "symbol": "BRAI",
+      "name": "Braiin Limited",
+      "changePct": -15.75
     },
     {
       "symbol": "XMTR",
       "name": "Xometry, Inc.",
-      "changePct": -10.94
+      "changePct": -10.76
     }
   ],
-  "narrative": "今日市場呈現明顯的科技領漲格局。半導體ETF(SMH)漲2.93%,MRVL、AEHR等芯片股大漲20%以上,顯示AI晶片需求持續強勁。公用事業(XLU)也上漲1.84%,防守性資金流入。相反,生物醫療(IBB -3.1%)、軟體(IGV -3.39%)嚴重承壓,ABVX暴跌41.63%。VIX下跌至15.96,殖利率走低(10Y -0.45%),資金明確從防守轉向風險資產。MU與IREN等動能領導股表現亮眼,顯示機構持續加碼成長股。",
-  "headline": "科技股領漲,半導體強勢,生物醫療承壓,風險偏好升溫",
-  "regime": "risk-on",
+  "narrative": "今日市場呈現明顯的科技領漲、生醫挫折格局。SMH芯片ETF大漲4.01%，MRVL暴漲32.52%、AEHR+20.7%領軍，反映半導體需求復甦。同時公用事業XLU+1.87%走強，顯示防守資金進場。然IBB生技-3.06%、IGV軟體-2.71%領跌，表明成長股承壓。VIX下跌1.5%至15.81、10年期殖利率下降45bp至4.45%，暗示風險胃口改善。UCTT、MRVL等三共振候選股形成強勢累積。預期尾盤科技族群維持強勢，但需警惕生醫賣壓延續。",
+  "headline": "科技芯片領漲，生物醫療重挫，風險資產輪動升溫",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
       "SMH",
       "XLU",
-      "XLE"
+      "XLK"
     ],
     "outOf": [
-      "IGV",
       "IBB",
+      "IGV",
       "XLC"
     ]
   },
-  "tomorrowWatch": "監控半導體與MU能否延續漲勢,留意生物醫療是否止跌反彈,警惕IBB -3.1%跌幅是否預示更大調整"
+  "tomorrowWatch": "關注MRVL、UCTT能否突破高點新高，以及生技下跌是否觸發逢低承接"
 }

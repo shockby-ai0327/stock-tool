@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1780423639406,
+  "generatedAt": 1780431308660,
   "market": "TW",
-  "scanAt": "2026-06-02T17:56:57.214Z",
+  "scanAt": "2026-06-02T20:04:18.696Z",
   "session": "AFTERNOON SESSION (last 2 hours before close)",
   "sessionShort": "afternoon",
   "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 758.96,
-      "changePct": 0.06
+      "last": 759.55,
+      "changePct": 0.13
     },
     "vix": {
-      "last": 15.96,
-      "changePct": -0.56
+      "last": 15.8,
+      "changePct": -1.56
     },
     "tnx": {
       "last": 4.45,
       "changePct": -0.45
     },
     "dxy": {
-      "last": 99.29,
-      "changePct": 0.09
+      "last": 99.19,
+      "changePct": -0.01
     }
   },
   "sectorLeaders": [
     {
       "etf": "SMH",
-      "last": 625.77,
-      "changePct": 2.95
+      "last": 632.21,
+      "changePct": 4.01
     },
     {
       "etf": "XLU",
-      "last": 43.88,
-      "changePct": 1.81
+      "last": 43.9,
+      "changePct": 1.86
     },
     {
-      "etf": "XLE",
-      "last": 58.03,
-      "changePct": 1.28
+      "etf": "GDX",
+      "last": 88.04,
+      "changePct": 1.57
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "IGV",
-      "last": 104.1,
-      "changePct": -3.35
+      "etf": "IBB",
+      "last": 164.27,
+      "changePct": -3.01
     },
     {
-      "etf": "IBB",
-      "last": 164.18,
-      "changePct": -3.06
+      "etf": "IGV",
+      "last": 104.73,
+      "changePct": -2.76
     },
     {
       "etf": "XLC",
-      "last": 114.01,
-      "changePct": -1.38
+      "last": 113.57,
+      "changePct": -1.76
     }
   ],
   "gainers": [
     {
       "symbol": "LEGN",
       "name": "Legend Biotech Corporation",
-      "changePct": 39.77
+      "changePct": 42.22
     },
     {
       "symbol": "MRVL",
       "name": "Marvell Technology, Inc.",
-      "changePct": 28.93
+      "changePct": 32.52
     },
     {
       "symbol": "AEHR",
       "name": "Aehr Test Systems",
-      "changePct": 20.1
+      "changePct": 20.7
+    },
+    {
+      "symbol": "HPE",
+      "name": "Hewlett Packard Enterprise Com",
+      "changePct": 19.47
     },
     {
       "symbol": "PENG",
       "name": "Penguin Solutions, Inc.",
-      "changePct": 19.16
-    },
-    {
-      "symbol": "COHR",
-      "name": "Coherent Corp.",
-      "changePct": 17.29
+      "changePct": 18.32
     }
   ],
   "losers": [
     {
       "symbol": "ABVX",
       "name": "Abivax SA",
-      "changePct": -42.04
+      "changePct": -44.1
     },
     {
       "symbol": "CELC",
       "name": "Celcuity Inc.",
-      "changePct": -23.7
+      "changePct": -25.65
     },
     {
       "symbol": "PRAX",
       "name": "Praxis Precision Medicines, In",
-      "changePct": -17.44
+      "changePct": -23
     },
     {
-      "symbol": "NU",
-      "name": "Nu Holdings Ltd.",
-      "changePct": -11.51
+      "symbol": "BRAI",
+      "name": "Braiin Limited",
+      "changePct": -15.75
     },
     {
       "symbol": "XMTR",
       "name": "Xometry, Inc.",
-      "changePct": -10.88
+      "changePct": -10.76
     }
   ],
-  "narrative": "今日盤面呈現明顯科技分化。半導體ETF(SMH)漲2.95%領漲，MRVL、AEHR等晶片股大漲20%+，反映AI芯片需求強勁。台灣晶片股(2337、2344、2360)RS值90+，1個月漲幅逾50%，顯示資金持續押注晶片週期。生技(IBB -3.06%)與軟體(IGV -3.35%)大幅回檔，NU跌11.51%。債券利率下滑(-0.45%)、VIX平穩，資金從高估值科技轉向防守性公用事業(XLU +1.81%)。大盤微幅上漲暗示盤中已完成換股。收盤前預期震盪整理，晶片股可能鎖利。",
-  "headline": "科技股領漲，半導體強勢，生技與軟體承壓，資金流向晶片與公用事業",
-  "regime": "rotation",
+  "narrative": "今日市場呈現明顯的科技輪動。半導體ETF(SMH)大漲4.01%，MRVL、AEHR等芯片股狂飆逾20%，顯示AI晶片需求持續熾熱。公用事業(XLU)也小幅上揚，反映防守情緒。但生技(IBB)重挫3.01%，軟體(IGV)下跌2.76%，通訊(XLC)走弱，形成明顯分化。VIX下跌至15.8、債券收益率下行(-0.45%)暗示避險情緒緩解，美元持平顯示風險資產吸引力提升。台股RS領先者(2344.TW、6770.TW)持續強勢，預示亞股芯片供應鏈受惠。收盤前有望維持強勢，科技權值股可能護盤。",
+  "headline": "科技芯片強勢領漲，生物科技重挫，風險情緒升溫",
+  "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "XLK",
       "XLU",
-      "XLE"
+      "SMH"
     ],
     "outOf": [
-      "IGV",
       "IBB",
+      "IGV",
       "XLC"
     ]
   },
-  "tomorrowWatch": "留意2337、2344能否守住漲幅，及IBB是否止跌反彈，判斷科技分化是短期輪動或趨勢轉變"
+  "tomorrowWatch": "監控AI芯片需求延續度、台股2337.TW四星評級信號、生技反彈動能"
 }
