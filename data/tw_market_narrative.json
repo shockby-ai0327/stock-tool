@@ -1,26 +1,26 @@
 {
-  "generatedAt": 1780431308660,
+  "generatedAt": 1780439147359,
   "market": "TW",
-  "scanAt": "2026-06-02T20:04:18.696Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-02T22:15:34.001Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 759.55,
-      "changePct": 0.13
+      "last": 759.57,
+      "changePct": 0.14
     },
     "vix": {
-      "last": 15.8,
-      "changePct": -1.56
+      "last": 15.77,
+      "changePct": -1.74
     },
     "tnx": {
       "last": 4.45,
       "changePct": -0.45
     },
     "dxy": {
-      "last": 99.19,
-      "changePct": -0.01
+      "last": 99.22,
+      "changePct": 0.02
     }
   },
   "sectorLeaders": [
@@ -36,8 +36,8 @@
     },
     {
       "etf": "GDX",
-      "last": 88.04,
-      "changePct": 1.57
+      "last": 88.05,
+      "changePct": 1.58
     }
   ],
   "sectorLaggards": [
@@ -111,14 +111,14 @@
       "changePct": -10.76
     }
   ],
-  "narrative": "今日市場呈現明顯的科技輪動。半導體ETF(SMH)大漲4.01%，MRVL、AEHR等芯片股狂飆逾20%，顯示AI晶片需求持續熾熱。公用事業(XLU)也小幅上揚，反映防守情緒。但生技(IBB)重挫3.01%，軟體(IGV)下跌2.76%，通訊(XLC)走弱，形成明顯分化。VIX下跌至15.8、債券收益率下行(-0.45%)暗示避險情緒緩解，美元持平顯示風險資產吸引力提升。台股RS領先者(2344.TW、6770.TW)持續強勢，預示亞股芯片供應鏈受惠。收盤前有望維持強勢，科技權值股可能護盤。",
-  "headline": "科技芯片強勢領漲，生物科技重挫，風險情緒升溫",
-  "regime": "risk-on",
+  "narrative": "今日美股呈現結構性輪動，SPY微漲0.14%反映市場謹慎情緒。VIX下跌1.74%至15.77，暗示風險偏好溫和提升。10年期公債殖利率下跌45bp至4.45%，顯示資金流向防守。SMH芯片ETF領漲4.01%，MRVL、AEHR漲勢亮眼，反映AI晶片需求持續火熱。XLU公用事業次強（+1.86%），防守屬性突顯。相反地，IBB生技(-3.01%)與IGV軟體(-2.76%)領跌，顯示成長股承壓。台股權值股表現搶眼，2344.TW月線漲86.74%、2337.TW獲4★評等，值得關注。",
+  "headline": "科技芯片領漲，生物醫療重挫，美股微幅收紅",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "XLK",
+      "SMH",
       "XLU",
-      "SMH"
+      "GDX"
     ],
     "outOf": [
       "IBB",
@@ -126,5 +126,5 @@
       "XLC"
     ]
   },
-  "tomorrowWatch": "監控AI芯片需求延續度、台股2337.TW四星評級信號、生技反彈動能"
+  "tomorrowWatch": "留意AI芯片能否延續強勢，關注生技股止跌訊號及2337.TW四星選股表現"
 }

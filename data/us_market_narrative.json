@@ -1,26 +1,26 @@
 {
-  "generatedAt": 1780431174142,
+  "generatedAt": 1780439013243,
   "market": "US",
-  "scanAt": "2026-06-02T20:04:16.003Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-02T22:15:31.342Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 759.55,
-      "changePct": 0.13
+      "last": 759.57,
+      "changePct": 0.14
     },
     "vix": {
-      "last": 15.81,
-      "changePct": -1.5
+      "last": 15.77,
+      "changePct": -1.74
     },
     "tnx": {
       "last": 4.45,
       "changePct": -0.45
     },
     "dxy": {
-      "last": 99.2,
-      "changePct": 0
+      "last": 99.22,
+      "changePct": 0.02
     }
   },
   "sectorLeaders": [
@@ -32,28 +32,28 @@
     {
       "etf": "XLU",
       "last": 43.9,
-      "changePct": 1.87
+      "changePct": 1.86
     },
     {
       "etf": "GDX",
-      "last": 88.04,
-      "changePct": 1.57
+      "last": 88.05,
+      "changePct": 1.58
     }
   ],
   "sectorLaggards": [
     {
       "etf": "IBB",
-      "last": 164.19,
-      "changePct": -3.06
+      "last": 164.27,
+      "changePct": -3.01
     },
     {
       "etf": "IGV",
-      "last": 104.78,
-      "changePct": -2.71
+      "last": 104.73,
+      "changePct": -2.76
     },
     {
       "etf": "XLC",
-      "last": 113.58,
+      "last": 113.57,
       "changePct": -1.76
     }
   ],
@@ -111,14 +111,14 @@
       "changePct": -10.76
     }
   ],
-  "narrative": "今日市場呈現明顯的科技領漲、生醫挫折格局。SMH芯片ETF大漲4.01%，MRVL暴漲32.52%、AEHR+20.7%領軍，反映半導體需求復甦。同時公用事業XLU+1.87%走強，顯示防守資金進場。然IBB生技-3.06%、IGV軟體-2.71%領跌，表明成長股承壓。VIX下跌1.5%至15.81、10年期殖利率下降45bp至4.45%，暗示風險胃口改善。UCTT、MRVL等三共振候選股形成強勢累積。預期尾盤科技族群維持強勢，但需警惕生醫賣壓延續。",
-  "headline": "科技芯片領漲，生物醫療重挫，風險資產輪動升溫",
+  "narrative": "今日大盤微幅上漲0.14%，風險情緒呈選擇性好轉。VIX下跌1.74%至15.77，10Y殖利率下行45bp至4.45%，暗示資金轉向成長資產。半導體(SMH +4.01%)與公用事業(XLU +1.86%)領漲，惟生醫(IBB -3.01%)與軟體(IGV -2.76%)遭拋售。芯片股爆發：MRVL +32.52%、MU一月漲84.6%領動能排行。LEGN狂飆42.22%帶動小型股。惟ABVX -44.1%、CELC -25.65%反映生技風險。殖利率下降利好成長股，但生醫板塊逆勢走弱需警惕。",
+  "headline": "科技芯片領漲，生醫重挫，市場選擇性風險偏好",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "SMH",
+      "XLK",
       "XLU",
-      "XLK"
+      "GDX"
     ],
     "outOf": [
       "IBB",
@@ -126,5 +126,5 @@
       "XLC"
     ]
   },
-  "tomorrowWatch": "關注MRVL、UCTT能否突破高點新高，以及生技下跌是否觸發逢低承接"
+  "tomorrowWatch": "監控UCTT(5★三共鳴)與MRVL財報後續表現，留意IBB生醫板塊止跌訊號，關注殖利率4.45%支撐是否穩固。"
 }
