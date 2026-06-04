@@ -1,18 +1,18 @@
 {
-  "generatedAt": 1780600863766,
+  "generatedAt": 1780608615548,
   "market": "US",
-  "scanAt": "2026-06-04T19:12:52.107Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-04T21:22:15.224Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 757.8,
-      "changePct": 0.47
+      "last": 757.09,
+      "changePct": 0.38
     },
     "vix": {
-      "last": 15.37,
-      "changePct": -4.3
+      "last": 15.4,
+      "changePct": -4.11
     },
     "tnx": {
       "last": 4.48,
@@ -26,104 +26,105 @@
   "sectorLeaders": [
     {
       "etf": "XLV",
-      "last": 151.87,
-      "changePct": 2.92
-    },
-    {
-      "etf": "XAR",
-      "last": 281.07,
-      "changePct": 2.78
+      "last": 152.08,
+      "changePct": 3.07
     },
     {
       "etf": "XLF",
-      "last": 52.17,
-      "changePct": 2.56
+      "last": 52.19,
+      "changePct": 2.59
+    },
+    {
+      "etf": "XAR",
+      "last": 280.42,
+      "changePct": 2.55
     }
   ],
   "sectorLaggards": [
     {
       "etf": "SMH",
-      "last": 629.82,
-      "changePct": -1.27
+      "last": 627.53,
+      "changePct": -1.63
     },
     {
       "etf": "XLK",
-      "last": 193.89,
-      "changePct": -1.19
+      "last": 193.17,
+      "changePct": -1.56
     },
     {
       "etf": "XLP",
-      "last": 81.96,
-      "changePct": -0.25
+      "last": 82.04,
+      "changePct": -0.15
     }
   ],
   "gainers": [
     {
       "symbol": "CHRN",
       "name": "ChronoScale Corporation",
-      "changePct": 19.28
-    },
-    {
-      "symbol": "RDW",
-      "name": "Redwire Corporation",
-      "changePct": 18.47
+      "changePct": 22.69
     },
     {
       "symbol": "ABVX",
       "name": "Abivax SA",
-      "changePct": 16.19
+      "changePct": 16.39
     },
     {
       "symbol": "OSCR",
       "name": "Oscar Health, Inc.",
-      "changePct": 16.24
+      "changePct": 15.12
     },
     {
-      "symbol": "CAI",
-      "name": "Caris Life Sciences, Inc.",
-      "changePct": 14.73
+      "symbol": "RDW",
+      "name": "Redwire Corporation",
+      "changePct": 15.09
+    },
+    {
+      "symbol": "ADPT",
+      "name": "Adaptive Biotechnologies Corpo",
+      "changePct": 13.07
     }
   ],
   "losers": [
     {
       "symbol": "PVH",
       "name": "PVH Corp.",
-      "changePct": -22.09
+      "changePct": -20.24
     },
     {
       "symbol": "NTSK",
       "name": "Netskope, Inc.",
-      "changePct": -17.3
-    },
-    {
-      "symbol": "CIEN",
-      "name": "Ciena Corporation",
-      "changePct": -13.95
-    },
-    {
-      "symbol": "AVGO",
-      "name": "Broadcom Inc.",
-      "changePct": -13.29
+      "changePct": -19.11
     },
     {
       "symbol": "FIVE",
       "name": "Five Below, Inc.",
-      "changePct": -13.13
+      "changePct": -13.78
+    },
+    {
+      "symbol": "CIEN",
+      "name": "Ciena Corporation",
+      "changePct": -13.66
+    },
+    {
+      "symbol": "AVGO",
+      "name": "Broadcom Inc.",
+      "changePct": -12.59
     }
   ],
-  "narrative": "今日市場呈現典型的輪動格局。SPY小漲0.47%，VIX下跌4.3%至15.37，殖利率下行至4.48%，顯示風險偏好溫和回升。醫療(XLV +2.92%)和航宇防務(XAR +2.78%)領漲，金融(XLF +2.56%)跟進，反映資金流向防禦性及週期性板塊。科技(XLK -1.19%)和半導體(SMH -1.27%)明顯承壓，AVGO(-13.29%)和CIEN(-13.95%)重挫。動能股VSCO(55.56%)和NRGV(53.21%)仍搶眼，但整體科技拋售訊號明確。收盤前兩小時應留意防禦是否持續吸引資金。",
-  "headline": "醫療防禦領漲，科技承壓，風險情緒溫和復甦",
+  "narrative": "今日市場呈現典型的風險輪動格局。儘管大盤微漲0.38%，但主題清晰：資金從高波動性科技股流向防守性板塊。醫療保健(XLV +3.07%)與金融(XLF +2.59%)領漲，反映投資者風險偏好回落。VIX急挫4.11%至15.4，殖利率走低(10Y -0.31%)支持防守布局。科技股(XLK -1.56%)與半導體(SMH -1.63%)雙雙承壓，個股層面AVGO(-12.59%)、CIEN(-13.66%)領跌，形成鮮明對比。收益面大幅波動，個股分化加劇，預示市場進入選股階段。",
+  "headline": "防守性輪動主導，醫療金融領漲，科技承壓回調",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
       "XLV",
-      "XAR",
-      "XLF"
+      "XLF",
+      "XAR"
     ],
     "outOf": [
       "XLK",
-      "SMH"
+      "SMH",
+      "XLP"
     ]
   },
-  "tomorrowWatch": "留意科技股是否反彈或進一步下跌，MRVL/DELL財報後動向是決定風險資產方向的關鍵"
+  "tomorrowWatch": "留意科技股是否止跌反彈，及防守板塊能否延續強勢；MRVL、DELL等四星優質股財報催化潛力。"
 }
