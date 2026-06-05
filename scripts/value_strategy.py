@@ -95,6 +95,10 @@ def main():
             vm = value_metrics(info)
             if vm["earningsYield"] is None or vm["earningsYield"] <= 0 or not vm["price"]:
                 continue
+            # sanity: reject garbage data — E/P > 50% (PE < 2) is almost always a
+            # data error or one-off, not a real value opportunity (e.g. CARM 190000%).
+            if vm["earningsYield"] > 0.5 or (vm["pe"] is not None and vm["pe"] < 2):
+                continue
             rows.append({"symbol": sym, **vm,
                          "name": info.get("shortName") or sym,
                          "sector": info.get("sector") or ""})
@@ -132,14 +136,17 @@ def main():
     # ── history (survivorship-immune forward log) ──
     prior = load_json("value_picks.json", {"history": []})
     history = [h for h in prior.get("history", []) if isinstance(h, dict)]
-    logged_months = set(h.get("month") for h in history)
-    if month not in logged_months:
+    # allow a same-day re-run to CORRECT today's log (e.g. data-bug fix); but once a
+    # prior day in this month is recorded, the month is immutable (forward test integrity).
+    history = [h for h in history if h.get("date") != today]
+    month_has_prior = any(h.get("month") == month for h in history)
+    if not month_has_prior:
         for p in picks:
             history.append({"symbol": p["symbol"], "month": month, "date": today,
                             "priceAtPick": p["price"], "valueScore": p["valueScore"]})
         print(f"  logged {len(picks)} picks for {month} (forward test)")
     else:
-        print(f"  {month} already logged — skipping append")
+        print(f"  {month} already logged on an earlier day — locked")
     history = history[-2000:]
 
     # ── grade history vs SPY (survivorship-immune) ──
