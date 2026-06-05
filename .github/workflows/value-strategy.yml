@@ -1,0 +1,43 @@
+name: Value Strategy (forward test)
+
+# 整段 8 輪回測裡唯一通過所有誠實關卡的東西 = 價值因子。但回測被倖存者偏差灌水。
+# 唯一乾淨的驗證 = 前向追蹤(真實時間,免疫倖存者偏差)。
+# 價值是月/季的事 → 一個月跑一次,每月記錄一次選股,scorecard 持續累積真相。
+on:
+  schedule:
+    - cron: '17 9 1 * *'   # 每月 1 號 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  value:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install yfinance pandas
+
+      - name: Rank value × quality + grade forward history
+        run: python scripts/value_strategy.py
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/value_picks.json ] && git add data/value_picks.json || true
+          git diff --cached --quiet || git commit -m "value-strategy: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 2))
+          done

@@ -542,6 +542,16 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-regime"></div>
  </section>
 
+ <!-- 1.5 價值精選 — 8 輪回測唯一通過的因子,前向驗證中 -->
+ <section class="card-strip" id="dash-value-card" style="display:none">
+  <div class="sl-section">
+   <h2>價值精選</h2><span class="sl-en">value × quality</span>
+   <span class="sl-sub">唯一通過回測的因子 · 前向驗證中</span>
+   <span class="sl-meta" id="value-asof"></span>
+  </div>
+  <div id="dash-value"></div>
+ </section>
+
  <!-- 2. ACTION ITEMS -->
  <section class="card-strip">
   <div class="sl-section">
@@ -9234,6 +9244,7 @@ async function renderDashboard(forceRescan) {
  renderWatchlistSimple(); // Fix G: 簡版觀察清單
  renderDashHoldings(); // 持倉動態
  try { renderBehaviorCoach(); } catch(e) {} // Phase 4 行為教練
+ try { renderValuePicks(); } catch(e) {} // 價值精選(唯一通過回測的因子 + 前向追蹤)
  // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
  loadMarketNarrative(window._dashboardMarket || 'us');
  // 6. T交易精選（15 分鐘快取，獨立載入）
@@ -10206,6 +10217,53 @@ function _epCompute() {
     '<div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
       '<b style="color:#fbbf24">海外所得稅提醒</b>：美股屬海外所得,計入個人基本所得額。全戶海外所得年度合計 <b>NT$100 萬以上</b>才需計入;基本所得額有 <b>NT$750 萬免稅額</b>(2025 年度)。實際依國稅局規定,大額獲利建議諮詢會計師。' +
     '</div>';
+}
+
+// 2026-05-29 價值精選 — 8 輪回測唯一通過所有誠實關卡的因子(價值×品質)。
+// 回測被倖存者偏差灌水 → 用前向追蹤(免疫倖存者偏差)當真正的裁判。
+async function renderValuePicks() {
+  const card = document.getElementById('dash-value-card');
+  const el = document.getElementById('dash-value');
+  if (!card || !el) return;
+  let data;
+  try {
+    const r = await fetch(GH_RAW + 'value_picks.json?t=' + Math.floor(Date.now() / 600000));
+    if (!r.ok) { card.style.display = 'none'; return; }
+    data = await r.json();
+  } catch (e) { card.style.display = 'none'; return; }
+  if (!data || !Array.isArray(data.picks) || !data.picks.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const meta = document.getElementById('value-asof');
+  if (meta) meta.textContent = data.asOf ? ('as of ' + data.asOf) : '';
+
+  const sc = data.scorecard || {};
+  // 前向追蹤裁決(誠實的判官)
+  let scHtml = '';
+  if (sc.graded > 0) {
+    const aColor = (sc.avgAlphaPct > 1) ? '#22c55e' : (sc.avgAlphaPct < -1) ? '#ef4444' : 'var(--muted)';
+    scHtml = '<div style="padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.6">' +
+      '<span style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px">前向追蹤(免疫倖存者偏差)</span><br>' +
+      '<b style="color:' + aColor + '">' + escapeHtml(sc.verdict || '') + '</b>' +
+      '<span style="color:var(--muted)"> · 已評 ' + sc.graded + ' 筆 · 中位持有 ' + (sc.medianDaysHeld || 0) + ' 天</span></div>';
+  } else {
+    scHtml = '<div style="padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--muted)">前向追蹤剛起步 —— 每月記錄一次選股,3-6 個月後才有可靠裁決(價值是月/季的事)。</div>';
+  }
+
+  // 本月選股(可點擊 → 進場決策助手)
+  const picksHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' +
+    data.picks.slice(0, 12).map(p =>
+      '<button onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="' +
+        escapeAttr((p.name || '') + ' · ' + (p.sector || '') + ' · E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '?') + ' · ROE ' + (p.roePct ?? '?') + '%') + '" ' +
+        'style="text-align:left;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text)">' +
+        '<div style="font-weight:700;font-size:14px">' + p.symbol + '</div>' +
+        '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
+        '<div class="mono" style="font-size:10px;color:#86efac">價值分 ' + p.valueScore + '</div>' +
+      '</button>'
+    ).join('') + '</div>';
+
+  el.innerHTML = scHtml + picksHtml +
+    '<div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+      '<b style="color:#fbbf24">誠實標籤</b>：' + escapeHtml(data.disclaimer || '') + '</div>';
 }
 
 // 2026-05-29 設計 A：Calm Hero — 平常安靜，一眼回答「我今天該幹嘛」，誠實打底。
