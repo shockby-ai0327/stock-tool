@@ -10108,19 +10108,81 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
+// 2026-05-29 進攻模式：進攻獵場 — 你衛星倉的「該打誰」。波段燃料,高變異,非統計 edge。
+// 從掃描資料挑最猛的波段設定(帶量突破 / 動能加速 / 催化劑)。
+function _attackScore(r) {
+  let s = 0; const tags = [];
+  const dist = (r.high52w && r.price) ? (r.price - r.high52w) / r.high52w * 100 : null;
+  if (dist != null && dist >= -5) { s += 30; tags.push('逼近新高'); }
+  if (r.volExpand >= 1.5) { s += 25; tags.push('爆量'); } else if (r.volExpand >= 1.2) { s += 12; }
+  if (r.accel >= 1.3) { s += 20; tags.push('加速'); } else if (r.accel >= 1.0) { s += 8; }
+  if ((r.rsRating || 0) >= 90) { s += 15; } else if ((r.rsRating || 0) >= 80) { s += 8; }
+  if (r.daysToEarnings != null && r.daysToEarnings >= 0 && r.daysToEarnings <= 10) { s += 10; tags.push('財報 T-' + r.daysToEarnings); }
+  return { score: s, tags };
+}
+async function showAttackHunt() {
+  const old = document.getElementById('attack-hunt-modal'); if (old) { old.remove(); return; }
+  let leaders = window._rsLeaderCache, disc = window._rsDiscoveryCache;
+  if (!leaders || !leaders.length) {
+    try {
+      const r = await fetch(GH_RAW + 'us_scan.json?t=' + Math.floor(Date.now() / 600000));
+      const d = await r.json(); leaders = d.leaders || []; disc = d.discoveries || [];
+    } catch (e) { leaders = []; disc = []; }
+  }
+  const fund = window._fundamentals || {};
+  const all = [...(leaders || []), ...(disc || [])];
+  const seen = new Set();
+  const ranked = all.filter(r => r && r.symbol && !seen.has(r.symbol) && seen.add(r.symbol))
+    .map(r => ({ r, ...(_attackScore(r)) }))
+    .filter(x => x.score >= 40)
+    .sort((a, b) => b.score - a.score).slice(0, 15);
+
+  let html = '<div id="attack-hunt-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
+  html += '<div style="background:var(--card);border-radius:12px;max-width:600px;width:100%;max-height:88vh;overflow:auto;border:1px solid rgba(239,68,68,.3)">';
+  html += '<div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px">';
+  html += '<div style="font-size:15px;font-weight:700">🔥 進攻獵場 · 波段衛星倉</div>';
+  html += '<button onclick="document.getElementById(\'attack-hunt-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button></div>';
+  html += '<div style="padding:12px 20px;background:rgba(239,68,68,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
+    '<b style="color:#f87171">誠實標籤</b>:這裡<b style="color:var(--text)">沒有統計 edge</b>(回測證明動能/突破贏不過 SPY)。這是高變異的波段燃料 —— 贏靠你<b style="color:var(--text)">砍得快、抱得久、heat 控好、運氣站你這邊</b>。只用衛星倉的錢。</div>';
+  if (!ranked.length) {
+    html += '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">目前沒有夠猛的波段設定 —— 空手也是一種紀律。</div>';
+  } else {
+    html += '<div style="padding:12px 20px">';
+    ranked.forEach((x, i) => {
+      const r = x.r;
+      const q = fund[r.symbol];
+      const trap = q && q.flag === 'trap' ? '<span style="font-size:9px;color:#f87171;margin-left:4px">⚠燒錢</span>' : '';
+      const dist = (r.high52w && r.price) ? ((r.price - r.high52w) / r.high52w * 100).toFixed(1) : '—';
+      html += '<div onclick="document.getElementById(\'attack-hunt-modal\').remove();showEntryPlanner(\'' + r.symbol + '\',' + (r.price || 0) + ',\'attack\')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">' +
+        '<div style="font-size:11px;color:var(--muted);width:18px">#' + (i + 1) + '</div>' +
+        '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + r.symbol + trap + '</div>' +
+          '<div style="font-size:10px;color:var(--muted)">' + x.tags.map(t => '<span style="background:rgba(239,68,68,.12);color:#fca5a5;padding:1px 5px;border-radius:3px;margin-right:3px">' + t + '</span>').join('') + '</div></div>' +
+        '<div style="text-align:right"><div class="mono" style="font-size:12px">$' + (r.price ? r.price.toFixed(2) : '—') + '</div>' +
+          '<div style="font-size:10px;color:var(--muted)">距高 ' + dist + '% · RS ' + (r.rsRating || '—') + '</div></div>' +
+        '<div style="font-size:10px;color:#f87171;font-weight:700">進攻 ' + x.score + '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
 // 2026-05-29 Phase 6+8：進場決策助手 — 部位大小 + 元大下單單 + 進場前檢查表 + 集中度 + 海外所得稅
 // 把「該不該進、進多少、怎麼下單」收成一個工具。固定分數風險法(每筆只賭帳戶的 R%)。
-function showEntryPlanner(symbol, prefillEntry) {
+function showEntryPlanner(symbol, prefillEntry, mode) {
   const old = document.getElementById('entry-planner-modal');
   if (old) old.remove();
+  window._epMode = mode || 'value';   // 'value'(核心) | 'attack'(衛星波段)
   const acct = Number(localStorage.getItem('account-size-usd')) || 30000;
-  const riskPct = Number(localStorage.getItem('risk-per-trade-pct')) || 1;
+  const riskPct = mode === 'attack' ? 3 : (Number(localStorage.getItem('risk-per-trade-pct')) || 1);
   const entry = Number(prefillEntry) || 0;
   const html =
     '<div id="entry-planner-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">' +
     '<div style="background:var(--card);border-radius:12px;max-width:520px;width:100%;max-height:90vh;overflow:auto;border:1px solid var(--border)">' +
       '<div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px">' +
-        '<div style="font-size:15px;font-weight:700">進場決策助手 · ' + escapeHtml(symbol || '') + '</div>' +
+        '<div style="font-size:15px;font-weight:700">進場決策助手 · ' + escapeHtml(symbol || '') +
+          (mode === 'attack' ? ' <span style="font-size:10px;color:#f87171;border:1px solid rgba(239,68,68,.4);padding:1px 6px;border-radius:4px">🔥 進攻</span>' : ' <span style="font-size:10px;color:#86efac;border:1px solid rgba(34,197,94,.4);padding:1px 6px;border-radius:4px">價值核心</span>') + '</div>' +
         '<button onclick="document.getElementById(\'entry-planner-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>' +
       '</div>' +
       '<div style="padding:18px 20px">' +
@@ -10221,8 +10283,11 @@ function _epCompute() {
     '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px">元大下單單（複製貼上）</div>' +
     '<textarea readonly onclick="this.select()" style="width:100%;height:118px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;resize:none">' + ticket + '</textarea>' +
     '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(' + JSON.stringify(ticket) + ');showToast&&showToast(\'已複製下單單\')" class="act ghost" style="margin-top:8px">複製下單單</button>' +
-    '<div style="margin-top:10px;padding:8px 12px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
-      '<b style="color:#86efac">價值持有的出場</b>：別在固定獲利%賣 —— 抱到<b style="color:var(--text)">月再平衡時它跌出價值清單</b>,或它不再便宜為止。漲到 2R/3R 就跑是處置效應,會剪掉價值的報酬。上方目標價僅供風險參考。' +
+    (window._epMode === 'attack'
+      ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+        '<b style="color:#f87171">快砍慢抱(波段)</b>：跌破停損 <b style="color:var(--text)">$' + stopPrice.toFixed(2) + ' 秒砍</b>,不凹單;一旦獲利,把停損<b style="color:var(--text)">移動到成本價、再隨新高往上拉</b>,讓贏家狂奔。不對稱(小虧大賺)是波段唯一的活路。'
+      : '<div style="margin-top:10px;padding:8px 12px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+        '<b style="color:#86efac">價值持有的出場</b>：別在固定獲利%賣 —— 抱到<b style="color:var(--text)">月再平衡時它跌出價值清單</b>,或它不再便宜為止。漲到 2R/3R 就跑是處置效應,會剪掉價值的報酬。') +
     '</div>' +
     (csSym && csSym !== '標的'
       ? '<div style="margin-top:8px;font-size:10px;color:var(--muted)">資料已自動過濾異常值。想再保險可<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(csSym) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">到 Yahoo 核對 ' + escapeHtml(csSym) + ' ↗</a>(可選)</div>'
@@ -10348,8 +10413,8 @@ function renderCalmHero() {
       (stateSub ? '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + escapeHtml(stateSub) + '</div>' : '') +
       picksHtml + scLine +
       '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
-        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：機械選股訊號都贏不過它,只有「價值×品質」通過回測。' +
-        '<a onclick="showPage(\'scanner\')" style="color:var(--accent);cursor:pointer;margin-left:4px">掃描器的動能名單是研究點子(未證實,非買進訊號)→</a>' +
+        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：機械選股訊號都贏不過它,只有「價值×品質」通過回測(核心倉)。' +
+        '<a onclick="showAttackHunt()" style="color:#f87171;cursor:pointer;margin-left:4px;font-weight:600">🔥 想打波段?進攻獵場(衛星倉)→</a>' +
       '</div>' +
     '</div>';
 }
