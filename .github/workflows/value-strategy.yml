@@ -4,8 +4,8 @@ name: Value Strategy (forward test)
 # 唯一乾淨的驗證 = 前向追蹤(真實時間,免疫倖存者偏差)。
 # 價值是月/季的事 → 一個月跑一次,每月記錄一次選股,scorecard 持續累積真相。
 on:
-  schedule:
-    - cron: '17 9 1 * *'   # 每月 1 號 09:17 UTC
+  # 2026-05-29: 使用者核心改放大盤指數,前端價值精選已移除 → 停用月排程。
+  # 保留 workflow_dispatch,要重啟價值策略隨時手動觸發即可。
   workflow_dispatch:
 
 permissions:

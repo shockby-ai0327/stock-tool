@@ -542,15 +542,9 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-regime"></div>
  </section>
 
- <!-- 1.5 價值精選 — 8 輪回測唯一通過的因子,前向驗證中 -->
- <section class="card-strip" id="dash-value-card" style="display:none">
-  <div class="sl-section">
-   <h2>價值精選</h2><span class="sl-en">value × quality</span>
-   <span class="sl-sub">唯一通過回測的因子 · 前向驗證中</span>
-   <span class="sl-meta" id="value-asof"></span>
-  </div>
-  <div id="dash-value"></div>
- </section>
+ <!-- 2026-05-29: 價值精選已移除 — 使用者核心放大盤指數(本來就是最好核心),
+      此工具改當進攻衛星駕駛艙。dash-value-card 容器保留隱藏避免 null ref。 -->
+ <div id="dash-value-card" style="display:none"><span id="value-asof"></span><div id="dash-value"></div></div>
 
  <!-- 2. ACTION ITEMS -->
  <section class="card-strip">
@@ -592,14 +586,25 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="narrative-watch" style="margin-top:8px;font-size:11px"></div>
  </section>
 
- <!-- 2026-05-29: 動能領袖 + 三重共振已移出首頁 → 它們回測證明無 edge,不是買進訊號。
-      保留在「掃描器」分頁當研究/觀察工具。首頁只留決策流。 -->
- <!-- 研究工具入口（低調) -->
+ <!-- 2026-05-29: 動能領袖移回首頁(進攻衛星倉的獵場入口)。誠實標:無統計 edge。 -->
  <section class="card-strip">
-  <div style="padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.6">
-   想看市場在動什麼?動能領袖 / 三重共振 等**研究工具**(回測無 edge,非買進訊號)在
-   <a onclick="showPage('scanner')" style="color:var(--accent);cursor:pointer">掃描器分頁 →</a>
+  <div class="sl-section">
+   <h2>動能領袖</h2><span class="sl-en">RS leader · 進攻獵場</span>
+   <span class="sl-sub">無統計 edge · 高變異波段燃料,靠紀律</span>
+   <button class="act ghost" onclick="showAttackHunt()" style="margin-left:auto" title="挑最猛的波段設定">🔥 進攻獵場</button>
+   <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
   </div>
+  <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
+ </section>
+
+ <!-- 三重共振雷達(進攻參考) -->
+ <section class="card-strip" id="dash-triple-resonance-card">
+  <div class="sl-section">
+   <h2>三重共振雷達</h2><span class="sl-en">triple resonance</span>
+   <span class="sl-sub">財報・VCP・內部人 ≥3 訊號匯流(無 edge,參考)</span>
+   <span class="sl-meta" id="dash-triple-resonance-meta"></span>
+  </div>
+  <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;font-family:var(--mono)">scanning…</div></div>
  </section>
 
  <!-- 隱藏 stub：警報 / 觀察清單 / 短線追蹤 容器仍存在避免 null ref -->
@@ -9233,7 +9238,7 @@ async function renderDashboard(forceRescan) {
  renderWatchlistSimple(); // Fix G: 簡版觀察清單
  renderDashHoldings(); // 持倉動態
  try { renderBehaviorCoach(); } catch(e) {} // Phase 4 行為教練
- try { renderValuePicks(); } catch(e) {} // 價值精選(唯一通過回測的因子 + 前向追蹤)
+ // 價值精選已移除(使用者核心放大盤指數,此工具改當進攻衛星倉)
  // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
  loadMarketNarrative(window._dashboardMarket || 'us');
  // 6. T交易精選（15 分鐘快取，獨立載入）
@@ -10432,60 +10437,38 @@ function renderCalmHero() {
   const el = document.getElementById('dash-calm-hero');
   if (!el) return;
   const regime = window._marketRegime;
-  const vp = window._valuePicks;                 // 唯一有證據的買單來源
-  const picks = (vp && Array.isArray(vp.picks)) ? vp.picks : null;
+  const leaders = window._rsLeaderCache || [];
+  // 進攻獵場設定數(動能在空頭最容易死,所以 regime 對波段更重要)
+  const setups = leaders.filter(r => typeof _attackScore === 'function' && _attackScore(r).score >= 40);
 
-  // 1) 大盤環境閘門 → 本月可否進場
-  let regimeLine, regimeColor, canLong = true;
-  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 歷史虧損集中期'; regimeColor = 'var(--red)'; canLong = false; }
-  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 提高標準、減碼'; regimeColor = 'var(--yellow)'; canLong = false; }
-  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 環境允許進場'; regimeColor = 'var(--green)'; }
+  // 1) 大盤環境閘門 — 動能版(空頭=動能墳場)
+  let regimeLine, regimeColor, deploy = true;
+  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 動能在空頭是墳場,傾向空手'; regimeColor = 'var(--red)'; deploy = false; }
+  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 減碼、只碰最強設定'; regimeColor = 'var(--yellow)'; deploy = false; }
+  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 動能環境,可進攻'; regimeColor = 'var(--green)'; }
   else { regimeLine = '大盤中性 — 偏謹慎'; regimeColor = 'var(--muted)'; }
 
-  // 2) 主要答案 = 價值精選(唯一通過回測),被大盤閘門 gate
   let stateBig, stateSub = '';
-  if (!canLong) {
-    stateBig = '本月傾向空手';
-    stateSub = '大盤環境不利 —— 保留資金本身就是一個決策,不勉強進場。';
-  } else if (!picks) {
-    stateBig = '價值精選載入中…';
-    stateSub = '若長期空白,代表 value-strategy workflow 還沒跑過。';
-  } else if (!picks.length) {
-    stateBig = '本月無價值候選';
-  } else {
-    stateBig = '本月該買的候選：價值精選 ' + picks.length + ' 檔';
-    stateSub = '唯一通過 8 輪回測的策略(價值×品質)。方向有學界支撐、幅度前向驗證中 —— 不是保證會漲。點任一檔規劃進場(算部位 + 元大下單單)。';
-  }
+  if (!leaders.length) { stateBig = '掃描資料載入中…'; }
+  else if (!deploy) { stateBig = '今日傾向空手'; stateSub = '大盤不利動能 —— 進攻倉減碼或觀望,別在墳場開槍。空手也是紀律。'; }
+  else if (!setups.length) { stateBig = '今日無夠猛的設定'; stateSub = '沒有逼近新高+爆量的波段燃料 —— 不勉強,等更猛的。'; }
+  else { stateBig = '🔥 進攻獵場 ' + setups.length + ' 檔設定就緒'; stateSub = '逼近新高 / 爆量 / 加速的波段燃料。點開挑、用進攻檔規劃(3% 風險 + heat 護欄 + 快砍慢抱)。'; }
 
-  // 價值候選按鈕(點擊 → 進場決策助手)
-  let picksHtml = '';
-  if (canLong && picks && picks.length) {
-    picksHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">' + picks.slice(0, 8).map(p =>
-      '<button onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="規劃進場：部位大小 + 元大下單單 + 檢查表" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
-        '<div style="font-weight:700;font-size:14px">' + p.symbol + '</div>' +
-        '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
-        '<div style="font-size:10px;color:var(--accent);margin-top:3px">規劃進場 →</div>' +
-      '</button>').join('') + '</div>';
-  }
-
-  // 前向追蹤裁決(誠實判官,小字)
-  const sc = vp && vp.scorecard;
-  const scLine = (sc && sc.verdict)
-    ? '<div style="margin-top:12px;font-size:11px;color:var(--muted)"><b style="color:var(--text)">前向驗證</b>：' + escapeHtml(sc.verdict) + '</div>'
+  const btnHtml = (deploy && setups.length)
+    ? '<button onclick="showAttackHunt()" style="margin-top:14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700;font-size:13px">🔥 打開進攻獵場 →</button>'
     : '';
 
   el.innerHTML =
-    '<div style="padding:18px 20px;background:linear-gradient(135deg,rgba(255,255,255,.03),transparent);border:1px solid var(--border);border-radius:12px">' +
+    '<div style="padding:18px 20px;background:linear-gradient(135deg,rgba(239,68,68,.04),transparent);border:1px solid var(--border);border-radius:12px">' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">' +
-        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)">本月怎麼買 · HOW TO BUY</span>' +
+        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)">進攻衛星倉 · TODAY</span>' +
         '<span style="font-size:11px;color:' + regimeColor + '">● ' + regimeLine + '</span>' +
       '</div>' +
       '<div style="font-size:22px;font-weight:700;margin:4px 0 2px">' + escapeHtml(stateBig) + '</div>' +
       (stateSub ? '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + escapeHtml(stateSub) + '</div>' : '') +
-      picksHtml + scLine +
+      btnHtml +
       '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
-        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：機械選股訊號都贏不過它,只有「價值×品質」通過回測(核心倉)。' +
-        '<a onclick="showAttackHunt()" style="color:#f87171;cursor:pointer;margin-left:4px;font-weight:600">🔥 想打波段?進攻獵場(衛星倉)→</a>' +
+        '核心放<b style="color:var(--text)">大盤指數</b>(你自己持有)。這裡是<b style="color:var(--text)">進攻衛星倉</b> —— 動能/掃描器<b style="color:#f87171">無統計 edge</b>、高變異,贏靠你<b style="color:var(--text)">砍得快、抱得久、heat 控好</b>。護欄與誠實追蹤是你不畢業的保險。' +
       '</div>' +
     '</div>';
 }
