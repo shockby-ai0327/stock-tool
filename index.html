@@ -10203,6 +10203,11 @@ function _epCompute() {
     '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px">元大下單單（複製貼上）</div>' +
     '<textarea readonly onclick="this.select()" style="width:100%;height:118px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;resize:none">' + ticket + '</textarea>' +
     '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(' + JSON.stringify(ticket) + ');showToast&&showToast(\'已複製下單單\')" class="act ghost" style="margin-top:8px">複製下單單</button>' +
+    (csSym && csSym !== '標的'
+      ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+        '⚠ 下單前自己對帳：價格 / PE / 是否仍有獲利,別只信工具。' +
+        '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(csSym) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent);margin-left:4px">在 Yahoo 查證 ' + escapeHtml(csSym) + ' ↗</a></div>'
+      : '') +
     '<div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
       '<b style="color:#fbbf24">海外所得稅提醒</b>：美股屬海外所得,計入個人基本所得額。全戶海外所得年度合計 <b>NT$100 萬以上</b>才需計入;基本所得額有 <b>NT$750 萬免稅額</b>(2025 年度)。實際依國稅局規定,大額獲利建議諮詢會計師。' +
     '</div>';
@@ -10240,19 +10245,27 @@ async function renderValuePicks() {
     scHtml = '<div style="padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--muted)">前向追蹤剛起步 —— 每月記錄一次選股,3-6 個月後才有可靠裁決(價值是月/季的事)。</div>';
   }
 
-  // 本月選股(可點擊 → 進場決策助手)
-  const picksHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' +
+  // 資料新鮮度 + 查證提醒(yfinance 會出錯,下單前自己對帳)
+  const ageDays = data.asOf ? Math.round((Date.now() - new Date(data.asOf).getTime()) / 864e5) : null;
+  const freshHtml = '<div style="margin-bottom:10px;font-size:11px;color:var(--muted);line-height:1.6">' +
+    '更新於 ' + (data.asOf || '?') + (ageDays != null ? '（' + ageDays + ' 天前）' : '') +
+    ' · <b style="color:var(--text)">價格為月初快照,非即時</b> —— 下單前在進場助手改成當前價,並用下方連結到 Yahoo 對帳(yfinance 偶有錯誤資料)。</div>';
+
+  // 本月選股(可點擊 → 進場決策助手;附 Yahoo 查證連結)
+  const picksHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">' +
     data.picks.slice(0, 12).map(p =>
-      '<button onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="' +
-        escapeAttr((p.name || '') + ' · ' + (p.sector || '') + ' · E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '?') + ' · ROE ' + (p.roePct ?? '?') + '%') + '" ' +
-        'style="text-align:left;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text)">' +
-        '<div style="font-weight:700;font-size:14px">' + p.symbol + '</div>' +
-        '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
-        '<div class="mono" style="font-size:10px;color:#86efac">價值分 ' + p.valueScore + '</div>' +
-      '</button>'
+      '<div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:8px 10px">' +
+        '<div onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="' +
+          escapeAttr((p.name || '') + ' · ' + (p.sector || '') + ' · ROE ' + (p.roePct ?? '?') + '%') + '" style="cursor:pointer">' +
+          '<div style="font-weight:700;font-size:14px;color:var(--text)">' + p.symbol + '</div>' +
+          '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
+          '<div class="mono" style="font-size:10px;color:#86efac">價值分 ' + p.valueScore + ' · 規劃進場 →</div>' +
+        '</div>' +
+        '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(p.symbol) + '" target="_blank" rel="noopener noreferrer" style="font-size:9px;color:var(--muted);text-decoration:none" onclick="event.stopPropagation()">在 Yahoo 查證 ↗</a>' +
+      '</div>'
     ).join('') + '</div>';
 
-  el.innerHTML = scHtml + picksHtml +
+  el.innerHTML = freshHtml + scHtml + picksHtml +
     '<div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
       '<b style="color:#fbbf24">誠實標籤</b>：' + escapeHtml(data.disclaimer || '') + '</div>';
 }
