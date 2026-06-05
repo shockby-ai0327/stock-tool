@@ -531,6 +531,8 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <div id="dash-timestamp" style="display:none"></div>
 
  <!-- 0. CALM HERO — 設計 A：平常安靜，一眼回答「我今天該幹嘛」，誠實打底 -->
+ <!-- 200MA 指數擇時警示 — 唯一有數據撐腰、值得系統化的訊號(只在跌破時出現) -->
+ <div id="dash-regime-timing"></div>
  <section class="card-strip" id="dash-calm-hero" style="margin-bottom:20px"></section>
 
  <!-- 1. MARKET REGIME -->
@@ -7172,8 +7174,9 @@ async function fetchMarketRegime() {
    const dRegimeDiv = document.getElementById('dash-regime');
    if (dRegimeDiv && typeof _rsRegimeCard === 'function') dRegimeDiv.innerHTML = _rsRegimeCard();
  } catch(e) {}
- // 2026-05-29: regime 載入完，刷新 Calm Hero 的環境判讀
+ // 2026-05-29: regime 載入完，刷新 Calm Hero + 200MA 擇時警示
  try { if (typeof renderCalmHero === 'function') renderCalmHero(); } catch(e) {}
+ try { if (typeof renderRegimeTimingBanner === 'function') renderRegimeTimingBanner(); } catch(e) {}
  // FRED 殖利率曲線（非阻塞）
  fetchFredMacro().then(fred => {
    if (!window._marketRegime) return;
@@ -10433,6 +10436,27 @@ async function renderValuePicks() {
 
 // 2026-05-29 設計 A：Calm Hero — 平常安靜，一眼回答「我今天該幹嘛」，誠實打底。
 // 核心 = 品質×動能交集（高 RS 且基本面穩健），多數日子可能是「空手」。
+// 200MA 指數擇時警示 — 回測唯一像樣的系統化訊號:SPY>200MA 持有(回撤 -20% vs 買進持有 -34%)。
+// 只在「跌破 200MA」時出現(設計 A:沒事不佔版面)。針對你的「大盤指數核心」減碼用。
+function renderRegimeTimingBanner() {
+  const el = document.getElementById('dash-regime-timing');
+  if (!el) return;
+  const r = window._marketRegime;
+  if (!r || r.spyVs200 == null) { el.innerHTML = ''; return; }
+  if (r.spyVs200 >= 0) {
+    // 在 200MA 之上 — 低調綠字,不佔版面
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">🛡 大盤在 200MA 之上 +' + r.spyVs200.toFixed(1) + '% — 指數擇時:持有核心。</div>';
+    return;
+  }
+  // 跌破 200MA — 顯眼紅色減碼警示
+  el.innerHTML =
+    '<div style="margin-bottom:16px;padding:14px 18px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:10px">' +
+      '<div style="font-size:14px;font-weight:700;color:#f87171;margin-bottom:4px">🛡 大盤跌破 200MA（' + r.spyVs200.toFixed(1) + '%）— 指數擇時減碼訊號</div>' +
+      '<div style="font-size:12px;color:var(--muted);line-height:1.6">回測唯一有數據撐腰的系統化訊號:此時退出/減碼核心,歷史最大回撤 <b style="color:var(--text)">-20%</b> vs 買進持有 <b style="color:var(--text)">-34%</b>。' +
+      '<br>建議:<b style="color:var(--text)">核心(大盤指數)減碼或移現金</b>,進攻衛星倉<b style="color:#f87171">空手</b>(動能在空頭是墳場)。等站回 200MA 再回場。</div>' +
+    '</div>';
+}
+
 function renderCalmHero() {
   const el = document.getElementById('dash-calm-hero');
   if (!el) return;
