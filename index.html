@@ -592,25 +592,14 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="narrative-watch" style="margin-top:8px;font-size:11px"></div>
  </section>
 
- <!-- 4. TRIPLE RESONANCE -->
- <section class="card-strip" id="dash-triple-resonance-card">
-  <div class="sl-section">
-   <h2>三重共振雷達</h2><span class="sl-en">triple resonance</span>
-   <span class="sl-sub">財報・VCP・內部人 ≥3 訊號匯流</span>
-   <span class="sl-meta" id="dash-triple-resonance-meta"></span>
-  </div>
-  <div id="dash-triple-resonance-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;font-family:var(--mono)">scanning…</div></div>
- </section>
-
- <!-- 5. RS LEADER -->
+ <!-- 2026-05-29: 動能領袖 + 三重共振已移出首頁 → 它們回測證明無 edge,不是買進訊號。
+      保留在「掃描器」分頁當研究/觀察工具。首頁只留決策流。 -->
+ <!-- 研究工具入口（低調) -->
  <section class="card-strip">
-  <div class="sl-section">
-   <h2>動能領袖</h2><span class="sl-en">RS leader</span>
-   <span class="sl-sub">全市場動能排行</span>
-   <button class="act ghost" onclick="refreshDashboardData()" style="margin-left:auto" title="重新拉伺服器排行 + 即時報價">重新整理</button>
-   <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
+  <div style="padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.6">
+   想看市場在動什麼?動能領袖 / 三重共振 等**研究工具**(回測無 edge,非買進訊號)在
+   <a onclick="showPage('scanner')" style="color:var(--accent);cursor:pointer">掃描器分頁 →</a>
   </div>
-  <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
  </section>
 
  <!-- 隱藏 stub：警報 / 觀察清單 / 短線追蹤 容器仍存在避免 null ref -->
