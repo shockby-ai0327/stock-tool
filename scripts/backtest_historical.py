@@ -452,7 +452,7 @@ def compute_stats(trades, idx, close, spy_close, n_trials=DSR_TRIALS, config=Non
                 })
 
     # Regime split
-    up = np.array([t["uptrend"] for t in trades])
+    up = np.array([t["uptrend"] for t in trades], dtype=bool)
     def seg(mask):
         if mask.sum() == 0:
             return None
@@ -743,6 +743,24 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
             return None, None
         return lc, volexp[ti, lc]
 
+    # 進攻系統:前端進攻獵場的系統化版 — 逼近新高 + 爆量 + 1月動能,且 regime 閘門
+    # (SPY>200MA 才進場,動能在空頭是墳場)。
+    ret1m_arr = (close / close.shift(21) - 1.0).values
+    spy_arr_a = spy_close.values
+    spy_ma200_a = spy_close.rolling(200).mean().values
+
+    def e_attack(ti):
+        # regime 閘門:SPY 必須在自己的 200MA 之上,否則整批不進場
+        if np.isnan(spy_ma200_a[ti]) or spy_arr_a[ti] < spy_ma200_a[ti]:
+            return None, None
+        row_c = C[ti]
+        mask = (row_c >= 0.97 * hi252[ti]) & (volexp[ti] > 1.3) & (row_c > ma200[ti]) & (ret1m_arr[ti] > 0)
+        mask = np.nan_to_num(mask, nan=False).astype(bool)
+        lc = np.where(mask)[0]
+        if lc.size == 0:
+            return None, None
+        return lc, ret1m_arr[ti, lc]   # 按近月動能排序
+
     def e_pead(ti):
         # PEAD proxy: large single-day jump + volume spike = likely earnings beat.
         # Buy next bar, ride the post-earnings drift. No earnings calendar needed.
@@ -768,6 +786,8 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
          "rebal": 5, "topn": 15, "exit": {"policy": "trail", "trail": 0.15, "timeout": 120, "disaster": 0.15}},
         {"name": "pead", "label": "財報跳空漂移(代理)", "entry": e_pead,
          "rebal": 1, "topn": 20, "exit": {"policy": "trail", "trail": 0.12, "timeout": 50, "disaster": 0.12}},
+        {"name": "attack_sys", "label": "進攻系統(突破+量+regime+快砍慢抱·40bps)", "entry": e_attack,
+         "rebal": 5, "topn": 8, "exit": {"policy": "trail", "trail": 0.12, "timeout": 60, "disaster": 0.08, "costBps": 40}},
     ]
 
     split = RS_LOOKBACK + int((n - RS_LOOKBACK) * 0.6)  # 60% in-sample
