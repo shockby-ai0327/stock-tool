@@ -10034,6 +10034,77 @@ function renderBehaviorCoach() {
   el.innerHTML = html;
 }
 
+// 2026-05-29 進攻模式：快砍慢抱出場引擎 — 緊停損秒砍 + 移動停損隨新高拉。
+function _swingExit(entry, current, peak) {
+  const INIT_STOP = 0.08, TRAIL = 0.12, BREAKEVEN_AT = 0.10;
+  peak = Math.max(peak || entry, current);
+  let stop = entry * (1 - INIT_STOP);
+  if (peak >= entry * (1 + BREAKEVEN_AT)) stop = Math.max(stop, entry);   // 獲利 10% 後保本
+  stop = Math.max(stop, peak * (1 - TRAIL));                              // 從峰值移動停損
+  const gainPct = (current / entry - 1) * 100;
+  const distPct = (current / stop - 1) * 100;
+  let state, color;
+  if (current <= stop) { state = '該砍了'; color = '#f87171'; }
+  else if (distPct < 3) { state = '逼近停損'; color = '#fbbf24'; }
+  else if (stop >= entry) { state = '已鎖保本+'; color = '#4ade80'; }
+  else { state = '持有'; color = 'var(--muted)'; }
+  return { stop, peak, gainPct, distPct, state, color };
+}
+function _loadPeaks() { try { return JSON.parse(localStorage.getItem('holdings-peaks') || '{}'); } catch (e) { return {}; } }
+function _savePeaks(p) { try { localStorage.setItem('holdings-peaks', JSON.stringify(p)); } catch (e) {} }
+
+function _swingExitSummary(open, prices) {
+  const peaks = _loadPeaks();
+  const rows = [];
+  for (const [ticker, p] of open) {
+    const entry = p.totalCost / p.qty, cur = prices[ticker] || 0;
+    if (!(entry > 0 && cur > 0)) continue;
+    const ex = _swingExit(entry, cur, peaks[ticker]);
+    peaks[ticker] = ex.peak;        // ratchet peak
+    rows.push({ ticker, cur, ex });
+  }
+  _savePeaks(peaks);
+  if (!rows.length) return '';
+  // 該砍 / 逼近的排前面
+  rows.sort((a, b) => a.ex.distPct - b.ex.distPct);
+  return '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)">' +
+    '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">波段出場參考 · 快砍慢抱<span style="text-transform:none"> （核心價值倉請忽略,用月再平衡）</span></div>' +
+    rows.map(x =>
+      '<div style="display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;font-size:11px;margin-bottom:3px">' +
+        '<span class="mono" style="font-weight:700">' + x.ticker + '</span>' +
+        '<span class="mono" style="color:var(--muted)">砍在 $' + x.ex.stop.toFixed(2) + ' · 距 ' + x.ex.distPct.toFixed(0) + '%' + (x.ex.gainPct >= 0 ? ' · 帳上 +' + x.ex.gainPct.toFixed(0) + '%' : '') + '</span>' +
+        '<span style="font-weight:700;color:' + x.ex.color + '">' + x.ex.state + '</span>' +
+      '</div>'
+    ).join('') + '</div>';
+}
+
+// 即時砍/拉警示:定時檢查持倉,跌破波段停損就推播(每標的每天一次)
+let _swingAlerted = {};
+async function _checkSwingExits() {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const open = calcOpenPositions(getJ());
+    if (!open.length) return;
+    const peaks = _loadPeaks();
+    const today = new Date().toISOString().slice(0, 10);
+    for (const [ticker, p] of open) {
+      const entry = p.totalCost / p.qty;
+      let cur = 0; try { const d = await quickPrice(ticker); cur = d ? d.price : 0; } catch (e) {}
+      if (!(entry > 0 && cur > 0)) continue;
+      const ex = _swingExit(entry, cur, peaks[ticker]);
+      peaks[ticker] = ex.peak;
+      const key = ticker + '|' + today;
+      if (ex.state === '該砍了' && _swingAlerted[key] !== 'cut') {
+        _sendPushNotification('🔪 ' + ticker + ' 跌破波段停損', '現價 $' + cur.toFixed(2) + ' ≤ 停損 $' + ex.stop.toFixed(2) + ' — 快砍,別凹單。', 'swing-' + ticker);
+        _swingAlerted[key] = 'cut';
+      }
+    }
+    _savePeaks(peaks);
+  } catch (e) {}
+}
+setInterval(() => { try { _checkSwingExits(); } catch (e) {} }, 120000);   // 每 2 分鐘
+setTimeout(() => { try { _checkSwingExits(); } catch (e) {} }, 8000);
+
 async function renderDashHoldings() {
  const j = getJ();
  if (!j.length) return;
@@ -10103,7 +10174,7 @@ async function renderDashHoldings() {
   '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase">' + open.length + ' positions</span>' +
   '<span class="mono" style="font-size:14px;font-weight:700;color:'+tc+'">'+(totalPnl>=0?'+':'')+'$'+Math.round(totalPnl).toLocaleString()+' · '+(totalCost>0?(totalPnl/totalCost*100):0).toFixed(2)+'%</span>' +
  '</div>' +
- items + sectorHtml +
+ items + sectorHtml + _swingExitSummary(open, prices) +
  '<div style="text-align:right;margin-top:10px"><button class="act ghost" onclick="showPage(\'portfolio\');setTimeout(()=>switchJournalTab(\'holdings\'),50)">詳細追蹤 →</button></div>';
 }
 
