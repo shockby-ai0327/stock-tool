@@ -108,7 +108,7 @@ def extract_annual(facts, tags):
                 out.append([x["filed"], x.get("end", ""), x["val"]])
         if out:
             out.sort(key=lambda r: r[0])      # by filed date
-            return out[-8:]                    # last ~8 annual points
+            return out[-16:]                   # keep ~16 annual points (long-history test)
     return []
 
 

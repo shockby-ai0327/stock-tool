@@ -73,7 +73,7 @@ STOP_PCT        = 0.08         # -8% stop (backtest.js)
 TIMEOUT_DAYS    = 60           # trading-day timeout (backtest.js)
 REBALANCE_DAYS  = 5            # weekly rebalance (every 5 trading days)
 COST_BPS        = 10           # round-trip cost assumption, basis points (0.10%)
-YEARS           = 6            # history depth
+YEARS           = 15           # history depth (long-history regime test; XBRL fundamentals ~2010+)
 MC_RUNS         = 2000         # Monte Carlo bootstrap resamples
 DSR_TRIALS      = 20           # assumed # of strategy configs tested (for DSR haircut)
 
@@ -953,8 +953,11 @@ def run_factor_lab(close, high, low, op, spy_close, leader, rs12_1, fund_hist, n
 
     out = []
     spy_cagr = None
+    qmv_trades = None
     for s in strategies:
         trades = sim_strategy(panels, s["entry"], s["rebal"], exit_cfg, s["topn"], RS_LOOKBACK + 1, n)
+        if s["name"] == "qmv":
+            qmv_trades = trades
         st = compute_stats(trades, idx, close, spy_close, n_trials=n_trials, config={"factor": s["name"]})
         spy_cagr = st["benchmark"]["spyCagr"]
         o = st["overall"]
@@ -982,8 +985,33 @@ def run_factor_lab(close, high, low, op, spy_close, leader, rs12_1, fund_hist, n
                    + (f"最接近「{max(beat, key=lambda v: v['cagr'] or -99)['label']}」贏了 SPY 但穩健度/樣本外沒過。" if beat
                       else "連贏 SPY 都做不到。")
                    + " 注意：仍有倖存者偏差(宇宙是當前成分股)→ 真實只會更差。")
+    # Era breakdown: does QMV beat SPY in ANY era (esp. non-mega-cap-bull periods)?
+    era_breakdown = []
+    if qmv_trades:
+        spy = spy_close.values
+        start = RS_LOOKBACK
+        step = (n - start) // 4   # 4 eras
+        for k in range(4):
+            lo = start + k * step
+            hi = (start + (k + 1) * step) if k < 3 else n
+            sub = [t for t in qmv_trades if lo <= t["entry_i"] < hi]
+            spy_ret = (spy[hi - 1] / spy[lo] - 1) if (spy[lo] > 0 and not np.isnan(spy[lo]) and not np.isnan(spy[hi - 1])) else None
+            yrs = (idx[hi - 1] - idx[lo]).days / 365.25
+            spy_cagr_era = ((spy[hi - 1] / spy[lo]) ** (1 / yrs) - 1) if (spy_ret is not None and yrs > 0) else None
+            if len(sub) >= 8:
+                rets = [t["ret"] for t in sub]
+                era_breakdown.append({
+                    "era": str(idx[lo].date()) + " ~ " + str(idx[hi - 1].date()),
+                    "spyCagrPct": round(spy_cagr_era * 100, 1) if spy_cagr_era is not None else None,
+                    "qmvMeanRetPct": round(sum(rets) / len(rets) * 100, 2),
+                    "qmvWinRate": round(sum(1 for r in rets if r > 0) / len(sub), 2),
+                    "nTrades": len(sub),
+                    "qmvFavorable": bool(sum(rets) / len(rets) > 0 and (spy_cagr_era is None or spy_cagr_era < 0.08)),
+                })
+
     return {"spyCagr": spy_cagr, "costBps": FACTOR_COST_BPS, "splitDate": str(idx[split].date()),
-            "factors": out, "verdict": verdict, "coverage": len(fund_hist)}
+            "yearsTested": round((idx[-1] - idx[0]).days / 365.25, 1),
+            "factors": out, "eraBreakdown": era_breakdown, "verdict": verdict, "coverage": len(fund_hist)}
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
