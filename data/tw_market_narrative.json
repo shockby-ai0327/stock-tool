@@ -1,128 +1,130 @@
 {
-  "generatedAt": 1780608746119,
+  "generatedAt": 1780676829810,
   "market": "TW",
-  "scanAt": "2026-06-04T21:22:17.897Z",
-  "session": "POST-CLOSE (market closed)",
-  "sessionShort": "post-close",
-  "watchLabel": "明日關注",
+  "scanAt": "2026-06-05T16:16:41.074Z",
+  "session": "MORNING SESSION (post-open, first 3.5 hours)",
+  "sessionShort": "morning",
+  "watchLabel": "下午盤關注",
   "macros": {
     "spy": {
-      "last": 757.09,
-      "changePct": 0.38
+      "last": 745.35,
+      "changePct": -1.55
     },
     "vix": {
-      "last": 15.4,
-      "changePct": -4.11
+      "last": 17.9,
+      "changePct": 16.23
     },
     "tnx": {
-      "last": 4.48,
-      "changePct": -0.31
+      "last": 4.54,
+      "changePct": 1.45
     },
     "dxy": {
-      "last": 99.43,
-      "changePct": -0.1
+      "last": 100.06,
+      "changePct": 0.65
     }
   },
   "sectorLeaders": [
     {
+      "etf": "XLP",
+      "last": 83.54,
+      "changePct": 1.83
+    },
+    {
       "etf": "XLV",
-      "last": 152.08,
-      "changePct": 3.07
+      "last": 154.61,
+      "changePct": 1.66
     },
     {
-      "etf": "XLF",
-      "last": 52.19,
-      "changePct": 2.59
-    },
-    {
-      "etf": "XAR",
-      "last": 280.42,
-      "changePct": 2.55
+      "etf": "XLRE",
+      "last": 44.83,
+      "changePct": 0.96
     }
   ],
   "sectorLaggards": [
     {
+      "etf": "GDX",
+      "last": 80.29,
+      "changePct": -7.07
+    },
+    {
       "etf": "SMH",
-      "last": 627.53,
-      "changePct": -1.63
+      "last": 588.47,
+      "changePct": -6.22
     },
     {
       "etf": "XLK",
-      "last": 193.17,
-      "changePct": -1.56
-    },
-    {
-      "etf": "XLP",
-      "last": 82.04,
-      "changePct": -0.15
+      "last": 184.3,
+      "changePct": -4.59
     }
   ],
   "gainers": [
     {
-      "symbol": "CHRN",
-      "name": "ChronoScale Corporation",
-      "changePct": 22.69
+      "symbol": "COO",
+      "name": "The Cooper Companies, Inc.",
+      "changePct": 7.49
     },
     {
-      "symbol": "ABVX",
-      "name": "Abivax SA",
-      "changePct": 16.39
+      "symbol": "ABM",
+      "name": "ABM Industries Incorporated",
+      "changePct": 7.71
     },
     {
-      "symbol": "OSCR",
-      "name": "Oscar Health, Inc.",
-      "changePct": 15.12
+      "symbol": "AGX",
+      "name": "Argan, Inc.",
+      "changePct": 6.74
     },
     {
-      "symbol": "RDW",
-      "name": "Redwire Corporation",
-      "changePct": 15.09
+      "symbol": "ARCB",
+      "name": "ArcBest Corporation",
+      "changePct": 6.21
     },
     {
-      "symbol": "ADPT",
-      "name": "Adaptive Biotechnologies Corpo",
-      "changePct": 13.07
+      "symbol": "FIZZ",
+      "name": "National Beverage Corp.",
+      "changePct": 6.16
     }
   ],
   "losers": [
     {
-      "symbol": "PVH",
-      "name": "PVH Corp.",
-      "changePct": -20.24
+      "symbol": "PL",
+      "name": "Planet Labs PBC",
+      "changePct": -23.52
     },
     {
-      "symbol": "NTSK",
-      "name": "Netskope, Inc.",
-      "changePct": -19.11
+      "symbol": "POET",
+      "name": "POET Technologies Inc.",
+      "changePct": -19.99
     },
     {
-      "symbol": "FIVE",
-      "name": "Five Below, Inc.",
-      "changePct": -13.78
+      "symbol": "ALM",
+      "name": "Almonty Industries Inc.",
+      "changePct": -19.41
     },
     {
-      "symbol": "CIEN",
-      "name": "Ciena Corporation",
-      "changePct": -13.66
+      "symbol": "TE",
+      "name": "T1 Energy Inc.",
+      "changePct": -16.64
     },
     {
-      "symbol": "AVGO",
-      "name": "Broadcom Inc.",
-      "changePct": -12.59
+      "symbol": "USAR",
+      "name": "USA Rare Earth, Inc.",
+      "changePct": -15.98
     }
   ],
-  "narrative": "今日市場呈現典型輪動格局。標普500微漲0.38%，但VIX大幅下滑4.11%至15.4，反映風險情緒改善。資金從科技（XLK -1.56%、SMH -1.63%）轉向防守板塊，醫療保健XLV領漲3.07%，金融XLF緊跟2.59%。利率下行（10Y yield -31bp至4.48%）支撐防守性資產。個股層面極度分化：CHRN狂漲22.69%，PVH卻暴跌20.24%。台股權值股2344.TW月線漲幅達57.46%，動能加速。整體屬溫和風險偏好轉向防守的輪動模式。",
-  "headline": "美股溫和上漲，防守板塊領漲，科技股承壓調整",
-  "regime": "rotation",
+  "narrative": "SPY跌1.55%確認風險情緒惡化，VIX飆升16.23%至17.9反映波動加劇。預期內的防禦性輪動已充分展現：消費必需品(XLP +1.83%)與醫療(XLV +1.66%)領漲，科技(-4.59%)與半導體(-6.22%)重挫。10Y殖利率升1.45%至4.54%加壓成長股。驚人現象：PL(-23.52%)與POET(-19.99%)崩跌，可能受供應鏈或財報衝擊；台股領先指標2344.TW仍強(+57.46%，RS 95)暗示結構性強度。美元升0.65%支撐防禦性資產。",
+  "headline": "美股早盤風險資產拋售，防禦性板塊逆勢上漲",
+  "regime": "risk-off",
   "sectorRotation": {
     "into": [
+      "XLP",
       "XLV",
-      "XLF"
+      "XLRE"
     ],
     "outOf": [
       "XLK",
-      "SMH"
+      "SMH",
+      "GDX"
     ]
   },
-  "tomorrowWatch": "留意科技股能否止跌反彈，監控2337.TW四星訊號與台股權值股動能持續性"
+  "tomorrowWatch": "留意2337.TW(4★三重共振)與美債殖利率能否守住4.5%，決定午盤科技反彈力度"
 }
