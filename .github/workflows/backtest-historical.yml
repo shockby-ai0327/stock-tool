@@ -13,7 +13,7 @@ permissions:
 jobs:
   backtest:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,7 +26,13 @@ jobs:
       - name: Install deps
         run: pip install yfinance pandas numpy
 
-      - name: Run historical backtest
+      # 時點基本面面板(EDGAR XBRL,免費)— 因子回測的資料層。
+      # 在回測前跑;產出 data/fundamentals_history.json(不 commit,當次消耗)。
+      - name: Fetch point-in-time fundamentals (EDGAR)
+        run: python scripts/fetch_fundamentals_history.py
+        continue-on-error: true
+
+      - name: Run historical backtest (price + factor labs)
         run: python scripts/backtest_historical.py
 
       - name: Commit results

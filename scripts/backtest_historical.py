@@ -574,6 +574,7 @@ def sim_strategy(panels, entry_fn, rebal, exit_cfg, topn, t0, t1):
     timeout = exit_cfg.get("timeout", 60)
     disaster = exit_cfg.get("disaster", 0.20)
     trail = exit_cfg.get("trail")
+    cost = exit_cfg.get("costBps", COST_BPS) / 10000.0
     r_unit = disaster if policy != "trail" else trail
 
     open_until = {}
@@ -623,7 +624,7 @@ def sim_strategy(panels, entry_fn, rebal, exit_cfg, topn, t0, t1):
                 xi = last; xpx = C[last, col]; out = "timeout"
                 if np.isnan(xpx):
                     continue
-            ret = (xpx - entry_px) / entry_px - COST_BPS / 10000.0
+            ret = (xpx - entry_px) / entry_px - cost
             trades.append({"symbol": sym, "col": col, "entry_i": int(ei), "exit_i": int(xi),
                            "ret": float(ret), "r_multiple": float(ret / r_unit),
                            "hold": int(xi - ei), "outcome": out, "uptrend": True,
@@ -827,6 +828,164 @@ def run_strategy_lab(close, high, low, op, vol, spy_close, leader, rs12_1, n_tri
             "sizeTranche": tranche, "verdict": verdict}
 
 
+# ── Factor lab: point-in-time fundamentals × momentum × value ────────────────
+FACTOR_COST_BPS = 40   # realistic 元大 複委託 round-trip (much higher than 10bps)
+
+
+def _pit_panel(idx, cols, fund_hist, concept):
+    """Build a days×syms array = latest fundamental value KNOWN (filed) by each date.
+    No lookahead: uses the most recent annual value whose filed-date <= the bar date."""
+    n, m = len(idx), len(cols)
+    arr = np.full((n, m), np.nan)
+    bar_dates = np.array([d.value for d in idx])  # int64 ns
+    for cj, sym in enumerate(cols):
+        rec = fund_hist.get(sym)
+        if not rec or concept not in rec:
+            continue
+        series = rec[concept]  # [[filed, end, val], ...] sorted by filed
+        if not series:
+            continue
+        filed_ns = np.array([pd.Timestamp(s[0]).value for s in series])
+        vals = np.array([s[2] for s in series], dtype=float)
+        # for each bar, index of latest filed <= bar date
+        pos = np.searchsorted(filed_ns, bar_dates, side="right") - 1
+        ok = pos >= 0
+        arr[ok, cj] = vals[pos[ok]]
+    return arr
+
+
+def _prev_panel(idx, cols, fund_hist, concept):
+    """Like _pit_panel but the PRIOR annual value (for growth/Δ)."""
+    n, m = len(idx), len(cols)
+    arr = np.full((n, m), np.nan)
+    bar_dates = np.array([d.value for d in idx])
+    for cj, sym in enumerate(cols):
+        rec = fund_hist.get(sym)
+        if not rec or concept not in rec or len(rec[concept]) < 2:
+            continue
+        series = rec[concept]
+        filed_ns = np.array([pd.Timestamp(s[0]).value for s in series])
+        vals = np.array([s[2] for s in series], dtype=float)
+        pos = np.searchsorted(filed_ns, bar_dates, side="right") - 1
+        ok = pos >= 1
+        arr[ok, cj] = vals[pos[ok] - 1]
+    return arr
+
+
+def run_factor_lab(close, high, low, op, spy_close, leader, rs12_1, fund_hist, n_trials):
+    idx = close.index
+    n = len(idx)
+    cols = list(close.columns)
+    panels = {"C": close.values, "H": high.values, "L": low.values, "O": op.values, "cols": cols}
+    C = panels["C"]
+    RS = rs12_1.values
+    Lmask = leader.values
+
+    # point-in-time fundamental panels (no lookahead)
+    NI = _pit_panel(idx, cols, fund_hist, "netIncome")
+    EQ = _pit_panel(idx, cols, fund_hist, "equity")
+    REV = _pit_panel(idx, cols, fund_hist, "revenue")
+    OCF = _pit_panel(idx, cols, fund_hist, "opCashFlow")
+    CAPEX = _pit_panel(idx, cols, fund_hist, "capex")
+    SH = _pit_panel(idx, cols, fund_hist, "shares")
+    NI_prev = _prev_panel(idx, cols, fund_hist, "netIncome")
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ROE = NI / EQ                                   # quality
+        FCF = OCF - np.nan_to_num(CAPEX)                 # free cash flow
+        FCFM = FCF / REV                                 # quality (fcf margin)
+        EP = NI / (SH * C)                               # value (earnings yield); needs shares×price
+        GROW = NI / NI_prev - 1.0                        # earnings growth
+
+    def _rank(vals, cols_sel):
+        """percentile rank (0-1) of vals[cols_sel], NaN-safe."""
+        v = vals[cols_sel]
+        ok = ~np.isnan(v)
+        r = np.full(len(v), np.nan)
+        if ok.sum() >= 5:
+            order = np.argsort(np.argsort(v[ok]))
+            r[ok] = order / (ok.sum() - 1)
+        return r
+
+    def e_value(ti):
+        ep = EP[ti]; mask = ~np.isnan(ep) & (NI[ti] > 0)
+        lc = np.where(mask)[0]
+        return (lc, ep[lc]) if lc.size else (None, None)
+
+    def e_quality(ti):
+        roe = ROE[ti]; mask = ~np.isnan(roe) & (FCF[ti] > 0) & (NI[ti] > 0)
+        lc = np.where(mask)[0]
+        return (lc, roe[lc]) if lc.size else (None, None)
+
+    def e_qual_mom(ti):
+        lc = np.where(Lmask[ti])[0]               # momentum leaders
+        if lc.size == 0:
+            return None, None
+        roe = ROE[ti, lc]; ok = ~np.isnan(roe) & (NI[ti, lc] > 0)
+        return (lc[ok], roe[ok]) if ok.sum() else (None, None)
+
+    def e_val_mom(ti):
+        lc = np.where(Lmask[ti])[0]
+        if lc.size == 0:
+            return None, None
+        ep = EP[ti, lc]; ok = ~np.isnan(ep) & (NI[ti, lc] > 0)
+        return (lc[ok], ep[ok]) if ok.sum() else (None, None)
+
+    def e_qmv(ti):
+        # composite: average rank of quality(ROE) + momentum(RS) + value(EP), among profitable
+        base = np.where((NI[ti] > 0) & ~np.isnan(ROE[ti]) & ~np.isnan(EP[ti]) & ~np.isnan(RS[ti]))[0]
+        if base.size < 10:
+            return None, None
+        rq = _rank(ROE[ti], base); rm = _rank(RS[ti], base); rv = _rank(EP[ti], base)
+        comp = np.nanmean(np.vstack([rq, rm, rv]), axis=0)
+        ok = ~np.isnan(comp)
+        return (base[ok], comp[ok]) if ok.sum() else (None, None)
+
+    strategies = [
+        {"name": "value", "label": "價值(高earnings yield)", "entry": e_value, "rebal": 21, "topn": 25},
+        {"name": "quality", "label": "品質(高ROE+FCF正)", "entry": e_quality, "rebal": 21, "topn": 25},
+        {"name": "qual_mom", "label": "品質×動能", "entry": e_qual_mom, "rebal": 21, "topn": 20},
+        {"name": "val_mom", "label": "價值×動能", "entry": e_val_mom, "rebal": 21, "topn": 20},
+        {"name": "qmv", "label": "QMV 綜合(品質+動能+價值)", "entry": e_qmv, "rebal": 21, "topn": 20},
+    ]
+    exit_cfg = {"policy": "time", "timeout": 63, "disaster": 0.25, "costBps": FACTOR_COST_BPS}
+    split = RS_LOOKBACK + int((n - RS_LOOKBACK) * 0.6)
+
+    out = []
+    spy_cagr = None
+    for s in strategies:
+        trades = sim_strategy(panels, s["entry"], s["rebal"], exit_cfg, s["topn"], RS_LOOKBACK + 1, n)
+        st = compute_stats(trades, idx, close, spy_close, n_trials=n_trials, config={"factor": s["name"]})
+        spy_cagr = st["benchmark"]["spyCagr"]
+        o = st["overall"]
+        is_m = subset_metrics(trades, RS_LOOKBACK + 1, split)
+        oos_m = subset_metrics(trades, split, n)
+        beats = (o["cagr"] is not None and spy_cagr is not None and o["cagr"] > spy_cagr)
+        robust = (o["dsr"] is not None and o["dsr"] >= 0.90)
+        persists = (not is_m.get("insufficient") and not oos_m.get("insufficient")
+                    and is_m.get("expectancyPct", 0) > 0 and oos_m.get("expectancyPct", 0) > 0)
+        out.append({"name": s["name"], "label": s["label"], "nTrades": o["nTrades"],
+                    "winRate": o["winRate"], "cagr": o["cagr"], "annSharpe": o["annSharpe"],
+                    "dsr": o["dsr"], "maxDrawdownPct": o["maxDrawdownPct"],
+                    "beatsSPY": beats, "robust": robust, "persists": persists,
+                    "tradeable": bool(beats and robust and persists),
+                    "inSample": is_m, "outOfSample": oos_m})
+
+    winners = [s for s in out if s["tradeable"]]
+    if winners:
+        b = max(winners, key=lambda v: v["dsr"] or 0)
+        verdict = (f"✓✓ 基本面因子找到 edge：「{b['label']}」全期贏 SPY({b['cagr']}% vs {spy_cagr}%)、"
+                   f"DSR {b['dsr']}≥0.90、樣本外仍正。扣 40bps 元大成本後依然成立 —— 這是整段唯一通過的東西。")
+    else:
+        beat = [s for s in out if s["beatsSPY"]]
+        verdict = (f"⨯ 五種基本面因子(扣 40bps 元大成本)無一全中(贏SPY+DSR≥0.9+樣本外)。"
+                   + (f"最接近「{max(beat, key=lambda v: v['cagr'] or -99)['label']}」贏了 SPY 但穩健度/樣本外沒過。" if beat
+                      else "連贏 SPY 都做不到。")
+                   + " 注意：仍有倖存者偏差(宇宙是當前成分股)→ 真實只會更差。")
+    return {"spyCagr": spy_cagr, "costBps": FACTOR_COST_BPS, "splitDate": str(idx[split].date()),
+            "factors": out, "verdict": verdict, "coverage": len(fund_hist)}
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 def main():
     import yfinance as yf
@@ -903,6 +1062,24 @@ def main():
     print(f"    index_timing: CAGR {strat_lab['indexTiming']['cagr']}% maxDD {strat_lab['indexTiming']['maxDrawdownPct']}%")
     print(f"    STRATEGY VERDICT: {strat_lab['verdict']}")
 
+    # ── Factor lab: point-in-time fundamentals (the genuinely-untested direction) ──
+    factor_lab = None
+    fh_path = os.path.join(DATA_DIR, "fundamentals_history.json")
+    if os.path.exists(fh_path):
+        try:
+            with open(fh_path) as f:
+                fund_hist = json.load(f).get("bySymbol", {})
+            print(f"  running factor lab (point-in-time fundamentals, {len(fund_hist)} symbols)...")
+            factor_lab = run_factor_lab(close, high, low, op, spy_close, leader, rs12_1, fund_hist, n_trials)
+            for s in factor_lab["factors"]:
+                print(f"    [{s['name']:9s}] N={s['nTrades']:4d} CAGR {s['cagr']}% DSR {s['dsr']} "
+                      f"beatsSPY={s['beatsSPY']} persists={s['persists']} tradeable={s['tradeable']}")
+            print(f"    FACTOR VERDICT: {factor_lab['verdict']}")
+        except Exception as e:
+            print(f"  factor lab failed: {e}")
+    else:
+        print("  (no fundamentals_history.json — run fetch_fundamentals_history.py first)")
+
     # Variant comparison summary (lightweight)
     variants = []
     for cfg in configs:
@@ -956,6 +1133,7 @@ def main():
         "best": headline_best,       # full detail — best discovered config
         "spyCagr": spy_cagr,
         "strategyLab": strat_lab,    # 4 different-hypothesis strategies + IS/OOS + index timing
+        "factorLab": factor_lab,     # 5 point-in-time fundamental factor strategies (40bps 元大 cost)
     }
     out_path = os.path.join(DATA_DIR, "backtest_historical.json")
     with open(out_path, "w") as f:
