@@ -70,10 +70,35 @@ def value_metrics(info):
     eps = num(info.get("trailingEps"))
     price = num(info.get("currentPrice")) or num(info.get("regularMarketPrice"))
     roe = num(info.get("returnOnEquity"))
+    mcap = num(info.get("marketCap"))
     # earnings yield (prefer EPS/price, fall back to 1/PE)
     ey = (eps / price) if (eps and price and price > 0) else (1.0 / pe if (pe and pe > 0) else None)
     by = (1.0 / pb) if (pb and pb > 0) else None     # book yield
-    return {"pe": pe, "pb": pb, "earningsYield": ey, "bookYield": by, "roe": roe, "price": price}
+    return {"pe": pe, "pb": pb, "eps": eps, "earningsYield": ey, "bookYield": by,
+            "roe": roe, "price": price, "marketCap": mcap}
+
+
+def data_sane(vm):
+    """Auto data-quality gate — keep garbage out so the user never sees it.
+    Returns (ok, reason)."""
+    p = vm["price"]; ey = vm["earningsYield"]; pe = vm["pe"]; mc = vm["marketCap"]; eps = vm["eps"]
+    if not p or p < 3:
+        return False, "price<$3 (penny/illiquid/bad-data)"
+    if mc is None or mc < 5e8:
+        return False, "marketCap<$500M (illiquid/sparse data)"
+    if ey is None or ey <= 0 or ey > 0.4:           # E/P>40% (PE<2.5) ≈ always bad/one-off
+        return False, "earnings yield out of sane range"
+    if pe is not None and (pe < 2.5 or pe > 100):
+        return False, "PE out of sane range"
+    # cross-field consistency: EPS/price vs 1/PE must agree within 3x
+    if eps and p and pe and pe > 0:
+        ey_eps = eps / p
+        ey_pe = 1.0 / pe
+        if ey_eps > 0 and ey_pe > 0:
+            ratio = max(ey_eps, ey_pe) / min(ey_eps, ey_pe)
+            if ratio > 3:
+                return False, "EPS/price vs 1/PE inconsistent (suspect data)"
+    return True, ""
 
 
 def main():
@@ -87,17 +112,16 @@ def main():
     print(f"  scanning {len(tickers)} names for value×quality")
 
     rows = []
+    rejected = []
     for i, sym in enumerate(tickers):
         try:
             info = yf.Ticker(sym).info or {}
             if not quality_ok(info):
                 continue
             vm = value_metrics(info)
-            if vm["earningsYield"] is None or vm["earningsYield"] <= 0 or not vm["price"]:
-                continue
-            # sanity: reject garbage data — E/P > 50% (PE < 2) is almost always a
-            # data error or one-off, not a real value opportunity (e.g. CARM 190000%).
-            if vm["earningsYield"] > 0.5 or (vm["pe"] is not None and vm["pe"] < 2):
+            ok, reason = data_sane(vm)   # auto data-quality gate (keep garbage out)
+            if not ok:
+                rejected.append((sym, reason))
                 continue
             rows.append({"symbol": sym, **vm,
                          "name": info.get("shortName") or sym,
@@ -107,7 +131,11 @@ def main():
         if (i + 1) % 50 == 0:
             sys.stdout.write(f"  {i+1}/{len(tickers)} · {len(rows)} qualify\r"); sys.stdout.flush()
         time.sleep(0.2)
-    print(f"\n  {len(rows)} names pass value×quality")
+    print(f"\n  {len(rows)} names pass value×quality · {len(rejected)} rejected by data-quality gate")
+    if rejected:
+        from collections import Counter
+        for reason, c in Counter(r[1] for r in rejected).most_common():
+            print(f"    rejected {c}: {reason}")
 
     if len(rows) < TOP_N:
         print("  too few qualifiers — writing minimal output")

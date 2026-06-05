@@ -10203,10 +10203,11 @@ function _epCompute() {
     '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px">元大下單單（複製貼上）</div>' +
     '<textarea readonly onclick="this.select()" style="width:100%;height:118px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;resize:none">' + ticket + '</textarea>' +
     '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(' + JSON.stringify(ticket) + ');showToast&&showToast(\'已複製下單單\')" class="act ghost" style="margin-top:8px">複製下單單</button>' +
+    '<div style="margin-top:10px;padding:8px 12px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
+      '<b style="color:#86efac">價值持有的出場</b>：別在固定獲利%賣 —— 抱到<b style="color:var(--text)">月再平衡時它跌出價值清單</b>,或它不再便宜為止。漲到 2R/3R 就跑是處置效應,會剪掉價值的報酬。上方目標價僅供風險參考。' +
+    '</div>' +
     (csSym && csSym !== '標的'
-      ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
-        '⚠ 下單前自己對帳：價格 / PE / 是否仍有獲利,別只信工具。' +
-        '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(csSym) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent);margin-left:4px">在 Yahoo 查證 ' + escapeHtml(csSym) + ' ↗</a></div>'
+      ? '<div style="margin-top:8px;font-size:10px;color:var(--muted)">資料已自動過濾異常值。想再保險可<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(csSym) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">到 Yahoo 核對 ' + escapeHtml(csSym) + ' ↗</a>(可選)</div>'
       : '') +
     '<div style="margin-top:14px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
       '<b style="color:#fbbf24">海外所得稅提醒</b>：美股屬海外所得,計入個人基本所得額。全戶海外所得年度合計 <b>NT$100 萬以上</b>才需計入;基本所得額有 <b>NT$750 萬免稅額</b>(2025 年度)。實際依國稅局規定,大額獲利建議諮詢會計師。' +
@@ -10249,7 +10250,8 @@ async function renderValuePicks() {
   const ageDays = data.asOf ? Math.round((Date.now() - new Date(data.asOf).getTime()) / 864e5) : null;
   const freshHtml = '<div style="margin-bottom:10px;font-size:11px;color:var(--muted);line-height:1.6">' +
     '更新於 ' + (data.asOf || '?') + (ageDays != null ? '（' + ageDays + ' 天前）' : '') +
-    ' · <b style="color:var(--text)">價格為月初快照,非即時</b> —— 下單前在進場助手改成當前價,並用下方連結到 Yahoo 對帳(yfinance 偶有錯誤資料)。</div>';
+    ' · 資料已<b style="color:#86efac">自動過濾異常值</b>(便士股/微型股/數據不一致)。' +
+    '<b style="color:var(--text)">價格為月初快照</b> —— 下單前在進場助手看當前價即可;Yahoo 連結只是想再保險時的可選核對。</div>';
 
   // 本月選股(可點擊 → 進場決策助手;附 Yahoo 查證連結)
   const picksHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">' +
