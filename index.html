@@ -10232,6 +10232,8 @@ async function renderValuePicks() {
     data = await r.json();
   } catch (e) { card.style.display = 'none'; return; }
   if (!data || !Array.isArray(data.picks) || !data.picks.length) { card.style.display = 'none'; return; }
+  window._valuePicks = data;                       // feed the Calm hero
+  try { if (typeof renderCalmHero === 'function') renderCalmHero(); } catch (e) {}
   card.style.display = '';
   const meta = document.getElementById('value-asof');
   if (meta) meta.textContent = data.asOf ? ('as of ' + data.asOf) : '';
@@ -10272,54 +10274,60 @@ function renderCalmHero() {
   const el = document.getElementById('dash-calm-hero');
   if (!el) return;
   const regime = window._marketRegime;
-  const leaders = window._rsLeaderCache || [];
-  const fund = window._fundamentals || {};
+  const vp = window._valuePicks;                 // 唯一有證據的買單來源
+  const picks = (vp && Array.isArray(vp.picks)) ? vp.picks : null;
 
-  // 大盤環境判讀 → 今日可否做多
+  // 1) 大盤環境閘門 → 本月可否進場
   let regimeLine, regimeColor, canLong = true;
-  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 歷史上虧損集中期，傾向空手/大幅減碼'; regimeColor = 'var(--red)'; canLong = false; }
-  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 降低主動交易、提高標準'; regimeColor = 'var(--yellow)'; canLong = false; }
-  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 環境允許做多，但仍只碰品質×動能'; regimeColor = 'var(--green)'; }
-  else { regimeLine = '大盤中性 — 中性偏謹慎'; regimeColor = 'var(--muted)'; }
+  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 歷史虧損集中期'; regimeColor = 'var(--red)'; canLong = false; }
+  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 提高標準、減碼'; regimeColor = 'var(--yellow)'; canLong = false; }
+  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 環境允許進場'; regimeColor = 'var(--green)'; }
+  else { regimeLine = '大盤中性 — 偏謹慎'; regimeColor = 'var(--muted)'; }
 
-  const hasFund = Object.keys(fund).length > 0;
-  const qPicks = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'quality')
-    .sort((a, b) => (typeof _signalAlignment === 'function' ? _signalAlignment(b).count - _signalAlignment(a).count : 0));
-  const trapCount = leaders.filter(r => fund[r.symbol] && fund[r.symbol].flag === 'trap').length;
-
+  // 2) 主要答案 = 價值精選(唯一通過回測),被大盤閘門 gate
   let stateBig, stateSub = '';
-  if (!leaders.length) { stateBig = '載入排行中…'; }
-  else if (!hasFund) { stateBig = '品質資料載入中…'; }
-  else if (!canLong) { stateBig = '今日傾向空手'; stateSub = '大盤環境不利，主動交易期望值低 —— 保留資金本身就是一個決策。'; }
-  else if (qPicks.length === 0) { stateBig = '今日 0 檔品質×動能設定'; stateSub = '高動能名字目前沒有基本面穩健的 —— 空手等更好機會，不勉強進場。'; }
-  else { stateBig = '今日 ' + qPicks.length + ' 檔通過品質×動能'; stateSub = '技術強 + 有獲利/現金流，值得進一步研究（這是研究起點，不是買進訊號）。'; }
-
-  let picksHtml = '';
-  if (canLong && hasFund && qPicks.length) {
-    picksHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">' + qPicks.slice(0, 6).map(r => {
-      const sig = (typeof _getRSSignal === 'function') ? _getRSSignal(r) : null;
-      const sigTxt = sig ? '<div style="font-size:10px;color:' + sig.color + ';margin-top:2px">' + sig.label + '</div>' : '';
-      return '<button onclick="showEntryPlanner(\'' + r.symbol + '\',' + (r.price || 0) + ')" title="規劃進場：部位大小 + 下單單 + 檢查表" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
-        '<div style="font-weight:700;font-size:14px">' + r.symbol + ' <span style="font-size:10px;color:#22c55e">✓獲利</span></div>' +
-        '<div class="mono" style="font-size:11px;color:var(--muted)">$' + (r.price ? r.price.toFixed(2) : '—') + ' · RS ' + (r.rsRating || '—') + '</div>' + sigTxt +
-        '<div style="font-size:10px;color:var(--accent);margin-top:3px">規劃進場 →</div>' +
-      '</button>';
-    }).join('') + '</div>';
+  if (!canLong) {
+    stateBig = '本月傾向空手';
+    stateSub = '大盤環境不利 —— 保留資金本身就是一個決策,不勉強進場。';
+  } else if (!picks) {
+    stateBig = '價值精選載入中…';
+    stateSub = '若長期空白,代表 value-strategy workflow 還沒跑過。';
+  } else if (!picks.length) {
+    stateBig = '本月無價值候選';
+  } else {
+    stateBig = '本月該買的候選：價值精選 ' + picks.length + ' 檔';
+    stateSub = '唯一通過 8 輪回測的策略(價值×品質)。方向有學界支撐、幅度前向驗證中 —— 不是保證會漲。點任一檔規劃進場(算部位 + 元大下單單)。';
   }
-  const trapNote = (hasFund && trapCount > 0) ? '<span style="color:var(--muted)"> · 已標出 ' + trapCount + ' 檔燒錢陷阱</span>' : '';
+
+  // 價值候選按鈕(點擊 → 進場決策助手)
+  let picksHtml = '';
+  if (canLong && picks && picks.length) {
+    picksHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">' + picks.slice(0, 8).map(p =>
+      '<button onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="規劃進場：部位大小 + 元大下單單 + 檢查表" style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--text)">' +
+        '<div style="font-weight:700;font-size:14px">' + p.symbol + '</div>' +
+        '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
+        '<div style="font-size:10px;color:var(--accent);margin-top:3px">規劃進場 →</div>' +
+      '</button>').join('') + '</div>';
+  }
+
+  // 前向追蹤裁決(誠實判官,小字)
+  const sc = vp && vp.scorecard;
+  const scLine = (sc && sc.verdict)
+    ? '<div style="margin-top:12px;font-size:11px;color:var(--muted)"><b style="color:var(--text)">前向驗證</b>：' + escapeHtml(sc.verdict) + '</div>'
+    : '';
 
   el.innerHTML =
     '<div style="padding:18px 20px;background:linear-gradient(135deg,rgba(255,255,255,.03),transparent);border:1px solid var(--border);border-radius:12px">' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">' +
-        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)">今日 · TODAY</span>' +
+        '<span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)">本月怎麼買 · HOW TO BUY</span>' +
         '<span style="font-size:11px;color:' + regimeColor + '">● ' + regimeLine + '</span>' +
       '</div>' +
       '<div style="font-size:22px;font-weight:700;margin:4px 0 2px">' + escapeHtml(stateBig) + '</div>' +
-      (stateSub ? '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + escapeHtml(stateSub) + trapNote + '</div>' : '') +
-      picksHtml +
+      (stateSub ? '<div style="font-size:12px;color:var(--muted);line-height:1.6">' + escapeHtml(stateSub) + '</div>' : '') +
+      picksHtml + scLine +
       '<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
-        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：我們測過的機械選股訊號都贏不過它。本工具的工作 = <b style="color:var(--text)">幫你避開地雷、不輸給自己、誠實追蹤</b> —— 不是假裝有明牌。' +
-        '<a onclick="showPage(\'scanner\')" style="color:var(--accent);cursor:pointer;margin-left:6px">看完整排行 →</a>' +
+        '要打敗的是 <b style="color:var(--text)">SPY</b>。實證：機械選股訊號都贏不過它,只有「價值×品質」通過回測。' +
+        '<a onclick="showPage(\'scanner\')" style="color:var(--accent);cursor:pointer;margin-left:4px">掃描器的動能名單是研究點子(未證實,非買進訊號)→</a>' +
       '</div>' +
     '</div>';
 }
