@@ -1,0 +1,30 @@
+name: Smoke Test (index.html)
+
+# 穩定地基:每次改 index.html / scripts 都自動驗 —— JS 語法、onclick 指向、
+# 重複定義。回歸 bug 在合併前就被擋下,不再靠人工手動檢查。
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'scripts/**'
+      - '.github/workflows/smoke-test.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'scripts/**'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run smoke test
+        run: python scripts/smoke_test.py

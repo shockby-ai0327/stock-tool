@@ -947,11 +947,7 @@ async function finnhubQuote(symbol) {
  finally { clearTimeout(tid); }
 }
 
-async function finnhubBatchPreScreen(symbols) {
- // Fire all at once — 40 stocks is well under Finnhub's 60/min limit
- const settled = await Promise.allSettled(symbols.map(s => finnhubQuote(s)));
- return settled.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
-}
+
 
 // ============ YAHOO FINANCE ============
 // Strategy: v8 chart for OHLCV, page scrape for fundamentals
@@ -3530,14 +3526,7 @@ function openNews(idx) {
 function closeModal() { document.getElementById('news-modal').style.display = 'none'; }
 
 // 雙語摘要 toggle
-function switchSummaryLang(lang, cat) {
- ['zh','en'].forEach(l => {
- const c = document.getElementById('sum-' + l + '-' + cat);
- const b = document.getElementById('sum-btn-' + l + '-' + cat);
- if (c) c.style.display = l === lang ? '' : 'none';
- if (b) { b.style.background = l === lang ? 'var(--accent)' : 'transparent'; b.style.color = l === lang ? '#fff' : 'var(--muted)'; }
- });
-}
+
 
 function generateMarketSummary(items, cat) {
  const allText = items.map(it => it.title + ' ' + it.desc).join(' ').toLowerCase();
@@ -3844,12 +3833,7 @@ function signalConfidence(name) {
   const emp  = '★'.repeat(s.empirical) + '☆'.repeat(5 - s.empirical);
   return `學術 ${acad}\n本系統實證 ${emp}\n${s.note}`;
 }
-function signalConfidenceBadge(name) {
-  // 2026-05-20 (Option B): 不再在每個 badge 上掛標籤（防禦過度，視覺噪音）。
-  // 改為「為什麼這個訊號？」按鈕點開時統一呈現 — 見 showSignalValidationModal()。
-  // 函式保留是為了不破壞舊的呼叫（會 return 空字串 = 無痕回退）。
-  return '';
-}
+
 
 // 2026-05-21 Sprint 3-D: 點 catalyst bar 上的「📖 解釋這些訊號」開啟說明 modal
 function showCatalystExplainModal() {
@@ -4144,7 +4128,7 @@ function showSignalValidationModal() {
 }
 
 function isTw(ticker) { return ticker && (ticker.endsWith('.TW') || ticker.endsWith('.TWO')); }
-function currencySymbol(ticker) { return isTw(ticker) ? 'NT$' : '$'; }
+
 function fmtChineseNumber(v) {
   if (v == null || isNaN(v)) return 'N/A';
   const abs = Math.abs(v);
@@ -4152,16 +4136,7 @@ function fmtChineseNumber(v) {
   if (abs >= 1e4) return (v / 1e4).toFixed(1) + '萬';
   return Math.round(v).toLocaleString();
 }
-function fmtNumberSmart(v, ticker) {
-  // TW tickers use 萬/億, US tickers use K/M/B
-  if (v == null || isNaN(v)) return 'N/A';
-  if (isTw(ticker)) return fmtChineseNumber(v);
-  const abs = Math.abs(v);
-  if (abs >= 1e9) return (v / 1e9).toFixed(2) + 'B';
-  if (abs >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-  if (abs >= 1e3) return (v / 1e3).toFixed(1) + 'K';
-  return Math.round(v).toLocaleString();
-}
+
 
 // ============ JOURNAL ============
 const FEE = 0.003;
@@ -6963,7 +6938,7 @@ async function chartScanFallback(strategy, customPool) {
 let _scannerMarket = 'us';
 let _scannerStrategy = 'schwartz';
 let _scannerCustomPool = JSON.parse(localStorage.getItem('scanner_custom_pool') || '[]');
-function saveCustomPool() { localStorage.setItem('scanner_custom_pool', JSON.stringify(_scannerCustomPool)); }
+
 let _scannerResults = [];
 let _scannerTimer = null;
 // 2026-05-19: vestigial — watchlist feature deleted but cloud sync legacy still
@@ -10378,61 +10353,7 @@ function _epCompute() {
 
 // 2026-05-29 價值精選 — 8 輪回測唯一通過所有誠實關卡的因子(價值×品質)。
 // 回測被倖存者偏差灌水 → 用前向追蹤(免疫倖存者偏差)當真正的裁判。
-async function renderValuePicks() {
-  const card = document.getElementById('dash-value-card');
-  const el = document.getElementById('dash-value');
-  if (!card || !el) return;
-  let data;
-  try {
-    const r = await fetch(GH_RAW + 'value_picks.json?t=' + Math.floor(Date.now() / 600000));
-    if (!r.ok) { card.style.display = 'none'; return; }
-    data = await r.json();
-  } catch (e) { card.style.display = 'none'; return; }
-  if (!data || !Array.isArray(data.picks) || !data.picks.length) { card.style.display = 'none'; return; }
-  window._valuePicks = data;                       // feed the Calm hero
-  try { if (typeof renderCalmHero === 'function') renderCalmHero(); } catch (e) {}
-  card.style.display = '';
-  const meta = document.getElementById('value-asof');
-  if (meta) meta.textContent = data.asOf ? ('as of ' + data.asOf) : '';
 
-  const sc = data.scorecard || {};
-  // 前向追蹤裁決(誠實的判官)
-  let scHtml = '';
-  if (sc.graded > 0) {
-    const aColor = (sc.avgAlphaPct > 1) ? '#22c55e' : (sc.avgAlphaPct < -1) ? '#ef4444' : 'var(--muted)';
-    scHtml = '<div style="padding:10px 12px;margin-bottom:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.6">' +
-      '<span style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px">前向追蹤(免疫倖存者偏差)</span><br>' +
-      '<b style="color:' + aColor + '">' + escapeHtml(sc.verdict || '') + '</b>' +
-      '<span style="color:var(--muted)"> · 已評 ' + sc.graded + ' 筆 · 中位持有 ' + (sc.medianDaysHeld || 0) + ' 天</span></div>';
-  } else {
-    scHtml = '<div style="padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--muted)">前向追蹤剛起步 —— 每月記錄一次選股,3-6 個月後才有可靠裁決(價值是月/季的事)。</div>';
-  }
-
-  // 資料新鮮度 + 查證提醒(yfinance 會出錯,下單前自己對帳)
-  const ageDays = data.asOf ? Math.round((Date.now() - new Date(data.asOf).getTime()) / 864e5) : null;
-  const freshHtml = '<div style="margin-bottom:10px;font-size:11px;color:var(--muted);line-height:1.6">' +
-    '更新於 ' + (data.asOf || '?') + (ageDays != null ? '（' + ageDays + ' 天前）' : '') +
-    ' · 資料已<b style="color:#86efac">自動過濾異常值</b>(便士股/微型股/數據不一致)。' +
-    '<b style="color:var(--text)">價格為月初快照</b> —— 下單前在進場助手看當前價即可;Yahoo 連結只是想再保險時的可選核對。</div>';
-
-  // 本月選股(可點擊 → 進場決策助手;附 Yahoo 查證連結)
-  const picksHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">' +
-    data.picks.slice(0, 12).map(p =>
-      '<div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:8px 10px">' +
-        '<div onclick="showEntryPlanner(\'' + p.symbol + '\',' + (p.price || 0) + ')" title="' +
-          escapeAttr((p.name || '') + ' · ' + (p.sector || '') + ' · ROE ' + (p.roePct ?? '?') + '%') + '" style="cursor:pointer">' +
-          '<div style="font-weight:700;font-size:14px;color:var(--text)">' + p.symbol + '</div>' +
-          '<div class="mono" style="font-size:10px;color:var(--muted)">E/P ' + p.earningsYieldPct + '% · PE ' + (p.pe ?? '—') + '</div>' +
-          '<div class="mono" style="font-size:10px;color:#86efac">價值分 ' + p.valueScore + ' · 規劃進場 →</div>' +
-        '</div>' +
-        '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(p.symbol) + '" target="_blank" rel="noopener noreferrer" style="font-size:9px;color:var(--muted);text-decoration:none" onclick="event.stopPropagation()">在 Yahoo 查證 ↗</a>' +
-      '</div>'
-    ).join('') + '</div>';
-
-  el.innerHTML = freshHtml + scHtml + picksHtml +
-    '<div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">' +
-      '<b style="color:#fbbf24">誠實標籤</b>：' + escapeHtml(data.disclaimer || '') + '</div>';
-}
 
 // 2026-05-29 設計 A：Calm Hero — 平常安靜，一眼回答「我今天該幹嘛」，誠實打底。
 // 核心 = 品質×動能交集（高 RS 且基本面穩健），多數日子可能是「空手」。
@@ -10500,18 +10421,7 @@ function renderCalmHero() {
 // 2026-05-29: 首頁手動「重新整理」— 智能選擇行為
 //   有快取 → 報價更新（秒速）
 //   無快取 → 重抓排行（含 toast 進度條）
-async function refreshDashboardData() {
- if (window._rsLeaderCache && window._rsLeaderCache.length) {
-  // 已有快取 → 只刷報價（保留排行，避免重打 GitHub Raw 拿到一樣的 JSON）
-  return refreshPricesOnly();
- }
- // 無快取 → 重抓排行
- try {
-  await triggerGithubScan();
- } catch(e) {
-  showToast('❌ 重新整理失敗：' + e.message, 'error');
- }
-}
+
 
 async function quickDashboardScan(force) {
  const rsEl = document.getElementById('dash-rsleader-list');
@@ -11542,13 +11452,11 @@ const COMPACT_HIDE_IDS = [
  'dash-news-card',       // news (browse, not actionable)
 ];
 
-function getDashboardMode() {
- try { return localStorage.getItem(DASH_MODE_KEY) || 'full'; } catch(e) { return 'full'; }
-}
+
 // 2026-05-20: 砍精簡/完整模式切換 — Gemini 評為「設計師不知所措的鐵證」
 // 改成 opinionated default：固定 Morning Brief 排版。函式保留 no-op 避免舊 caller 報錯。
-function setDashboardMode(mode) { /* deprecated no-op */ }
-function _applyDashboardMode(mode) { /* deprecated no-op */ }
+
+
 
 // ── Conditional Alerts (Wave 7.2) ─────────────────────────────────────────
 // User defines conditions; checked every 5 minutes; triggers push + toast.
@@ -12185,20 +12093,7 @@ function _removeRescanToken() {
 // 同時清除舊有 PAT 殘留。
 try { localStorage.removeItem('gh_pat'); } catch(e) {}
 
-async function triggerGithubActionsDispatch() {
-  // 改為純讀取 — 重新抓 GitHub Raw 的 JSON，等同跑一次 scan 載入流程
-  const btns = document.querySelectorAll('[data-rescan-btn]');
-  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ 重整中...'; });
-  try {
-    showToast('🔄 從 GitHub 重新載入最新資料... (cron 每日 3 次自動跑)');
-    window._rsLeaderRunning = false;
-    await runRSLeaderScan();
-    btns.forEach(b => { b.disabled = false; b.textContent = '🔄 重新整理'; });
-  } catch(e) {
-    btns.forEach(b => { b.disabled = false; b.textContent = '🔄 重新整理'; });
-    showToast('❌ 重整失敗：' + e.message, 'error');
-  }
-}
+
 
 // ── Live Monitor: 60-second price + signal refresh for RS Leader watchlist ───
 // Answers the user's real intraday need: "has anything entered the buy zone?"
@@ -14415,15 +14310,7 @@ async function renderDashTTrading() {
 }
 
 // ── 首頁國際新聞摘要（10 分鐘快取）
-function toggleDashNews() {
- const body = document.getElementById('dash-news-body');
- const icon = document.getElementById('dash-news-toggle-icon');
- if (!body) return;
- const open = body.style.display !== 'none';
- body.style.display = open ? 'none' : 'block';
- if (icon) icon.textContent = open ? '▼ 展開' : '▲ 收起';
- if (!open) renderDashNews(false);
-}
+
 let _dashNewsCache = { ts: 0, items: [] };
 async function renderDashNews(force) {
  const el = document.getElementById('dash-news-list');
@@ -15065,19 +14952,7 @@ async function loadSectorRotation() {
 }
 
 // ============ FEATURE D: DAILY-TO-WEEKLY HELPER ============
-function dailyToWeekly(closes, highs, lows) {
- const wc = [], wh = [], wl = [];
- for (let i = 0; i < closes.length; i += 5) {
- const cSlice = closes.slice(i, i + 5);
- const hSlice = highs.slice(i, i + 5);
- const lSlice = lows.slice(i, i + 5);
- if (cSlice.length < 3) break;
- wc.push(cSlice[cSlice.length - 1]);
- wh.push(Math.max(...hSlice));
- wl.push(Math.min(...lSlice));
- }
- return { wc, wh, wl };
-}
+
 
 
 // ============ FEATURE E: EARNINGS CALENDAR ============
