@@ -600,9 +600,9 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <!-- 2026-05-29: 動能領袖移回首頁(進攻衛星倉的獵場入口)。誠實標:無統計 edge。 -->
  <section class="card-strip">
   <div class="sl-section">
-   <h2>動能領袖</h2><span class="sl-en">RS leader · 進攻獵場</span>
+   <h2>動能領袖</h2><span class="sl-en">RS leader · 突破時機</span>
    <span class="sl-sub">無統計 edge · 高變異波段燃料,靠紀律</span>
-   <button class="act ghost" onclick="showAttackHunt()" style="margin-left:auto" title="挑最猛的波段設定">🔥 進攻獵場</button>
+   <button class="act ghost" onclick="gotoTimingScan()" style="margin-left:auto" title="掃描器依突破時機排序:逼近新高+爆量+加速+催化">🔥 突破時機</button>
    <button class="act ghost" onclick="showPage('scanner');setTimeout(()=>switchScanStrategy('rsleader'),100)">完整排行 →</button>
   </div>
   <div id="dash-rsleader-list"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">前往掃描器取得最新排行</div></div>
@@ -10314,8 +10314,9 @@ async function renderDashHoldings() {
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
-// 2026-05-29 進攻模式：進攻獵場 — 你衛星倉的「該打誰」。波段燃料,高變異,非統計 edge。
-// 從掃描資料挑最猛的波段設定(帶量突破 / 動能加速 / 催化劑)。
+// 2026-05-29 進攻模式：波段衛星倉的「該打誰」。波段燃料,高變異,非統計 edge。
+// 2026-06-08 原獨立「進攻獵場」modal 併入掃描器 →「突破時機」排序。
+// _attackScore 保留:供掃描器 timing 排序 + 列上「突破N」徽章用。
 function _attackScore(r) {
   let s = 0; const tags = [];
   const dist = (r.high52w && r.price) ? (r.price - r.high52w) / r.high52w * 100 : null;
@@ -10326,52 +10327,30 @@ function _attackScore(r) {
   if (r.daysToEarnings != null && r.daysToEarnings >= 0 && r.daysToEarnings <= 10) { s += 10; tags.push('財報 T-' + r.daysToEarnings); }
   return { score: s, tags };
 }
-async function showAttackHunt() {
-  const old = document.getElementById('attack-hunt-modal'); if (old) { old.remove(); return; }
-  let leaders = window._rsLeaderCache, disc = window._rsDiscoveryCache;
-  if (!leaders || !leaders.length) {
-    try {
-      const r = await fetch(GH_RAW + 'us_scan.json?t=' + Math.floor(Date.now() / 600000));
-      const d = await r.json(); leaders = d.leaders || []; disc = d.discoveries || [];
-    } catch (e) { leaders = []; disc = []; }
-  }
-  const fund = window._fundamentals || {};
-  const all = [...(leaders || []), ...(disc || [])];
-  const seen = new Set();
-  const ranked = all.filter(r => r && r.symbol && !seen.has(r.symbol) && seen.add(r.symbol))
-    .map(r => ({ r, ...(_attackScore(r)) }))
-    .filter(x => x.score >= 40)
-    .sort((a, b) => b.score - a.score).slice(0, 15);
-
-  let html = '<div id="attack-hunt-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">';
-  html += '<div style="background:var(--card);border-radius:12px;max-width:600px;width:100%;max-height:88vh;overflow:auto;border:1px solid rgba(239,68,68,.3)">';
-  html += '<div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px">';
-  html += '<div style="font-size:15px;font-weight:700">🔥 進攻獵場 · 波段衛星倉</div>';
-  html += '<button onclick="document.getElementById(\'attack-hunt-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button></div>';
-  html += '<div style="padding:12px 20px;background:rgba(239,68,68,.06);font-size:11px;color:var(--muted);line-height:1.6">' +
-    '<b style="color:#f87171">誠實標籤</b>:這裡<b style="color:var(--text)">沒有統計 edge</b>(回測證明動能/突破贏不過 SPY)。這是高變異的波段燃料 —— 贏靠你<b style="color:var(--text)">砍得快、抱得久、heat 控好、運氣站你這邊</b>。只用衛星倉的錢。</div>';
-  if (!ranked.length) {
-    html += '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">目前沒有夠猛的波段設定 —— 空手也是一種紀律。</div>';
-  } else {
-    html += '<div style="padding:12px 20px">';
-    ranked.forEach((x, i) => {
-      const r = x.r;
-      const q = fund[r.symbol];
-      const trap = q && q.flag === 'trap' ? '<span style="font-size:9px;color:#f87171;margin-left:4px">⚠燒錢</span>' : '';
-      const dist = (r.high52w && r.price) ? ((r.price - r.high52w) / r.high52w * 100).toFixed(1) : '—';
-      html += '<div onclick="document.getElementById(\'attack-hunt-modal\').remove();showEntryPlanner(\'' + r.symbol + '\',' + (r.price || 0) + ',\'attack\')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer">' +
-        '<div style="font-size:11px;color:var(--muted);width:18px">#' + (i + 1) + '</div>' +
-        '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + r.symbol + trap + '</div>' +
-          '<div style="font-size:10px;color:var(--muted)">' + x.tags.map(t => '<span style="background:rgba(239,68,68,.12);color:#fca5a5;padding:1px 5px;border-radius:3px;margin-right:3px">' + t + '</span>').join('') + '</div></div>' +
-        '<div style="text-align:right"><div class="mono" style="font-size:12px">$' + (r.price ? r.price.toFixed(2) : '—') + '</div>' +
-          '<div style="font-size:10px;color:var(--muted)">距高 ' + dist + '% · RS ' + (r.rsRating || '—') + '</div></div>' +
-        '<div style="font-size:10px;color:#f87171;font-weight:700">進攻 ' + x.score + '</div>' +
-      '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div></div>';
-  document.body.insertAdjacentHTML('beforeend', html);
+// 2026-06-08 突破時機:把「誰正在噴」併入掃描器,不再用獨立 modal。
+//   _setScanSort  — 掃描器排序切換(rs=誰最強 / timing=突破時機)
+//   gotoTimingScan — 首頁一鍵直達掃描器(突破時機排序)
+function _setScanSort(mode) {
+  window._scanSort = mode;
+  const leaders = window._rsLeaderCache;
+  if (!leaders || !leaders.length) return;
+  const meta = window._scanMetaCache || {};
+  let ageMin = 0;
+  try { if (meta.scannedAt) ageMin = Math.round((Date.now() - new Date(meta.scannedAt).getTime()) / 60000); } catch (e) {}
+  renderRSLeaderResultsPrecomputed(leaders.slice(0, 15), meta, ageMin, ageMin > 30);
+}
+function gotoTimingScan() {
+  window._scanSort = 'timing';
+  showPage('scanner');
+  setTimeout(() => { try { if (typeof switchScanStrategy === 'function') switchScanStrategy('rsleader'); } catch (e) {} }, 100);
+}
+// 突破時機分徽章 — 掃描器列上標示誰正在突破(逼近新高+爆量+加速+催化)
+function _timingBadge(r) {
+  if (typeof _attackScore !== 'function') return '';
+  const s = _attackScore(r).score;
+  if (s < 40) return '';
+  const c = s >= 70 ? '#f87171' : s >= 55 ? '#fbbf24' : 'var(--muted)';
+  return '<span title="突破時機分:逼近新高+爆量+加速+催化 — 波段進場時機(非統計 edge,靠紀律)" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.1);color:' + c + ';font-weight:700;cursor:help">突破' + s + '</span>';
 }
 
 // 2026-05-29 Phase 6+8：進場決策助手 — 部位大小 + 元大下單單 + 進場前檢查表 + 集中度 + 海外所得稅
@@ -10535,7 +10514,7 @@ function renderCalmHero() {
   if (!el) return;
   const regime = window._marketRegime;
   const leaders = window._rsLeaderCache || [];
-  // 進攻獵場設定數(動能在空頭最容易死,所以 regime 對波段更重要)
+  // 突破時機設定數(動能在空頭最容易死,所以 regime 對波段更重要)
   const setups = leaders.filter(r => typeof _attackScore === 'function' && _attackScore(r).score >= 40);
 
   // 1) 大盤環境閘門 — 動能版(空頭=動能墳場)
@@ -10549,10 +10528,10 @@ function renderCalmHero() {
   if (!leaders.length) { stateBig = '掃描資料載入中…'; }
   else if (!deploy) { stateBig = '今日傾向空手'; stateSub = '大盤不利動能 —— 進攻倉減碼或觀望,別在墳場開槍。空手也是紀律。'; }
   else if (!setups.length) { stateBig = '今日無夠猛的設定'; stateSub = '沒有逼近新高+爆量的波段燃料 —— 不勉強,等更猛的。'; }
-  else { stateBig = '🔥 進攻獵場 ' + setups.length + ' 檔設定就緒'; stateSub = '逼近新高 / 爆量 / 加速的波段燃料。點開挑、用進攻檔規劃(3% 風險 + heat 護欄 + 快砍慢抱)。'; }
+  else { stateBig = '🔥 突破時機 ' + setups.length + ' 檔設定就緒'; stateSub = '逼近新高 / 爆量 / 加速的波段燃料。到掃描器依突破時機排序、用進攻檔規劃(3% 風險 + heat 護欄 + 快砍慢抱)。'; }
 
   const btnHtml = (deploy && setups.length)
-    ? '<button onclick="showAttackHunt()" style="margin-top:14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700;font-size:13px">🔥 打開進攻獵場 →</button>'
+    ? '<button onclick="gotoTimingScan()" style="margin-top:14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700;font-size:13px">🔥 看突破時機 →</button>'
     : '';
 
   el.innerHTML =
@@ -12841,6 +12820,13 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
   const tableDiv = document.getElementById('scanner-table');
   if (!tableDiv) return;
 
+  // 2026-06 突破時機排序(原進攻獵場併入此處):timing 模式下,用全 leaders 池按
+  // _attackScore(逼近新高+爆量+加速+催化)重排取前 15。預設 rs。
+  if (window._scanSort === 'timing' && typeof _attackScore === 'function') {
+    const pool = (window._rsLeaderCache && window._rsLeaderCache.length) ? window._rsLeaderCache : results;
+    results = pool.slice().sort((a, b) => _attackScore(b).score - _attackScore(a).score).slice(0, Math.max(15, results.length));
+  }
+
   // Load AI analysis in background (non-blocking), re-render when ready
   if (!window._aiAnalysis) {
     fetchAIAnalysis(_scannerMarket || 'us').then(ai => {
@@ -12907,6 +12893,12 @@ function renderRSLeaderResultsPrecomputed(results, meta, ageMin, stale) {
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + universeLabel + ' · ' + statusLine + '</div>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">' +
+        // 排序切換:RS(誰最強)| 突破時機(誰正在噴)— 原進攻獵場併入
+        '<span style="font-size:11px;color:var(--muted)">排序</span>' +
+        '<button onclick="_setScanSort(\'rs\')" style="font-size:11px;padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap;' +
+          (window._scanSort !== 'timing' ? 'background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.45);color:#a5b4fc' : 'background:transparent;border:1px solid var(--border);color:var(--muted)') + '">RS</button>' +
+        '<button onclick="_setScanSort(\'timing\')" title="逼近新高+爆量+加速+催化 — 誰正在突破(波段進場時機)" style="font-size:11px;padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap;' +
+          (window._scanSort === 'timing' ? 'background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.45);color:#fca5a5' : 'background:transparent;border:1px solid var(--border);color:var(--muted)') + '">突破時機</button>' +
         '<span id="live-countdown" style="font-size:11px;color:var(--muted)"></span>' +
         '<button id="notif-toggle-btn" onclick="_initPushNotifications()" title="開啟買點推播通知" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.4);color:#f59e0b;background:rgba(245,158,11,.08);cursor:pointer;white-space:nowrap">🔔 通知</button>' +
         // 報價更新：只刷已快取 leaders 的即時價，秒速
@@ -13379,7 +13371,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + _alignBadge(r) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + _alignBadge(r) + _timingBadge(r) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
         sigHtml + earnHtml + aiStarsHtml +
       '</td>' +
@@ -13426,6 +13418,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
       // 2026-05-21 Sprint 2-C: 進場指引欄位加 inline action summary（買/停/R:R/失效）
       '<td style="padding:10px 8px;text-align:left;vertical-align:top">' + actionSummaryHTML(r) +
         '<button onclick="event.stopPropagation();showRSEntryGuide(\'' + r.symbol + '\')" style="margin-top:6px;font-size:10px;padding:4px 8px;border-radius:5px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;cursor:pointer;white-space:nowrap">詳細指引 →</button>' +
+        '<button onclick="event.stopPropagation();showEntryPlanner(\'' + r.symbol + '\',' + (r.price || 0) + ',\'attack\')" title="用進攻檔規劃進場(3% 風險 + heat 護欄 + 快砍慢抱)" style="margin-top:6px;margin-left:6px;font-size:10px;padding:4px 8px;border-radius:5px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;cursor:pointer;white-space:nowrap">進場 →</button>' +
       '</td>' +
     '</tr>';
   }).join('');
