@@ -566,6 +566,15 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
   <div id="dash-holdings"></div>
  </section>
 
+ <!-- 3.1 我的 edge — 你的實盤交易 vs 同期指數(免疫倖存者偏差的真實裁判) -->
+ <section class="card-strip" id="dash-myedge-card" style="display:none">
+  <div class="sl-section">
+   <h2>我的 edge</h2><span class="sl-en">my trades vs SPY</span>
+   <span class="sl-sub">你的實盤決策有沒有打敗指數 · 唯一屬於你的真相</span>
+  </div>
+  <div id="dash-myedge"></div>
+ </section>
+
  <!-- 3.2 行為教練 — 從交易日誌偵測壞習慣（散戶真正的 edge：不輸給自己） -->
  <section class="card-strip" id="dash-behavior-card" style="display:none">
   <div class="sl-section">
@@ -9216,6 +9225,7 @@ async function renderDashboard(forceRescan) {
  renderWatchlistSimple(); // Fix G: 簡版觀察清單
  renderDashHoldings(); // 持倉動態
  try { renderBehaviorCoach(); } catch(e) {} // Phase 4 行為教練
+ try { renderMyEdge(); } catch(e) {} // B1 我的 edge:實盤 vs 指數(練功核心)
  // 價值精選已移除(使用者核心放大盤指數,此工具改當進攻衛星倉)
  // Wave 6 — Claude AI 市場敘事（依當前選擇市場）
  loadMarketNarrative(window._dashboardMarket || 'us');
@@ -9924,6 +9934,97 @@ async function renderActionItems() {
 
 // 2026-05-29 Phase 4：行為教練 — 從交易日誌偵測虧損習慣（散戶真正的 edge）
 // 用 FIFO 配對買賣得出已實現交易，偵測學界最常見的散戶錯誤。
+// 2026-06 B1：我的 edge — 你的實盤已實現交易 vs 同期 SPY(免疫倖存者偏差)。
+// 練功核心:先免費量出「你」到底有沒有 edge,再決定要不要花錢買資料放大它。
+async function _loadSpyHistory() {
+  if (window._spyHist) return window._spyHist;
+  // 主來源:後端產的 spy_history.json(可靠、無 CORS)
+  try {
+    const r = await fetch(GH_RAW + 'spy_history.json?t=' + Math.floor(Date.now() / 864e5));
+    if (r.ok) {
+      const d = await r.json();
+      if (d.dates && d.closes) { window._spyHist = d; return d; }
+    }
+  } catch (e) {}
+  // 後備:Stooq CSV(瀏覽器可直接抓的免費日線)
+  try {
+    const r = await fetch('https://stooq.com/q/d/l/?s=spy.us&i=d');
+    if (r.ok) {
+      const txt = await r.text();
+      const lines = txt.trim().split('\n').slice(1);
+      const dates = [], closes = [];
+      for (const ln of lines) {
+        const c = ln.split(','); if (c.length >= 5) { dates.push(c[0]); closes.push(parseFloat(c[4])); }
+      }
+      if (dates.length) { window._spyHist = { dates, closes }; return window._spyHist; }
+    }
+  } catch (e) {}
+  return null;
+}
+function _spyOn(hist, dateStr) {
+  // 找 ≤ dateStr 的最近交易日收盤(二分搜尋)
+  if (!hist || !hist.dates.length) return null;
+  const t = dateStr.slice(0, 10);
+  let lo = 0, hi = hist.dates.length - 1, ans = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (hist.dates[m] <= t) { ans = m; lo = m + 1; } else hi = m - 1; }
+  return ans >= 0 ? hist.closes[ans] : hist.closes[0];
+}
+function _myClosedTrades(j) {
+  const sorted = [...j].filter(e => e.ticker && e.qty && e.price).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const q = {}; const closed = [];
+  for (const e of sorted) {
+    if (e.action === 'buy') (q[e.ticker] = q[e.ticker] || []).push({ qty: e.qty, cost: (e.net || e.price * e.qty) / e.qty, date: e.date });
+    else if (e.action === 'sell') {
+      let rem = e.qty; const proceeds = (e.net || e.price * e.qty) / e.qty; const lots = q[e.ticker] || [];
+      while (rem > 0 && lots.length) {
+        const lot = lots[0], take = Math.min(rem, lot.qty);
+        if (lot.cost > 0) closed.push({ ticker: e.ticker, buyDate: lot.date, sellDate: e.date, ret: (proceeds - lot.cost) / lot.cost });
+        lot.qty -= take; rem -= take; if (lot.qty <= 0) lots.shift();
+      }
+    }
+  }
+  return closed;
+}
+async function renderMyEdge() {
+  const card = document.getElementById('dash-myedge-card'), el = document.getElementById('dash-myedge');
+  if (!card || !el) return;
+  let closed; try { closed = _myClosedTrades(getJ()); } catch (e) { return; }
+  if (!closed.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">計算你 vs 指數中…</div>';
+  const hist = await _loadSpyHistory();
+  if (!hist) { el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">SPY 對照資料載入中(下次掃描後生成)…</div>'; return; }
+
+  const rows = [];
+  for (const t of closed) {
+    const s0 = _spyOn(hist, t.buyDate), s1 = _spyOn(hist, t.sellDate);
+    if (!(s0 && s1)) continue;
+    const spyRet = s1 / s0 - 1;
+    rows.push({ ...t, spyRet, alpha: t.ret - spyRet });
+  }
+  if (!rows.length) { el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">交易日期超出 SPY 對照範圍</div>'; return; }
+  const n = rows.length;
+  const avgAlpha = rows.reduce((s, r) => s + r.alpha, 0) / n * 100;
+  const winVsSpy = rows.filter(r => r.alpha > 0).length / n;
+  const yourAvg = rows.reduce((s, r) => s + r.ret, 0) / n * 100;
+  const spyAvg = rows.reduce((s, r) => s + r.spyRet, 0) / n * 100;
+
+  let verdict, vColor;
+  if (n < 10) { verdict = '樣本僅 ' + n + ' 筆,太早 — 累積 10+ 筆已實現交易才算數。先練功。'; vColor = 'var(--muted)'; }
+  else if (avgAlpha > 1) { verdict = '✓ 你的交易平均贏指數 +' + avgAlpha.toFixed(1) + '%/筆 — 你「可能」有真 edge,繼續累積驗證。'; vColor = '#22c55e'; }
+  else if (avgAlpha < -1) { verdict = '⨯ 你的交易平均輸指數 ' + avgAlpha.toFixed(1) + '%/筆 — 殘酷但重要:目前主動交易不如直接買指數。'; vColor = '#f87171'; }
+  else { verdict = '≈ 你的交易跟指數差不多(' + avgAlpha.toFixed(1) + '%/筆)— 扣掉心力與成本,還沒證明值得主動。'; vColor = '#fbbf24'; }
+
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">' +
+      '<div style="padding:12px;background:rgba(255,255,255,.02);border-radius:8px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">平均 alpha/筆</div><div class="mono" style="font-size:22px;font-weight:700;color:' + vColor + '">' + (avgAlpha >= 0 ? '+' : '') + avgAlpha.toFixed(1) + '%</div></div>' +
+      '<div style="padding:12px;background:rgba(255,255,255,.02);border-radius:8px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">贏指數比率</div><div class="mono" style="font-size:22px;font-weight:700">' + (winVsSpy * 100).toFixed(0) + '%</div></div>' +
+      '<div style="padding:12px;background:rgba(255,255,255,.02);border-radius:8px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">你 / 指數 (平均)</div><div class="mono" style="font-size:15px;font-weight:700">' + (yourAvg >= 0 ? '+' : '') + yourAvg.toFixed(1) + '% / ' + (spyAvg >= 0 ? '+' : '') + spyAvg.toFixed(1) + '%</div></div>' +
+    '</div>' +
+    '<div style="padding:11px 14px;border-radius:8px;background:rgba(255,255,255,.02);border-left:3px solid ' + vColor + ';font-size:13px;color:var(--text);line-height:1.6">' + escapeHtml(verdict) + '</div>' +
+    '<div style="margin-top:8px;font-size:10px;color:var(--muted)">基於 ' + n + ' 筆已實現交易 · 對照同期 SPY · 免疫倖存者偏差(這是你的真實成績,不是回測)。匯入元大交易紀錄(持倉頁)讓它更完整。</div>';
+}
+
 function analyzeBehavior(j) {
   const sorted = [...j].filter(e => e.ticker && e.qty && e.price).sort((a, b) => new Date(a.date) - new Date(b.date));
   const queues = {}; const closed = [];
