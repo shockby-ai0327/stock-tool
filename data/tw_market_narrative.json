@@ -1,124 +1,123 @@
 {
-  "generatedAt": 1780946643464,
+  "generatedAt": 1780955208642,
   "market": "TW",
-  "scanAt": "2026-06-08T19:14:27.428Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-08T21:31:01.406Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 738.51,
-      "changePct": 0.13
+      "last": 739.22,
+      "changePct": 0.23
     },
     "vix": {
-      "last": 18.74,
-      "changePct": -12.88
+      "last": 18.92,
+      "changePct": -12.04
     },
     "tnx": {
       "last": 4.55,
       "changePct": 0.35
     },
     "dxy": {
-      "last": 100.01,
-      "changePct": -0.06
+      "last": 99.98,
+      "changePct": -0.09
     }
   },
   "sectorLeaders": [
     {
       "etf": "SMH",
-      "last": 595.48,
-      "changePct": 4.53
+      "last": 598.16,
+      "changePct": 5
     },
     {
       "etf": "XLK",
-      "last": 183.58,
-      "changePct": 1.82
+      "last": 184.18,
+      "changePct": 2.15
     },
     {
       "etf": "XLE",
-      "last": 58.26,
-      "changePct": 1.03
+      "last": 58.33,
+      "changePct": 1.14
     }
   ],
   "sectorLaggards": [
     {
       "etf": "XLU",
-      "last": 43.58,
-      "changePct": -1.74
+      "last": 43.52,
+      "changePct": -1.87
     },
     {
       "etf": "XLRE",
-      "last": 44,
-      "changePct": -1.57
+      "last": 44.03,
+      "changePct": -1.5
     },
     {
       "etf": "XLB",
-      "last": 50.01,
-      "changePct": -1.21
+      "last": 49.96,
+      "changePct": -1.32
     }
   ],
   "gainers": [
     {
       "symbol": "TNGX",
       "name": "Tango Therapeutics, Inc.",
-      "changePct": 51.9
+      "changePct": 52.97
     },
     {
       "symbol": "GLXY",
       "name": "Galaxy Digital Inc.",
-      "changePct": 21.92
+      "changePct": 21.36
     },
     {
       "symbol": "CBRS",
       "name": "Cerebras Systems Inc.",
-      "changePct": 20.25
+      "changePct": 18.32
     },
     {
       "symbol": "MARA",
       "name": "MARA Holdings, Inc.",
-      "changePct": 11.32
+      "changePct": 11.85
     },
     {
-      "symbol": "INTC",
-      "name": "Intel Corporation",
-      "changePct": 10.96
+      "symbol": "OSCR",
+      "name": "Oscar Health, Inc.",
+      "changePct": 11.75
     }
   ],
   "losers": [
     {
       "symbol": "BRC",
       "name": "Brady Corporation",
-      "changePct": -14.92
+      "changePct": -15.06
     },
     {
       "symbol": "AGX",
       "name": "Argan, Inc.",
-      "changePct": -12.64
+      "changePct": -10.76
     },
     {
       "symbol": "TLK",
       "name": "PT Telekomunikasi Indonesia, T",
-      "changePct": -9.3
+      "changePct": -9.46
     },
     {
       "symbol": "FRVO",
       "name": "Fervo Energy Company",
-      "changePct": -8.89
+      "changePct": -8.76
     },
     {
       "symbol": "ENSG",
       "name": "The Ensign Group, Inc.",
-      "changePct": -8.95
+      "changePct": -8.15
     }
   ],
-  "narrative": "今日市場呈現明顯的科技領漲格局。SMH漲幅4.53%，INTC、MARA等晶片股大漲逾10%，顯示AI與半導體板塊重獲資金青睞。VIX大跌12.88%至18.74，反映風險情緒明顯改善。10Y殖利率上升35bp至4.55%，暗示長期增長預期提升。資金從傳統防禦性板塊（公用事業-1.74%、房地產-1.57%）流向成長性科技股，形成典型的風險偏好輪動。電信股TLK跌9.3%領跌，反映利率敏感板塊承壓。收盤前兩小時若科技股維持強勢，預期將以正收盤作收。",
-  "headline": "科技領漲帶動風險偏好回升，晶片股強勢突圍",
+  "narrative": "今日市場呈現溫和上升，SPY漲0.23%，但重點在風險情緒轉好——VIX暴跌12.04%至18.92，顯示恐慌指數明顯舒緩。科技股(SMH +5%)與軟體(XLK +2.15%)領漲，反映資金重新進入成長型資產。公用事業(-1.87%)與房地產(-1.5%)領跌，表明低波動防守股失寵。10年期殖利率上升35基點至4.55%，對成長股構成結構性支撐。台股成分股在相對強度排行中佔據主導，暗示亞洲科技需求強勁。整體呈現風險偏好復甦的旋轉行情。",
+  "headline": "科技領漲帶動小幅上揚，VIX大幅回落風險偏好回溫",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "SMH",
-      "XLK",
-      "XLE"
+      "XLK"
     ],
     "outOf": [
       "XLU",
@@ -126,5 +125,5 @@
       "XLB"
     ]
   },
-  "tomorrowWatch": "留意晶片股能否延續強勢，及殖利率4.55%支撐力度，決定後市科技領導力道"
+  "tomorrowWatch": "密切監控科技股能否延續漲勢，留意VIX進一步下行是否觸發追高行為，以及10Y殖利率4.55%是否構成壓力位。"
 }
