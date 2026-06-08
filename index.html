@@ -10149,17 +10149,67 @@ function _swingExitSummary(open, prices) {
   }
   _savePeaks(peaks);
   if (!rows.length) return '';
-  // 該砍 / 逼近的排前面
-  rows.sort((a, b) => a.ex.distPct - b.ex.distPct);
+  rows.sort((a, b) => a.ex.distPct - b.ex.distPct);   // 該砍/逼近排前
+  const advice = (st) => st === '該砍了' ? { t: '出場,別凹', c: '#f87171' }
+    : st === '逼近停損' ? { t: '快觸發,準備出', c: '#fbbf24' }
+    : { t: '趨勢中,讓它跑 · 別手癢早賣', c: '#86efac' };
   return '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)">' +
-    '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">波段出場參考 · 快砍慢抱<span style="text-transform:none"> （核心價值倉請忽略,用月再平衡）</span></div>' +
-    rows.map(x =>
-      '<div style="display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;font-size:11px;margin-bottom:3px">' +
-        '<span class="mono" style="font-weight:700">' + x.ticker + '</span>' +
-        '<span class="mono" style="color:var(--muted)">砍在 $' + x.ex.stop.toFixed(2) + ' · 距 ' + x.ex.distPct.toFixed(0) + '%' + (x.ex.gainPct >= 0 ? ' · 帳上 +' + x.ex.gainPct.toFixed(0) + '%' : '') + '</span>' +
-        '<span style="font-weight:700;color:' + x.ex.color + '">' + x.ex.state + '</span>' +
-      '</div>'
-    ).join('') + '</div>';
+    '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">波段出場 · 快砍慢抱</div>' +
+    '<div style="font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:8px">你不是要賣在頂點(做不到),是抱到「從峰值回落觸發移動停損」。下面=離停損的緩衝 + 現在距峰值多遠。<span style="color:var(--muted)">(核心價值倉忽略)</span></div>' +
+    rows.map(x => {
+      const pullFromPeak = x.ex.peak > 0 ? (x.cur / x.ex.peak - 1) * 100 : 0;
+      const a = advice(x.ex.state);
+      return '<div id="sw-' + x.ticker + '" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">' +
+        '<div style="display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;font-size:11px">' +
+          '<span class="mono" style="font-weight:700">' + x.ticker + '</span>' +
+          '<span class="mono" style="color:var(--muted)">' + (x.ex.gainPct >= 0 ? '帳上 +' + x.ex.gainPct.toFixed(0) + '%' : '帳上 ' + x.ex.gainPct.toFixed(0) + '%') +
+            ' · 距峰 ' + pullFromPeak.toFixed(0) + '% · 停損 $' + x.ex.stop.toFixed(2) + '(緩衝 ' + x.ex.distPct.toFixed(0) + '%)</span>' +
+          '<span style="font-weight:700;color:' + x.ex.color + '">' + x.ex.state + '</span>' +
+        '</div>' +
+        '<div style="font-size:10px;color:' + a.c + ';margin-left:64px">→ ' + a.t + '<span class="sw-trend" style="color:var(--muted)"></span></div>' +
+      '</div>';
+    }).join('') + '</div>';
+}
+
+// 趨勢健康:用日線判斷「波段還在跑 vs 轉弱 vs 過熱」—— 回答「該抱還是該走」
+async function _fetchDailyHistory(ticker) {
+  window._dailyHist = window._dailyHist || {};
+  if (window._dailyHist[ticker]) return window._dailyHist[ticker];
+  try {
+    const r = await fetch('https://stooq.com/q/d/l/?s=' + encodeURIComponent(ticker.toLowerCase()) + '.us&i=d');
+    if (!r.ok) return null;
+    const lines = (await r.text()).trim().split('\n').slice(1);
+    const closes = [], highs = [];
+    for (const ln of lines) { const c = ln.split(','); if (c.length >= 5) { highs.push(parseFloat(c[2])); closes.push(parseFloat(c[4])); } }
+    const h = { closes, highs };
+    if (closes.length) window._dailyHist[ticker] = h;
+    return closes.length ? h : null;
+  } catch (e) { return null; }
+}
+function _trendHealth(closes, highs) {
+  if (!closes || closes.length < 20) return null;
+  const last = closes[closes.length - 1];
+  const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+  const ma20prev = closes.slice(-25, -5).reduce((a, b) => a + b, 0) / 20;
+  const ext = (last / ma20 - 1) * 100;                       // 距 20MA(過熱?)
+  const recentHi = Math.max(...(highs || closes).slice(-10));
+  const nearHigh = last >= recentHi * 0.97;
+  if (last < ma20) return { t: '⚠ 跌破 20MA,趨勢轉弱 — 移動停損會接手', c: '#fbbf24' };
+  if (ext > 25) return { t: '🔥 距 20MA +' + ext.toFixed(0) + '%,過熱 — 可考慮收緊停損鎖利', c: '#fbbf24' };
+  if (nearHigh && ma20 > ma20prev) return { t: '✓ 創新高 + 均線上揚,趨勢健康 — 讓它跑', c: '#86efac' };
+  return { t: '趨勢中性,守住移動停損', c: 'var(--muted)' };
+}
+async function _enrichSwingTrend(open) {
+  for (const [ticker] of (open || []).slice(0, 10)) {
+    const row = document.getElementById('sw-' + ticker);
+    if (!row) continue;
+    const span = row.querySelector('.sw-trend');
+    if (!span) continue;
+    const h = await _fetchDailyHistory(ticker);
+    const th = h ? _trendHealth(h.closes, h.highs) : null;
+    if (th && span) { span.textContent = ' · ' + th.t; span.style.color = th.c; }
+    await new Promise(r => setTimeout(r, 120));
+  }
 }
 
 // 即時砍/拉警示:定時檢查持倉,跌破波段停損就推播(每標的每天一次)
@@ -10260,6 +10310,7 @@ async function renderDashHoldings() {
  '</div>' +
  items + sectorHtml + _swingExitSummary(open, prices) +
  '<div style="text-align:right;margin-top:10px"><button class="act ghost" onclick="showPage(\'portfolio\');setTimeout(()=>switchJournalTab(\'holdings\'),50)">詳細追蹤 →</button></div>';
+ try { _enrichSwingTrend(open); } catch(e) {} // 背景補上趨勢健康(波段還在跑嗎)
 }
 
 // ── 首頁精選快掃 top-3（背景執行，結果寫入 _scanCache）
