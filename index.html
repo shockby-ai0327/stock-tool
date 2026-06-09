@@ -13339,6 +13339,8 @@ function _stockFundamentalsPanel(symbol) {
     unknown: { c: 'var(--muted)', t: '資料不足', d: '抓不到足夠基本面 — 當未知,別腦補。' },
   };
   const fc = flagCfg[f.flag] || flagCfg.unknown;
+  // 虧損公司:估值類指標天生算不出(沒有正盈餘)。用來把「天生沒有」跟「抓失敗」分開講清楚。
+  const lossMaking = (f.profitMargin != null && f.profitMargin < 0) || f.flag === 'trap' || (f.roe != null && f.roe < 0);
   const big = (m) => m == null ? null : (Math.abs(m) >= 1e6 ? '$' + (m / 1e6).toFixed(1) + 'T' : Math.abs(m) >= 1000 ? '$' + (m / 1000).toFixed(1) + 'B' : '$' + Math.round(m) + 'M');
   const row = (label, val, color) => {
     const has = val !== null && val !== undefined && val !== '';
@@ -13353,7 +13355,7 @@ function _stockFundamentalsPanel(symbol) {
   const deCol = (v) => v == null ? null : v > 200 ? '#f87171' : v > 100 ? '#f59e0b' : 'var(--text)';
   const grp = (title, rows) => '<div style="flex:1;min-width:135px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">' + title + '</div>' + rows + '</div>';
   const valuation = grp('估值',
-    row('P/E', f.trailingPE, peCol(f.trailingPE)) +
+    row('P/E', f.trailingPE != null ? f.trailingPE : (lossMaking ? '虧損' : null), f.trailingPE != null ? peCol(f.trailingPE) : (lossMaking ? '#f87171' : null)) +
     row('Fwd P/E', f.forwardPE, peCol(f.forwardPE)) +
     row('P/S', f.priceToSales) +
     row('PEG', f.peg, f.peg != null && f.peg > 2.5 ? '#f59e0b' : null) +
@@ -13380,6 +13382,15 @@ function _stockFundamentalsPanel(symbol) {
   const sectorPill = secZh ? '<span style="font-size:11px;color:var(--muted)">產業:<b style="color:var(--text)">' + secZh + '</b></span>' : '';
   const bizText = [f.industry, f.summary].filter(Boolean).join(' — ');
   const bizLine = bizText ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizText) + '</div>' : '';
+  const lossNote = lossMaking ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px"><span style="color:#fbbf24">ⓘ 虧損公司</span>:P/E、PEG、EV/EBITDA 等估值指標沒有正盈餘可算,顯示「—」是<b style="color:var(--text)">正常、不是資料缺失</b>。</div>' : '';
+  const _fMeta = window._fundamentalsMeta || {};
+  const _fetchedAt = _fMeta.generatedAt ? new Date(_fMeta.generatedAt).toLocaleDateString('zh-TW') : '';
+  const footerLine = '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">' +
+    '基本面是動能的<b style="color:var(--text)">真實性檢查</b>(真公司 vs 燒錢迷因),不是價值投資。' +
+    '<b style="color:var(--text)">「—」</b>= 該指標不適用(如虧損無 P/E)或免費資料源未提供,<b style="color:var(--text)">不是系統錯誤</b>。' +
+    '資料 yfinance' + (_fetchedAt ? ' · 抓取於 ' + _fetchedAt : '') + ' · ' +
+    '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/key-statistics" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Yahoo 核對 →</a>' +
+    '</div>';
   return '<div class="card" style="margin-top:0">' +
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">' +
       '<div class="section-label" style="margin:0">基本面快照</div>' +
@@ -13388,8 +13399,9 @@ function _stockFundamentalsPanel(symbol) {
     '</div>' +
     '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">' + fc.d + '</div>' +
     bizLine +
+    lossNote +
     '<div style="display:flex;gap:18px;flex-wrap:wrap">' + valuation + profit + growth + health + '</div>' +
-    '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.5">基本面是動能的<b style="color:var(--text)">真實性檢查</b>(確認是真公司、不是燒錢迷因),不是叫你做價值投資。資料 yfinance,僅供參考,以官方財報為準。</div>' +
+    footerLine +
   '</div>';
 }
 
