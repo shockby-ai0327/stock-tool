@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1781032621823,
+  "generatedAt": 1781041162969,
   "market": "TW",
-  "scanAt": "2026-06-09T19:07:05.882Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-09T21:30:01.426Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 733.64,
-      "changePct": -0.75
+      "last": 737.05,
+      "changePct": -0.29
     },
     "vix": {
-      "last": 19.54,
-      "changePct": 3.28
+      "last": 19.87,
+      "changePct": 5.02
     },
     "tnx": {
       "last": 4.53,
       "changePct": -0.53
     },
     "dxy": {
-      "last": 99.93,
-      "changePct": -0.12
+      "last": 99.97,
+      "changePct": -0.08
     }
   },
   "sectorLeaders": [
     {
       "etf": "XLRE",
-      "last": 44.98,
-      "changePct": 2.16
+      "last": 44.97,
+      "changePct": 2.13
     },
     {
-      "etf": "XLV",
-      "last": 154.71,
-      "changePct": 1.35
+      "etf": "XLB",
+      "last": 50.77,
+      "changePct": 1.62
     },
     {
       "etf": "IBB",
-      "last": 168.77,
-      "changePct": 1.11
+      "last": 169.36,
+      "changePct": 1.46
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "SMH",
-      "last": 578.68,
-      "changePct": -3.26
-    },
-    {
       "etf": "IGV",
-      "last": 92.55,
-      "changePct": -3.24
+      "last": 92.95,
+      "changePct": -2.82
     },
     {
       "etf": "XLK",
-      "last": 178.41,
-      "changePct": -3.13
+      "last": 180.77,
+      "changePct": -1.85
+    },
+    {
+      "etf": "XLE",
+      "last": 57.39,
+      "changePct": -1.61
     }
   ],
   "gainers": [
     {
       "symbol": "NUVL",
       "name": "Nuvalent, Inc.",
-      "changePct": 39.09
+      "changePct": 39.28
     },
     {
       "symbol": "ALHC",
       "name": "Alignment Healthcare, Inc.",
-      "changePct": 25.86
+      "changePct": 25.08
     },
     {
       "symbol": "CECO",
       "name": "CECO Environmental Corp.",
-      "changePct": 14.96
+      "changePct": 18.52
     },
     {
       "symbol": "IFS",
       "name": "Intercorp Financial Services I",
-      "changePct": 12.11
+      "changePct": 11.43
     },
     {
-      "symbol": "VECO",
-      "name": "Veeco Instruments Inc.",
-      "changePct": 10.58
+      "symbol": "DKNG",
+      "name": "DraftKings Inc.",
+      "changePct": 11.34
     }
   ],
   "losers": [
     {
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics, Inc.",
+      "changePct": -17.17
+    },
+    {
       "symbol": "UEC",
       "name": "Uranium Energy Corp.",
-      "changePct": -17.57
+      "changePct": -15.54
     },
     {
       "symbol": "PRIM",
       "name": "Primoris Services Corporation",
-      "changePct": -16.98
-    },
-    {
-      "symbol": "AAOI",
-      "name": "Applied Optoelectronics, Inc.",
-      "changePct": -17.35
+      "changePct": -15.4
     },
     {
       "symbol": "RDW",
       "name": "Redwire Corporation",
-      "changePct": -16.32
+      "changePct": -15.19
     },
     {
       "symbol": "AXTI",
       "name": "AXT Inc",
-      "changePct": -14.6
+      "changePct": -13.68
     }
   ],
-  "narrative": "今日美股呈現明顯的板塊輪動格局。SPY跌0.75%，VIX升3.28%至19.54，反映風險情緒轉弱。科技股領跌，SMH、IGV、XLK分別跌3.26%、3.24%、3.13%，顯示AI與軟體領域承壓。與此同時，XLRE地產與XLV醫療逆市上漲，分別漲2.16%與1.35%，資金從成長股轉向防守性資產。10Y殖利率下跌53bp至4.53%，支撐債券與防守性板塊。台股領先指標向好，2344.TW月漲28.81%、RS 96。整體呈現典型的風險規避輪動特徵。",
-  "headline": "科技股重挫引發風險情緒轉向，地產與醫療逆勢領漲",
+  "narrative": "今日標普500微跌0.29%，呈現溫和調整格局。10年期殖利率大幅下滑53基點至4.53%，激發債券敏感類股買盤。不動產(XLRE)領漲2.13%，原物料(XLB)次之1.62%。惟科技股逆勢走弱，軟體(IGV)跌2.82%、科技(XLK)跌1.85%，反映利率下行環境中的獲利疑慮。VIX升5.02%至19.87，顯示市場波動略增。台股龍頭2344.TW月漲28.81%、加速度1.79倍，展現強勢動能。",
+  "headline": "債券反彈帶動地產領漲，科技股承壓，市場溫和調整",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
       "XLRE",
-      "XLV",
+      "XLB",
       "IBB"
     ],
     "outOf": [
       "XLK",
       "IGV",
-      "SMH"
+      "XLE"
     ]
   },
-  "tomorrowWatch": "留意科技股是否止跌，及殖利率進一步走低對防守型資產的支撐力度"
+  "tomorrowWatch": "留意10Y殖利率走勢與科技股能否反彈，以及台股高RS個股能否延續強勢"
 }
