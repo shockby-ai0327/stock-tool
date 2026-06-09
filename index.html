@@ -13314,6 +13314,19 @@ function _qualityBadge(symbol) {
   return '';
 }
 
+// 2026-06-09 選股品質標記(只標不篩,清單照舊):低價股 / 微型股一眼看到流動性風險。
+// 掃描依據不變 —— 只是讓你知道第一名是不是 $1 微型股。市值來自 enrich(r.marketCap),不必等 cron。
+function _lowQualityBadge(r) {
+  if (!r) return '';
+  const flags = [];
+  if (r.price != null && r.price < 5) flags.push('低價股');
+  let mc = (r.marketCap != null) ? r.marketCap : null;
+  if (mc == null) { const f = (window._fundamentals || {})[r.symbol]; if (f && f.marketCapM != null) mc = f.marketCapM * 1e6; }
+  if (mc != null && mc < 3e8) flags.push('微型股');
+  if (!flags.length) return '';
+  return '<span title="低價股(<$5)或微型股(市值<$3億):波動大、買賣價差大、流動性差 — 不是不能碰,是要用更小的倉、更嚴的停損。" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.12);color:#fbbf24;font-weight:600;cursor:help">⚠ ' + flags.join('·') + '</span>';
+}
+
 // 2026-06-09 基本面快照面板(個股頁)— 估值/獲利/成長/體質 一張卡。
 // 框架:動能標的的「真實性檢查」(真公司 vs 燒錢迷因),非價值選股。資料 yfinance(掃描池內個股)。
 function _stockFundamentalsPanel(symbol) {
@@ -13483,7 +13496,7 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
     return '<tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)" onclick="showStock(\'' + r.symbol + '\')">' +
       '<td style="padding:10px 8px;font-weight:700;color:var(--muted);font-size:13px">#' + (i+1) + rankBadge + '</td>' +
       '<td style="padding:10px 8px">' +
-        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + _alignBadge(r) + _timingBadge(r) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
+        '<div' + accelTitle + ' style="font-weight:700;font-size:15px">' + r.symbol + accelEmoji + vcpHtml + _qualityBadge(r.symbol) + _alignBadge(r) + _timingBadge(r) + _lowQualityBadge(r) + (r.reddit ? '<span style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(255,69,0,.15);color:#ff6314">Reddit #' + r.reddit.rank + (r.reddit.rankChange > 0 ? ' ↑' + r.reddit.rankChange : '') + '</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + nameStr + '</div>' +
         sigHtml + earnHtml + aiStarsHtml +
       '</td>' +
