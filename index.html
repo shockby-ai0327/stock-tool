@@ -13334,7 +13334,7 @@ function _stockFundamentalsPanel(symbol) {
   if (!f || !f.flag) return '';
   const flagCfg = {
     quality: { c: '#22c55e', t: '✓ 體質健康', d: '有獲利 + 正自由現金流 — 動能背後有真實的賺錢能力。' },
-    watch:   { c: '#f59e0b', t: '○ 半張臉',   d: '獲利或現金流只佔其一 — 可做,但盯緊基本面別再惡化。' },
+    watch:   { c: '#f59e0b', t: '○ 體質普通', d: '獲利、正現金流 兩項只達成其一 — 可做,但盯緊基本面別再惡化。' },
     trap:    { c: '#f87171', t: '⚠ 動能陷阱', d: '不賺錢 + 燒現金 — 股價是唯一支撐。回測證明這類最容易崩,只用最小倉 + 鐵紀律停損。' },
     unknown: { c: 'var(--muted)', t: '資料不足', d: '抓不到足夠基本面 — 當未知,別腦補。' },
   };
@@ -13382,7 +13382,7 @@ function _stockFundamentalsPanel(symbol) {
   const sectorPill = secZh ? '<span style="font-size:11px;color:var(--muted)">產業:<b style="color:var(--text)">' + secZh + '</b></span>' : '';
   const bizText = [f.industry, (f.summaryZh || f.summary)].filter(Boolean).join(' — ');
   const bizLine = bizText ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizText) + '</div>' : '';
-  const lossNote = lossMaking ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px"><span style="color:#fbbf24">ⓘ 虧損公司</span>:P/E、PEG、EV/EBITDA 等估值指標沒有正盈餘可算,顯示「—」是<b style="color:var(--text)">正常、不是資料缺失</b>。</div>' : '';
+  const lossNote = lossMaking ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px"><span style="color:#fbbf24">ⓘ 目前淨虧損</span>:沒有正盈餘,P/E、PEG、EV/EBITDA 等估值指標算不出,顯示「—」是<b style="color:var(--text)">正常、不是資料缺失</b>。</div>' : '';
   const _fMeta = window._fundamentalsMeta || {};
   const _fetchedAt = _fMeta.generatedAt ? new Date(_fMeta.generatedAt).toLocaleDateString('zh-TW') : '';
   const footerLine = '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">' +
