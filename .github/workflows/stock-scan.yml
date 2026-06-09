@@ -114,6 +114,14 @@ jobs:
         run: python scripts/fetch_fundamentals.py
         continue-on-error: true
 
+      # 業務簡介翻繁中(hash 快取,只翻新的 → 成本≈0)— 供「基本面快照」面板的「在做什麼」
+      - name: Translate fundamentals summaries (zh)
+        if: ${{ github.event.inputs.market != 'tw' }}
+        run: node scripts/translate_summaries.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        continue-on-error: true
+
       # SPY 日線歷史 — 供「我的交易 vs 指數」前向 scorecard(B1)用
       - name: Fetch SPY history (my-edge scorecard)
         if: ${{ github.event.inputs.market != 'tw' }}
@@ -151,6 +159,7 @@ jobs:
           [ -f data/short_interest.json ]    && git add data/short_interest.json    || true
           [ -f data/earnings_whisper.json ]  && git add data/earnings_whisper.json  || true
           [ -f data/fundamentals.json ]      && git add data/fundamentals.json      || true
+          [ -f data/summary_zh_cache.json ]  && git add data/summary_zh_cache.json  || true
           [ -f data/spy_history.json ]       && git add data/spy_history.json       || true
           git diff --cached --quiet || git commit -m "scan: $(date -u '+%Y-%m-%d %H:%M UTC')"
           for attempt in 1 2 3 4 5; do
