@@ -1429,7 +1429,7 @@ async function analyzeStock() {
  ? '<span style="font-size:12px;font-weight:700;color:' + (_rsData.rs > 2 ? 'var(--green)' : _rsData.rs > 0 ? 'var(--yellow)' : 'var(--red)') + '">RS ' + (_rsData.rs > 0 ? '+' : '') + _rsData.rs.toFixed(1) + '% vs ' + _rsBench + '</span>'
  : '';
  const regimeDisplay = regime
- ? '<span style="font-size:12px;color:' + (regime.overall >= 1 ? 'var(--green)' : regime.overall <= -1 ? 'var(--red)' : 'var(--muted)') + '">' + (regime.overall >= 2 ? '' : regime.overall >= 1 ? '' : regime.overall <= -2 ? '' : '') + ' 大盤 ' + (regime.spyVs200 != null ? (regime.spyVs200 > 0 ? '+' : '') + regime.spyVs200.toFixed(1) + '% vs 200MA' : '') + (regime.vixNow ? ' · VIX ' + regime.vixNow.toFixed(0) : '') + '</span>'
+ ? '<span style="font-size:12px;color:' + (regime.riskOffToday ? 'var(--orange)' : regime.overall >= 1 ? 'var(--green)' : regime.overall <= -1 ? 'var(--red)' : 'var(--muted)') + '">大盤 ' + (regime.spyVs200 != null ? (regime.spyVs200 > 0 ? '+' : '') + regime.spyVs200.toFixed(1) + '% vs 200MA' : '') + (regime.vixNow ? ' · VIX ' + regime.vixNow.toFixed(0) : '') + (regime.riskOffToday ? ' · ⚠ 今日急殺' + (regime.spyDayChg != null ? ' ' + (regime.spyDayChg > 0 ? '+' : '') + regime.spyDayChg.toFixed(1) + '%' : '') : '') + '</span>'
  : '';
  if (rsDisplay || regimeDisplay) {
  const ctxBar = '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:8px 14px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border);margin-bottom:12px">' +
@@ -7101,7 +7101,7 @@ async function fetchMarketRegime() {
  yfChart(bench, '1y', '1d', 8000),
  yfChart(vixTicker, '1mo', '1d', 6000)
  ]);
- let spyCloses = [], ma200 = null, vixNow = null;
+ let spyCloses = [], ma200 = null, vixNow = null, vixDayChg = null;
  if (benchChart.status === 'fulfilled') {
  spyCloses = benchChart.value.indicators.quote[0].close.filter(v => v != null);
  if (spyCloses.length >= 200) ma200 = sma(spyCloses, 200);
@@ -7124,9 +7124,18 @@ async function fetchMarketRegime() {
  if (vixChart.status === 'fulfilled') {
  const vc = vixChart.value.indicators.quote[0].close.filter(v => v != null);
  vixNow = vc[vc.length - 1];
+ if (vc.length >= 2 && vc[vc.length - 2]) vixDayChg = (vixNow - vc[vc.length - 2]) / vc[vc.length - 2] * 100;
  }
  const spyNow = spyCloses[spyCloses.length - 1];
+ const spyPrev = spyCloses.length >= 2 ? spyCloses[spyCloses.length - 2] : null;
+ const spyDayChg = (spyNow != null && spyPrev) ? ((spyNow - spyPrev) / spyPrev * 100) : null;
  const spyVs200 = ma200 && spyNow ? ((spyNow - ma200) / ma200 * 100) : null;
+ // 2026-06-09 修自我矛盾:regime 原本只看 200MA(長期結構),完全沒看「今天」。
+ // 「今日急殺」偵測 — 結構可多頭,但今天大盤重挫 / VIX 跳升時,不該再喊「可進攻」(會跟市場頁打架)。
+ const riskOffToday =
+   (spyDayChg != null && spyDayChg <= -1.5) ||
+   (vixDayChg != null && vixDayChg >= 12 && vixNow != null && vixNow >= 20) ||
+   (vixNow != null && vixNow >= 30);
  // Classify regime
  let trend = 'neutral', trendScore = 0;
  if (spyVs200 !== null) {
@@ -7150,7 +7159,7 @@ async function fetchMarketRegime() {
    if (existingHmm.state === 2 && existingHmm.confidence >= 0.6) finalOverall = Math.max(finalOverall - 1, -4);
    else if (existingHmm.state === 0 && existingHmm.confidence >= 0.6) finalOverall = Math.min(finalOverall + 1, 3);
  }
- window._marketRegime = { trend, trendScore, vixNow, vixLevel, vixScore, spyVs200, spyNow, ma200, bench, overall: finalOverall, hmm: existingHmm || null };
+ window._marketRegime = { trend, trendScore, vixNow, vixDayChg, vixLevel, vixScore, spyVs200, spyDayChg, riskOffToday, spyNow, ma200, bench, overall: finalOverall, hmm: existingHmm || null };
  renderRegimeBanner();
  try { updateScanRegimeWarning(); } catch(e) {}
  // 2026-05-19: refresh dashboard regime div using same _rsRegimeCard source
@@ -7216,6 +7225,9 @@ function renderRegimeBanner() {
      (r.yieldSpread < -0.3 ? ' ⚠ 曲線倒掛' : '') +
      '</span>'
    : '';
+ const riskOffLine = r.riskOffToday
+   ? '<div style="font-size:11px;margin-top:4px;color:var(--orange);font-weight:600">⚠ 今日急殺:' + [(r.spyDayChg != null ? (r.bench || '大盤') + ' ' + (r.spyDayChg > 0 ? '+' : '') + r.spyDayChg.toFixed(1) + '%' : ''), (r.vixDayChg != null ? 'VIX ' + (r.vixDayChg > 0 ? '+' : '') + r.vixDayChg.toFixed(0) + '%' : '')].filter(Boolean).join(' · ') + ' — 結構仍多頭,但今天別追高 / 開新倉</div>'
+   : '';
  // 2026-05-20 (信任破洞 #2 修)：HMM 自打臉的修法 —
  // 1) HMM 信心 < 60% = 噪音，不顯示
  // 2) HMM 跟主 trend 一致 = 加強信號，灰色顯示
@@ -7238,6 +7250,7 @@ function renderRegimeBanner() {
  '<div style="font-size:16px;font-weight:700;color:' + tc.color + '">' + tc.icon + ' ' + tc.label + '</div>' +
  '<div style="font-size:11px;color:var(--muted);margin-top:3px">' + tc.tip + '</div>' +
  (fredLine ? '<div style="font-size:11px;margin-top:4px">' + fredLine + '</div>' : '') +
+ riskOffLine +
  '</div>' +
  '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
  '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">' + r.bench + ' vs 200MA</div><div style="font-size:15px;font-weight:700;color:' + tc.color + '">' + (r.spyVs200 !== null ? (r.spyVs200 > 0 ? '+' : '') + r.spyVs200.toFixed(1) + '%' : '—') + '</div></div>' +
@@ -10519,14 +10532,21 @@ function renderCalmHero() {
 
   // 1) 大盤環境閘門 — 動能版(空頭=動能墳場)
   let regimeLine, regimeColor, deploy = true;
+  // 2026-06-09 修自我矛盾:結構多頭 + 今日急殺 時,不再喊「可進攻」(會跟市場頁打架)
+  const _riskOff = regime && regime.riskOffToday;
+  const _todayBits = regime ? [
+    (regime.spyDayChg != null ? (regime.bench || '大盤') + ' ' + (regime.spyDayChg > 0 ? '+' : '') + regime.spyDayChg.toFixed(1) + '%' : ''),
+    (regime.vixDayChg != null ? 'VIX ' + (regime.vixDayChg > 0 ? '+' : '') + regime.vixDayChg.toFixed(0) + '%' : '')
+  ].filter(Boolean).join('、') : '';
   if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 動能在空頭是墳場,傾向空手'; regimeColor = 'var(--red)'; deploy = false; }
   else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 減碼、只碰最強設定'; regimeColor = 'var(--yellow)'; deploy = false; }
+  else if (_riskOff) { regimeLine = '結構多頭但今日急殺(' + _todayBits + ')— 今天別追高、別開新倉'; regimeColor = 'var(--orange)'; deploy = false; }
   else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 動能環境,可進攻'; regimeColor = 'var(--green)'; }
   else { regimeLine = '大盤中性 — 偏謹慎'; regimeColor = 'var(--muted)'; }
 
   let stateBig, stateSub = '';
   if (!leaders.length) { stateBig = '掃描資料載入中…'; }
-  else if (!deploy) { stateBig = '今日傾向空手'; stateSub = '大盤不利動能 —— 進攻倉減碼或觀望,別在墳場開槍。空手也是紀律。'; }
+  else if (!deploy) { stateBig = '今日傾向空手'; stateSub = _riskOff ? '結構還在多頭,但今天急殺、VIX 跳升 —— 別追突破、別開新倉,等盤穩。空手也是紀律。' : '大盤不利動能 —— 進攻倉減碼或觀望,別在墳場開槍。空手也是紀律。'; }
   else if (!setups.length) { stateBig = '今日無夠猛的設定'; stateSub = '沒有逼近新高+爆量的波段燃料 —— 不勉強,等更猛的。'; }
   else { stateBig = '🔥 突破時機 ' + setups.length + ' 檔設定就緒'; stateSub = '逼近新高 / 爆量 / 加速的波段燃料。到掃描器依突破時機排序、用進攻檔規劃(3% 風險 + heat 護欄 + 快砍慢抱)。'; }
 
@@ -13163,7 +13183,9 @@ function _rsRegimeCard() {
     bear:    { dot:'bear',    label:'偏空',   guide:'建議空手觀望，買點訊號先跳過' },
   };
   const key = r.overall >= 1 ? 'good' : r.overall === 0 ? 'neutral' : r.overall >= -1 ? 'caution' : 'bear';
-  const c = configs[key];
+  const c = Object.assign({}, configs[key]);
+  // 2026-06-09 修自我矛盾:結構多頭但今日急殺 → 蓋掉「可積極進場」指引
+  if (r.riskOffToday && (key === 'good' || key === 'neutral')) c.guide = '結構多頭但今日急殺 — 先別追高 / 開新倉,等盤穩';
   // VIX pill
   let vixPill = '';
   if (r.vixNow != null) {
@@ -13184,6 +13206,14 @@ function _rsRegimeCard() {
    if (hmmAgrees) hmmPill = '<span class="cp info" title="HMM 模型跟趨勢一致">HMM ✓ ' + r.hmm.stateName + ' ' + Math.round(r.hmm.confidence * 100) + '%</span>';
    else hmmPill = '<span class="cp amber" title="HMM 跟趨勢分歧 — 建議縮小倉位">HMM △ ' + r.hmm.stateName + ' ' + Math.round(r.hmm.confidence * 100) + '%</span>';
   }
+  // 2026-06-09 今日急殺 pill(把當日 tape 跟長期結構分開呈現)
+  let riskPill = '';
+  if (r.riskOffToday) {
+   const _b = [];
+   if (r.spyDayChg != null) _b.push((r.bench || '大盤') + ' ' + (r.spyDayChg > 0 ? '+' : '') + r.spyDayChg.toFixed(1) + '%');
+   if (r.vixDayChg != null) _b.push('VIX ' + (r.vixDayChg > 0 ? '+' : '') + r.vixDayChg.toFixed(0) + '%');
+   riskPill = '<span class="cp bear" title="今日大盤急殺 / VIX 跳升 — 跟長期結構分開看">⚠ 今日急殺 ' + _b.join(' ') + '</span>';
+  }
   return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:4px 0">' +
     '<div style="display:flex;align-items:center;gap:8px;min-width:140px">' +
      '<span class="sd ' + c.dot + '"></span>' +
@@ -13191,7 +13221,7 @@ function _rsRegimeCard() {
       '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:6px;letter-spacing:1px;text-transform:uppercase">' + key + '</span></div>' +
      '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + c.guide + '</div></div>' +
     '</div>' +
-    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:auto">' + spyPill + vixPill + hmmPill + '</div>' +
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:auto">' + riskPill + spyPill + vixPill + hmmPill + '</div>' +
     '</div>';
 }
 
