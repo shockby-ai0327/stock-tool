@@ -530,6 +530,12 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
       function 仍會跑（避免 null reference），UI 只是不再渲染 -->
  <div id="dash-timestamp" style="display:none"></div>
 
+ <!-- 2026-06-09 個股搜尋放回首頁 — 直接查任何代號的完整分析 -->
+ <div style="display:flex;gap:8px;margin-bottom:20px;align-items:center">
+   <input id="dash-ticker-search" placeholder="🔍 搜尋個股 — 輸入代號（美股 AAPL ｜ 台股 2330.TW）" onkeydown="if(event.key==='Enter')_dashSearchStock()" style="flex:1;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+   <button onclick="_dashSearchStock()" style="padding:10px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap">分析 →</button>
+ </div>
+
  <!-- 0. CALM HERO — 設計 A：平常安靜，一眼回答「我今天該幹嘛」，誠實打底 -->
  <!-- 200MA 指數擇時警示 — 唯一有數據撐腰、值得系統化的訊號(只在跌破時出現) -->
  <div id="dash-regime-timing"></div>
@@ -1325,6 +1331,12 @@ function showStock(symbol) {
   if (inp) inp.value = symbol;
   showPage('stock');
   analyzeStock();
+}
+// 2026-06-09 首頁個股搜尋 → 個股分析頁
+function _dashSearchStock() {
+  const el = document.getElementById('dash-ticker-search');
+  const v = el && el.value ? el.value.trim().toUpperCase() : '';
+  if (v) showStock(v);
 }
 
 async function analyzeStock() {
@@ -13376,12 +13388,16 @@ function _stockFundamentalsPanel(symbol) {
     row('現金', big(f.totalCashM)) +
     row('市值', big(f.marketCapM)) +
     row('營收', big(f.revenueM)));
-  // 產業(中文分類)+ 業務簡介(這公司到底在做什麼)
+  // 產業(中文:大類 · 細分)+ 業務簡介(這公司到底在做什麼)
   const sectorZh = { 'Technology': '科技', 'Healthcare': '醫療保健', 'Financial Services': '金融', 'Consumer Cyclical': '非必需消費', 'Consumer Defensive': '必需消費', 'Communication Services': '通訊服務', 'Industrials': '工業', 'Energy': '能源', 'Basic Materials': '原物料', 'Real Estate': '房地產', 'Utilities': '公用事業' };
+  // 細分產業(Yahoo 用「 - 」分隔,非破折號)。查無對應就退回英文原名。
+  const industryZh = { 'Semiconductors': '半導體', 'Semiconductor Equipment & Materials': '半導體設備材料', 'Software - Infrastructure': '基礎軟體', 'Software - Application': '應用軟體', 'Information Technology Services': '資訊服務', 'Computer Hardware': '電腦硬體', 'Consumer Electronics': '消費電子', 'Communication Equipment': '通訊設備', 'Electronic Components': '電子零組件', 'Electrical Equipment & Parts': '電氣設備', 'Scientific & Technical Instruments': '精密儀器', 'Solar': '太陽能', 'Internet Content & Information': '網路內容/平台', 'Internet Retail': '網路零售', 'Electronic Gaming & Multimedia': '電玩/多媒體', 'Entertainment': '娛樂', 'Advertising Agencies': '廣告', 'Telecom Services': '電信', 'Biotechnology': '生物科技', 'Drug Manufacturers - General': '製藥(大型)', 'Drug Manufacturers - Specialty & Generic': '製藥(專科/學名藥)', 'Medical Devices': '醫療器材', 'Medical Instruments & Supplies': '醫材耗材', 'Diagnostics & Research': '診斷與研究', 'Healthcare Plans': '健康保險', 'Medical Care Facilities': '醫療照護', 'Banks - Regional': '區域銀行', 'Banks - Diversified': '綜合銀行', 'Capital Markets': '資本市場', 'Asset Management': '資產管理', 'Insurance - Life': '壽險', 'Insurance - Property & Casualty': '產險', 'Credit Services': '信貸服務', 'Financial Data & Stock Exchanges': '金融數據/交易所', 'Apparel Retail': '服飾零售', 'Apparel Manufacturing': '服飾製造', 'Footwear & Accessories': '鞋類配件', 'Restaurants': '餐飲', 'Specialty Retail': '專業零售', 'Auto Manufacturers': '汽車製造', 'Auto Parts': '汽車零件', 'Travel Services': '旅遊', 'Lodging': '住宿', 'Packaged Foods': '包裝食品', 'Beverages - Non-Alcoholic': '非酒精飲料', 'Household & Personal Products': '家用個人用品', 'Discount Stores': '量販折扣', 'Grocery Stores': '食品雜貨', 'Aerospace & Defense': '航太國防', 'Specialty Industrial Machinery': '工業機械', 'Building Products & Equipment': '建材設備', 'Engineering & Construction': '工程營造', 'Integrated Freight & Logistics': '物流貨運', 'Railroads': '鐵路', 'Airlines': '航空', 'Oil & Gas E&P': '油氣探勘生產', 'Oil & Gas Integrated': '綜合石油', 'Oil & Gas Midstream': '油氣中游', 'Oil & Gas Equipment & Services': '油氣設備服務', 'Specialty Chemicals': '特用化學', 'Gold': '黃金', 'Steel': '鋼鐵', 'Copper': '銅', 'Aluminum': '鋁業', 'Utilities - Regulated Electric': '電力公用', 'Utilities - Renewable': '再生能源公用' };
   const secZh = f.sector ? (sectorZh[f.sector] || f.sector) : null;
-  const sectorPill = secZh ? '<span style="font-size:11px;color:var(--muted)">產業:<b style="color:var(--text)">' + secZh + '</b></span>' : '';
-  const bizText = [f.industry, (f.summaryZh || f.summary)].filter(Boolean).join(' — ');
-  const bizLine = bizText ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizText) + '</div>' : '';
+  const indZh = f.industry ? (industryZh[f.industry] || f.industry) : null;
+  const catParts = [secZh, indZh].filter(Boolean);
+  const sectorPill = catParts.length ? '<span style="font-size:11px;color:var(--muted)">產業:<b style="color:var(--text)">' + escapeHtml(catParts.join(' · ')) + '</b></span>' : '';
+  const bizSummary = f.summaryZh || f.summary || '';
+  const bizLine = bizSummary ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizSummary) + '</div>' : '';
   const lossNote = lossMaking ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px"><span style="color:#fbbf24">ⓘ 目前淨虧損</span>:沒有正盈餘,P/E、PEG、EV/EBITDA 等估值指標算不出,顯示「—」是<b style="color:var(--text)">正常、不是資料缺失</b>。</div>' : '';
   const _fMeta = window._fundamentalsMeta || {};
   const _fetchedAt = _fMeta.generatedAt ? new Date(_fMeta.generatedAt).toLocaleDateString('zh-TW') : '';
