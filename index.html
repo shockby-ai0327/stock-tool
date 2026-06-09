@@ -164,6 +164,7 @@ table td, table th, .num, [data-num], .stock-change { font-variant-numeric: tabu
 /* 2026-05-21 v3: 無邊界 — 砍 border / 砍 background / 加大 section 間距
    靠 title hairline + 空白自然分隔。padding 集中垂直方向 */
 .card-strip{background:transparent;border:none;border-radius:0;padding:0;margin-bottom:32px}
+.dash-hidden{display:none !important}
 .card-strip:last-child{margin-bottom:0}
 
 /* ═══════════════════════════════════════════════════════════════ */
@@ -534,15 +535,16 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <div style="display:flex;gap:8px;margin-bottom:20px;align-items:center">
    <input id="dash-ticker-search" placeholder="🔍 搜尋個股 — 輸入代號（美股 AAPL ｜ 台股 2330.TW）" onkeydown="if(event.key==='Enter')_dashSearchStock()" style="flex:1;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
    <button onclick="_dashSearchStock()" style="padding:10px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap">分析 →</button>
+   <button onclick="_openDashCustomize()" title="自訂首頁:區塊排序、顯示/隱藏" style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;cursor:pointer;white-space:nowrap">⚙ 自訂</button>
  </div>
 
  <!-- 0. CALM HERO — 設計 A：平常安靜，一眼回答「我今天該幹嘛」，誠實打底 -->
  <!-- 200MA 指數擇時警示 — 唯一有數據撐腰、值得系統化的訊號(只在跌破時出現) -->
  <div id="dash-regime-timing"></div>
- <section class="card-strip" id="dash-calm-hero" style="margin-bottom:20px"></section>
+ <section class="card-strip" id="dash-calm-hero" data-dash-section="calmhero" data-dash-label="今日總覽 / 進攻儀表板" style="margin-bottom:20px"></section>
 
  <!-- 1. MARKET REGIME -->
- <section class="card-strip">
+ <section class="card-strip" data-dash-section="regime" data-dash-label="大盤環境">
   <div class="sl-section">
    <h2>大盤環境</h2><span class="sl-en">market regime</span>
    <span class="sl-sub">決定今日可否做多</span>
@@ -555,7 +557,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  <div id="dash-value-card" style="display:none"><span id="value-asof"></span><div id="dash-value"></div></div>
 
  <!-- 2. ACTION ITEMS -->
- <section class="card-strip">
+ <section class="card-strip" data-dash-section="action" data-dash-label="今日待處理">
   <div class="sl-section">
    <h2>今日待處理</h2><span class="sl-en">action</span>
    <span class="sl-sub">停損觸發・目標達標・警報</span>
@@ -564,7 +566,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 3. HOLDINGS -->
- <section class="card-strip">
+ <section class="card-strip" data-dash-section="holdings" data-dash-label="持倉動態">
   <div class="sl-section">
    <h2>持倉動態</h2><span class="sl-en">holdings</span>
    <span class="sl-sub">我的持倉今日健康度</span>
@@ -573,7 +575,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 3.1 我的 edge — 你的實盤交易 vs 同期指數(免疫倖存者偏差的真實裁判) -->
- <section class="card-strip" id="dash-myedge-card" style="display:none">
+ <section class="card-strip" id="dash-myedge-card" data-dash-section="myedge" data-dash-label="我的 edge（實盤 vs 指數）" style="display:none">
   <div class="sl-section">
    <h2>我的 edge</h2><span class="sl-en">my trades vs SPY</span>
    <span class="sl-sub">你的實盤決策有沒有打敗指數 · 唯一屬於你的真相</span>
@@ -582,7 +584,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 3.2 行為教練 — 從交易日誌偵測壞習慣（散戶真正的 edge：不輸給自己） -->
- <section class="card-strip" id="dash-behavior-card" style="display:none">
+ <section class="card-strip" id="dash-behavior-card" data-dash-section="behavior" data-dash-label="行為教練" style="display:none">
   <div class="sl-section">
    <h2>行為教練</h2><span class="sl-en">behavioral coach</span>
    <span class="sl-sub">從你的交易紀錄抓出虧損習慣</span>
@@ -591,7 +593,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 3.5 MARKET NARRATIVE (Claude AI) -->
- <section class="card-strip" id="dash-narrative-card">
+ <section class="card-strip" id="dash-narrative-card" data-dash-section="narrative" data-dash-label="今日市場敘事">
   <div class="sl-section">
    <h2>今日市場敘事</h2><span class="sl-en">market narrative</span>
    <span class="sl-sub">Claude AI · 每日盤前/盤中/盤後 3 次更新</span>
@@ -604,7 +606,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 2026-05-29: 動能領袖移回首頁(進攻衛星倉的獵場入口)。誠實標:無統計 edge。 -->
- <section class="card-strip">
+ <section class="card-strip" data-dash-section="rsleader" data-dash-label="動能領袖">
   <div class="sl-section">
    <h2>動能領袖</h2><span class="sl-en">RS leader · 突破時機</span>
    <span class="sl-sub">無統計 edge · 高變異波段燃料,靠紀律</span>
@@ -615,7 +617,7 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
  </section>
 
  <!-- 三重共振雷達(進攻參考) -->
- <section class="card-strip" id="dash-triple-resonance-card">
+ <section class="card-strip" id="dash-triple-resonance-card" data-dash-section="triple" data-dash-label="三重共振雷達">
   <div class="sl-section">
    <h2>三重共振雷達</h2><span class="sl-en">triple resonance</span>
    <span class="sl-sub">財報・VCP・內部人 ≥3 訊號匯流(無 edge,參考)</span>
@@ -1271,6 +1273,7 @@ function showPage(name) {
  if (mobBtns[idx]) mobBtns[idx].classList.add('active');
  }
  if (name === 'dashboard' && _shouldRerender('dashboard')) { renderDashboard(); _markRendered('dashboard'); }
+ if (name === 'dashboard') { try { _applyDashLayout(); } catch (e) {} }
  if (name === 'market') { switchMarketTab('indices'); }
  if (name !== 'market') stopNewsAutoRefresh();
  if (name === 'portfolio') { renderJournal(); switchJournalTab(window._lastJournalTab || 'records'); }
@@ -1338,6 +1341,76 @@ function _dashSearchStock() {
   const v = el && el.value ? el.value.trim().toUpperCase() : '';
   if (v) showStock(v);
 }
+
+// ── 2026-06-09 首頁自訂:區塊排序 + 顯示/隱藏(只有你知道什麼順序對你重要)─────────────
+function _getDashLayout() { try { return JSON.parse(localStorage.getItem('dash-layout') || '{}'); } catch (e) { return {}; } }
+function _saveDashLayout(l) { try { localStorage.setItem('dash-layout', JSON.stringify(l)); if (typeof syncField === 'function') syncField('dashLayout', l); } catch (e) {} }
+function _allDashSections() { return Array.from(document.querySelectorAll('#page-dashboard [data-dash-section]')); }
+let _dashDefaultOrder = null;  // 原始 HTML 順序(在第一次重排前擷取,供「恢復預設」用)
+function _applyDashLayout() {
+  const lay = _getDashLayout();
+  const all = _allDashSections();
+  if (!all.length) return;
+  const byId = {}; all.forEach(el => byId[el.getAttribute('data-dash-section')] = el);
+  if (!_dashDefaultOrder) _dashDefaultOrder = all.map(el => el.getAttribute('data-dash-section'));
+  const base = _dashDefaultOrder.filter(id => byId[id]);
+  all.forEach(el => { const id = el.getAttribute('data-dash-section'); if (!base.includes(id)) base.push(id); });
+  const savedOrder = (lay.order || []).filter(id => byId[id]);
+  const ordered = savedOrder.concat(base.filter(id => !savedOrder.includes(id)));
+  const anchor = document.getElementById('dash-regime-timing');
+  let prev = anchor;
+  ordered.forEach(id => { const el = byId[id]; if (el && prev && prev.after) { prev.after(el); prev = el; } });
+  const hidden = new Set(lay.hidden || []);
+  ordered.forEach(id => byId[id].classList.toggle('dash-hidden', hidden.has(id)));
+}
+function _openDashCustomize() {
+  const old = document.getElementById('dash-customize-modal'); if (old) { old.remove(); return; }
+  const html = '<div id="dash-customize-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">' +
+    '<div style="background:var(--card);border-radius:12px;max-width:480px;width:100%;max-height:88vh;overflow:auto;border:1px solid var(--border)">' +
+      '<div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px">' +
+        '<div style="font-size:15px;font-weight:700">⚙ 自訂首頁</div>' +
+        '<button onclick="document.getElementById(\'dash-customize-modal\').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button></div>' +
+      '<div style="padding:10px 20px 4px;font-size:11px;color:var(--muted);line-height:1.6">↑ ↓ 調順序、右側開關顯示/隱藏。設定存在你這台裝置(登入後自動跨裝置同步)。</div>' +
+      '<div id="dash-customize-list" style="padding:6px 20px"></div>' +
+      '<div style="padding:12px 20px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center">' +
+        '<button onclick="_dashResetLayout()" style="font-size:12px;padding:8px 14px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer">恢復預設</button>' +
+        '<button onclick="document.getElementById(\'dash-customize-modal\').remove()" style="margin-left:auto;font-size:12px;padding:8px 18px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-weight:600;cursor:pointer">完成</button>' +
+      '</div>' +
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  _renderDashCustomizeList();
+}
+function _renderDashCustomizeList() {
+  const el = document.getElementById('dash-customize-list'); if (!el) return;
+  const all = _allDashSections();
+  el.innerHTML = all.map((sec, i) => {
+    const id = sec.getAttribute('data-dash-section');
+    const label = sec.getAttribute('data-dash-label') || id;
+    const hidden = sec.classList.contains('dash-hidden');
+    const btnBase = 'width:28px;height:28px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">' +
+      '<button onclick="_dashMove(\'' + id + '\',-1)" ' + (i === 0 ? 'disabled' : '') + ' style="' + btnBase + (i === 0 ? ';opacity:.3' : '') + '">↑</button>' +
+      '<button onclick="_dashMove(\'' + id + '\',1)" ' + (i === all.length - 1 ? 'disabled' : '') + ' style="' + btnBase + (i === all.length - 1 ? ';opacity:.3' : '') + '">↓</button>' +
+      '<span style="flex:1;font-size:13px;' + (hidden ? 'opacity:.4;text-decoration:line-through' : 'color:var(--text)') + '">' + label + '</span>' +
+      '<button onclick="_dashToggleHide(\'' + id + '\')" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:' + (hidden ? 'var(--muted)' : 'var(--green)') + ';cursor:pointer;white-space:nowrap">' + (hidden ? '🚫 已隱藏' : '👁 顯示') + '</button>' +
+    '</div>';
+  }).join('');
+}
+function _dashMove(id, dir) {
+  const ids = _allDashSections().map(s => s.getAttribute('data-dash-section'));
+  const i = ids.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  const tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+  const lay = _getDashLayout(); lay.order = ids; _saveDashLayout(lay);
+  _applyDashLayout(); _renderDashCustomizeList();
+}
+function _dashToggleHide(id) {
+  const lay = _getDashLayout(); const h = new Set(lay.hidden || []);
+  if (h.has(id)) h.delete(id); else h.add(id);
+  lay.hidden = Array.from(h); _saveDashLayout(lay);
+  _applyDashLayout(); _renderDashCustomizeList();
+}
+function _dashResetLayout() { _saveDashLayout({}); _applyDashLayout(); _renderDashCustomizeList(); }
 
 async function analyzeStock() {
  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase().replace(/[^A-Z0-9.\-^]/g, '');
@@ -14841,6 +14914,7 @@ async function loadCloudData() {
   if (snap.exists()) {
    const d = snap.data();
    if (d.journal && Array.isArray(d.journal)) localStorage.setItem('stock-journal', JSON.stringify(d.journal));
+   if (d.dashLayout && typeof d.dashLayout === 'object') { localStorage.setItem('dash-layout', JSON.stringify(d.dashLayout)); try { _applyDashLayout(); } catch (e) {} }
    if (d.watchlist && Array.isArray(d.watchlist)) { _todayWatchlist = d.watchlist; localStorage.setItem('scanner-watchlist', JSON.stringify(d.watchlist)); }
    if (d.tHoldings && typeof d.tHoldings === 'object'){ _tHoldings = d.tHoldings; localStorage.setItem('tHoldings', JSON.stringify(d.tHoldings)); }
    if (d.tLastReview) { _tLastReview = d.tLastReview; localStorage.setItem('tLastReview', d.tLastReview); }
@@ -15352,6 +15426,8 @@ startAutoRefresh();
 // Set initial nav active state
 document.querySelectorAll('.sidebar nav button').forEach((b,i) => b.classList.toggle('active', i===0));
 document.querySelectorAll('.mobile-nav button').forEach((b,i) => b.classList.toggle('active', i===0));
+// 2026-06-09 首次載入就套用首頁自訂排序/顯示(dashboard 預設 active)
+try { _applyDashLayout(); } catch (e) {}
 // Firebase 初始化（帳號 + 雲端同步）
 initFirebase();
 </script>
