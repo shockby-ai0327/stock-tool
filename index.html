@@ -1412,6 +1412,117 @@ function _dashToggleHide(id) {
 }
 function _dashResetLayout() { _saveDashLayout({}); _applyDashLayout(); _renderDashCustomizeList(); }
 
+// ── 2026-06-09 漲跌解讀:為什麼前一段大漲/大跌(歸因)+ 延續 or 反轉的「傾向」───────────────
+// 誠實:延續/反轉是因子傾向,不是機率。短線方向本質高變異、無可靠 edge — 拿來理解盤面,不是保證。
+function _moveStory(ctx) {
+  const { ticker, c, h, l, v, o, price, ta, rsData, regime } = ctx;
+  if (!c || c.length < 25 || !price) return '';
+  const n = c.length, last = n - 1;
+  const pct = (a, b) => (b ? (a - b) / b * 100 : null);
+  const chg1 = pct(c[last], c[last - 1]);
+  const ret5 = n >= 6 ? pct(c[last], c[last - 6]) : null;
+  const avgVol = v && v.length >= 21 ? v.slice(-21, -1).reduce((a, b) => a + b, 0) / 20 : null;
+  const volR = (ta && ta.volRatio) ? ta.volRatio : (avgVol && v[last] ? v[last] / avgVol : null);
+  const gap = (o && o[last] != null) ? pct(o[last], c[last - 1]) : null;
+  const intraday = (o && o[last]) ? pct(c[last], o[last]) : null;
+  const rsi = ta && ta.rsi != null ? ta.rsi : null;
+  const ma20 = ta && ta.ma20 != null ? ta.ma20 : null;
+  const ma60 = ta && ta.ma60 != null ? ta.ma60 : null;
+  const extMA20 = ma20 ? pct(price, ma20) : null;
+  const spyDay = regime && regime.spyDayChg != null ? regime.spyDayChg : null;
+  const scanEntry = window._rsLeaderCache ? window._rsLeaderCache.find(s => s.symbol === ticker) : null;
+  const recentH = h.slice(-126).filter(x => x != null && isFinite(x));
+  const hi52 = scanEntry && scanEntry.high52w ? scanEntry.high52w : (recentH.length ? Math.max.apply(null, recentH) : null);
+  const hiLabel = (scanEntry && scanEntry.high52w) ? '52週高' : '近半年高';
+  const distHigh = hi52 ? pct(price, hi52) : null;
+  const up = (chg1 != null && chg1 >= 0);
+  const dir = chg1 == null ? '' : (chg1 >= 0 ? '漲' : '跌');
+
+  // ── A. 歸因 ───────────────────────────────
+  const A = [];
+  A.push(['幅度', '近一日 <b style="color:' + (up ? 'var(--green)' : 'var(--red)') + '">' + (chg1 == null ? '—' : (chg1 > 0 ? '+' : '') + chg1.toFixed(1) + '%') + '</b>' + (ret5 != null ? ' · 近5日 ' + (ret5 > 0 ? '+' : '') + ret5.toFixed(1) + '%' : '')]);
+  if (chg1 != null && spyDay != null) {
+    let s;
+    if (Math.abs(chg1) >= 2 && Math.abs(spyDay) < 1) s = '個股獨走 — 大盤才 ' + (spyDay > 0 ? '+' : '') + spyDay.toFixed(1) + '%,這檔多半是<b style="color:var(--text)">自己的事</b>(個股消息/題材)';
+    else if (Math.sign(chg1) === Math.sign(spyDay) && Math.abs(spyDay) >= 1) s = '跟著大盤 — 大盤 ' + (spyDay > 0 ? '+' : '') + spyDay.toFixed(1) + '%,<b style="color:var(--text)">至少一半是大盤帶</b>的,不是個股獨強/獨弱';
+    else if (Math.sign(chg1) !== Math.sign(spyDay)) s = '逆勢 — 大盤 ' + (spyDay > 0 ? '+' : '') + spyDay.toFixed(1) + '% 反向,這檔<b style="color:var(--text)">逆著大盤走</b>(更像個股自身因素)';
+    else s = '大盤 ' + (spyDay > 0 ? '+' : '') + spyDay.toFixed(1) + '%,部分跟大盤連動';
+    A.push(['個股 vs 大盤', s]);
+  }
+  if (volR != null) {
+    let s;
+    if (volR >= 1.5) s = '<b style="color:var(--green)">爆量 ' + volR.toFixed(1) + '×</b> — 有人認真進出,這個' + dir + '比較<b style="color:var(--text)">當真</b>';
+    else if (volR <= 0.7) s = '<b style="color:var(--yellow)">量縮 ' + volR.toFixed(1) + '×</b> — 沒什麼人追,雜訊機率高,<b style="color:var(--text)">別太當真</b>';
+    else s = '量能普通 ' + volR.toFixed(1) + '× — 沒有明顯放量';
+    A.push(['量能', s]);
+  }
+  if (gap != null && Math.abs(gap) >= 1) A.push(['跳空', '開盤跳空 ' + (gap > 0 ? '+' : '') + gap.toFixed(1) + '%' + (intraday != null ? '(盤中' + (intraday >= 0 ? '守住 +' : '回吐 ') + intraday.toFixed(1) + '%)' : '')]);
+  const cat = [];
+  if (scanEntry) {
+    if (scanEntry.daysToEarnings != null && scanEntry.daysToEarnings >= 0 && scanEntry.daysToEarnings <= 14) cat.push('財報 T-' + scanEntry.daysToEarnings + '(盤前盤後波動大)');
+    const er = scanEntry.epsRevision;
+    if (er && er.pct30d != null && er.pct30d >= 3) cat.push('EPS 30天上修 +' + er.pct30d.toFixed(1) + '%');
+    else if (er && er.pct30d != null && er.pct30d <= -3) cat.push('EPS 30天下修 ' + er.pct30d.toFixed(1) + '%');
+    if ((scanEntry.recentUpgrades || []).length >= 1) cat.push(scanEntry.recentUpgrades.length + ' 位分析師升評');
+    if ((scanEntry.recentDowngrades || []).length >= 2) cat.push(scanEntry.recentDowngrades.length + ' 位分析師降評');
+    if (scanEntry.shortPctOfFloat != null && scanEntry.shortPctOfFloat > 0.20) cat.push('高空頭 ' + (scanEntry.shortPctOfFloat * 100).toFixed(0) + '%(軋空潛力)');
+  }
+  A.push(['可能催化劑', cat.length ? cat.join('、') : '<span style="color:var(--muted)">資料中查無明確催化劑 — 多半是消息面/技術面。<b style="color:var(--text)">建議查當天新聞</b>確認真正原因。</span>']);
+
+  // ── B. 延續 vs 反轉 傾向 ─────────────────────
+  const F = [];
+  if (volR != null && chg1 != null) {
+    if (up && volR >= 1.5) F.push(['cont', '帶量上漲 — 有承接,偏延續']);
+    else if (up && volR <= 0.8) F.push(['rev', '量縮上漲 — 追價無力,易回,偏反轉']);
+    else if (!up && volR >= 1.5) F.push(['cont', '帶量下殺 — 賣壓重,偏續跌']);
+    else if (!up && volR <= 0.8) F.push(['rev', '量縮下跌 — 殺盤無力,可能反彈']);
+  }
+  if (ma20 != null && ma60 != null) {
+    if (price > ma20 && ma20 > ma60) F.push(['cont', '多頭排列(價>20MA>60MA)— 結構偏多,延續傾向']);
+    else if (price < ma20 && ma20 < ma60) F.push(['cont', '空頭排列(價<20MA<60MA)— 結構偏空,續跌傾向']);
+    else F.push(['neutral', '均線糾結 — 趨勢不明,中性']);
+  }
+  if (distHigh != null) {
+    if (distHigh >= -3 && up && volR != null && volR >= 1.3) F.push(['cont', '逼近' + hiLabel + '又帶量 — 突破續攻傾向']);
+    else if (distHigh >= -1.5 && (!volR || volR < 1.3)) F.push(['rev', '貼著' + hiLabel + '但沒量 — 假突破/回落風險']);
+  }
+  if (rsi != null) {
+    if (rsi >= 75) F.push(['rev', 'RSI ' + rsi.toFixed(0) + ' 過熱 — 短線易回,偏反轉']);
+    else if (rsi <= 28) F.push(['rev', 'RSI ' + rsi.toFixed(0) + ' 超賣 — 短線易反彈']);
+    else if (rsi >= 45 && rsi <= 68) F.push(['cont', 'RSI ' + rsi.toFixed(0) + ' 健康動能區 — 偏延續']);
+  }
+  if (extMA20 != null && extMA20 >= 12) F.push(['rev', '離 20MA +' + extMA20.toFixed(0) + '% 太遠 — 乖離過大,回測風險']);
+  if (gap != null && intraday != null) {
+    if (gap >= 2 && intraday >= 0) F.push(['cont', '跳空高開又守住 — gap-and-go,偏延續']);
+    else if (gap >= 2 && intraday <= -1.5) F.push(['rev', '跳空高開但盤中回吐 — 衝高拉回,偏反轉']);
+  }
+  const contN = F.filter(f => f[0] === 'cont').length;
+  const revN = F.filter(f => f[0] === 'rev').length;
+  let verdict, vColor;
+  if (contN > revN) { verdict = '偏延續'; vColor = up ? 'var(--green)' : 'var(--red)'; }
+  else if (revN > contN) { verdict = '偏反轉'; vColor = 'var(--yellow)'; }
+  else { verdict = '兩邊拉扯 · 中性'; vColor = 'var(--muted)'; }
+  const verdictNote = verdict === '偏延續' ? '(' + (up ? '續漲' : '續跌') + '傾向)' : verdict === '偏反轉' ? '(' + (up ? '回檔' : '反彈') + '傾向)' : '';
+
+  const leanColor = t => t === 'cont' ? 'var(--green)' : t === 'rev' ? 'var(--yellow)' : 'var(--muted)';
+  const leanTag = t => t === 'cont' ? '📈 延續' : t === 'rev' ? '📉 反轉' : '➖ 中性';
+  const rowA = A.map(kv => '<div style="display:flex;gap:10px;padding:4px 0;font-size:12px;line-height:1.6"><span style="color:var(--muted);min-width:78px;flex-shrink:0">' + kv[0] + '</span><span style="flex:1">' + kv[1] + '</span></div>').join('');
+  const rowB = F.length ? F.map(f => '<div style="display:flex;gap:8px;padding:3px 0;font-size:12px;line-height:1.6"><span style="color:' + leanColor(f[0]) + ';min-width:58px;flex-shrink:0;font-weight:600">' + leanTag(f[0]) + '</span><span style="flex:1;color:var(--muted)">' + f[1] + '</span></div>').join('') : '<div style="font-size:12px;color:var(--muted)">資料不足,無法判斷傾向。</div>';
+
+  return '<div class="card" style="margin-top:0;border-left:3px solid ' + (up ? 'rgba(34,197,94,.5)' : 'rgba(239,68,68,.5)') + '">' +
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">' +
+      '<div class="section-label" style="margin:0">漲跌解讀</div>' +
+      '<span style="font-size:11px;color:var(--muted)">為什麼動 + 接下來偏哪邊</span>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:2px 0 4px">A · 為什麼' + (dir || '動') + '</div>' +
+    rowA +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:12px 0 4px">B · 延續 or 反轉(傾向,非機率)</div>' +
+    '<div style="margin-bottom:6px;font-size:13px">綜合:<b style="color:' + vColor + '">' + verdict + '</b> <span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 延續 ' + contN + ' / 反轉 ' + revN + '</span></div>' +
+    rowB +
+    '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">這是<b style="color:var(--text)">因子傾向,不是機率</b>。短線延續/反轉本質高變異,回測證明沒有可靠 edge —— 拿來<b style="color:var(--text)">理解盤面</b>,不是拿來保證方向。重大決策請配合新聞與你的計畫。</div>' +
+  '</div>';
+}
+
 async function analyzeStock() {
  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase().replace(/[^A-Z0-9.\-^]/g, '');
  if (!ticker) return;
@@ -1732,6 +1843,11 @@ async function analyzeStock() {
   rd.innerHTML = '<div id="stock-catalyst-bar" style="display:none"></div>' + rd.innerHTML;
  }
  }
+ // 2026-06-09 漲跌解讀(歸因 + 延續/反轉傾向)— 放最上面當頭條
+ try {
+  const _moveCard = _moveStory({ ticker, c, h, l, v, o, price, prevClose, changePct, ta, rsData: _rsData, regime: window._marketRegime });
+  if (_moveCard) rd.innerHTML = _moveCard + rd.innerHTML;
+ } catch (e) { console.warn('moveStory failed', e); }
  // Append K-line pattern card (after main render, before kline chart init)
  if (allPatterns.length) {
  const pTag = p => '<span class="tag" title="' + p.desc + '" style="cursor:default;background:' +
