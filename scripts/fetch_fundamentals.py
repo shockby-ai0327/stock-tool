@@ -52,6 +52,20 @@ def num(v):
         return None
 
 
+def trim_summary(s):
+    """First 1–2 sentences of the business summary, capped — enough to know what the company does."""
+    if not s:
+        return None
+    import re
+    s = " ".join(str(s).split())
+    parts = re.split(r"(?<=[.])\s+", s)
+    out = parts[0] if parts else s
+    if len(out) < 90 and len(parts) > 1:
+        out = out + " " + parts[1]
+    out = out[:220].rstrip()
+    return out or None
+
+
 def assess(info):
     """Return a quality dict from a yfinance .info dict (all fields defensive)."""
     net_income = num(info.get("netIncomeToCommon"))
@@ -140,9 +154,10 @@ def assess(info):
         "totalCashM": mil(num(info.get("totalCash"))),
         "totalDebtM": mil(num(info.get("totalDebt"))),
         "dividendYield": pct1(div_yield),
-        # 分類
+        # 分類 + 業務(做什麼的)
         "sector": info.get("sector") or None,
         "industry": info.get("industry") or None,
+        "summary": trim_summary(info.get("longBusinessSummary")),
     }
 
 

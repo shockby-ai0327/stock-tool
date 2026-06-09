@@ -13374,14 +13374,20 @@ function _stockFundamentalsPanel(symbol) {
     row('現金', big(f.totalCashM)) +
     row('市值', big(f.marketCapM)) +
     row('營收', big(f.revenueM)));
-  const sectorLine = (f.sector || f.industry) ? '<span style="font-size:11px;color:var(--muted)">' + [f.sector, f.industry].filter(Boolean).join(' · ') + '</span>' : '';
+  // 產業(中文分類)+ 業務簡介(這公司到底在做什麼)
+  const sectorZh = { 'Technology': '科技', 'Healthcare': '醫療保健', 'Financial Services': '金融', 'Consumer Cyclical': '非必需消費', 'Consumer Defensive': '必需消費', 'Communication Services': '通訊服務', 'Industrials': '工業', 'Energy': '能源', 'Basic Materials': '原物料', 'Real Estate': '房地產', 'Utilities': '公用事業' };
+  const secZh = f.sector ? (sectorZh[f.sector] || f.sector) : null;
+  const sectorPill = secZh ? '<span style="font-size:11px;color:var(--muted)">產業:<b style="color:var(--text)">' + secZh + '</b></span>' : '';
+  const bizText = [f.industry, f.summary].filter(Boolean).join(' — ');
+  const bizLine = bizText ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizText) + '</div>' : '';
   return '<div class="card" style="margin-top:0">' +
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">' +
       '<div class="section-label" style="margin:0">基本面快照</div>' +
       '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + fc.c + '22;color:' + fc.c + '">' + fc.t + '</span>' +
-      sectorLine +
+      sectorPill +
     '</div>' +
-    '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">' + fc.d + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">' + fc.d + '</div>' +
+    bizLine +
     '<div style="display:flex;gap:18px;flex-wrap:wrap">' + valuation + profit + growth + health + '</div>' +
     '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.5">基本面是動能的<b style="color:var(--text)">真實性檢查</b>(確認是真公司、不是燒錢迷因),不是叫你做價值投資。資料 yfinance,僅供參考,以官方財報為準。</div>' +
   '</div>';
