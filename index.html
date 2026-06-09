@@ -1412,6 +1412,19 @@ function _dashToggleHide(id) {
 }
 function _dashResetLayout() { _saveDashLayout({}); _applyDashLayout(); _renderDashCustomizeList(); }
 
+// 個股近期新聞快取(供漲跌解讀歸因)— 讀伺服器端 {market}_news_raw.json,無 proxy/CORS。
+async function _loadNewsRaw() {
+  if (window._newsRawCache) return window._newsRawCache;
+  const cache = {};
+  await Promise.all(['us', 'tw'].map(async m => {
+    try {
+      const r = await fetch(GH_RAW + m + '_news_raw.json?t=' + Math.floor(Date.now() / 1800000), { signal: AbortSignal.timeout(6000) });
+      if (r.ok) { const d = await r.json(); Object.assign(cache, d.bySymbol || {}); }
+    } catch (e) {}
+  }));
+  window._newsRawCache = cache;
+  return cache;
+}
 // ── 2026-06-09 漲跌解讀:為什麼前一段大漲/大跌(歸因)+ 延續 or 反轉的「傾向」───────────────
 // 誠實:延續/反轉是因子傾向,不是機率。短線方向本質高變異、無可靠 edge — 拿來理解盤面,不是保證。
 function _moveStory(ctx) {
@@ -1504,6 +1517,14 @@ function _moveStory(ctx) {
   else { verdict = '兩邊拉扯 · 中性'; vColor = 'var(--muted)'; }
   const verdictNote = verdict === '偏延續' ? '(' + (up ? '續漲' : '續跌') + '傾向)' : verdict === '偏反轉' ? '(' + (up ? '回檔' : '反彈') + '傾向)' : '';
 
+  // 近期新聞(歸因用)— 來自伺服器端 {market}_news_raw.json;查無則給 Google News 連結
+  const _news = (window._newsRawCache && window._newsRawCache[ticker]) || [];
+  const _gnews = 'https://news.google.com/search?q=' + encodeURIComponent(ticker + ' stock');
+  const newsRow = '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:12px 0 4px">近期新聞</div>' +
+    (_news.length
+      ? _news.slice(0, 3).map(it => '<div style="font-size:12px;line-height:1.6;padding:2px 0"><a href="' + String(it.link || _gnews).replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" style="color:#a5b4fc;text-decoration:none">• ' + escapeHtml(it.title || '') + '</a>' + ((it.source || it.publisher) ? ' <span style="color:var(--muted);font-size:10px">· ' + escapeHtml(it.source || it.publisher) + '</span>' : '') + '</div>').join('') + '<a href="' + _gnews + '" target="_blank" rel="noopener" style="font-size:10px;color:var(--muted)">更多 ' + ticker + ' 新聞 →</a>'
+      : '<div style="font-size:12px"><a href="' + _gnews + '" target="_blank" rel="noopener" style="color:#a5b4fc;text-decoration:none">🔍 查 ' + ticker + ' 最新新聞 →</a> <span style="color:var(--muted);font-size:11px">(此股不在新聞快取池,點開查 Google News 確認原因)</span></div>');
+
   const leanColor = t => t === 'cont' ? 'var(--green)' : t === 'rev' ? 'var(--yellow)' : 'var(--muted)';
   const leanTag = t => t === 'cont' ? '📈 延續' : t === 'rev' ? '📉 反轉' : '➖ 中性';
   const rowA = A.map(kv => '<div style="display:flex;gap:10px;padding:4px 0;font-size:12px;line-height:1.6"><span style="color:var(--muted);min-width:78px;flex-shrink:0">' + kv[0] + '</span><span style="flex:1">' + kv[1] + '</span></div>').join('');
@@ -1516,6 +1537,7 @@ function _moveStory(ctx) {
     '</div>' +
     '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:2px 0 4px">A · 為什麼' + (dir || '動') + '</div>' +
     rowA +
+    newsRow +
     '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:12px 0 4px">B · 延續 or 反轉(傾向,非機率)</div>' +
     '<div style="margin-bottom:6px;font-size:13px">綜合:<b style="color:' + vColor + '">' + verdict + '</b> <span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 延續 ' + contN + ' / 反轉 ' + revN + '</span></div>' +
     rowB +
@@ -1527,6 +1549,7 @@ async function analyzeStock() {
  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase().replace(/[^A-Z0-9.\-^]/g, '');
  if (!ticker) return;
  _lastAnalyzedTicker = ticker;
+ _loadNewsRaw().catch(() => {});  // 預載近期新聞(供漲跌解讀歸因),非阻塞
  const rd = document.getElementById('stock-result');
  rd.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在分析 ' + ticker + ' ...</p></div>';
  // Bug 4: auto-load scan cache if user landed directly on stock page without
@@ -3465,7 +3488,17 @@ async function loadNews(cat) {
  const GNEWS_TOPIC = 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB';
  try {
  let allItems = [];
- if (cat === 'us' || cat === 'crypto') {
+ // 2026-06-09 優先讀伺服器端 news_feed.json(無 proxy/CORS,可靠)。抓不到才退回即時 RSS。
+ let fromFeed = false;
+ try {
+ const _fr = await fetch(GH_RAW + 'news_feed.json?t=' + Math.floor(Date.now() / 600000), { signal: AbortSignal.timeout(6000) });
+ if (_fr.ok) {
+ const _fd = await _fr.json();
+ const _fi = (_fd.categories && _fd.categories[cat]) || [];
+ if (_fi.length) { allItems = _fi.map(it => ({ title: it.title, link: it.link, pubDate: it.pubDate, desc: '', source: it.source || 'Google News' })); fromFeed = true; }
+ }
+ } catch (_e) {}
+ if (fromFeed) { /* 已用 news_feed.json,跳過即時抓取 */ } else if (cat === 'us' || cat === 'crypto') {
  // ── 美股 / 加密：Finnhub 直連（無 proxy，零 403）
  const finnhubCat = cat === 'crypto' ? 'crypto' : 'general';
  const r = await fetch(
