@@ -88,11 +88,30 @@ def main():
             print(f"  {cat}: FAILED {str(e)[:80]}")
         time.sleep(0.4)
 
+    path = os.path.join(DATA_DIR, "news_feed.json")
+
+    # 抓失敗(全空)就保留舊資料,別用空的覆蓋掉好資料
+    if not any(categories.values()):
+        print("  all categories empty (fetch failed) — keeping existing feed, no write")
+        return
+
+    # 內容沒變就不重寫 — 否則每 30 分都會產生一個只有時間戳不同的廢 commit
+    def sig(cats):
+        return {k: [it.get("title") for it in v] for k, v in (cats or {}).items()}
+    try:
+        with open(path) as f:
+            existing = json.load(f)
+        if sig(existing.get("categories")) == sig(categories):
+            print("  no content change — skip write (avoids a needless commit)")
+            return
+    except Exception:
+        pass
+
     out = {
         "generatedAt": int(datetime.now(timezone.utc).timestamp() * 1000),
         "categories": categories,
     }
-    with open(os.path.join(DATA_DIR, "news_feed.json"), "w") as f:
+    with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     total = sum(len(v) for v in categories.values())
     print(f"  wrote news_feed.json — {total} items across {len(categories)} categories")

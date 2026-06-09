@@ -1,0 +1,48 @@
+name: News Feed (every 30 min)
+
+# 新聞頁分類動態(綜合/美股/台股/加密)— 獨立、輕量、高頻。
+# 跟主掃描(一天 3 次)分開,所以新聞能 30 分更新一次,而不卡掃描排程。
+# 伺服器端抓 Google News RSS(零 CORS/proxy),前端讀 data/news_feed.json。
+# fetch_news_feed.py 內建「內容沒變就不重寫」→ 只有新聞真的變了才會 commit。
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 每 30 分鐘
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# 同時只允許一個 run,避免多個 job 互相 push 衝突
+concurrency:
+  group: news-feed
+  cancel-in-progress: false
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 純 stdlib(urllib + xml.etree)— 不用裝任何套件,秒級啟動
+      - name: Fetch category news feed (server-side, no proxy)
+        run: python scripts/fetch_news_feed.py
+
+      - name: Commit news feed (only if content changed)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/news_feed.json ] && git add data/news_feed.json || true
+          git diff --cached --quiet && { echo "no change — nothing to commit"; exit 0; }
+          git commit -m "news-feed: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 3))
+          done

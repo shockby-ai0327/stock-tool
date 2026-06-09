@@ -57,12 +57,6 @@ jobs:
         run: python scripts/fetch_news.py tw
         continue-on-error: true  # TW news may be sparse; don't kill workflow
 
-      # 2026-06-09 新聞頁分類動態(綜合/美股/台股/加密)— 伺服器端抓 Google News RSS,
-      # 取代壞掉的瀏覽器 CORS proxy(worker 403、台股 RSS 全被 CORS 擋)。stdlib only,無新依賴。
-      - name: Fetch category news feed (server-side, no proxy)
-        run: python scripts/fetch_news_feed.py
-        continue-on-error: true
-
       # Step B: Node sends headlines to Claude for sentiment classification
       - name: Run news sentiment scan (US)
         env:
@@ -83,7 +77,6 @@ jobs:
           [ -f data/tw_news_sentiment.json ] && git add data/tw_news_sentiment.json || true
           [ -f data/us_news_raw.json ]       && git add data/us_news_raw.json       || true
           [ -f data/tw_news_raw.json ]       && git add data/tw_news_raw.json       || true
-          [ -f data/news_feed.json ]         && git add data/news_feed.json         || true
           [ -f data/api_usage.json ]         && git add data/api_usage.json         || true
           git diff --cached --quiet || git commit -m "news: $(date -u '+%Y-%m-%d %H:%M UTC')"
           # Push with retry — workflows race on main
