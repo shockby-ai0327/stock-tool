@@ -90,17 +90,59 @@ def assess(info):
     else:
         flag = "trap"      # unprofitable AND cash-burning = momentum trap
 
+    # 2026-06-09 基本面深度:估值 / 財務體質 / 規模 / 獲利效率(全部來自 yfinance .info,免費)。
+    # 用途是「動能標的的真實性檢查」(真公司 vs 燒錢/迷因),不是價值選股。
+    def pct1(x):
+        return round(x * 100, 1) if x is not None else None
+
+    def r(x, n=1):
+        return round(x, n) if x is not None else None
+
+    def mil(x):
+        return round(x / 1e6, 0) if x is not None else None
+
+    gross_margin = num(info.get("grossMargins"))
+    roe = num(info.get("returnOnEquity"))
+    roa = num(info.get("returnOnAssets"))
+    eq_growth = num(info.get("earningsQuarterlyGrowth"))
+    div_yield = num(info.get("dividendYield"))
+
     return {
         "flag": flag,
         "qualityScore": score,
         "profitable": profitable,
         "fcfPositive": fcf_positive,
-        "profitMargin": round(profit_margin * 100, 1) if profit_margin is not None else None,
-        "operatingMargin": round(op_margin * 100, 1) if op_margin is not None else None,
-        "revenueGrowth": round(rev_growth * 100, 1) if rev_growth is not None else None,
-        "earningsGrowth": round(earn_growth * 100, 1) if earn_growth is not None else None,
-        "netIncomeM": round(net_income / 1e6, 0) if net_income is not None else None,
-        "fcfM": round(fcf / 1e6, 0) if fcf is not None else None,
+        # 獲利能力
+        "profitMargin": pct1(profit_margin),
+        "operatingMargin": pct1(op_margin),
+        "grossMargin": pct1(gross_margin),
+        "roe": pct1(roe),
+        "roa": pct1(roa),
+        # 成長
+        "revenueGrowth": pct1(rev_growth),
+        "earningsGrowth": pct1(earn_growth),
+        "earningsQGrowth": pct1(eq_growth),
+        # 規模 / 絕對數字
+        "netIncomeM": mil(net_income),
+        "fcfM": mil(fcf),
+        "revenueM": mil(num(info.get("totalRevenue"))),
+        "marketCapM": mil(num(info.get("marketCap"))),
+        # 估值
+        "trailingPE": r(num(info.get("trailingPE"))),
+        "forwardPE": r(num(info.get("forwardPE"))),
+        "priceToSales": r(num(info.get("priceToSalesTrailing12Months"))),
+        "priceToBook": r(num(info.get("priceToBook"))),
+        "peg": r(num(info.get("pegRatio")), 2),
+        "evToEbitda": r(num(info.get("enterpriseToEbitda"))),
+        # 財務體質
+        "debtToEquity": r(num(info.get("debtToEquity"))),
+        "currentRatio": r(num(info.get("currentRatio")), 2),
+        "totalCashM": mil(num(info.get("totalCash"))),
+        "totalDebtM": mil(num(info.get("totalDebt"))),
+        "dividendYield": pct1(div_yield),
+        # 分類
+        "sector": info.get("sector") or None,
+        "industry": info.get("industry") or None,
     }
 
 
