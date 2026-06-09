@@ -1724,6 +1724,17 @@ async function analyzeStock() {
  }
  } catch(e) { console.warn('AI analysis load failed:', e.message); }
  })();
+ // 2026-06-09 基本面快照(yfinance:估值/獲利/成長/體質)— 動能標的的真實性檢查
+ if (!ticker.includes('.')) {
+   const fdiv = document.createElement('div');
+   fdiv.id = 'fund-snapshot';
+   fdiv.innerHTML = '<div class="card" style="margin-top:0"><div class="section-label">基本面快照</div><div style="color:var(--muted);font-size:12px;padding:8px 0">載入中...</div></div>';
+   document.getElementById('stock-result').appendChild(fdiv);
+   (window._fundamentals ? Promise.resolve() : _loadFundamentals()).then(() => {
+     const el = document.getElementById('fund-snapshot');
+     if (el) el.outerHTML = _stockFundamentalsPanel(ticker) || '';
+   }).catch(() => { const el = document.getElementById('fund-snapshot'); if (el) el.innerHTML = ''; });
+ }
  // SEC EDGAR — 非阻塞，US股票才抓
  if (!ticker.includes('.')) {
    const edgarDiv = document.createElement('div');
@@ -13301,6 +13312,66 @@ function _qualityBadge(symbol) {
   if (f.flag === 'watch')
     return '<span title="基本面混合：獲利與自由現金流其中一項為正（淨利 ' + ni + ' · FCF ' + fc + '）" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600;cursor:help">○ 混合</span>';
   return '';
+}
+
+// 2026-06-09 基本面快照面板(個股頁)— 估值/獲利/成長/體質 一張卡。
+// 框架:動能標的的「真實性檢查」(真公司 vs 燒錢迷因),非價值選股。資料 yfinance(掃描池內個股)。
+function _stockFundamentalsPanel(symbol) {
+  const f = (window._fundamentals || {})[symbol];
+  if (!f || !f.flag) return '';
+  const flagCfg = {
+    quality: { c: '#22c55e', t: '✓ 體質健康', d: '有獲利 + 正自由現金流 — 動能背後有真實的賺錢能力。' },
+    watch:   { c: '#f59e0b', t: '○ 半張臉',   d: '獲利或現金流只佔其一 — 可做,但盯緊基本面別再惡化。' },
+    trap:    { c: '#f87171', t: '⚠ 動能陷阱', d: '不賺錢 + 燒現金 — 股價是唯一支撐。回測證明這類最容易崩,只用最小倉 + 鐵紀律停損。' },
+    unknown: { c: 'var(--muted)', t: '資料不足', d: '抓不到足夠基本面 — 當未知,別腦補。' },
+  };
+  const fc = flagCfg[f.flag] || flagCfg.unknown;
+  const big = (m) => m == null ? null : (Math.abs(m) >= 1e6 ? '$' + (m / 1e6).toFixed(1) + 'T' : Math.abs(m) >= 1000 ? '$' + (m / 1000).toFixed(1) + 'B' : '$' + Math.round(m) + 'M');
+  const row = (label, val, color) => {
+    const has = val !== null && val !== undefined && val !== '';
+    return '<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px">' +
+      '<span style="color:var(--muted)">' + label + '</span>' +
+      '<span style="font-weight:600;font-variant-numeric:tabular-nums;color:' + (has ? (color || 'var(--text)') : 'var(--muted)') + '">' + (has ? val : '—') + '</span></div>';
+  };
+  const pctV = (v) => v == null ? null : (v > 0 ? '+' : '') + v + '%';
+  const peCol = (v) => v == null ? null : v < 0 ? '#f87171' : v > 50 ? '#f59e0b' : 'var(--text)';
+  const mgCol = (v) => v == null ? null : v < 0 ? '#f87171' : v >= 20 ? '#22c55e' : 'var(--text)';
+  const grCol = (v) => v == null ? null : v < 0 ? '#f87171' : v >= 20 ? '#22c55e' : 'var(--text)';
+  const deCol = (v) => v == null ? null : v > 200 ? '#f87171' : v > 100 ? '#f59e0b' : 'var(--text)';
+  const grp = (title, rows) => '<div style="flex:1;min-width:135px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">' + title + '</div>' + rows + '</div>';
+  const valuation = grp('估值',
+    row('P/E', f.trailingPE, peCol(f.trailingPE)) +
+    row('Fwd P/E', f.forwardPE, peCol(f.forwardPE)) +
+    row('P/S', f.priceToSales) +
+    row('PEG', f.peg, f.peg != null && f.peg > 2.5 ? '#f59e0b' : null) +
+    row('EV/EBITDA', f.evToEbitda));
+  const profit = grp('獲利',
+    row('毛利率', pctV(f.grossMargin), mgCol(f.grossMargin)) +
+    row('營益率', pctV(f.operatingMargin), mgCol(f.operatingMargin)) +
+    row('淨利率', pctV(f.profitMargin), mgCol(f.profitMargin)) +
+    row('ROE', pctV(f.roe), f.roe != null && f.roe < 0 ? '#f87171' : null) +
+    row('自由現金流', f.fcfM == null ? null : (f.fcfM >= 0 ? '+' : '−') + big(Math.abs(f.fcfM)), f.fcfM != null ? (f.fcfM < 0 ? '#f87171' : '#22c55e') : null));
+  const growth = grp('成長',
+    row('營收 YoY', pctV(f.revenueGrowth), grCol(f.revenueGrowth)) +
+    row('EPS YoY', pctV(f.earningsGrowth), grCol(f.earningsGrowth)) +
+    row('季增', pctV(f.earningsQGrowth), grCol(f.earningsQGrowth)));
+  const health = grp('體質',
+    row('負債/權益', f.debtToEquity == null ? null : f.debtToEquity + '%', deCol(f.debtToEquity)) +
+    row('流動比', f.currentRatio, f.currentRatio != null && f.currentRatio < 1 ? '#f59e0b' : null) +
+    row('現金', big(f.totalCashM)) +
+    row('市值', big(f.marketCapM)) +
+    row('營收', big(f.revenueM)));
+  const sectorLine = (f.sector || f.industry) ? '<span style="font-size:11px;color:var(--muted)">' + [f.sector, f.industry].filter(Boolean).join(' · ') + '</span>' : '';
+  return '<div class="card" style="margin-top:0">' +
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">' +
+      '<div class="section-label" style="margin:0">基本面快照</div>' +
+      '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + fc.c + '22;color:' + fc.c + '">' + fc.t + '</span>' +
+      sectorLine +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">' + fc.d + '</div>' +
+    '<div style="display:flex;gap:18px;flex-wrap:wrap">' + valuation + profit + growth + health + '</div>' +
+    '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.5">基本面是動能的<b style="color:var(--text)">真實性檢查</b>(確認是真公司、不是燒錢迷因),不是叫你做價值投資。資料 yfinance,僅供參考,以官方財報為準。</div>' +
+  '</div>';
 }
 
 // 2026-05-29 Phase 2+7：訊號對齊綜合（誠實版信心引擎 + 交叉驗證）
