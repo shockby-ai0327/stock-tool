@@ -3466,6 +3466,14 @@ let _newsItems = [];
 // 2026-05-21 Sprint 3-E: LRU bound — 新聞每個 tab 一份，最多 6 個 tab × ~50KB
 const _NEWS_TAB_CACHE_MAX = 6;
 window._newsTabCache = window._newsTabCache || {};
+// 新聞抓取時間 → 「X 分鐘前 (HH:MM)」,讓你一眼看到資料多新(誠實顯示真實落差)
+function _newsAgo(ts) {
+  const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  const t = new Date(ts).toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+  if (mins < 1) return '剛剛 (' + t + ')';
+  if (mins < 60) return mins + ' 分鐘前 (' + t + ')';
+  return (Math.round(mins / 6) / 10) + ' 小時前 (' + t + ')';
+}
 async function loadNews(cat) {
  const div = document.getElementById('news-content');
  document.querySelectorAll('#news-tabs button').forEach(b => b.classList.remove('active'));
@@ -3490,12 +3498,13 @@ async function loadNews(cat) {
  let allItems = [];
  // 2026-06-09 優先讀伺服器端 news_feed.json(無 proxy/CORS,可靠)。抓不到才退回即時 RSS。
  let fromFeed = false;
+ window._newsFeedAsOf = null;
  try {
  const _fr = await fetch(GH_RAW + 'news_feed.json?t=' + Math.floor(Date.now() / 600000), { signal: AbortSignal.timeout(6000) });
  if (_fr.ok) {
  const _fd = await _fr.json();
  const _fi = (_fd.categories && _fd.categories[cat]) || [];
- if (_fi.length) { allItems = _fi.map(it => ({ title: it.title, link: it.link, pubDate: it.pubDate, desc: '', source: it.source || 'Google News' })); fromFeed = true; }
+ if (_fi.length) { allItems = _fi.map(it => ({ title: it.title, link: it.link, pubDate: it.pubDate, desc: '', source: it.source || 'Google News' })); fromFeed = true; window._newsFeedAsOf = _fd.generatedAt || null; }
  }
  } catch (_e) {}
  if (fromFeed) { /* 已用 news_feed.json,跳過即時抓取 */ } else if (cat === 'us' || cat === 'crypto') {
@@ -3678,7 +3687,7 @@ async function loadNews(cat) {
  '<div class="meta">' + sourceBadge + '<span style="margin-left:8px">' + (it.pubDate ? new Date(it.pubDate).toLocaleString('zh-TW') : '') + '</span></div>' +
  '<p>' + safeDesc + '</p></div>';
  });
- html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)"> 新聞內容來自 Finnhub、Google News RSS 等財經媒體彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + new Date().toLocaleString('zh-TW') + '</div>';
+ html += '</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;padding:8px;border-top:1px solid var(--border)"> 新聞內容來自 Finnhub、Google News RSS 等財經媒體彙整，僅供市場參考。投資決策請以原始報告及多方查證為準。· ' + (window._newsFeedAsOf ? '新聞抓取於 ' + _newsAgo(window._newsFeedAsOf) : '即時 ' + new Date().toLocaleString('zh-TW')) + '</div>';
  div.innerHTML = html;
  // 存入 session 快取（10 分鐘）
  window._newsTabCache[cat] = { html, items: _newsItems, ts: Date.now() };
