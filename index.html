@@ -4546,7 +4546,16 @@ function editJ(id) {
 // ── Shared open-position calculator (used by renderHoldings + renderDashHoldings)
 function calcOpenPositions(journal) {
  const pos = {};
- journal.slice().reverse().forEach(e => {
+ // 2026-06-09 修「已平倉部位被當成未平倉」bug:
+ // 原本用 .reverse() + 假設儲存順序(手動 unshift=新→舊)。但 CSV 匯入是 push(檔案順序,
+ // 多數券商=舊→新),一旦「賣」被排在「買」之前處理,Math.max(0, qty−賣量) 會把賣量吃掉,
+ // 部位永遠淨不掉 → 已平倉的票一直出現在持倉/待處理,且部位數灌水。
+ // 改成明確按日期(舊→新)排序,結果與儲存方式無關、穩定。
+ journal.slice().sort((a, b) => {
+   const da = a.date || '', db = b.date || '';
+   if (da !== db) return da < db ? -1 : 1;
+   return (a.id || 0) - (b.id || 0);
+ }).forEach(e => {
  if (!pos[e.ticker]) pos[e.ticker] = { qty: 0, totalCost: 0, firstDate: e.date, strategy: e.strategy };
  if (e.action === 'buy') {
  pos[e.ticker].qty += e.qty;
@@ -7449,9 +7458,9 @@ function loadScanner() {
 // ============ RISK CENTER ============
 function renderRisk() {
  const div = document.getElementById('risk-content');
- div.innerHTML = '<div class="card"><h3>倉位計算器（Position Sizing）</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">基於 Marty Schwartz 的 1% 法則：單筆交易最大虧損不超過總資金的 1-2%。</p><div class="journal-form" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>總資金 <span id="fx-rate-display" style="font-size:10px;color:var(--muted)"></span></label><div style="display:flex;gap:6px"><input type="number" id="risk-capital" placeholder="1000000" step="1000" style="flex:1"><select id="risk-currency" onchange="setCurrency(this.value)" style="width:90px;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px"><option value="usd">USD $</option><option value="twd">TWD NT$</option></select></div></div><div class="form-group"><label>風險比例</label><select id="risk-pct"><option value="0.5">0.5%（極保守）</option><option value="1" selected>1%（標準）</option><option value="1.5">1.5%（積極）</option><option value="2">2%（激進）</option><option value="3">3%（高風險）</option></select></div><div class="form-group"><label>進場價</label><input type="number" id="risk-entry" step="0.01" placeholder="150.00"></div><div class="form-group"><label>停損價</label><input type="number" id="risk-stop" step="0.01" placeholder="145.00"></div><div class="form-group"><label>市場</label><select id="risk-market" onchange="riskMarketChange()"><option value="us">美股</option><option value="tw">台股</option></select></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcPosition()" style="width:100%">計算倉位</button></div></div></div><div id="position-result"></div>' +
+ div.innerHTML = '<div class="card"><h3>倉位計算器（Position Sizing）</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">基於 Marty Schwartz 的 1% 法則：單筆交易最大虧損不超過總資金的 1-2%。</p><div class="journal-form" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>總資金 <span id="fx-rate-display" style="font-size:10px;color:var(--muted)"></span></label><div style="display:flex;gap:6px"><input type="number" id="risk-capital" placeholder="30000" step="1000" style="flex:1" value="' + (Number(localStorage.getItem('account-size-usd')) || '') + '"><select id="risk-currency" onchange="setCurrency(this.value)" style="width:90px;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px"><option value="usd">USD $</option><option value="twd">TWD NT$</option></select></div></div><div class="form-group"><label>風險比例</label><select id="risk-pct"><option value="0.5">0.5%（極保守）</option><option value="1" selected>1%（標準）</option><option value="1.5">1.5%（積極）</option><option value="2">2%（激進）</option><option value="3">3%（高風險）</option></select></div><div class="form-group"><label>進場價</label><input type="number" id="risk-entry" step="0.01" placeholder="150.00"></div><div class="form-group"><label>停損價</label><input type="number" id="risk-stop" step="0.01" placeholder="145.00"></div><div class="form-group"><label>市場</label><select id="risk-market" onchange="riskMarketChange()"><option value="us">美股</option><option value="tw">台股</option></select></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcPosition()" style="width:100%">計算倉位</button></div></div></div><div id="position-result"></div>' +
  '<div class="card"><h3>Kelly Criterion 最佳倉位</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">根據你的歷史勝率和盈虧比，計算數學上最佳的倉位比例。</p><div id="kelly-auto-stats"></div><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>勝率 (%)</label><input type="number" id="kelly-winrate" value="55" min="1" max="99" step="1"></div><div class="form-group"><label>平均獲利 / 平均虧損</label><input type="number" id="kelly-ratio" value="1.5" min="0.1" step="0.1"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcKelly()">計算 Kelly</button></div></div><div id="kelly-result"></div><div style="margin-top:8px;font-size:12px;color:var(--orange)">實務上建議使用 Half Kelly（凱利值的一半），以降低波動。</div></div>' +
- '<div class="card"><h3>最大回撤模擬</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">模擬連續虧損時你的資金會怎樣。這就是風控存在的意義。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>起始資金</label><input type="number" id="dd-capital" value="1000000" step="1000"></div><div class="form-group"><label>每次虧損比例 (%)</label><input type="number" id="dd-loss" value="2" min="0.1" max="50" step="0.5"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcDrawdown()">模擬</button></div></div><div id="dd-result"></div></div>' +
+ '<div class="card"><h3>最大回撤模擬</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">模擬連續虧損時你的資金會怎樣。這就是風控存在的意義。</p><div class="journal-form" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>起始資金</label><input type="number" id="dd-capital" value="' + (Number(localStorage.getItem('account-size-usd')) || 100000) + '" step="1000"></div><div class="form-group"><label>每次虧損比例 (%)</label><input type="number" id="dd-loss" value="2" min="0.1" max="50" step="0.5"></div><div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcDrawdown()">模擬</button></div></div><div id="dd-result"></div></div>' +
  '<div class="card"><h3>交易策略模板</h3><div class="tab-bar" id="strategy-tabs"><button class="active" onclick="showStrategy(\'breakout\')">突破交易</button><button onclick="showStrategy(\'meanrev\')">均值回歸</button><button onclick="showStrategy(\'momentum\')">動量追蹤</button><button onclick="showStrategy(\'gap\')">缺口交易</button><button onclick="showStrategy(\'orb\')">開盤區間突破</button></div><div id="strategy-detail"></div></div>';
  showStrategy('breakout');
  autoFillKellyFromJournal();
@@ -7474,6 +7483,8 @@ function calcPosition() {
  // 幣別轉換：若 TWD 模式，先把資金換成 USD 再計算（進出場價皆為 USD）
  const isTWD = _currency === 'twd' && market === 'us';
  const capitalUSD = isTWD ? capitalRaw / _fxRate : capitalRaw;
+ // 2026-06-09 帳戶金額單一真相:跟進場助手共用 account-size-usd,避免「30k / 1M」各說各話
+ try { if (capitalUSD > 0) localStorage.setItem('account-size-usd', Math.round(capitalUSD)); } catch (e) {}
  const maxLoss = capitalUSD * riskPct;
  const riskPerShare = entry - stop;
  let shares = Math.floor(maxLoss / riskPerShare);
