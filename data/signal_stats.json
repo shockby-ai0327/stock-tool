@@ -1,20 +1,26 @@
 {
-  "computedAt": 1781110513151,
+  "computedAt": 1781119677840,
   "stats": {
     "rs_leader": {
       "trailing_252d": {
-        "insufficientData": true,
-        "sampleSize": 15,
-        "total": 596,
-        "open": 581
+        "total": 598,
+        "winners": 9,
+        "losers": 14,
+        "open": 575,
+        "winRate": 0.3913,
+        "avgWin": 39.2,
+        "avgLoss": -13.1,
+        "avgReturn": 7.37,
+        "sharpe": 1.34,
+        "avgHoldDays": 11
       }
     },
     "discovery": {
       "trailing_252d": {
         "insufficientData": true,
         "sampleSize": 9,
-        "total": 202,
-        "open": 193
+        "total": 204,
+        "open": 195
       }
     },
     "triple_resonance": {
@@ -28,9 +34,9 @@
     "vcp_breakout": {
       "trailing_252d": {
         "insufficientData": true,
-        "sampleSize": 3,
-        "total": 173,
-        "open": 170
+        "sampleSize": 4,
+        "total": 175,
+        "open": 171
       }
     },
     "earnings_play": {
