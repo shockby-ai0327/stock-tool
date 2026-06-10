@@ -13650,6 +13650,43 @@ function _lowQualityBadge(r) {
   return '<span title="低價股(<$5)或微型股(市值<$3億):波動大、買賣價差大、流動性差 — 不是不能碰,是要用更小的倉、更嚴的停損。" style="font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.12);color:#fbbf24;font-weight:600;cursor:help">⚠ ' + flags.join('·') + '</span>';
 }
 
+// 2026-06-10 同產業估值中位(從已載入的 fundamentals 算,樣本 ≥5 才算)— 給「貴不貴 vs 什麼」一個基準
+function _sectorMedians() {
+  const fund = window._fundamentals || {};
+  const bySec = {};
+  for (const q of Object.values(fund)) { if (q && q.sector) (bySec[q.sector] = bySec[q.sector] || []).push(q); }
+  const med = arr => { const s = arr.filter(x => x != null).sort((a, b) => a - b); return s.length ? +s[Math.floor(s.length / 2)].toFixed(1) : null; };
+  const out = {};
+  for (const [sec, arr] of Object.entries(bySec)) {
+    if (arr.length < 5) continue;
+    out[sec] = { n: arr.length, pe: med(arr.map(x => x.trailingPE)), ps: med(arr.map(x => x.priceToSales)) };
+  }
+  return out;
+}
+// 2026-06-10 基本面「一眼判讀」:把原始比率翻成白話的估值/品質/成長結論(回應評審:深度不夠)
+function _fundReads(f) {
+  const reads = [];
+  if (f.profitMargin != null && f.profitMargin < 0) {
+    reads.push(['估值', '虧損中,P/E 不適用 — 看營收成長 + 現金流何時轉正,目前是「賭未來」。']);
+  } else if (f.peg != null) {
+    const r = f.peg < 1 ? '相對成長 <b style="color:#22c55e">偏便宜</b>' : f.peg <= 2 ? '相對成長 <b style="color:var(--text)">合理</b>' : f.peg <= 3 ? '<b style="color:#fbbf24">略貴</b>(成長要兌現)' : '<b style="color:#f87171">偏貴</b>(需高成長撐)';
+    reads.push(['估值', 'PEG ' + f.peg + ' → ' + r + (f.trailingPE != null ? ' · P/E ' + f.trailingPE : '')]);
+  } else if (f.trailingPE != null) {
+    const r = f.trailingPE < 15 ? '低(便宜或低成長)' : f.trailingPE <= 30 ? '中等' : '偏高(成長股常態,但要成長撐)';
+    reads.push(['估值', 'P/E ' + f.trailingPE + ' → ' + r]);
+  }
+  const qbits = [];
+  if (f.roe != null) qbits.push('ROE ' + f.roe + '%' + (f.roe >= 15 ? '(高)' : f.roe < 0 ? '(負)' : ''));
+  if (f.grossMargin != null) qbits.push('毛利 ' + f.grossMargin + '%' + (f.grossMargin >= 40 ? '(高)' : ''));
+  const qRead = f.flag === 'quality' ? '<b style="color:#22c55e">賺錢且有正現金流</b>' : f.flag === 'trap' ? '<b style="color:#f87171">不賺錢 + 燒現金</b>' : f.flag === 'unknown' ? '資料不足' : '<b style="color:#fbbf24">獲利/現金流只達一項</b>';
+  reads.push(['品質', qRead + (qbits.length ? ' · ' + qbits.join(' · ') : '')]);
+  if (f.revenueGrowth != null || f.earningsGrowth != null) {
+    const rg = f.revenueGrowth;
+    const g = rg == null ? '—' : rg < 0 ? '<b style="color:#f87171">營收衰退</b>' : rg >= 20 ? '<b style="color:#22c55e">高速成長</b>' : rg >= 5 ? '穩健成長' : '低成長';
+    reads.push(['成長', g + (rg != null ? ' 營收 ' + (rg > 0 ? '+' : '') + rg + '% YoY' : '') + (f.earningsGrowth != null ? ' · EPS ' + (f.earningsGrowth > 0 ? '+' : '') + f.earningsGrowth + '%' : '')]);
+  }
+  return reads;
+}
 // 2026-06-09 基本面快照面板(個股頁)— 估值/獲利/成長/體質 一張卡。
 // 框架:動能標的的「真實性檢查」(真公司 vs 燒錢迷因),非價值選股。資料 yfinance(掃描池內個股)。
 function _stockFundamentalsPanel(symbol) {
@@ -13718,6 +13755,13 @@ function _stockFundamentalsPanel(symbol) {
     '資料 yfinance' + (_fetchedAt ? ' · 抓取於 ' + _fetchedAt : '') + ' · ' +
     '<a href="https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/key-statistics" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Yahoo 核對 →</a>' +
     '</div>';
+  const _reads = _fundReads(f);
+  const _sm = _sectorMedians()[f.sector];
+  const _secCtx = (_sm && _sm.pe != null && f.trailingPE != null) ? ' <span style="color:var(--muted)">· 同產業 P/E 中位 ' + _sm.pe + '(' + _sm.n + ' 檔)</span>' : '';
+  const readsHtml = _reads.length ? '<div style="margin:0 0 12px;padding:10px 12px;background:rgba(99,102,241,.05);border-radius:8px;border:1px solid rgba(99,102,241,.12)">' +
+    '<div style="font-size:11px;font-weight:700;color:#a5b4fc;margin-bottom:6px">一眼判讀</div>' +
+    _reads.map(r => '<div style="font-size:12px;line-height:1.7;padding:1px 0"><span style="color:var(--muted);display:inline-block;min-width:42px">' + r[0] + '</span> ' + r[1] + (r[0] === '估值' ? _secCtx : '') + '</div>').join('') +
+    '</div>' : '';
   return '<div class="card" style="margin-top:0">' +
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">' +
       '<div class="section-label" style="margin:0">基本面快照</div>' +
@@ -13727,6 +13771,7 @@ function _stockFundamentalsPanel(symbol) {
     '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">' + fc.d + '</div>' +
     bizLine +
     lossNote +
+    readsHtml +
     '<div style="display:flex;gap:18px;flex-wrap:wrap">' + valuation + profit + growth + health + '</div>' +
     footerLine +
   '</div>';
