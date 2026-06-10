@@ -1425,6 +1425,43 @@ async function _loadNewsRaw() {
   window._newsRawCache = cache;
   return cache;
 }
+// ── 2026-06-10 延續/反轉「前向命中率」:把傾向變成可驗證的成績,不再只是因子計數 ──────────
+// 記錄每次判斷,5 個交易日後用實際走勢結算對錯(你看股票時順手 grade),累積夠了才顯示命中率。
+function _msGetLog() { try { return JSON.parse(localStorage.getItem('movestory-log') || '[]'); } catch (e) { return []; } }
+function _msSaveLog(l) { try { localStorage.setItem('movestory-log', JSON.stringify(l)); } catch (e) {} }
+function _logMoveVerdict(s, lean, up, price) {
+  if (lean === 'neutral' || !price) return;
+  let log = _msGetLog();
+  const today = new Date().toISOString().slice(0, 10);
+  if (log.some(e => e.s === s && new Date(e.ts * 1000).toISOString().slice(0, 10) === today)) return; // 一天一檔一筆
+  log.push({ s, ts: Math.floor(Date.now() / 1000), lean, up: !!up, p: price, graded: false });
+  if (log.length > 300) log = log.slice(-300);
+  _msSaveLog(log);
+}
+function _gradeMoveLog(symbol, ts, closes) {
+  if (!ts || !closes || ts.length < 6) return;
+  let log = _msGetLog(), changed = false;
+  for (const e of log) {
+    if (e.s !== symbol || e.graded) continue;
+    let idx = -1;
+    for (let i = 0; i < ts.length; i++) { if (ts[i] >= e.ts - 86400) { idx = i; break; } }
+    if (idx < 0) continue;
+    const f = idx + 5;                       // 5 個交易日後
+    if (f >= closes.length) continue;        // 還沒滿 5 天,先不結算
+    const fwd = (closes[f] - e.p) / e.p * 100;
+    const upR = fwd > 1, downR = fwd < -1;
+    const correct = e.up ? (e.lean === 'cont' ? upR : downR) : (e.lean === 'cont' ? downR : upR);
+    e.graded = true; e.correct = !!correct; e.fwd = +fwd.toFixed(1); changed = true;
+  }
+  if (changed) _msSaveLog(log);
+}
+function _moveHitRate() {
+  const all = _msGetLog(), graded = all.filter(e => e.graded);
+  if (graded.length < 8) return '延續/反轉前向命中率:<b style="color:var(--text)">練功中</b>(已記錄 ' + all.length + ' 筆 · 已結算 ' + graded.length + '/8 才開始計分)';
+  const hit = graded.filter(e => e.correct).length;
+  return '延續/反轉前向命中率 <b style="color:var(--text)">' + Math.round(hit / graded.length * 100) + '%</b>(' + graded.length + ' 筆 · 5 日後結算) — 接近 50% 就代表「沒有可靠 edge」,誠實面對';
+}
+
 // ── 2026-06-09 漲跌解讀:為什麼前一段大漲/大跌(歸因)+ 延續 or 反轉的「傾向」───────────────
 // 誠實:延續/反轉是因子傾向,不是機率。短線方向本質高變異、無可靠 edge — 拿來理解盤面,不是保證。
 function _moveStory(ctx) {
@@ -1516,6 +1553,10 @@ function _moveStory(ctx) {
   else if (revN > contN) { verdict = '偏反轉'; vColor = 'var(--yellow)'; }
   else { verdict = '兩邊拉扯 · 中性'; vColor = 'var(--muted)'; }
   const verdictNote = verdict === '偏延續' ? '(' + (up ? '續漲' : '續跌') + '傾向)' : verdict === '偏反轉' ? '(' + (up ? '回檔' : '反彈') + '傾向)' : '';
+  // 前向命中率:先結算這檔過去的判斷,再記錄今天這次
+  const leanCode = contN > revN ? 'cont' : revN > contN ? 'rev' : 'neutral';
+  try { _gradeMoveLog(ticker, ctx.ts, c); _logMoveVerdict(ticker, leanCode, up, price); } catch (e) {}
+  const hitRateTxt = _moveHitRate();
 
   // 近期新聞(歸因用)— 來自伺服器端 {market}_news_raw.json;查無則給 Google News 連結
   const _news = (window._newsRawCache && window._newsRawCache[ticker]) || [];
@@ -1530,18 +1571,26 @@ function _moveStory(ctx) {
   const rowA = A.map(kv => '<div style="display:flex;gap:10px;padding:4px 0;font-size:12px;line-height:1.6"><span style="color:var(--muted);min-width:78px;flex-shrink:0">' + kv[0] + '</span><span style="flex:1">' + kv[1] + '</span></div>').join('');
   const rowB = F.length ? F.map(f => '<div style="display:flex;gap:8px;padding:3px 0;font-size:12px;line-height:1.6"><span style="color:' + leanColor(f[0]) + ';min-width:58px;flex-shrink:0;font-weight:600">' + leanTag(f[0]) + '</span><span style="flex:1;color:var(--muted)">' + f[1] + '</span></div>').join('') : '<div style="font-size:12px;color:var(--muted)">資料不足,無法判斷傾向。</div>';
 
+  const _mid = 'moveb-' + ticker;
+  const chgTxt = chg1 == null ? '—' : (chg1 > 0 ? '+' : '') + chg1.toFixed(1) + '%';
+  // 預設折疊:header 一行摘要常駐(偏延續/反轉 + 近一日%),點開才看 A/B 細節 → 把價格/K線拉回上面
   return '<div class="card" style="margin-top:0;border-left:3px solid ' + (up ? 'rgba(34,197,94,.5)' : 'rgba(239,68,68,.5)') + '">' +
-    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">' +
+    '<div onclick="_toggleCollapse(\'' + _mid + '\',\'' + _mid + 't\')" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer">' +
       '<div class="section-label" style="margin:0">漲跌解讀</div>' +
-      '<span style="font-size:11px;color:var(--muted)">為什麼動 + 接下來偏哪邊</span>' +
+      '<span style="font-size:13px;color:' + vColor + ';font-weight:700">' + verdict + '</span>' +
+      '<span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 近一日 ' + chgTxt + '</span>' +
+      '<span id="' + _mid + 't" style="margin-left:auto;color:var(--muted);font-size:12px" title="點開看為什麼動 + 延續/反轉細節">▼</span>' +
     '</div>' +
-    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:2px 0 4px">A · 為什麼' + (dir || '動') + '</div>' +
-    rowA +
-    newsRow +
-    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:12px 0 4px">B · 延續 or 反轉(傾向,非機率)</div>' +
-    '<div style="margin-bottom:6px;font-size:13px">綜合:<b style="color:' + vColor + '">' + verdict + '</b> <span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 延續 ' + contN + ' / 反轉 ' + revN + '</span></div>' +
-    rowB +
-    '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">這是<b style="color:var(--text)">因子傾向,不是機率</b>。短線延續/反轉本質高變異,回測證明沒有可靠 edge —— 拿來<b style="color:var(--text)">理解盤面</b>,不是拿來保證方向。重大決策請配合新聞與你的計畫。</div>' +
+    '<div id="' + _mid + '" style="display:none;margin-top:10px">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:2px 0 4px">A · 為什麼' + (dir || '動') + '</div>' +
+      rowA +
+      newsRow +
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin:12px 0 4px">B · 延續 or 反轉(傾向,非機率)</div>' +
+      '<div style="margin-bottom:6px;font-size:13px">綜合:<b style="color:' + vColor + '">' + verdict + '</b> <span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 延續 ' + contN + ' / 反轉 ' + revN + '</span></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;padding:6px 8px;background:rgba(255,255,255,.02);border-radius:6px">' + hitRateTxt + '</div>' +
+      rowB +
+      '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">這是<b style="color:var(--text)">因子傾向,不是機率</b>。短線延續/反轉本質高變異,回測證明沒有可靠 edge —— 拿來<b style="color:var(--text)">理解盤面</b>,不是拿來保證方向。重大決策請配合新聞與你的計畫。</div>' +
+    '</div>' +
   '</div>';
 }
 
@@ -1868,7 +1917,7 @@ async function analyzeStock() {
  }
  // 2026-06-09 漲跌解讀(歸因 + 延續/反轉傾向)— 放最上面當頭條
  try {
-  const _moveCard = _moveStory({ ticker, c, h, l, v, o, price, prevClose, changePct, ta, rsData: _rsData, regime: window._marketRegime });
+  const _moveCard = _moveStory({ ticker, c, h, l, v, o, ts: ohlcv.map(d => d.t), price, prevClose, changePct, ta, rsData: _rsData, regime: window._marketRegime });
   if (_moveCard) rd.innerHTML = _moveCard + rd.innerHTML;
  } catch (e) { console.warn('moveStory failed', e); }
  // Append K-line pattern card (after main render, before kline chart init)
@@ -3490,6 +3539,13 @@ function _showJargon(key) {
   document.body.insertAdjacentHTML('beforeend', '<div id="jargon-pop" onclick="this.remove()" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px"><div onclick="event.stopPropagation()" style="background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:380px;width:100%;padding:18px 20px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">' + key + '</div><div style="font-size:13px;color:var(--muted);line-height:1.8">' + def + '</div><div style="text-align:right;margin-top:14px"><button onclick="document.getElementById(\'jargon-pop\').remove()" style="font-size:12px;padding:7px 16px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-weight:600;cursor:pointer">懂了</button></div></div></div>');
 }
 
+// 通用折疊:點 header toggle body(個股頁資訊分層用 — 摘要常駐、細節點開)
+function _toggleCollapse(id, togId) {
+  const e = document.getElementById(id); if (!e) return;
+  const show = e.style.display === 'none';
+  e.style.display = show ? 'block' : 'none';
+  const t = togId && document.getElementById(togId); if (t) t.textContent = show ? '▲' : '▼';
+}
 // 新聞抓取時間 → 「X 分鐘前 (HH:MM)」,讓你一眼看到資料多新(誠實顯示真實落差)
 function _newsAgo(ts) {
   const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
