@@ -1,123 +1,123 @@
 {
-  "generatedAt": 1781119970514,
+  "generatedAt": 1781128229977,
   "market": "US",
-  "scanAt": "2026-06-10T19:24:28.476Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-10T21:42:47.762Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 726.62,
-      "changePct": -1.42
+      "last": 725.43,
+      "changePct": -1.58
     },
     "vix": {
-      "last": 22.06,
-      "changePct": 11.02
+      "last": 22.22,
+      "changePct": 11.83
     },
     "tnx": {
       "last": 4.54,
       "changePct": 0.31
     },
     "dxy": {
-      "last": 99.98,
-      "changePct": 0.07
+      "last": 100.02,
+      "changePct": 0.11
     }
   },
   "sectorLeaders": [
     {
-      "etf": "XLE",
-      "last": 58.71,
-      "changePct": 2.3
+      "etf": "XLP",
+      "last": 85.49,
+      "changePct": 1.65
     },
     {
-      "etf": "XLP",
-      "last": 85.44,
-      "changePct": 1.6
+      "etf": "XLE",
+      "last": 58.25,
+      "changePct": 1.5
     },
     {
       "etf": "XLU",
-      "last": 44.06,
-      "changePct": 0.17
+      "last": 44,
+      "changePct": 0.05
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 73.85,
-      "changePct": -4.82
-    },
-    {
-      "etf": "XLI",
-      "last": 169.72,
-      "changePct": -3.35
+      "last": 73.81,
+      "changePct": -4.87
     },
     {
       "etf": "SMH",
-      "last": 572.39,
-      "changePct": -3.15
+      "last": 570.91,
+      "changePct": -3.4
+    },
+    {
+      "etf": "XLI",
+      "last": 169.66,
+      "changePct": -3.38
     }
   ],
   "gainers": [
     {
       "symbol": "FRMI",
       "name": "Fermi Inc.",
-      "changePct": 23.93
+      "changePct": 22.6
     },
     {
       "symbol": "CASY",
       "name": "Caseys General Stores, Inc.",
-      "changePct": 18.64
+      "changePct": 20.29
     },
     {
       "symbol": "PLBL",
       "name": "Polibeli Group Ltd",
-      "changePct": 17.11
+      "changePct": 16.36
     },
     {
       "symbol": "BULL",
       "name": "Webull Corporation",
-      "changePct": 13.55
+      "changePct": 11.27
     },
     {
-      "symbol": "AXTI",
-      "name": "AXT Inc",
-      "changePct": 11.92
+      "symbol": "MUSA",
+      "name": "Murphy USA Inc.",
+      "changePct": 10.04
     }
   ],
   "losers": [
     {
       "symbol": "SMCI",
       "name": "Super Micro Computer, Inc.",
-      "changePct": -25.5
+      "changePct": -27.98
     },
     {
       "symbol": "LAZ",
       "name": "Lazard, Inc.",
-      "changePct": -13
+      "changePct": -12.56
     },
     {
       "symbol": "XE",
       "name": "X-Energy, Inc.",
-      "changePct": -11.31
+      "changePct": -11.8
     },
     {
       "symbol": "UEC",
       "name": "Uranium Energy Corp.",
-      "changePct": -11.88
+      "changePct": -11.55
     },
     {
-      "symbol": "CYD",
-      "name": "China Yuchai International Lim",
-      "changePct": -10.46
+      "symbol": "HIMX",
+      "name": "Himax Technologies, Inc.",
+      "changePct": -11.17
     }
   ],
-  "narrative": "今日市場呈現明顯風險迴避格局。SPY跌1.42%，VIX飆升11%至22.06，10Y殖利率走高至4.54%，反映投資者情緒轉向謹慎。資金流向防禦性資產：能源(XLE +2.3%)與消費必需品(XLP +1.6%)領漲，而半導體(SMH -3.15%)、工業(XLI -3.35%)與礦業(GDX -4.82%)大幅下滑。科技與週期股遭拋售，SMCI暴跌25.5%創最大跌幅。動能股TNGX、TLYS表現相對抗跌。收盤前兩小時預期持續承壓，恐跌破日低。",
-  "headline": "市場風險迴避升溫，能源獨強撐盤，科技重挫領跌",
+  "narrative": "今日美股呈現明顯的風險厭惡格局。SPY下跌1.58%，VIX飆升11.83至22.22，反映市場恐慌升溫。科技股慘遭拋售，SMH跌3.4%，芯片龍頭SMCI更暴跌27.98%；工業股XLI也下跌3.38%。相反，防禦性板塊逆勢上漲，日用消費XLP漲1.65%，能源XLE漲1.5%。10年期公債殖利率小幅上升至4.54%，美元指數持平。資金明確流向防禦資產，規避科技與成長股風險。",
+  "headline": "科技股跳水拖累大盤，防禦股逆勢走強，風險情緒明顯轉弱",
   "regime": "risk-off",
   "sectorRotation": {
     "into": [
-      "XLE",
       "XLP",
+      "XLE",
       "XLU"
     ],
     "outOf": [
@@ -126,5 +126,5 @@
       "GDX"
     ]
   },
-  "tomorrowWatch": "密切追蹤科技股止跌訊號與VIX是否回落，評估風險迴避是否延續或反彈"
+  "tomorrowWatch": "關注VIX是否續高、科技股止跌訊號，及DOCN(4★)財報表現能否帶動成長股反彈"
 }
