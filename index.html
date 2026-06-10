@@ -3466,6 +3466,30 @@ let _newsItems = [];
 // 2026-05-21 Sprint 3-E: LRU bound — 新聞每個 tab 一份，最多 6 個 tab × ~50KB
 const _NEWS_TAB_CACHE_MAX = 6;
 window._newsTabCache = window._newsTabCache || {};
+// ── 2026-06-10 術語白話速查:點一下就懂(打破「一堆英文縮寫看不懂」的牆)──────────────
+const JARGON = {
+  'RS': 'RS Rating(相對強度 1–99):這檔近一年漲幅在全市場的排名。90 = 贏過 90% 的股票。越高越強勢。',
+  'VCP': 'VCP(波動收縮型態):股價波動越收越窄 = 蓄勢待發,Minervini 突破前最常見的型態。',
+  'heat': '總風險熱度:你所有未平倉部位「萬一全部觸發停損」會虧掉帳戶的百分比。控在 20% 內,避免一次黑天鵝重傷。',
+  '三重共振': '三個獨立來源(財報 / 技術 / 內部人)同時看好的匯流。匯流越多越值得研究 —— 但這是「綜合度」,不是勝率。',
+  '綜合分': '把 RS、量能、動量加權成 0–100 分(啟發式,非嚴格回測權重)。≥70 穩健領袖、≥85 動能爆發。平常看這個就好。',
+  'Qlib': '微軟 Alpha158 的系統化 8 因子分,只當「對照」用:跟綜合分差很多(⚠)才需要人工複查。',
+  '距高點': '現價離 52 週最高點還差幾 %。−3% = 逼近新高(突破在即);−30% = 離高點還很遠。',
+  '量能比': '今天成交量 ÷ 平均量。≥1.5× = 爆量(有人認真進出);<0.8× = 量縮(沒人追,雜訊多)。',
+  'ATR': 'ATR(平均真實波幅):股價每天大概振多少錢。用來抓「合理的停損距離」,別設太緊被洗掉。',
+  '突破時機': '逼近新高 + 爆量 + 加速 + 催化 的綜合分,標出「誰正在突破」。是波段進場時機,非統計 edge。',
+};
+function _jargon(label, key) {
+  key = key || label;
+  if (!JARGON[key]) return label;
+  return '<span onclick="event.stopPropagation();_showJargon(\'' + key + '\')" style="border-bottom:1px dotted currentColor;cursor:help" title="點看白話解釋">' + label + '</span>';
+}
+function _showJargon(key) {
+  const def = JARGON[key]; if (!def) return;
+  const old = document.getElementById('jargon-pop'); if (old) old.remove();
+  document.body.insertAdjacentHTML('beforeend', '<div id="jargon-pop" onclick="this.remove()" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px"><div onclick="event.stopPropagation()" style="background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:380px;width:100%;padding:18px 20px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">' + key + '</div><div style="font-size:13px;color:var(--muted);line-height:1.8">' + def + '</div><div style="text-align:right;margin-top:14px"><button onclick="document.getElementById(\'jargon-pop\').remove()" style="font-size:12px;padding:7px 16px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-weight:600;cursor:pointer">懂了</button></div></div></div>');
+}
+
 // 新聞抓取時間 → 「X 分鐘前 (HH:MM)」,讓你一眼看到資料多新(誠實顯示真實落差)
 function _newsAgo(ts) {
   const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
@@ -13800,9 +13824,9 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
         return '<td style="padding:10px 8px;text-align:center">' +
           '<div style="display:flex;gap:6px;align-items:baseline;justify-content:center">' +
             '<div style="font-size:22px;font-weight:800;color:' + g.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + compTooltip.replace(/"/g,'&quot;') + '">' + (sc != null ? sc : '—') + '</div>' +
-            (q != null ? '<div style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">/</div><div style="font-size:14px;font-weight:600;color:' + qg.color + ';font-variant-numeric:tabular-nums;cursor:help" title="' + qTooltip.replace(/"/g,'&quot;') + '">' + q + '</div>' : '') + divergeIcon +
+            (q != null ? '<div style="font-size:9px;color:var(--muted);align-self:center;margin:0 1px">對照</div><div style="font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;cursor:help" title="' + qTooltip.replace(/"/g,'&quot;') + '">' + q + '</div>' : '') + divergeIcon +
           '</div>' +
-          '<div style="font-size:10px;color:var(--muted);cursor:help" title="綜合分（啟發式）/ Qlib 因子分（系統化）— 對照用">綜合 / Qlib</div>' +
+          '<div style="font-size:10px;color:var(--muted);cursor:help" title="主分 = 綜合分(啟發式:RS×50% + 量能×30% + 動量×20%)。Qlib 是系統化 8 因子分,只當對照 — 兩者差很多(⚠)才需要人工複查。平常看綜合分就好。">綜合分 <span style="opacity:.55">· Qlib 對照</span></div>' +
         '</td>';
       })() +
       // 2026-05-21 Sprint 2-C: 進場指引欄位加 inline action summary（買/停/R:R/失效）
@@ -13827,10 +13851,10 @@ function _renderRSLeaderTable(results, tableDiv, prependHtml) {
             '<th style="padding:6px 8px;text-align:left">排名</th>' +
             '<th style="padding:6px 8px;text-align:left">股票</th>' +
             '<th style="padding:6px 8px;text-align:right">現價</th>' +
-            '<th style="padding:6px 8px;text-align:center">RS Rating</th>' +
-            '<th class="col-disthi" style="padding:6px 8px;text-align:center">距高點</th>' +
-            '<th class="col-volume" style="padding:6px 8px;text-align:center">量能比</th>' +
-            '<th style="padding:6px 8px;text-align:center">綜合分</th>' +
+            '<th style="padding:6px 8px;text-align:center">' + _jargon('RS Rating', 'RS') + '</th>' +
+            '<th class="col-disthi" style="padding:6px 8px;text-align:center">' + _jargon('距高點') + '</th>' +
+            '<th class="col-volume" style="padding:6px 8px;text-align:center">' + _jargon('量能比') + '</th>' +
+            '<th style="padding:6px 8px;text-align:center">' + _jargon('綜合分') + '</th>' +
             '<th style="padding:6px 8px;text-align:left">Action（買/停/R:R）</th>' +
           '</tr>' +
         '</thead>' +
