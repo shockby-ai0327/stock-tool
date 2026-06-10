@@ -1573,12 +1573,15 @@ function _moveStory(ctx) {
 
   const _mid = 'moveb-' + ticker;
   const chgTxt = chg1 == null ? '—' : (chg1 > 0 ? '+' : '') + chg1.toFixed(1) + '%';
+  // 時間戳:這份解讀是根據哪一天的價格(日線最後一根)
+  const _asOf = (ctx.ts && ctx.ts.length) ? new Date(ctx.ts[ctx.ts.length - 1] * 1000) : null;
+  const asOfTxt = _asOf ? ' · 截至 ' + (_asOf.getMonth() + 1) + '/' + _asOf.getDate() : '';
   // 預設折疊:header 一行摘要常駐(偏延續/反轉 + 近一日%),點開才看 A/B 細節 → 把價格/K線拉回上面
   return '<div class="card" style="margin-top:0;border-left:3px solid ' + (up ? 'rgba(34,197,94,.5)' : 'rgba(239,68,68,.5)') + '">' +
     '<div onclick="_toggleCollapse(\'' + _mid + '\',\'' + _mid + 't\')" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer">' +
       '<div class="section-label" style="margin:0">漲跌解讀</div>' +
       '<span style="font-size:13px;color:' + vColor + ';font-weight:700">' + verdict + '</span>' +
-      '<span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 近一日 ' + chgTxt + '</span>' +
+      '<span style="font-size:11px;color:var(--muted)">' + verdictNote + ' · 近一日 ' + chgTxt + asOfTxt + '</span>' +
       '<span id="' + _mid + 't" style="margin-left:auto;color:var(--muted);font-size:12px" title="點開看為什麼動 + 延續/反轉細節">▼</span>' +
     '</div>' +
     '<div id="' + _mid + '" style="display:none;margin-top:10px">' +
@@ -2005,7 +2008,7 @@ async function analyzeStock() {
    document.getElementById('stock-result').appendChild(fdiv);
    (window._fundamentals ? Promise.resolve() : _loadFundamentals()).then(() => {
      const el = document.getElementById('fund-snapshot');
-     if (el) el.outerHTML = _stockFundamentalsPanel(ticker) || '';
+     if (el) el.outerHTML = _stockFundamentalsPanel(ticker, (typeof _liveFundToPanel === 'function' ? _liveFundToPanel(fundamentals) : null)) || '';
    }).catch(() => { const el = document.getElementById('fund-snapshot'); if (el) el.innerHTML = ''; });
  }
  // SEC EDGAR — 非阻塞，US股票才抓
@@ -13678,7 +13681,8 @@ function _fundReads(f) {
   const qbits = [];
   if (f.roe != null) qbits.push('ROE ' + f.roe + '%' + (f.roe >= 15 ? '(高)' : f.roe < 0 ? '(負)' : ''));
   if (f.grossMargin != null) qbits.push('毛利 ' + f.grossMargin + '%' + (f.grossMargin >= 40 ? '(高)' : ''));
-  const qRead = f.flag === 'quality' ? '<b style="color:#22c55e">賺錢且有正現金流</b>' : f.flag === 'trap' ? '<b style="color:#f87171">不賺錢 + 燒現金</b>' : f.flag === 'unknown' ? '資料不足' : '<b style="color:#fbbf24">獲利/現金流只達一項</b>';
+  const qRead = f._live ? (f.profitMargin != null ? (f.profitMargin > 0 ? '<b style="color:#22c55e">目前獲利為正</b>(現金流未知)' : '<b style="color:#f87171">目前淨虧損</b>') : '資料不足')
+    : f.flag === 'quality' ? '<b style="color:#22c55e">賺錢且有正現金流</b>' : f.flag === 'trap' ? '<b style="color:#f87171">不賺錢 + 燒現金</b>' : f.flag === 'unknown' ? '資料不足' : '<b style="color:#fbbf24">獲利/現金流只達一項</b>';
   reads.push(['品質', qRead + (qbits.length ? ' · ' + qbits.join(' · ') : '')]);
   if (f.revenueGrowth != null || f.earningsGrowth != null) {
     const rg = f.revenueGrowth;
@@ -13687,18 +13691,43 @@ function _fundReads(f) {
   }
   return reads;
 }
+// 2026-06-10 非掃描池個股:把即時抓的 Yahoo quoteSummary 映射成快照欄位(簡版,best-effort)
+function _liveFundToPanel(fund) {
+  if (!fund) return null;
+  const sd = fund.summaryDetail || {}, ks = fund.defaultKeyStatistics || {}, fd = fund.financialData || {};
+  const raw = o => (o && o.raw != null && !isNaN(o.raw)) ? o.raw : null;
+  const pct = o => { const v = raw(o); return v != null ? +(v * 100).toFixed(1) : null; };
+  const r1 = o => { const v = raw(o); return v != null ? +v.toFixed(1) : null; };
+  const pm = pct(fd.profitMargins);
+  if ([raw(sd.trailingPE), pm, raw(fd.returnOnEquity), raw(sd.marketCap)].every(x => x == null)) return null;
+  const pegV = raw(ks.pegRatio), peg2 = pegV != null ? pegV : raw(ks.trailingPegRatio);
+  return {
+    flag: pm != null ? (pm > 0 ? 'watch' : 'trap') : 'unknown', _live: true,
+    profitMargin: pm, operatingMargin: pct(fd.operatingMargins), roe: pct(fd.returnOnEquity),
+    revenueGrowth: pct(fd.revenueGrowth), earningsGrowth: pct(fd.earningsGrowth),
+    trailingPE: r1(sd.trailingPE), forwardPE: r1(sd.forwardPE), priceToBook: r1(sd.priceToBook),
+    peg: peg2 != null ? +peg2.toFixed(2) : null, debtToEquity: r1(fd.debtToEquity),
+    marketCapM: raw(sd.marketCap) != null ? Math.round(raw(sd.marketCap) / 1e6) : null,
+  };
+}
 // 2026-06-09 基本面快照面板(個股頁)— 估值/獲利/成長/體質 一張卡。
 // 框架:動能標的的「真實性檢查」(真公司 vs 燒錢迷因),非價值選股。資料 yfinance(掃描池內個股)。
-function _stockFundamentalsPanel(symbol) {
-  const f = (window._fundamentals || {})[symbol];
-  if (!f || !f.flag) return '';
+function _stockFundamentalsPanel(symbol, liveFallback) {
+  const f = (window._fundamentals || {})[symbol] || liveFallback;
+  if (!f || !f.flag) {
+    // 不在掃描池 + 即時也抓不到 → 別給空白,給清楚的替代路徑
+    return '<div class="card" style="margin-top:0"><div class="section-label">基本面快照</div>' +
+      '<div style="font-size:12px;color:var(--muted);line-height:1.8;padding:6px 0">此股<b style="color:var(--text)">不在掃描池</b>,即時基本面也抓取失敗(Yahoo 擋瀏覽器)。<br>👉 看下方「<b style="color:var(--text)">SEC 財報速覽</b>」(任何美股都有),或 <a href="https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/key-statistics" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Yahoo 完整財報 →</a></div></div>';
+  }
   const flagCfg = {
     quality: { c: '#22c55e', t: '✓ 體質健康', d: '有獲利 + 正自由現金流 — 動能背後有真實的賺錢能力。' },
     watch:   { c: '#f59e0b', t: '○ 體質普通', d: '獲利、正現金流 兩項只達成其一 — 可做,但盯緊基本面別再惡化。' },
     trap:    { c: '#f87171', t: '⚠ 動能陷阱', d: '不賺錢 + 燒現金 — 股價是唯一支撐。回測證明這類最容易崩,只用最小倉 + 鐵紀律停損。' },
     unknown: { c: 'var(--muted)', t: '資料不足', d: '抓不到足夠基本面 — 當未知,別腦補。' },
   };
-  const fc = flagCfg[f.flag] || flagCfg.unknown;
+  const fc = f._live
+    ? { c: '#a5b4fc', t: '即時 · 簡版', d: '此股不在掃描池,以即時抓取的部分資料呈現(缺自由現金流 / 同業基準 / 業務簡介)。僅供快速參考。' }
+    : (flagCfg[f.flag] || flagCfg.unknown);
   // 虧損公司:估值類指標天生算不出(沒有正盈餘)。用來把「天生沒有」跟「抓失敗」分開講清楚。
   const lossMaking = (f.profitMargin != null && f.profitMargin < 0) || f.flag === 'trap' || (f.roe != null && f.roe < 0);
   const big = (m) => m == null ? null : (Math.abs(m) >= 1e6 ? '$' + (m / 1e6).toFixed(1) + 'T' : Math.abs(m) >= 1000 ? '$' + (m / 1000).toFixed(1) + 'B' : '$' + Math.round(m) + 'M');
