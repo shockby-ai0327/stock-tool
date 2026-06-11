@@ -4898,9 +4898,11 @@ function calcOpenPositions(journal) {
  }).forEach(e => {
  if (!pos[e.ticker]) pos[e.ticker] = { qty: 0, totalCost: 0, firstDate: e.date, strategy: e.strategy };
  if (e.action === 'buy') {
+ // 2026-06-12 修「賣光再買回,持有天數沒歸零」:qty=0(全平倉後)的買進 = 新一輪持倉,
+ // 起算日/策略以這筆為準(VSAT 賣掉再買回應顯示 3 天,不是 24 天)。同輪加碼(qty>0)不動。
+ if (pos[e.ticker].qty === 0) { pos[e.ticker].firstDate = e.date; pos[e.ticker].strategy = e.strategy; }
  pos[e.ticker].qty += e.qty;
  pos[e.ticker].totalCost += e.net;
- // Note: firstDate is set on initialization (earliest buy), do NOT overwrite here
  } else {
  const avgCost = pos[e.ticker].qty > 0 ? pos[e.ticker].totalCost / pos[e.ticker].qty : 0;
  pos[e.ticker].qty = Math.max(0, pos[e.ticker].qty - e.qty);
@@ -4908,6 +4910,18 @@ function calcOpenPositions(journal) {
  }
  });
  return Object.entries(pos).filter(([, p]) => p.qty > 0);
+}
+
+// 2026-06-12 最近一筆買進(依日期排,與儲存順序無關)— 停損/entryRS 要看「這一輪」的進場。
+// 原本用 j.slice().reverse().find(...):手動輸入存新→舊、CSV 匯入存舊→新,
+// 同一行程式在兩種來源下各找到「最舊」和「最新」— 賣掉再買回的票會拿到上一輪的停損價。
+function latestBuy(journal, ticker) {
+  let best = null;
+  for (const e of (journal || [])) {
+    if (e.ticker !== ticker || e.action !== 'buy') continue;
+    if (!best || (e.date || '') > (best.date || '') || ((e.date || '') === (best.date || '') && (e.id || 0) > (best.id || 0))) best = e;
+  }
+  return best;
 }
 
 // ── Exit signal calculator — always returns levels + optional alert signal
@@ -5251,7 +5265,7 @@ async function renderHoldings() {
  if (!cur || !taData[ticker]) return;
  const { closes, highs, lows } = taData[ticker];
  // Get user-defined stop price from most recent buy entry
- const lastBuy = j.slice().reverse().find(x => x.ticker === ticker && x.action === 'buy');
+ const lastBuy = latestBuy(j, ticker);
  const userStop = lastBuy?.stop || null;
  const sig = calcExitSignal(avgCost, cur, closes, highs, lows, userStop);
  exitSig[ticker] = sig;
@@ -5337,7 +5351,7 @@ async function renderHoldings() {
  const scanLookupRS = window._rsLeaderCache ? new Map(window._rsLeaderCache.map(s => [s.symbol, s])) : null;
  const scanEntry = scanLookupRS ? scanLookupRS.get(ticker) : null;
  const curRS = scanEntry ? scanEntry.rsRating : null;
- const lastBuyForRS = j.slice().reverse().find(x => x.ticker === ticker && x.action === 'buy');
+ const lastBuyForRS = latestBuy(j, ticker);
  const entryRS = lastBuyForRS && lastBuyForRS.entryRS != null ? lastBuyForRS.entryRS : null;
  let rsWeakBadge = '';
  if (curRS != null) {
@@ -5448,7 +5462,7 @@ window._holdingsExitSig = {};
 // Synthesizes RS Rating, P/L, days held, technical alert into a hold/trim/sell call.
 function aiPortfolioReview(ticker, avgCost, curPrice, pnlPct, days, curRS) {
  const j = getJ();
- const lastBuy = j.slice().reverse().find(x => x.ticker === ticker && x.action === 'buy');
+ const lastBuy = latestBuy(j, ticker);
  const entryRS = lastBuy && lastBuy.entryRS != null ? lastBuy.entryRS : null;
  const es = (window._holdingsExitSig || {})[ticker] || null;
  const aiData = window._aiAnalysis && window._aiAnalysis.bySymbol ? window._aiAnalysis.bySymbol.get(ticker) : null;
@@ -10251,7 +10265,7 @@ async function renderActionItems() {
   if (!cur) return;
   const avgCost = p.totalCost / p.qty;
   const pnlPct = (cur - avgCost) / avgCost * 100;
-  const lastBuy = j.slice().reverse().find(x => x.ticker === ticker && x.action === 'buy');
+  const lastBuy = latestBuy(j, ticker);
   const userStop = lastBuy?.stop || null;
   const entryRS = lastBuy?.entryRS || null;
   const sd = scanCache.get(ticker);
