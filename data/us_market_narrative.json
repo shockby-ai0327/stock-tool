@@ -1,87 +1,87 @@
 {
-  "generatedAt": 1781206882423,
+  "generatedAt": 1781214905583,
   "market": "US",
-  "scanAt": "2026-06-11T19:33:17.254Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-11T21:47:32.497Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 739.32,
-      "changePct": 1.91
+      "last": 737.76,
+      "changePct": 1.7
     },
     "vix": {
-      "last": 19.6,
-      "changePct": -11.79
+      "last": 19.44,
+      "changePct": -12.51
     },
     "tnx": {
       "last": 4.46,
       "changePct": -1.74
     },
     "dxy": {
-      "last": 99.62,
-      "changePct": -0.33
+      "last": 99.71,
+      "changePct": -0.24
     }
   },
   "sectorLeaders": [
     {
       "etf": "SMH",
-      "last": 609.91,
-      "changePct": 6.83
+      "last": 609.45,
+      "changePct": 6.75
     },
     {
       "etf": "XAR",
-      "last": 283.72,
-      "changePct": 6.37
+      "last": 284.39,
+      "changePct": 6.62
     },
     {
       "etf": "GDX",
-      "last": 78,
-      "changePct": 5.68
+      "last": 77.72,
+      "changePct": 5.3
     }
   ],
   "sectorLaggards": [
     {
       "etf": "XLE",
-      "last": 57.3,
-      "changePct": -1.63
+      "last": 57.12,
+      "changePct": -1.94
     },
     {
       "etf": "IGV",
-      "last": 91.06,
-      "changePct": -0.57
+      "last": 90.92,
+      "changePct": -0.72
     },
     {
-      "etf": "XLRE",
-      "last": 45.09,
-      "changePct": 0.22
+      "etf": "XLP",
+      "last": 85.27,
+      "changePct": -0.26
     }
   ],
   "gainers": [
     {
       "symbol": "YSS",
       "name": "York Space Systems Inc.",
-      "changePct": 21.72
-    },
-    {
-      "symbol": "FLY",
-      "name": "Firefly Aerospace Inc.",
-      "changePct": 17.71
+      "changePct": 22.09
     },
     {
       "symbol": "VSAT",
       "name": "ViaSat, Inc.",
-      "changePct": 17.24
+      "changePct": 18.23
+    },
+    {
+      "symbol": "FLY",
+      "name": "Firefly Aerospace Inc.",
+      "changePct": 17.8
+    },
+    {
+      "symbol": "ICHR",
+      "name": "Ichor Holdings",
+      "changePct": 16.45
     },
     {
       "symbol": "VOYG",
       "name": "Voyager Technologies, Inc.",
-      "changePct": 15.87
-    },
-    {
-      "symbol": "RDW",
-      "name": "Redwire Corporation",
-      "changePct": 15.16
+      "changePct": 15.96
     }
   ],
   "losers": [
@@ -93,39 +93,38 @@
     {
       "symbol": "PTC",
       "name": "PTC Inc.",
-      "changePct": -10.79
+      "changePct": -12.36
     },
     {
       "symbol": "PCT",
       "name": "PureCycle Technologies, Inc.",
-      "changePct": -8.9
+      "changePct": -8.75
     },
     {
       "symbol": "ORCL",
       "name": "Oracle Corporation",
-      "changePct": -8.42
+      "changePct": -8.53
     },
     {
-      "symbol": "BSY",
-      "name": "Bentley Systems, Incorporated",
-      "changePct": -6.07
+      "symbol": "ADSK",
+      "name": "Autodesk, Inc.",
+      "changePct": -7.1
     }
   ],
-  "narrative": "今日市場呈現強勁風險偏好態勢。SPY上漲1.91%,VIX大幅下跌11.79%至19.6,10Y殖利率下滑174基點至4.46%,資金明確流向風險資產。半導體(SMH +6.83%)與航空防衛(XAR +6.37%)領漲,反映科技與成長股強勢復甦。貴金屬(GDX +5.68%)亦表現亮眼,顯示避險需求緩解。能源(XLE -1.63%)與房地產(XLRE +0.22%)持續落後,傳統價值股遭冷落。KLAC、AMAT等晶片龍頭動能強勁(RS值77-84),TNGX創新高(RS 96)。下午兩小時應關注科技股能否維持漲勢至收盤,預期強勢收盤機率高。",
-  "headline": "科技領漲推動大盤上揚,風險情緒明顯改善",
+  "narrative": "今日市場呈現典型風險偏好格局。SPY上漲1.7%，VIX大幅下跌12.51%至19.44，10年期公債殖利率下降1.74%至4.46%，顯示避險情緒消退。半導體(SMH +6.75%)與航空防務(XAR +6.62%)領漲，反映科技與週期股輪動。能源(XLE -1.94%)與消費必需(XLP -0.26%)落後，確認資金從防守轉向進攻。KLAC、AMAT等晶片設備股跑贏大市，ORCL、ADSK等軟體股回檔，暗示市場聚焦硬體景氣復甦。VIX下跌幅度驚人，預示後續波動率可能進一步收斂。",
+  "headline": "科技領漲帶動大盤上揚，風險情緒明顯改善",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "SMH",
       "XAR",
-      "GDX",
-      "XLK"
+      "GDX"
     ],
     "outOf": [
       "XLE",
-      "XLRE",
+      "XLP",
       "IGV"
     ]
   },
-  "tomorrowWatch": "留意科技股能否延續漲勢,DOCN五星評級值得追蹤,同時觀察殖利率續跌對股債配置的影響"
+  "tomorrowWatch": "留意科技強勢能否延續，及DOCN(5★)財報前的技術面突破表現"
 }
