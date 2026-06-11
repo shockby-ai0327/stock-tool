@@ -795,17 +795,20 @@ details.collapsible > .table-wrap{padding:0 20px 16px 20px}
 
 <script>
 // ============ PROXY + CACHE + RETRY ============
+// 2026-06-11 健檢修:proxy 排序按「目前活著的程度」。原第一棒 Cloudflare worker 已 403 死亡,
+// 每個請求都先撞死牆 + 重試,整頁慢到像壞掉。corsproxy 升主力;worker 降末位(哪天修好自動復活);
+// cors-anywhere 永久 403(要手動 opt-in)直接移除。成功的 proxy 記進 localStorage,下次秒選。
 const PROXIES = [
- url => 'https://stocktool.7nzgpk2hdz.workers.dev/?url=' + encodeURIComponent(url),
  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
- url => 'https://cors-anywhere.herokuapp.com/' + url,
+ url => 'https://stocktool.7nzgpk2hdz.workers.dev/?url=' + encodeURIComponent(url),
 ];
 function PROXY(url) {
  // Use the last successful proxy index, fallback to 0
  return PROXIES[_lastProxyIdx || 0](url);
 }
-let _lastProxyIdx = 0;
+let _lastProxyIdx = Math.min(Number(localStorage.getItem('proxy-ok-idx')) || 0, PROXIES.length - 1);
+function _markProxyOk(pi) { _lastProxyIdx = pi; try { localStorage.setItem('proxy-ok-idx', pi); } catch (e) {} }
 const _cache = {};
 const CACHE_TTL = 30000; // 30s cache for real-time prices
 
@@ -896,10 +899,10 @@ async function pFetch(url, useCache, timeoutMs = 8000, cacheTTL = CACHE_TTL) {
  if (t.includes('Too Many Requests')) { await delay(1500 * (attempt + 1)); continue; }
  throw new Error('HTTP ' + r.status);
  }
- _lastProxyIdx = pi;
+ _markProxyOk(pi);
  if (useCache) { const blob = await r.blob(); _cache[url] = { ts: Date.now(), resp: new Response(blob, { headers: r.headers }) }; return _cache[url].resp.clone(); }
  return r;
- } catch(e) { lastErr = e; if (attempt === 0) await delay(300); }
+ } catch(e) { lastErr = e; break; /* 非429失敗:直接換下一個 proxy,不再原地重試(原本每棒重試2次,死proxy把全站拖慢20-30秒) */ }
  }
  }
  throw lastErr || new Error('所有 proxy 均逾時或失敗');
@@ -1175,11 +1178,11 @@ async function quickPrice(ticker) {
  const order = [_lastProxyIdx, ...PROXIES.map((_,i)=>i).filter(i=>i!==_lastProxyIdx)];
  for (const pi of order) {
  try {
- const r = await fetch(PROXIES[pi](url));
+ const r = await fetch(PROXIES[pi](url), { signal: AbortSignal.timeout(5000) });  // 2026-06-11: 無 timeout 會吊死「持倉動態」整個渲染
  if (!r.ok) continue;
  const j = await r.json();
  if (!j.chart || !j.chart.result || !j.chart.result[0]) continue;
- _lastProxyIdx = pi;
+ _markProxyOk(pi);
  const m = j.chart.result[0].meta;
  return { symbol: m.symbol, price: m.regularMarketPrice, prevClose: m.chartPreviousClose };
  } catch(e) { continue; }
@@ -7448,14 +7451,23 @@ async function fetchMarketRegime() {
  yfChart(vixTicker, '1mo', '1d', 6000)
  ]);
  let spyCloses = [], ma200 = null, vixNow = null, vixDayChg = null;
- if (benchChart.status === 'fulfilled') {
- spyCloses = benchChart.value.indicators.quote[0].close.filter(v => v != null);
+ if (benchChart.status === 'fulfilled' && benchChart.value && benchChart.value.indicators) {
+ spyCloses = (benchChart.value.indicators.quote[0].close || []).filter(v => v != null);
+ }
+ // 2026-06-11 健檢修:Yahoo+proxy 全掛時,SPY 改用每日 cron 提交的 spy_history.json(1500 根日線)。
+ // regime 是全站閘門,寧可用昨收的結構資料,也不能 null(null = 閘門默默放行)。
+ if (bench === 'SPY' && spyCloses.length < 50) {
+ try {
+ const r = await fetch(GH_RAW + 'spy_history.json?t=' + Math.floor(Date.now() / 900000), { signal: AbortSignal.timeout(6000) });
+ if (r.ok) { const d = await r.json(); if (d.closes && d.closes.length >= 50) spyCloses = d.closes; }
+ } catch (e) {}
+ }
  if (spyCloses.length >= 200) ma200 = sma(spyCloses, 200);
  else if (spyCloses.length >= 50) ma200 = sma(spyCloses, Math.min(200, spyCloses.length));
- window._benchmarkCloses[bench] = spyCloses;
- }
- // HMM 市場狀態偵測
- const hmm = classifyMarketHMM(spyCloses);
+ if (spyCloses.length) window._benchmarkCloses[bench] = spyCloses;
+ // HMM 市場狀態偵測(防禦:HMM 內部炸掉不准拖死整個 regime)
+ let hmm = null;
+ try { hmm = classifyMarketHMM(spyCloses); } catch (e) { hmm = null; }
  if (hmm) {
    window._marketRegime = window._marketRegime || {};
    window._marketRegime.hmm = hmm;
@@ -7467,9 +7479,9 @@ async function fetchMarketRegime() {
      window._marketRegime.overall = Math.max(window._marketRegime.overall || 0, 1);
    }
  }
- if (vixChart.status === 'fulfilled') {
- const vc = vixChart.value.indicators.quote[0].close.filter(v => v != null);
- vixNow = vc[vc.length - 1];
+ if (vixChart.status === 'fulfilled' && vixChart.value && vixChart.value.indicators) {
+ const vc = (vixChart.value.indicators.quote[0].close || []).filter(v => v != null);
+ vixNow = vc.length ? vc[vc.length - 1] : null;
  if (vc.length >= 2 && vc[vc.length - 2]) vixDayChg = (vixNow - vc[vc.length - 2]) / vc[vc.length - 2] * 100;
  }
  const spyNow = spyCloses[spyCloses.length - 1];
@@ -10612,23 +10624,29 @@ async function renderDashHoldings() {
  await Promise.all(open.map(async ([ticker])=>{
  try { const d = await quickPrice(ticker); if(d) prices[ticker]=d.price; } catch(e){}
  }));
- let totalPnl = 0, totalCost = 0;
+ let totalPnl = 0, totalCost = 0, _noPx = 0;
  // 2026-05-21 v3: grid layout、mono 數字、sd dot、無 emoji
+ // 2026-06-11 健檢修:報價抓不到(cur=0)時原本算成 -100% 假虧損 — 改顯示「—」且不計入合計
  const items = open.map(([ticker,p])=>{
   const ac = p.totalCost/p.qty, cur = prices[ticker]||0;
-  const pnl = (cur-ac)*p.qty, pct = ac>0?(cur-ac)/ac*100:0;
-  totalPnl += pnl; totalCost += p.totalCost;
+  const hasPx = cur > 0;
+  if (!hasPx) _noPx++;
+  const pnl = hasPx ? (cur-ac)*p.qty : 0, pct = (hasPx && ac>0) ? (cur-ac)/ac*100 : 0;
+  if (hasPx) { totalPnl += pnl; totalCost += p.totalCost; }
   const up = pct >= 0;
-  const dotCls = pct >= 25 ? 'strong' : pct >= 0 ? 'bull' : pct >= -5 ? 'neutral' : pct >= -15 ? 'weak' : 'bear';
+  const dotCls = !hasPx ? 'neutral' : pct >= 25 ? 'strong' : pct >= 0 ? 'bull' : pct >= -5 ? 'neutral' : pct >= -15 ? 'weak' : 'bear';
   return '<div style="display:grid;grid-template-columns:14px 70px 60px 1fr 80px 80px;gap:12px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer" onclick="document.getElementById(\'ticker-input\').value=\''+ticker+'\';showPage(\'stock\');analyzeStock()" onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'transparent\'">' +
    '<span class="sd '+dotCls+'"></span>' +
    '<b style="font-size:13px;letter-spacing:.3px">'+ticker+'</b>' +
    '<span class="mono" style="font-size:11px;color:var(--muted)">×'+p.qty+'</span>' +
-   '<span class="mono" style="font-size:11px;color:var(--muted)">cost $'+ac.toFixed(2)+'　cur $'+cur.toFixed(2)+'</span>' +
-   '<span class="mono" style="font-size:12px;font-weight:700;color:'+(up?'#4ade80':'#f87171')+';text-align:right">'+(up?'+':'')+pct.toFixed(2)+'%</span>' +
-   '<span class="mono" style="font-size:11px;color:'+(up?'#4ade80':'#f87171')+';text-align:right">'+(up?'+':'')+'$'+Math.round(pnl)+'</span>' +
+   '<span class="mono" style="font-size:11px;color:var(--muted)">cost $'+ac.toFixed(2)+'　cur '+(hasPx?'$'+cur.toFixed(2):'<span title="即時報價來源暫時抓不到,稍後自動重試">—</span>')+'</span>' +
+   (hasPx
+    ? '<span class="mono" style="font-size:12px;font-weight:700;color:'+(up?'#4ade80':'#f87171')+';text-align:right">'+(up?'+':'')+pct.toFixed(2)+'%</span>' +
+      '<span class="mono" style="font-size:11px;color:'+(up?'#4ade80':'#f87171')+';text-align:right">'+(up?'+':'')+'$'+Math.round(pnl)+'</span>'
+    : '<span class="mono" style="font-size:12px;color:var(--muted);text-align:right">—</span>' +
+      '<span class="mono" style="font-size:11px;color:var(--muted);text-align:right">—</span>') +
   '</div>';
- }).join('');
+ }).join('') + (_noPx ? '<div style="font-size:10px;color:var(--muted);padding:6px 4px">⚠ ' + _noPx + ' 檔報價暫時抓不到(來源被擋)— 損益「—」未計入合計,非歸零</div>' : '');
  const tc = totalPnl>=0?'#4ade80':'#f87171';
 
  // sector concentration: 改用 cp pill + 進度條（同色系，少 emoji）
@@ -10886,14 +10904,18 @@ function renderCalmHero() {
     (regime.spyDayChg != null ? (regime.bench || '大盤') + ' ' + (regime.spyDayChg > 0 ? '+' : '') + regime.spyDayChg.toFixed(1) + '%' : ''),
     (regime.vixDayChg != null ? 'VIX ' + (regime.vixDayChg > 0 ? '+' : '') + regime.vixDayChg.toFixed(0) + '%' : '')
   ].filter(Boolean).join('、') : '';
-  if (regime && regime.overall <= -2) { regimeLine = '大盤偏空 — 動能在空頭是墳場,傾向空手'; regimeColor = 'var(--red)'; deploy = false; }
-  else if (regime && regime.overall <= -1) { regimeLine = '大盤轉弱 — 減碼、只碰最強設定'; regimeColor = 'var(--yellow)'; deploy = false; }
+  // 2026-06-11 健檢修:regime 還沒載到(或抓不到)時「預設謹慎」,不是默默當中性放行。
+  // 不知道環境 ≠ 環境沒事 — 閘門資料缺失時寧可擋,載到後會自動重渲染解鎖。
+  if (!regime) { regimeLine = '大盤環境載入中/暫不可用 — 預設先謹慎'; regimeColor = 'var(--muted)'; deploy = false; }
+  else if (regime.overall <= -2) { regimeLine = '大盤偏空 — 動能在空頭是墳場,傾向空手'; regimeColor = 'var(--red)'; deploy = false; }
+  else if (regime.overall <= -1) { regimeLine = '大盤轉弱 — 減碼、只碰最強設定'; regimeColor = 'var(--yellow)'; deploy = false; }
   else if (_riskOff) { regimeLine = '結構多頭但今日急殺(' + _todayBits + ')— 今天別追高、別開新倉'; regimeColor = 'var(--orange)'; deploy = false; }
-  else if (regime && regime.overall >= 1) { regimeLine = '大盤偏多 — 動能環境,可進攻'; regimeColor = 'var(--green)'; }
+  else if (regime.overall >= 1) { regimeLine = '大盤偏多 — 動能環境,可進攻'; regimeColor = 'var(--green)'; }
   else { regimeLine = '大盤中性 — 偏謹慎'; regimeColor = 'var(--muted)'; }
 
   let stateBig, stateSub = '';
   if (!leaders.length) { stateBig = '掃描資料載入中…'; }
+  else if (!regime) { stateBig = '大盤環境確認中…'; stateSub = '環境資料載入中(或來源暫時抓不到)。閘門原則:不知道環境就不開新倉 —— 寧可慢,不可錯。'; }
   else if (!deploy) { stateBig = '今日傾向空手'; stateSub = _riskOff ? '結構還在多頭,但今天急殺、VIX 跳升 —— 別追突破、別開新倉,等盤穩。空手也是紀律。' : '大盤不利動能 —— 進攻倉減碼或觀望,別在墳場開槍。空手也是紀律。'; }
   else if (!setups.length) { stateBig = '今日無夠猛的設定'; stateSub = '沒有逼近新高+爆量的波段燃料 —— 不勉強,等更猛的。'; }
   else { stateBig = '🔥 突破時機 ' + setups.length + ' 檔設定就緒'; stateSub = '逼近新高 / 爆量 / 加速的波段燃料。到掃描器依突破時機排序、用進攻檔規劃(3% 風險 + heat 護欄 + 快砍慢抱)。'; }
