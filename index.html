@@ -9493,17 +9493,23 @@ async function renderDashboard(forceRescan) {
  const ts = document.getElementById('dash-timestamp');
  if (ts) ts.textContent = '更新時間：' + new Date().toLocaleTimeString('zh-TW');
 
- // 1. 取 5 大指數（使用真實指數代碼，與大盤指數頁一致）
+ // 1. 取 5 大指數 — 2026-06-11 健檢修:改成非阻塞 promise。
+ // 原本第一行就 await 5 個 proxy 報價,慢 proxy 一拖,整個首頁(待處理/持倉/敘事/regime)
+ // 全部排在後面動彈不得,看起來像壞掉。現在報價自己慢自己的,其他區塊立刻渲染。
+ const _mdPromise = (async () => {
  const symbols = ['^GSPC', '^IXIC', '^VIX', '^TWII', '^TNX'];
- let marketData = {};
+ const marketData = {};
  try {
  const prices = await Promise.allSettled(symbols.map(s => quickPrice(s)));
  prices.forEach((r, i) => {
  if (r.status === 'fulfilled' && r.value) marketData[symbols[i]] = r.value;
  });
  } catch(e) {}
+ return marketData;
+ })();
 
- // 2. 渲染 KPI cards
+ // 2. 渲染 KPI cards(報價到了才畫,不阻塞其他區塊)
+ _mdPromise.then(marketData => {
  const kpiDiv = document.getElementById('dash-market-kpis');
  if (kpiDiv) {
  const kpiDefs = [
@@ -9543,6 +9549,7 @@ async function renderDashboard(forceRescan) {
  '<div style="font-size:12px;font-weight:600;color:' + fgiInfo.color + ';margin-top:8px">' + fgiInfo.label + '</div>' +
  '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:12px"><div style="width:' + fgiScore + '%;height:100%;border-radius:2px;background:' + fgiInfo.color + ';transition:width .5s"></div></div>';
  }
+ });
 
  // 2026-05-19: 統一規模判斷 — dashboard 用同一個 _rsRegimeCard 為單一真實來源
  // (之前 dashboard 用 assessMarketRegime(FGI+VIX), scanner 用 _rsRegimeCard(SPY+VIX)
@@ -9557,8 +9564,11 @@ async function renderDashboard(forceRescan) {
    regimeDiv.innerHTML = html;
  }
 
+ _mdPromise.then(marketData => {
  const statusDiv = document.getElementById('dash-market-status');
  if (statusDiv) {
+ const vixD = marketData['^VIX'];
+ const vixPrc = vixD ? vixD.price : 18;
  const now = new Date(), utcMin = now.getUTCHours()*60 + now.getUTCMinutes();
  const weekday = now.getDay() >= 1 && now.getDay() <= 5;
  const usOpen = weekday && utcMin >= 810 && utcMin < 1200;
@@ -9577,6 +9587,11 @@ async function renderDashboard(forceRescan) {
  // async load calendar (targets the standalone card above)
  renderUpcomingEvents();
  }
+ });
+
+ // 3.5 大盤環境 — 2026-06-11 健檢修:首頁從來沒人呼叫 fetchMarketRegime(只有掃描器/個股頁會叫),
+ // 冷啟動落在首頁 → regime 永遠 null、閘門永遠「載入中」。補上(非阻塞,內部自帶 fallback)。
+ if (!window._marketRegime) { try { fetchMarketRegime(); } catch (e) {} }
 
  // 4. 觸發掃描（自動，快取 5 分鐘）
  quickDashboardScan(forceRescan);
@@ -9592,7 +9607,7 @@ async function renderDashboard(forceRescan) {
  '<div style="padding:12px;background:var(--bg);border-radius:8px;border-left:3px solid var(--border)"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">台股方向</div><div style="height:12px;background:var(--border);border-radius:4px;width:50%;margin-bottom:6px"></div><div style="height:10px;background:var(--border);border-radius:4px;width:80%"></div></div>' +
  '</div><div style="font-size:11px;color:var(--muted)">新聞情緒分析載入中...</div></div>';
  }
- renderPreMarketCard(marketData);
+ _mdPromise.then(md => renderPreMarketCard(md));
  fetchDashNewsBackground(); // 背景抓取核實新聞，完成後自動刷新預測卡
  renderActionItems(); // #3 今日待處理
  renderWatchlistSimple(); // Fix G: 簡版觀察清單
