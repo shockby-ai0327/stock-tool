@@ -15777,8 +15777,10 @@ startAutoRefresh();
 // Set initial nav active state
 document.querySelectorAll('.sidebar nav button').forEach((b,i) => b.classList.toggle('active', i===0));
 document.querySelectorAll('.mobile-nav button').forEach((b,i) => b.classList.toggle('active', i===0));
-// 2026-06-09 首次載入就套用首頁自訂排序/顯示(dashboard 預設 active)
-try { _applyDashLayout(); } catch (e) {}
+// 2026-06-11 健檢修(冷啟動大魔王):renderDashboard 全站唯一呼叫點在 showPage(),
+// 啟動流程從來沒呼叫過 → 冷載入的首頁是一片靜態 placeholder(scanning…/載入中),
+// 要點過導覽列才活過來。啟動正式走 showPage('dashboard')(內含渲染+regime+自訂排序)。
+try { showPage('dashboard'); } catch (e) { try { _applyDashLayout(); } catch (e2) {} }
 // Firebase 初始化（帳號 + 雲端同步）
 initFirebase();
 </script>
