@@ -47,7 +47,9 @@ def num(v):
         if v is None:
             return None
         f = float(v)
-        return f if f == f else None   # drop NaN
+        if f != f or f in (float("inf"), float("-inf")):
+            return None   # drop NaN AND ±Infinity — Python json 寫得出 Infinity,但瀏覽器 JSON.parse 會炸全檔
+        return f
     except (TypeError, ValueError):
         return None
 
@@ -194,8 +196,9 @@ def _write(by_symbol):
         "bySymbol": by_symbol,
     }
     # compact:universe 模式下 1200+ 檔,indent=2 會讓檔案翻倍(~2MB);前端不在乎排版
+    # allow_nan=False:任何 NaN/Infinity 漏網就在 CI 大聲炸,而不是寫出瀏覽器讀不了的檔
     with open(os.path.join(DATA_DIR, "fundamentals.json"), "w") as f:
-        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     return counts
 
 
