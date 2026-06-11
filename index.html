@@ -13717,7 +13717,7 @@ function _stockFundamentalsPanel(symbol, liveFallback) {
   if (!f || !f.flag) {
     // 不在掃描池 + 即時也抓不到 → 別給空白,給清楚的替代路徑
     return '<div class="card" style="margin-top:0"><div class="section-label">基本面快照</div>' +
-      '<div style="font-size:12px;color:var(--muted);line-height:1.8;padding:6px 0">此股<b style="color:var(--text)">不在掃描池</b>,即時基本面也抓取失敗(Yahoo 擋瀏覽器)。<br>👉 看下方「<b style="color:var(--text)">SEC 財報速覽</b>」(任何美股都有),或 <a href="https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/key-statistics" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Yahoo 完整財報 →</a></div></div>';
+      '<div style="font-size:12px;color:var(--muted);line-height:1.8;padding:6px 0">此股<b style="color:var(--text)">不在基本面資料池</b>(全市場池每日更新,冷門股可能不在內),即時抓取也失敗(Yahoo 擋瀏覽器)。<br>👉 看下方「<b style="color:var(--text)">SEC 財報速覽</b>」(任何美股都有),或 <a href="https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/key-statistics" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Yahoo 完整財報 →</a></div></div>';
   }
   const flagCfg = {
     quality: { c: '#22c55e', t: '✓ 體質健康', d: '有獲利 + 正自由現金流 — 動能背後有真實的賺錢能力。' },
@@ -13777,7 +13777,9 @@ function _stockFundamentalsPanel(symbol, liveFallback) {
   const bizLine = bizSummary ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:6px"><span style="color:var(--text);font-weight:600">在做什麼</span> · ' + escapeHtml(bizSummary) + '</div>' : '';
   const lossNote = lossMaking ? '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 12px"><span style="color:#fbbf24">ⓘ 目前淨虧損</span>:沒有正盈餘,P/E、PEG、EV/EBITDA 等估值指標算不出,顯示「—」是<b style="color:var(--text)">正常、不是資料缺失</b>。</div>' : '';
   const _fMeta = window._fundamentalsMeta || {};
-  const _fetchedAt = _fMeta.generatedAt ? new Date(_fMeta.generatedAt).toLocaleDateString('zh-TW') : '';
+  // 優先用「這檔自己」的抓取時間(merge 模式下同檔案新舊混合,全檔時間戳會說謊)
+  const _fetchedAt = f.asOf ? new Date(f.asOf).toLocaleDateString('zh-TW')
+                   : (_fMeta.generatedAt ? new Date(_fMeta.generatedAt).toLocaleDateString('zh-TW') : '');
   const footerLine = '<div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:var(--muted);line-height:1.6">' +
     '基本面是動能的<b style="color:var(--text)">真實性檢查</b>(真公司 vs 燒錢迷因),不是價值投資。' +
     '<b style="color:var(--text)">「—」</b>= 該指標不適用(如虧損無 P/E)或免費資料源未提供,<b style="color:var(--text)">不是系統錯誤</b>。' +

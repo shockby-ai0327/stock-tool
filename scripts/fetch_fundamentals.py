@@ -161,45 +161,105 @@ def assess(info):
     }
 
 
-def main():
-    import yfinance as yf
-    print("=== Fundamentals quality gate ===")
-    scan = load_json("us_scan.json", None)
-    if not scan or not scan.get("leaders"):
-        print("No us_scan.json leaders — nothing to assess.")
-        return
-
+def _leader_symbols():
+    scan = load_json("us_scan.json", None) or {}
     symbols, seen = [], set()
     for s in (scan.get("leaders", []) + scan.get("discoveries", [])):
         sym = s.get("symbol")
-        if sym and sym not in seen:
+        if sym and sym not in seen and "." not in sym:
             seen.add(sym)
             symbols.append(sym)
-    print(f"  assessing {len(symbols)} symbols")
+    return symbols
 
-    by_symbol = {}
-    counts = {"quality": 0, "watch": 0, "trap": 0}
-    for i, sym in enumerate(symbols):
-        try:
-            info = yf.Ticker(sym).info or {}
-            q = assess(info)
-            by_symbol[sym] = q
-            counts[q["flag"]] = counts.get(q["flag"], 0) + 1
-        except Exception as e:
-            by_symbol[sym] = {"flag": "unknown", "qualityScore": None, "error": str(e)[:60]}
-        if (i + 1) % 10 == 0:
-            sys.stdout.write(f"  {i+1}/{len(symbols)}\r"); sys.stdout.flush()
-        time.sleep(0.25)
 
+def _universe_symbols():
+    """Leaders first (freshest priority), then the full ~1200-name scan universe."""
+    symbols = _leader_symbols()
+    seen = set(symbols)
+    static = load_json("universe_static.json", {}) or {}
+    for sym in (static.get("tickers") or []):
+        if sym and sym not in seen and "." not in sym:
+            seen.add(sym)
+            symbols.append(sym)
+    return symbols
+
+
+def _write(by_symbol):
+    counts = {"quality": 0, "watch": 0, "trap": 0, "unknown": 0}
+    for q in by_symbol.values():
+        counts[q.get("flag", "unknown")] = counts.get(q.get("flag", "unknown"), 0) + 1
     out = {
         "generatedAt": int(time.time() * 1000),
         "counts": counts,
         "bySymbol": by_symbol,
     }
+    # compact:universe 模式下 1200+ 檔,indent=2 會讓檔案翻倍(~2MB);前端不在乎排版
     with open(os.path.join(DATA_DIR, "fundamentals.json"), "w") as f:
-        json.dump(out, f, indent=2, ensure_ascii=False)
-    print(f"\n  wrote fundamentals.json — quality {counts['quality']} · "
-          f"watch {counts['watch']} · trap {counts['trap']}")
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    return counts
+
+
+def main():
+    # 2026-06-10:--universe 全掃描池(~1200 檔,每日 cron),預設 = 排行榜 leaders(一天 3 次)。
+    # 兩種模式都「合併寫入」同一個 fundamentals.json:更新自己負責的符號、保留其他人的,
+    # 所以 3 次/日的 leaders 刷新不會把 universe 的廣覆蓋蓋掉,反之亦然。
+    universe_mode = "--universe" in sys.argv
+    limit = None
+    if "--limit" in sys.argv:
+        try:
+            limit = int(sys.argv[sys.argv.index("--limit") + 1])
+        except (IndexError, ValueError):
+            pass
+    FRESH_DAYS = 2  # universe 模式:2 天內抓過的跳過(基本面變化以「天」計,省 API + 可斷點續跑)
+
+    import yfinance as yf
+    print(f"=== Fundamentals quality gate ({'universe' if universe_mode else 'leaders'}) ===")
+
+    existing = load_json("fundamentals.json", {}) or {}
+    by_symbol = dict(existing.get("bySymbol") or {})
+
+    targets = _universe_symbols() if universe_mode else _leader_symbols()
+    if not targets:
+        print("  no symbols to assess — nothing to do.")
+        return
+    if universe_mode:
+        # 修剪:已不在 universe ∪ leaders 的舊符號移除,檔案不無限長大
+        keep = set(targets)
+        by_symbol = {s: q for s, q in by_symbol.items() if s in keep}
+
+    now_ms = int(time.time() * 1000)
+    todo = []
+    for sym in targets:
+        prev = by_symbol.get(sym)
+        if universe_mode and prev and prev.get("asOf") and (now_ms - prev["asOf"]) < FRESH_DAYS * 86400_000 and prev.get("flag") != "unknown":
+            continue  # 還新鮮,跳過(leaders 模式永遠重抓,保持一天 3 次新鮮)
+        todo.append(sym)
+    if limit:
+        todo = todo[:limit]
+    print(f"  targets {len(targets)} · to fetch {len(todo)} (rest fresh ≤{FRESH_DAYS}d)")
+
+    fetched = 0
+    for i, sym in enumerate(todo):
+        try:
+            info = yf.Ticker(sym).info or {}
+            q = assess(info)
+            q["asOf"] = int(time.time() * 1000)
+            by_symbol[sym] = q
+            fetched += 1
+        except Exception as e:
+            # 抓失敗:保留舊資料(若有),沒有才寫 unknown — 別用失敗覆蓋好資料
+            if sym not in by_symbol:
+                by_symbol[sym] = {"flag": "unknown", "qualityScore": None, "error": str(e)[:60], "asOf": int(time.time() * 1000)}
+        if (i + 1) % 10 == 0:
+            sys.stdout.write(f"  {i+1}/{len(todo)}\r"); sys.stdout.flush()
+        # checkpoint:每 100 檔落盤一次 — 長跑被砍也保留進度(寫入是合併式,安全)
+        if (i + 1) % 100 == 0:
+            _write(by_symbol)
+        time.sleep(0.25)
+
+    counts = _write(by_symbol)
+    print(f"\n  wrote fundamentals.json — {len(by_symbol)} symbols (fetched {fetched}) · "
+          f"quality {counts['quality']} · watch {counts['watch']} · trap {counts['trap']} · unknown {counts.get('unknown', 0)}")
     print(f"End: {datetime.now(timezone.utc).isoformat()}")
 
 

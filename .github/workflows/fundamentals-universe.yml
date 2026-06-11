@@ -1,0 +1,61 @@
+name: Fundamentals Universe (daily)
+
+# 基本面全池覆蓋:掃描池 ~1200 檔(S&P500 + 中小型成長 + 動能 ETF 持股)每日抓一次
+# 估值/獲利/體質/產業/業務簡介 → 個股頁「基本面快照」不再只有排行榜 30 檔。
+# fetch_fundamentals.py 是合併式寫入:每日這支管廣度,stock-scan 的 leaders 步驟管熱門名單
+# 的鮮度(一天 3 次),互不覆蓋。2 天內抓過的自動跳過 → 每日實際只補stale的部分。
+on:
+  schedule:
+    - cron: '38 21 * * 1-5'   # 美股收盤後(21:38 UTC ≈ 17:38 EDT),離整點避開高峰
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fundamentals-universe
+  cancel-in-progress: false
+
+jobs:
+  universe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install yfinance pandas
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch fundamentals (full universe, merge + checkpoint)
+        run: python scripts/fetch_fundamentals.py --universe
+
+      # 業務簡介翻繁中(hash 快取,只翻新的;首輪 ~1200 檔約 $0.3,之後 ≈ $0)
+      - name: Translate summaries (zh)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/translate_summaries.js
+        continue-on-error: true
+
+      - name: Commit fundamentals
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f data/fundamentals.json ]     && git add data/fundamentals.json     || true
+          [ -f data/summary_zh_cache.json ] && git add data/summary_zh_cache.json || true
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -m "fundamentals-universe: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash 2>&1 | tail -2 || true
+            if git push 2>&1; then echo "✅ push ok attempt $attempt"; break; fi
+            sleep $((attempt * 3))
+          done
