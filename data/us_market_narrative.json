@@ -1,124 +1,124 @@
 {
-  "generatedAt": 1781547393525,
+  "generatedAt": 1781555320084,
   "market": "US",
-  "scanAt": "2026-06-15T18:08:05.490Z",
+  "scanAt": "2026-06-15T20:20:20.808Z",
   "session": "AFTERNOON SESSION (last 2 hours before close)",
   "sessionShort": "afternoon",
   "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 755.26,
-      "changePct": 1.82
+      "last": 754.83,
+      "changePct": 1.76
     },
     "vix": {
-      "last": 16.24,
-      "changePct": -8.14
+      "last": 16.18,
+      "changePct": -8.48
     },
     "tnx": {
       "last": 4.47,
-      "changePct": -0.36
+      "changePct": -0.4
     },
     "dxy": {
-      "last": 99.57,
-      "changePct": -0.19
+      "last": 99.68,
+      "changePct": -0.07
     }
   },
   "sectorLeaders": [
     {
       "etf": "GDX",
-      "last": 84.91,
-      "changePct": 6.1
+      "last": 85.27,
+      "changePct": 6.55
     },
     {
       "etf": "SMH",
-      "last": 647.61,
-      "changePct": 4.46
+      "last": 647.1,
+      "changePct": 4.38
     },
     {
       "etf": "XLK",
-      "last": 191.48,
-      "changePct": 3.61
+      "last": 191.79,
+      "changePct": 3.78
     }
   ],
   "sectorLaggards": [
     {
       "etf": "XLE",
-      "last": 55.69,
-      "changePct": -3.22
+      "last": 55.55,
+      "changePct": -3.48
     },
     {
       "etf": "XLRE",
-      "last": 45.04,
-      "changePct": -0.69
+      "last": 44.99,
+      "changePct": -0.82
     },
     {
       "etf": "XLV",
-      "last": 152.85,
-      "changePct": -0.62
+      "last": 152.89,
+      "changePct": -0.6
     }
   ],
   "gainers": [
     {
-      "symbol": "AXTI",
-      "name": "AXT Inc",
-      "changePct": 19.7
-    },
-    {
       "symbol": "XNDU",
       "name": "Xanadu Quantum Technologies Li",
-      "changePct": 17.47
+      "changePct": 18.24
     },
     {
-      "symbol": "XE",
-      "name": "X-Energy, Inc.",
-      "changePct": 16.25
+      "symbol": "WDC",
+      "name": "Western Digital Corporation",
+      "changePct": 16.1
     },
     {
-      "symbol": "POET",
-      "name": "POET Technologies Inc.",
-      "changePct": 16.4
+      "symbol": "AXTI",
+      "name": "AXT Inc",
+      "changePct": 13.95
+    },
+    {
+      "symbol": "GPGI",
+      "name": "GPGI, Inc.",
+      "changePct": 13.83
     },
     {
       "symbol": "WOLF",
       "name": "Wolfspeed, Inc.",
-      "changePct": 15.77
+      "changePct": 13.79
     }
   ],
   "losers": [
     {
       "symbol": "FOXA",
       "name": "Fox Corporation",
-      "changePct": -17.6
+      "changePct": -16.84
     },
     {
       "symbol": "FOX",
       "name": "Fox Corporation",
-      "changePct": -16.24
+      "changePct": -15.22
     },
     {
       "symbol": "LRN",
       "name": "Stride, Inc.",
-      "changePct": -15.34
+      "changePct": -14.5
+    },
+    {
+      "symbol": "MH",
+      "name": "McGraw Hill, Inc.",
+      "changePct": -12.5
     },
     {
       "symbol": "SSL",
       "name": "Sasol Ltd.",
-      "changePct": -12.45
-    },
-    {
-      "symbol": "CENX",
-      "name": "Century Aluminum Company",
-      "changePct": -11.72
+      "changePct": -12.38
     }
   ],
-  "narrative": "今日主題為科技復甦與風險資產反彈。SPY漲1.82%，VIX大跌8.14至16.24，反映市場避險情緒明顯消退。資金流向風險資產，芯片類(SMH +4.46%)與礦業(GDX +6.1%)領漲，科技股(XLK +3.61%)強勢推進。能源板塊逆勢走弱(XLE -3.22%)，反映對經濟增長預期分化。10年期公債殖利率下跌36bp至4.47%，支撐科技估值。LRCX、WDC等芯片龍頭動能強勁(RS 88-98)。Fox集團大幅下跌反映個股風險，未影響大盤節奏。",
-  "headline": "科技芯片領漲，避險情緒緩解，資金風險偏好回升",
+  "narrative": "今日市場呈現明顯科技領漲格局。SPY上漲1.76%，VIX大跌8.48%至16.18，顯示市場風險偏好提升。資金流向科技（SMH +4.38%）、半導體（GDX +6.55%）及軟體（XLK +3.78%），WDC、XNDU等科技股漲幅逾13%。能源（XLE -3.48%）遭拋售，FOX系跌幅逾15%反映媒體板塊調整。10Y殖利率下跌0.4%至4.47%，支撐成長股估值修復。下午盤末需觀察科技動能能否延續至收盤，或現獲利了結。",
+  "headline": "科技領漲、能源重挫，風險資產強勢上攻",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "XLK",
-      "GDX",
-      "SMH"
+      "SMH",
+      "GDX"
     ],
     "outOf": [
       "XLE",
@@ -126,5 +126,5 @@
       "XLV"
     ]
   },
-  "tomorrowWatch": "留意VIX是否維持低檔、芯片動能能否延續至明日開盤，關注科技板塊能否守住漲幅"
+  "tomorrowWatch": "監控科技股動能能否延續、殖利率走勢對成長股估值支撐力度。"
 }
