@@ -1,10 +1,10 @@
 {
-  "generatedAt": 1781555466498,
+  "generatedAt": 1781561839799,
   "market": "TW",
-  "scanAt": "2026-06-15T20:20:23.468Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-15T22:06:37.897Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
       "last": 754.83,
@@ -19,8 +19,8 @@
       "changePct": -0.4
     },
     "dxy": {
-      "last": 99.69,
-      "changePct": -0.06
+      "last": 99.66,
+      "changePct": -0.09
     }
   },
   "sectorLeaders": [
@@ -111,14 +111,14 @@
       "changePct": -12.38
     }
   ],
-  "narrative": "今日市場呈現典型科技輪動行情。SPY上揚1.76%，VIX大跌8.37%至16.2，反映風險情緒明顯改善。資金強勢湧入半導體(SMH +4.38%)與科技(XLK +3.78%)，台灣晶片股領跑全球(2327.TW 87.62%)。貴金屬(GDX +6.55%)走強提示通膨預期，惟能源(XLE -3.48%)與地產(XLRE -0.82%)遭冷落。10Y殖利率下行4bp至4.47%支撐成長股。收盤前兩小時，技術面勢頭向上，預期強勢收盤。",
-  "headline": "科技領漲、能源重挫，風險偏好升溫迎收盤",
+  "narrative": "今日美股呈現明顯風險偏好態勢。SPY漲1.76%，VIX跌8.37%至16.2，10年期殖利率下跌4bp至4.47%，皆顯示市場情緒改善。科技類ETF（SMH +4.38%）及半導體礦業（GDX +6.55%）領漲，反映資金湧向高成長資產。能源板塊XLE重挫3.48%，顯示商品週期回調。台股成分股表現亮眼，2327.TW月漲87%領先。大型傳媒股（FOXA -16.84%）遭拋售，而WDC等科技股大漲16%，強化晶片主題。風險情緒明顯轉向成長型資產。",
+  "headline": "科技晶片領漲，能源重挫，風險偏好回升",
   "regime": "risk-on",
   "sectorRotation": {
     "into": [
       "XLK",
-      "SMH",
-      "GDX"
+      "GDX",
+      "SMH"
     ],
     "outOf": [
       "XLE",
@@ -126,5 +126,5 @@
       "XLV"
     ]
   },
-  "tomorrowWatch": "留意Fed決議前夕殖利率走向，科技股能否延續漲勢、貴金屬是否回檔整理"
+  "tomorrowWatch": "密切留意科技股能否延續漲勢，及Fed後續政策訊號對殖利率的影響"
 }
