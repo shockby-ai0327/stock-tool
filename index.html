@@ -11018,12 +11018,10 @@ async function quickDashboardScan(force) {
  _hydrateCalmHero();
 }
 
-// 2026-05-29: 載入 fundamentals（若還沒）後渲染 Calm Hero；資料到齊再重渲一次
 function _hydrateCalmHero() {
+  // 2026-06-12 慢網修:Calm hero 根本沒用到 fundamentals(突破時機數來自掃描資料的 _attackScore),
+  // 原本卻為它在首頁載 201KB fundamentals.json。砍掉 → 掃描器/個股頁要用時才會 lazy-load。
   renderCalmHero();
-  if (!window._fundamentals) {
-    _loadFundamentals().then(() => renderCalmHero()).catch(() => {});
-  }
 }
 
 // ── Market Narrative (Wave 6) — daily AI commentary on the macro picture ──
