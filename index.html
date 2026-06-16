@@ -6,9 +6,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>台美股智慧選股工具</title>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
-<!-- 2026-05-20 Day 5-7: TradingView Advanced Charts widget (免費可嵌入) — 取代自畫的 lightweight-charts 主圖 -->
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<!-- 2026-06-12 慢網/跨牆優化:預連線關鍵網域(省 RTT)+ 圖表庫改 defer(原本 head 阻塞 HTML 解析 4s+)-->
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+<link rel="preconnect" href="https://corsproxy.io" crossorigin>
+<link rel="dns-prefetch" href="https://query1.finance.yahoo.com">
+<!-- 圖表庫只在開個股/指數/教學頁才用到 → defer,讓首頁先跑起來,不卡在下載圖表庫 -->
+<script defer src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+<!-- 2026-05-20 Day 5-7: TradingView Advanced Charts widget (免費可嵌入) -->
+<script defer type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <style>
 :root{--bg:#161d2e;--card:#1d2538;--border:#2a3349;--text:#dde2eb;--muted:#8b9bb4;--accent:#5b8def;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
 /* 2026-05-21 v4: 背景從 #0a0e17 純黑改 #161d2e 柔和深藍（眼睛舒服）
@@ -7329,7 +7334,7 @@ async function fetchFredSeries(seriesId) {
   try {
     const url = 'https://api.stlouisfed.org/fred/series/observations?series_id=' + seriesId +
       '&api_key=' + FRED_KEY + '&sort_order=desc&limit=5&file_type=json';
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(4500) });  // 2026-06-12 無逾時會在中國 VPN 上空等到天荒地老
     const data = await res.json();
     const obs = (data.observations || []).filter(o => o.value !== '.');
     const val = obs.length ? parseFloat(obs[0].value) : null;
@@ -7355,7 +7360,7 @@ async function fetchFearAndGreed() {
   if (_fngCache.data && Date.now() - _fngCache.ts < _fngCache.TTL) return _fngCache.data;
   try {
     const url = 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
-    const r = await pFetch(url);
+    const r = await pFetch(url, false, 4000);  // 2026-06-12 CNN 在中國連不到 → 快速放棄,別拖
     const json = await r.json();
     const score = Math.round(json.fear_and_greed?.score ?? 50);
     const rating = json.fear_and_greed?.rating ?? 'neutral';
