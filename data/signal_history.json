@@ -8430,11 +8430,11 @@
       "symbol": "IBM",
       "triggeredAt": "2026-06-01T19:06:44.068Z",
       "entryPrice": 318.43,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 262.35,
+      "exitDate": "2026-06-17T21:39:56.339Z",
       "stopLoss": 292.9556,
       "target": 366.1945,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "discovery_2026-06-01_BBAR",
@@ -9138,11 +9138,11 @@
       "symbol": "IBM",
       "triggeredAt": "2026-06-02T15:36:55.682Z",
       "entryPrice": 323.36,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 262.35,
+      "exitDate": "2026-06-17T21:39:56.339Z",
       "stopLoss": 297.4912,
       "target": 371.864,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "discovery_2026-06-02_BBAR",
@@ -15610,6 +15610,30 @@
       "exitDate": null,
       "stopLoss": 75.0536,
       "target": 93.817,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-06-17_HUT",
+      "type": "rs_leader",
+      "symbol": "HUT",
+      "triggeredAt": "2026-06-17T21:36:45.257Z",
+      "entryPrice": 118.88,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 109.3696,
+      "target": 136.712,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-06-17_TSEM",
+      "type": "rs_leader",
+      "symbol": "TSEM",
+      "triggeredAt": "2026-06-17T21:36:45.257Z",
+      "entryPrice": 267.13,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 245.7596,
+      "target": 307.1995,
       "status": "open"
     }
   ]
