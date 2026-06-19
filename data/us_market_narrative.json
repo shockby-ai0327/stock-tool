@@ -1,57 +1,57 @@
 {
-  "generatedAt": 1781886676160,
+  "generatedAt": 1781894258776,
   "market": "US",
-  "scanAt": "2026-06-19T16:23:07.907Z",
-  "session": "MORNING SESSION (post-open, first 3.5 hours)",
-  "sessionShort": "morning",
-  "watchLabel": "下午盤關注",
+  "scanAt": "2026-06-19T18:29:33.980Z",
+  "session": "AFTERNOON SESSION (last 2 hours before close)",
+  "sessionShort": "afternoon",
+  "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 746.74,
-      "changePct": 0.78
+      "last": 740.96,
+      "changePct": -1.25
     },
     "vix": {
       "last": 16.78,
-      "changePct": 2.32
+      "changePct": -9
     },
     "tnx": null,
     "dxy": {
-      "last": 100.82,
-      "changePct": -0.03
+      "last": 100.72,
+      "changePct": 0.63
     }
   },
   "sectorLeaders": [
     {
+      "etf": "XAR",
+      "last": 285.59,
+      "changePct": 1.34
+    },
+    {
       "etf": "SMH",
-      "last": 659.88,
-      "changePct": 5.76
+      "last": 623.97,
+      "changePct": 1.29
     },
     {
-      "etf": "XLK",
-      "last": 191.44,
-      "changePct": 3.04
-    },
-    {
-      "etf": "XLY",
-      "last": 117.16,
-      "changePct": 1.45
+      "etf": "IBB",
+      "last": 173.44,
+      "changePct": 1.17
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 82.51,
-      "changePct": -2.19
+      "last": 84.36,
+      "changePct": -3.3
     },
     {
-      "etf": "XLE",
-      "last": 53.77,
-      "changePct": -1.65
+      "etf": "XLC",
+      "last": 109.2,
+      "changePct": -2.78
     },
     {
-      "etf": "XLF",
-      "last": 53.57,
-      "changePct": -0.89
+      "etf": "XLRE",
+      "last": 43.97,
+      "changePct": -2.51
     }
   ],
   "gainers": [
@@ -108,20 +108,22 @@
       "changePct": -12.61
     }
   ],
-  "narrative": "早盤SPY漲0.78%符合預期，科技類(SMH +5.76%、XLK +3.04%)強勢領漲，半導體個股BFLY暴漲55.87%、QS漲16.52%成最大驚喜。金融(XLF -0.89%)與能源(XLE -1.65%)承壓，呈現明顯的科技轉向周期股輪動。VIX微升2.32%至16.78反映風險情緒穩定。ACN跌17.97%與EPAM跌12.61%顯示軟體/IT服務承壓，與硬體芯片強勢形成對比。WDC與STX等儲存芯片股動能強勁(RS 97-98)，預示半導體周期反彈延續。",
-  "headline": "科技領漲帶動大盤微幅上揚，晶片股表現亮眼",
+  "narrative": "今日市場呈現典型的風險資產輪動格局。儘管SPY下跌1.25%，但VIX暴跌9%至16.78，反映恐慌情緒大幅緩解。資金明顯流入成長科技板塊：半導體(SMH +1.29%)與生技(IBB +1.17%)領漲，航太防務(XAR +1.34%)亦走強。個股層面，BFLY(+55.87%)與QS(+16.52%)等特殊情況股大幅上揚，顯示追逐動量交易活躍。傳統防守板塊如通訊(XLC -2.78%)與房地產(XLRE -2.51%)遭拋售，確認資金從防守轉向進攻。下午盤勢應延續這股輪動動能，預計科技股維持相對強勢，收盤前可能小幅整理。",
+  "headline": "科技反彈帶動輪動，恐慌指數大幅下滑，資金進攻模式啟動",
   "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "XLK",
       "SMH",
-      "XLY"
+      "IBB",
+      "XAR",
+      "XLK"
     ],
     "outOf": [
-      "XLE",
-      "XLF",
-      "GDX"
+      "XLC",
+      "XLRE",
+      "GDX",
+      "XLP"
     ]
   },
-  "tomorrowWatch": "留意科技股動能能否持續，及軟體個股(ACN、EPAM)是否觸底反彈"
+  "tomorrowWatch": "WDC與STX等記憶體股動能強勁(RS 98/97)，留意明日能否持續上攻或技術性回檔"
 }

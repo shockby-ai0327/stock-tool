@@ -1,57 +1,57 @@
 {
-  "generatedAt": 1781886815205,
+  "generatedAt": 1781894394541,
   "market": "TW",
-  "scanAt": "2026-06-19T16:23:10.573Z",
-  "session": "MORNING SESSION (post-open, first 3.5 hours)",
-  "sessionShort": "morning",
-  "watchLabel": "下午盤關注",
+  "scanAt": "2026-06-19T18:29:36.635Z",
+  "session": "AFTERNOON SESSION (last 2 hours before close)",
+  "sessionShort": "afternoon",
+  "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 746.74,
-      "changePct": 0.78
+      "last": 740.96,
+      "changePct": -1.25
     },
     "vix": {
       "last": 16.78,
-      "changePct": 2.32
+      "changePct": -9
     },
     "tnx": null,
     "dxy": {
-      "last": 100.8,
-      "changePct": -0.05
+      "last": 100.72,
+      "changePct": 0.63
     }
   },
   "sectorLeaders": [
     {
+      "etf": "XAR",
+      "last": 285.59,
+      "changePct": 1.34
+    },
+    {
       "etf": "SMH",
-      "last": 659.88,
-      "changePct": 5.76
+      "last": 623.97,
+      "changePct": 1.29
     },
     {
-      "etf": "XLK",
-      "last": 191.44,
-      "changePct": 3.04
-    },
-    {
-      "etf": "XLY",
-      "last": 117.16,
-      "changePct": 1.45
+      "etf": "IBB",
+      "last": 173.44,
+      "changePct": 1.17
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 82.51,
-      "changePct": -2.19
+      "last": 84.36,
+      "changePct": -3.3
     },
     {
-      "etf": "XLE",
-      "last": 53.77,
-      "changePct": -1.65
+      "etf": "XLC",
+      "last": 109.2,
+      "changePct": -2.78
     },
     {
-      "etf": "XLF",
-      "last": 53.57,
-      "changePct": -0.89
+      "etf": "XLRE",
+      "last": 43.97,
+      "changePct": -2.51
     }
   ],
   "gainers": [
@@ -108,20 +108,20 @@
       "changePct": -12.61
     }
   ],
-  "narrative": "早盤如預期呈現風險偏好，SPY上漲0.78%，VIX小幅波動至16.78。科技股強勢領漲，SMH飆升5.76%，XLK漲3.04%，顯示晶片與軟體買盤湧入。台灣權值股2344.TW領漲，1個月漲幅91.67%，加速度3.48倍，反映AI伺服器需求強勁。意外亮點為BFLY飆漲55.87%，QS、WOLF等電池與新能源股強勢，暗示ESG主題復甦。傳統能源XLE跌1.65%，金融XLF小幅下滑，資金明顯輪動至科技成長股。下午關注大型科技股能否延續漲勢，及Fed政策預期變化。",
-  "headline": "科技領漲帶動大盤走揚，半導體與台股權值股成焦點",
-  "regime": "risk-on",
+  "narrative": "今日呈現典型的選擇性反彈格局。儘管SPY下跌1.25%，但半導體(SMH +1.29%)、航太防務(XAR +1.34%)、生技(IBB +1.17%)等成長型科技板塊逆勢上揚，顯示資金從防守性資產流向高成長標的。VIX下跌9%至16.78反映風險情緒改善。然而大盤跌幅擴大暗示廣泛賣壓未歇——金融(ACN -17.97%)、地產(XLRE -2.51%)、通訊(XLC -2.78%)領跌。台灣晶圓代工股(2344、2327)強勢領先全球，暗示科技族群仍具支撐。收盤前關注成長股能否守住漲幅，以及大盤是否測試日低。",
+  "headline": "科技反彈掩蓋廣泛賣壓，VIX回落暗示風險偏好回溫",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "SMH",
       "XLK",
-      "XLY"
+      "IBB",
+      "XAR"
     ],
     "outOf": [
-      "XLE",
-      "XLF",
-      "GDX"
+      "XLC",
+      "XLRE",
+      "XLF"
     ]
   },
-  "tomorrowWatch": "監控科技股漲幅可持續性，及台股2344.TW加速度能否維持超過3倍水位"
+  "tomorrowWatch": "留意科技反彈是否可持續，或僅為技術性反彈——VIX走勢與成長股相對強度為關鍵判斷依據"
 }
