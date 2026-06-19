@@ -1,26 +1,23 @@
 {
-  "generatedAt": 1781819386483,
+  "generatedAt": 1781886676160,
   "market": "US",
-  "scanAt": "2026-06-18T21:41:46.958Z",
-  "session": "POST-CLOSE (market closed)",
-  "sessionShort": "post-close",
-  "watchLabel": "明日關注",
+  "scanAt": "2026-06-19T16:23:07.907Z",
+  "session": "MORNING SESSION (post-open, first 3.5 hours)",
+  "sessionShort": "morning",
+  "watchLabel": "下午盤關注",
   "macros": {
     "spy": {
       "last": 746.74,
       "changePct": 0.78
     },
     "vix": {
-      "last": 16.4,
-      "changePct": -11.06
+      "last": 16.78,
+      "changePct": 2.32
     },
-    "tnx": {
-      "last": 4.45,
-      "changePct": -0.8
-    },
+    "tnx": null,
     "dxy": {
-      "last": 100.79,
-      "changePct": 0.7
+      "last": 100.82,
+      "changePct": -0.03
     }
   },
   "sectorLeaders": [
@@ -91,14 +88,14 @@
       "changePct": -18.96
     },
     {
-      "symbol": "LEGN",
-      "name": "Legend Biotech Corporation",
-      "changePct": -16.68
-    },
-    {
       "symbol": "ACN",
       "name": "Accenture plc",
       "changePct": -17.97
+    },
+    {
+      "symbol": "LEGN",
+      "name": "Legend Biotech Corporation",
+      "changePct": -16.68
     },
     {
       "symbol": "TNGX",
@@ -111,20 +108,20 @@
       "changePct": -12.61
     }
   ],
-  "narrative": "今日市場呈現明顯風險偏好，SPY上漲0.78%，VIX大跌11.06%至16.4，反映避險情緒消退。10年期公債殖利率下降0.8%至4.45%，顯示資金流向成長資產。半導體(SMH +5.76%)與科技(XLK +3.04%)領漲，BFLY暴漲55.87%、WDC與STX強勢上揚，展現芯片周期反彈。能源(XLE -1.65%)與貴金屬(GDX -2.19%)承壓。ACN等軟體股遭拋售，惟整體科技仍為主流。美元走強(DXY +0.7%)與殖利率下行並行，暗示成長預期升溫。",
-  "headline": "科技領漲帶動風險偏好，半導體、軟體強勢上揚",
-  "regime": "risk-on",
+  "narrative": "早盤SPY漲0.78%符合預期，科技類(SMH +5.76%、XLK +3.04%)強勢領漲，半導體個股BFLY暴漲55.87%、QS漲16.52%成最大驚喜。金融(XLF -0.89%)與能源(XLE -1.65%)承壓，呈現明顯的科技轉向周期股輪動。VIX微升2.32%至16.78反映風險情緒穩定。ACN跌17.97%與EPAM跌12.61%顯示軟體/IT服務承壓，與硬體芯片強勢形成對比。WDC與STX等儲存芯片股動能強勁(RS 97-98)，預示半導體周期反彈延續。",
+  "headline": "科技領漲帶動大盤微幅上揚，晶片股表現亮眼",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "SMH",
       "XLK",
+      "SMH",
       "XLY"
     ],
     "outOf": [
       "XLE",
-      "GDX",
-      "XLF"
+      "XLF",
+      "GDX"
     ]
   },
-  "tomorrowWatch": "留意科技股能否延續漲勢，關鍵觀察10年殖利率與半導體股的後續動能是否持續。"
+  "tomorrowWatch": "留意科技股動能能否持續，及軟體個股(ACN、EPAM)是否觸底反彈"
 }
