@@ -1,21 +1,21 @@
 {
-  "computedAt": 1781345931101,
-  "universeSize": 1083,
+  "computedAt": 1781951076044,
+  "universeSize": 1082,
   "signal": "rs_leader",
-  "labVerdict": "✓ 找到 3 個「贏過 SPY 且 DSR≥0.90」的配置：基準 8%停損/15%目標、10% 移動停損(讓利潤奔跑)、跌破 20日均線出場。最穩健的是「跌破 20日均線出場」(DSR 1.0, CAGR 24.16% vs SPY 14.46%)。 注意：這仍是樣本內、且有倖存者偏差 → 下一步該樣本外驗證。",
+  "labVerdict": "✓ 找到 2 個「贏過 SPY 且 DSR≥0.90」的配置：基準 8%停損/15%目標、跌破 20日均線出場。最穩健的是「跌破 20日均線出場」(DSR 0.9999, CAGR 21.68% vs SPY 14.49%)。 注意：這仍是樣本內、且有倖存者偏差 → 下一步該樣本外驗證。",
   "anyTradeable": true,
   "variants": [
     {
       "name": "baseline",
       "label": "基準 8%停損/15%目標",
-      "nTrades": 8274,
-      "winRate": 0.3982,
-      "expectancyPct": 0.878,
-      "profitFactor": 1.18,
-      "annSharpe": 1.57,
-      "dsr": 0.9998,
-      "cagr": 16.56,
-      "maxDrawdownPct": -50.7,
+      "nTrades": 8284,
+      "winRate": 0.3969,
+      "expectancyPct": 0.86,
+      "profitFactor": 1.17,
+      "annSharpe": 1.59,
+      "dsr": 0.9999,
+      "cagr": 17.01,
+      "maxDrawdownPct": -50.8,
       "beatsSPY": true,
       "robust": true,
       "tradeable": true
@@ -23,14 +23,14 @@
     {
       "name": "wider",
       "label": "寬 12%停損/30%目標",
-      "nTrades": 5197,
-      "winRate": 0.3966,
-      "expectancyPct": 2.903,
-      "profitFactor": 1.39,
-      "annSharpe": 1.6,
-      "dsr": 0.9998,
-      "cagr": 10.72,
-      "maxDrawdownPct": -56.2,
+      "nTrades": 5194,
+      "winRate": 0.3937,
+      "expectancyPct": 2.843,
+      "profitFactor": 1.38,
+      "annSharpe": 1.37,
+      "dsr": 0.9969,
+      "cagr": 9.47,
+      "maxDrawdownPct": -56.4,
       "beatsSPY": false,
       "robust": true,
       "tradeable": false
@@ -38,29 +38,29 @@
     {
       "name": "trail10",
       "label": "10% 移動停損(讓利潤奔跑)",
-      "nTrades": 7899,
-      "winRate": 0.3795,
-      "expectancyPct": 1.012,
+      "nTrades": 7895,
+      "winRate": 0.3794,
+      "expectancyPct": 1.0,
       "profitFactor": 1.25,
-      "annSharpe": 1.44,
-      "dsr": 0.9972,
-      "cagr": 14.75,
-      "maxDrawdownPct": -48.4,
-      "beatsSPY": true,
+      "annSharpe": 1.3,
+      "dsr": 0.99,
+      "cagr": 13.46,
+      "maxDrawdownPct": -48.5,
+      "beatsSPY": false,
       "robust": true,
-      "tradeable": true
+      "tradeable": false
     },
     {
       "name": "trail15",
       "label": "15% 移動停損",
-      "nTrades": 5333,
-      "winRate": 0.4018,
-      "expectancyPct": 2.607,
-      "profitFactor": 1.46,
-      "annSharpe": 0.83,
-      "dsr": 0.8062,
-      "cagr": 5.68,
-      "maxDrawdownPct": -68.6,
+      "nTrades": 5320,
+      "winRate": 0.4004,
+      "expectancyPct": 2.581,
+      "profitFactor": 1.45,
+      "annSharpe": 0.59,
+      "dsr": 0.5391,
+      "cagr": 4.13,
+      "maxDrawdownPct": -68.8,
       "beatsSPY": false,
       "robust": false,
       "tradeable": false
@@ -68,13 +68,13 @@
     {
       "name": "ma_exit",
       "label": "跌破 20日均線出場",
-      "nTrades": 9432,
-      "winRate": 0.3567,
-      "expectancyPct": 0.915,
-      "profitFactor": 1.33,
-      "annSharpe": 2.54,
-      "dsr": 1.0,
-      "cagr": 24.16,
+      "nTrades": 9426,
+      "winRate": 0.3555,
+      "expectancyPct": 0.868,
+      "profitFactor": 1.31,
+      "annSharpe": 2.19,
+      "dsr": 0.9999,
+      "cagr": 21.68,
       "maxDrawdownPct": -42.0,
       "beatsSPY": true,
       "robust": true,
@@ -83,14 +83,14 @@
     {
       "name": "trail15_regime",
       "label": "15%移動停損 + 僅多頭進場",
-      "nTrades": 4601,
-      "winRate": 0.3945,
-      "expectancyPct": 2.486,
-      "profitFactor": 1.43,
-      "annSharpe": 0.72,
-      "dsr": 0.683,
-      "cagr": 4.5,
-      "maxDrawdownPct": -66.4,
+      "nTrades": 4590,
+      "winRate": 0.3928,
+      "expectancyPct": 2.463,
+      "profitFactor": 1.42,
+      "annSharpe": 0.47,
+      "dsr": 0.3822,
+      "cagr": 3.03,
+      "maxDrawdownPct": -66.6,
       "beatsSPY": false,
       "robust": false,
       "tradeable": false
@@ -112,581 +112,581 @@
       "costBps": 10,
       "rsLookback": 252,
       "rsSkip": 21,
-      "startDate": "2011-06-13",
-      "endDate": "2026-06-12",
+      "startDate": "2011-06-20",
+      "endDate": "2026-06-19",
       "years": 15.0
     },
     "overall": {
-      "nTrades": 8274,
-      "winRate": 0.3982,
-      "avgWinPct": 14.77,
+      "nTrades": 8284,
+      "winRate": 0.3969,
+      "avgWinPct": 14.79,
       "avgLossPct": -8.31,
-      "expectancyPct": 0.878,
-      "expectancyR": 0.11,
-      "profitFactor": 1.18,
-      "annSharpe": 1.57,
+      "expectancyPct": 0.86,
+      "expectancyR": 0.108,
+      "profitFactor": 1.17,
+      "annSharpe": 1.59,
       "psr": 1.0,
-      "dsr": 0.9998,
+      "dsr": 0.9999,
       "dsrTrialsAssumed": 20,
-      "maxDrawdownPct": -50.7,
+      "maxDrawdownPct": -50.8,
       "avgHoldDays": 11,
-      "totalReturnPct": 895.3,
-      "cagr": 16.56,
+      "totalReturnPct": 954.2,
+      "cagr": 17.01,
       "outcomes": {
-        "stop": 4915,
-        "target": 3038,
-        "timeout": 321
+        "stop": 4930,
+        "target": 3041,
+        "timeout": 313
       }
     },
     "monteCarlo": {
-      "finalReturnP5": 208.5,
-      "finalReturnP50": 912.1,
-      "finalReturnP95": 3353.9,
-      "maxDDP5": -47.5,
-      "maxDDP50": -30.8,
-      "maxDDP95": -20.3,
+      "finalReturnP5": 204.0,
+      "finalReturnP50": 889.3,
+      "finalReturnP95": 3111.5,
+      "maxDDP5": -48.5,
+      "maxDDP50": -31.2,
+      "maxDDP95": -20.6,
       "runs": 2000
     },
     "benchmark": {
-      "spyTotalReturnPct": 658.1,
-      "spyCagr": 14.46,
+      "spyTotalReturnPct": 661.4,
+      "spyCagr": 14.49,
       "spyMaxDDPct": -33.7,
-      "excessCagrPct": 2.1
+      "excessCagrPct": 2.51
     },
     "regimeSplit": {
       "uptrend": {
-        "nTrades": 6936,
-        "winRate": 0.3963,
-        "expectancyR": 0.112,
-        "avgRetPct": 0.89
+        "nTrades": 6947,
+        "winRate": 0.3948,
+        "expectancyR": 0.109,
+        "avgRetPct": 0.87
       },
       "downtrend": {
-        "nTrades": 1338,
-        "winRate": 0.4081,
-        "expectancyR": 0.1,
-        "avgRetPct": 0.8
+        "nTrades": 1337,
+        "winRate": 0.4076,
+        "expectancyR": 0.099,
+        "avgRetPct": 0.79
       }
     },
     "calibration": [
       {
         "bucket": "RS 最低20%",
-        "nTrades": 1655,
-        "winRate": 0.4665,
-        "avgR": 0.221
+        "nTrades": 1657,
+        "winRate": 0.4635,
+        "avgR": 0.217
       },
       {
         "bucket": "20-40%",
-        "nTrades": 1655,
-        "winRate": 0.394,
-        "avgR": 0.088
+        "nTrades": 1657,
+        "winRate": 0.3929,
+        "avgR": 0.086
       },
       {
         "bucket": "40-60%",
-        "nTrades": 1654,
-        "winRate": 0.3894,
-        "avgR": 0.118
+        "nTrades": 1656,
+        "winRate": 0.3883,
+        "avgR": 0.116
       },
       {
         "bucket": "60-80%",
-        "nTrades": 1655,
-        "winRate": 0.3837,
-        "avgR": 0.093
+        "nTrades": 1657,
+        "winRate": 0.385,
+        "avgR": 0.099
       },
       {
         "bucket": "RS 最高20%",
-        "nTrades": 1655,
-        "winRate": 0.3577,
-        "avgR": 0.028
+        "nTrades": 1657,
+        "winRate": 0.3549,
+        "avgR": 0.021
       }
     ],
     "equityCurve": [
       {
-        "date": "2011-06-13",
+        "date": "2011-06-20",
         "equity": 1.0
       },
       {
-        "date": "2011-07-27",
+        "date": "2011-08-03",
         "equity": 1.0
       },
       {
-        "date": "2011-09-09",
+        "date": "2011-09-16",
         "equity": 1.0
       },
       {
-        "date": "2011-10-24",
+        "date": "2011-10-31",
         "equity": 1.0
       },
       {
-        "date": "2011-12-07",
+        "date": "2011-12-14",
         "equity": 1.0
       },
       {
-        "date": "2012-01-24",
+        "date": "2012-01-31",
         "equity": 1.0
       },
       {
-        "date": "2012-03-08",
+        "date": "2012-03-15",
         "equity": 1.0
       },
       {
-        "date": "2012-04-23",
+        "date": "2012-04-30",
         "equity": 1.0
       },
       {
-        "date": "2012-06-06",
+        "date": "2012-06-13",
         "equity": 1.0
       },
       {
-        "date": "2012-07-20",
-        "equity": 1.0032
+        "date": "2012-07-27",
+        "equity": 0.9763
       },
       {
-        "date": "2012-09-04",
-        "equity": 1.0616
+        "date": "2012-09-11",
+        "equity": 1.0388
       },
       {
-        "date": "2012-10-17",
-        "equity": 1.0469
+        "date": "2012-10-24",
+        "equity": 1.0159
       },
       {
-        "date": "2012-12-04",
-        "equity": 1.0405
+        "date": "2012-12-11",
+        "equity": 1.0286
       },
       {
-        "date": "2013-01-18",
-        "equity": 1.1307
+        "date": "2013-01-28",
+        "equity": 1.12
       },
       {
-        "date": "2013-03-06",
-        "equity": 1.1907
+        "date": "2013-03-13",
+        "equity": 1.1803
       },
       {
-        "date": "2013-04-19",
-        "equity": 1.2229
+        "date": "2013-04-26",
+        "equity": 1.2217
       },
       {
-        "date": "2013-06-04",
-        "equity": 1.342
+        "date": "2013-06-11",
+        "equity": 1.3137
       },
       {
-        "date": "2013-07-18",
-        "equity": 1.4193
+        "date": "2013-07-25",
+        "equity": 1.4063
       },
       {
-        "date": "2013-08-30",
-        "equity": 1.4896
+        "date": "2013-09-09",
+        "equity": 1.4701
       },
       {
-        "date": "2013-10-15",
-        "equity": 1.5531
+        "date": "2013-10-22",
+        "equity": 1.5295
       },
       {
-        "date": "2013-11-27",
-        "equity": 1.5826
+        "date": "2013-12-05",
+        "equity": 1.554
       },
       {
-        "date": "2014-01-14",
-        "equity": 1.745
+        "date": "2014-01-22",
+        "equity": 1.7029
       },
       {
-        "date": "2014-02-28",
-        "equity": 1.8762
+        "date": "2014-03-07",
+        "equity": 1.8245
       },
       {
-        "date": "2014-04-14",
-        "equity": 1.6968
+        "date": "2014-04-22",
+        "equity": 1.6805
       },
       {
-        "date": "2014-05-29",
-        "equity": 1.7574
+        "date": "2014-06-05",
+        "equity": 1.7272
       },
       {
-        "date": "2014-07-14",
-        "equity": 1.8008
+        "date": "2014-07-21",
+        "equity": 1.7801
       },
       {
-        "date": "2014-08-26",
-        "equity": 1.8376
+        "date": "2014-09-03",
+        "equity": 1.8032
       },
       {
-        "date": "2014-10-09",
-        "equity": 1.6757
+        "date": "2014-10-16",
+        "equity": 1.6318
       },
       {
-        "date": "2014-11-21",
-        "equity": 1.8214
+        "date": "2014-12-01",
+        "equity": 1.7997
       },
       {
-        "date": "2015-01-08",
-        "equity": 1.8998
+        "date": "2015-01-15",
+        "equity": 1.8731
       },
       {
-        "date": "2015-02-24",
-        "equity": 1.985
+        "date": "2015-03-03",
+        "equity": 1.9631
       },
       {
-        "date": "2015-04-09",
-        "equity": 2.0304
+        "date": "2015-04-16",
+        "equity": 1.9932
       },
       {
-        "date": "2015-05-22",
-        "equity": 2.0369
+        "date": "2015-06-01",
+        "equity": 2.018
       },
       {
-        "date": "2015-07-08",
-        "equity": 2.0542
+        "date": "2015-07-15",
+        "equity": 2.0416
       },
       {
-        "date": "2015-08-20",
-        "equity": 1.8031
+        "date": "2015-08-27",
+        "equity": 1.6927
       },
       {
-        "date": "2015-10-05",
-        "equity": 1.709
+        "date": "2015-10-12",
+        "equity": 1.6735
       },
       {
-        "date": "2015-11-17",
-        "equity": 1.7354
+        "date": "2015-11-24",
+        "equity": 1.7019
       },
       {
-        "date": "2016-01-04",
-        "equity": 1.6022
+        "date": "2016-01-11",
+        "equity": 1.5218
       },
       {
-        "date": "2016-02-18",
-        "equity": 1.4912
+        "date": "2016-02-25",
+        "equity": 1.484
       },
       {
-        "date": "2016-04-04",
-        "equity": 1.5837
+        "date": "2016-04-11",
+        "equity": 1.5568
       },
       {
-        "date": "2016-05-17",
-        "equity": 1.5777
+        "date": "2016-05-24",
+        "equity": 1.5418
       },
       {
-        "date": "2016-06-30",
-        "equity": 1.7192
+        "date": "2016-07-08",
+        "equity": 1.7055
       },
       {
-        "date": "2016-08-15",
-        "equity": 1.7883
+        "date": "2016-08-22",
+        "equity": 1.7248
       },
       {
-        "date": "2016-09-28",
-        "equity": 1.7106
+        "date": "2016-10-05",
+        "equity": 1.6617
       },
       {
-        "date": "2016-11-10",
-        "equity": 1.6637
+        "date": "2016-11-17",
+        "equity": 1.6497
       },
       {
-        "date": "2016-12-27",
-        "equity": 1.6731
+        "date": "2017-01-04",
+        "equity": 1.6442
       },
       {
-        "date": "2017-02-10",
-        "equity": 1.7701
+        "date": "2017-02-17",
+        "equity": 1.7263
       },
       {
-        "date": "2017-03-28",
-        "equity": 1.7135
+        "date": "2017-04-04",
+        "equity": 1.6748
       },
       {
-        "date": "2017-05-11",
-        "equity": 1.7864
+        "date": "2017-05-18",
+        "equity": 1.7605
       },
       {
-        "date": "2017-06-26",
-        "equity": 1.8708
+        "date": "2017-07-03",
+        "equity": 1.8217
       },
       {
-        "date": "2017-08-09",
-        "equity": 1.794
+        "date": "2017-08-16",
+        "equity": 1.753
       },
       {
-        "date": "2017-09-22",
-        "equity": 1.8471
+        "date": "2017-09-29",
+        "equity": 1.8307
       },
       {
-        "date": "2017-11-06",
-        "equity": 1.8337
+        "date": "2017-11-13",
+        "equity": 1.8089
       },
       {
-        "date": "2017-12-20",
-        "equity": 1.8966
+        "date": "2017-12-28",
+        "equity": 1.8928
       },
       {
-        "date": "2018-02-06",
-        "equity": 1.9038
+        "date": "2018-02-13",
+        "equity": 1.9234
       },
       {
-        "date": "2018-03-22",
-        "equity": 2.165
+        "date": "2018-03-29",
+        "equity": 2.0862
       },
       {
-        "date": "2018-05-07",
-        "equity": 2.2271
+        "date": "2018-05-14",
+        "equity": 2.229
       },
       {
-        "date": "2018-06-20",
-        "equity": 2.5021
+        "date": "2018-06-27",
+        "equity": 2.3577
       },
       {
-        "date": "2018-08-03",
-        "equity": 2.3942
+        "date": "2018-08-10",
+        "equity": 2.3836
       },
       {
-        "date": "2018-09-18",
-        "equity": 2.5096
+        "date": "2018-09-25",
+        "equity": 2.3846
       },
       {
-        "date": "2018-10-31",
-        "equity": 2.0943
+        "date": "2018-11-07",
+        "equity": 2.0118
       },
       {
-        "date": "2018-12-17",
-        "equity": 1.9414
+        "date": "2018-12-24",
+        "equity": 1.8156
       },
       {
-        "date": "2019-02-01",
-        "equity": 2.1136
+        "date": "2019-02-08",
+        "equity": 2.0541
       },
       {
-        "date": "2019-03-19",
-        "equity": 2.1968
+        "date": "2019-03-26",
+        "equity": 2.1014
       },
       {
-        "date": "2019-05-02",
-        "equity": 2.2433
+        "date": "2019-05-09",
+        "equity": 2.183
       },
       {
-        "date": "2019-06-17",
-        "equity": 2.4406
+        "date": "2019-06-24",
+        "equity": 2.3533
       },
       {
-        "date": "2019-07-31",
-        "equity": 2.5021
+        "date": "2019-08-07",
+        "equity": 2.3972
       },
       {
-        "date": "2019-09-13",
-        "equity": 2.3944
+        "date": "2019-09-20",
+        "equity": 2.2878
       },
       {
-        "date": "2019-10-28",
-        "equity": 2.3647
+        "date": "2019-11-04",
+        "equity": 2.2879
       },
       {
-        "date": "2019-12-11",
-        "equity": 2.5783
+        "date": "2019-12-18",
+        "equity": 2.5532
       },
       {
-        "date": "2020-01-28",
-        "equity": 2.7828
+        "date": "2020-02-04",
+        "equity": 2.7475
       },
       {
-        "date": "2020-03-12",
-        "equity": 2.103
+        "date": "2020-03-19",
+        "equity": 1.9758
       },
       {
-        "date": "2020-04-27",
-        "equity": 2.3671
+        "date": "2020-05-04",
+        "equity": 2.2395
       },
       {
-        "date": "2020-06-10",
-        "equity": 2.4773
+        "date": "2020-06-17",
+        "equity": 2.46
       },
       {
-        "date": "2020-07-24",
-        "equity": 3.033
+        "date": "2020-07-31",
+        "equity": 2.9456
       },
       {
-        "date": "2020-09-08",
-        "equity": 3.277
+        "date": "2020-09-15",
+        "equity": 3.1964
       },
       {
-        "date": "2020-10-21",
-        "equity": 3.7015
+        "date": "2020-10-28",
+        "equity": 3.5052
       },
       {
-        "date": "2020-12-04",
-        "equity": 4.8338
+        "date": "2020-12-11",
+        "equity": 4.7451
       },
       {
-        "date": "2021-01-21",
-        "equity": 5.8563
+        "date": "2021-01-28",
+        "equity": 5.7967
       },
       {
-        "date": "2021-03-08",
-        "equity": 5.8276
+        "date": "2021-03-15",
+        "equity": 6.0615
       },
       {
-        "date": "2021-04-21",
-        "equity": 5.3684
+        "date": "2021-04-28",
+        "equity": 5.2736
       },
       {
-        "date": "2021-06-04",
-        "equity": 5.7703
+        "date": "2021-06-11",
+        "equity": 5.5725
       },
       {
-        "date": "2021-07-20",
-        "equity": 5.1166
+        "date": "2021-07-27",
+        "equity": 4.925
       },
       {
-        "date": "2021-09-01",
-        "equity": 5.4431
+        "date": "2021-09-09",
+        "equity": 5.2037
       },
       {
-        "date": "2021-10-15",
-        "equity": 5.7665
+        "date": "2021-10-22",
+        "equity": 5.6428
       },
       {
-        "date": "2021-11-30",
-        "equity": 5.2495
+        "date": "2021-12-07",
+        "equity": 4.8314
       },
       {
-        "date": "2022-01-13",
-        "equity": 4.6923
+        "date": "2022-01-21",
+        "equity": 4.3379
       },
       {
-        "date": "2022-03-01",
-        "equity": 4.6996
+        "date": "2022-03-08",
+        "equity": 4.6233
       },
       {
-        "date": "2022-04-13",
-        "equity": 5.0958
+        "date": "2022-04-21",
+        "equity": 4.7364
       },
       {
-        "date": "2022-05-27",
-        "equity": 4.5777
+        "date": "2022-06-06",
+        "equity": 4.4332
       },
       {
-        "date": "2022-07-14",
-        "equity": 4.3471
+        "date": "2022-07-21",
+        "equity": 4.2507
       },
       {
-        "date": "2022-08-26",
-        "equity": 4.6851
+        "date": "2022-09-02",
+        "equity": 4.4367
       },
       {
-        "date": "2022-10-11",
-        "equity": 4.2556
+        "date": "2022-10-18",
+        "equity": 4.2002
       },
       {
-        "date": "2022-11-23",
-        "equity": 4.4843
+        "date": "2022-12-01",
+        "equity": 4.2644
       },
       {
-        "date": "2023-01-10",
-        "equity": 4.4004
+        "date": "2023-01-18",
+        "equity": 4.2683
       },
       {
-        "date": "2023-02-24",
-        "equity": 4.0484
+        "date": "2023-03-03",
+        "equity": 3.8689
       },
       {
-        "date": "2023-04-11",
-        "equity": 3.6447
+        "date": "2023-04-18",
+        "equity": 3.468
       },
       {
-        "date": "2023-05-24",
-        "equity": 3.6606
+        "date": "2023-06-01",
+        "equity": 3.6142
       },
       {
-        "date": "2023-07-11",
-        "equity": 3.8576
+        "date": "2023-07-18",
+        "equity": 3.789
       },
       {
-        "date": "2023-08-23",
-        "equity": 3.6329
+        "date": "2023-08-30",
+        "equity": 3.4848
       },
       {
-        "date": "2023-10-06",
-        "equity": 3.4036
+        "date": "2023-10-13",
+        "equity": 3.286
       },
       {
-        "date": "2023-11-20",
-        "equity": 3.6519
+        "date": "2023-11-28",
+        "equity": 3.583
       },
       {
-        "date": "2024-01-05",
-        "equity": 4.0992
+        "date": "2024-01-12",
+        "equity": 3.8002
       },
       {
-        "date": "2024-02-21",
-        "equity": 4.4899
+        "date": "2024-02-28",
+        "equity": 4.4311
       },
       {
-        "date": "2024-04-05",
-        "equity": 4.4794
+        "date": "2024-04-12",
+        "equity": 4.2295
       },
       {
-        "date": "2024-05-20",
-        "equity": 4.8482
+        "date": "2024-05-28",
+        "equity": 4.6092
       },
       {
-        "date": "2024-07-05",
-        "equity": 4.597
+        "date": "2024-07-12",
+        "equity": 4.5109
       },
       {
-        "date": "2024-08-19",
-        "equity": 4.0678
+        "date": "2024-08-26",
+        "equity": 3.853
       },
       {
-        "date": "2024-10-02",
-        "equity": 4.2236
+        "date": "2024-10-09",
+        "equity": 4.1451
       },
       {
-        "date": "2024-11-14",
-        "equity": 5.0207
+        "date": "2024-11-21",
+        "equity": 4.8971
       },
       {
-        "date": "2024-12-31",
-        "equity": 5.2032
+        "date": "2025-01-08",
+        "equity": 4.9952
       },
       {
-        "date": "2025-02-18",
-        "equity": 5.9542
+        "date": "2025-02-25",
+        "equity": 5.1106
       },
       {
-        "date": "2025-04-02",
-        "equity": 4.3397
+        "date": "2025-04-09",
+        "equity": 3.8101
       },
       {
-        "date": "2025-05-16",
-        "equity": 4.2876
+        "date": "2025-05-23",
+        "equity": 4.3396
       },
       {
-        "date": "2025-07-02",
-        "equity": 4.5688
+        "date": "2025-07-10",
+        "equity": 4.5675
       },
       {
-        "date": "2025-08-15",
-        "equity": 4.3523
+        "date": "2025-08-22",
+        "equity": 4.2332
       },
       {
-        "date": "2025-09-30",
-        "equity": 5.4485
+        "date": "2025-10-07",
+        "equity": 5.7637
       },
       {
-        "date": "2025-11-12",
-        "equity": 5.8585
+        "date": "2025-11-19",
+        "equity": 5.7996
       },
       {
-        "date": "2025-12-29",
-        "equity": 6.5793
+        "date": "2026-01-06",
+        "equity": 6.4139
       },
       {
-        "date": "2026-02-12",
-        "equity": 7.5776
+        "date": "2026-02-20",
+        "equity": 7.3739
       },
       {
-        "date": "2026-03-30",
-        "equity": 7.7205
+        "date": "2026-04-07",
+        "equity": 7.9738
       },
       {
-        "date": "2026-05-13",
-        "equity": 10.6633
+        "date": "2026-05-20",
+        "equity": 9.7414
       }
     ],
     "caveats": [
@@ -696,7 +696,7 @@
       "無真實滑價 / 借券 / 流動性衝擊建模。",
       "Sharpe 用等權「有部位才投入」的日報酬曲線，空手日報酬為 0（現金拖累）。"
     ],
-    "verdict": "勝率 39.8%、每筆期望 0.88%（0.11R）。 Deflated Sharpe 1.00 —— 扣多重測試偏差後仍顯著，是這份報告裡少見的好兆頭。 年化 16.6% vs SPY 14.5%，有超額報酬。 空頭環境期望值（0.10R）明顯低於多頭（0.11R）—— regime 過濾是關鍵。",
+    "verdict": "勝率 39.7%、每筆期望 0.86%（0.11R）。 Deflated Sharpe 1.00 —— 扣多重測試偏差後仍顯著，是這份報告裡少見的好兆頭。 年化 17.0% vs SPY 14.5%，有超額報酬。 空頭環境期望值（0.10R）明顯低於多頭（0.11R）—— regime 過濾是關鍵。",
     "label": "基準 8%停損/15%目標"
   },
   "best": {
@@ -714,581 +714,580 @@
       "costBps": 10,
       "rsLookback": 252,
       "rsSkip": 21,
-      "startDate": "2011-06-13",
-      "endDate": "2026-06-12",
+      "startDate": "2011-06-20",
+      "endDate": "2026-06-19",
       "years": 15.0
     },
     "overall": {
-      "nTrades": 9432,
-      "winRate": 0.3567,
-      "avgWinPct": 10.33,
-      "avgLossPct": -4.3,
-      "expectancyPct": 0.915,
-      "expectancyR": 0.061,
-      "profitFactor": 1.33,
-      "annSharpe": 2.54,
+      "nTrades": 9426,
+      "winRate": 0.3555,
+      "avgWinPct": 10.27,
+      "avgLossPct": -4.32,
+      "expectancyPct": 0.868,
+      "expectancyR": 0.058,
+      "profitFactor": 1.31,
+      "annSharpe": 2.19,
       "psr": 1.0,
-      "dsr": 1.0,
+      "dsr": 0.9999,
       "dsrTrialsAssumed": 20,
       "maxDrawdownPct": -42.0,
       "avgHoldDays": 6,
-      "totalReturnPct": 2467.8,
-      "cagr": 24.16,
+      "totalReturnPct": 1797.7,
+      "cagr": 21.68,
       "outcomes": {
-        "ma": 9128,
-        "stop": 299,
-        "timeout": 5
+        "ma": 9123,
+        "stop": 303
       }
     },
     "monteCarlo": {
-      "finalReturnP5": 911.3,
-      "finalReturnP50": 2499.8,
-      "finalReturnP95": 6086.4,
-      "maxDDP5": -33.6,
-      "maxDDP50": -21.6,
-      "maxDDP95": -14.7,
+      "finalReturnP5": 740.0,
+      "finalReturnP50": 2057.1,
+      "finalReturnP95": 5327.1,
+      "maxDDP5": -35.0,
+      "maxDDP50": -22.4,
+      "maxDDP95": -15.3,
       "runs": 2000
     },
     "benchmark": {
-      "spyTotalReturnPct": 658.1,
-      "spyCagr": 14.46,
+      "spyTotalReturnPct": 661.4,
+      "spyCagr": 14.49,
       "spyMaxDDPct": -33.7,
-      "excessCagrPct": 9.7
+      "excessCagrPct": 7.19
     },
     "regimeSplit": {
       "uptrend": {
-        "nTrades": 7924,
-        "winRate": 0.354,
-        "expectancyR": 0.057,
-        "avgRetPct": 0.86
+        "nTrades": 7919,
+        "winRate": 0.3527,
+        "expectancyR": 0.055,
+        "avgRetPct": 0.83
       },
       "downtrend": {
-        "nTrades": 1508,
-        "winRate": 0.3707,
-        "expectancyR": 0.08,
-        "avgRetPct": 1.2
+        "nTrades": 1507,
+        "winRate": 0.3703,
+        "expectancyR": 0.072,
+        "avgRetPct": 1.08
       }
     },
     "calibration": [
       {
         "bucket": "RS 最低20%",
-        "nTrades": 1887,
-        "winRate": 0.3953,
-        "avgR": 0.052
+        "nTrades": 1886,
+        "winRate": 0.3902,
+        "avgR": 0.05
       },
       {
         "bucket": "20-40%",
-        "nTrades": 1886,
-        "winRate": 0.3531,
-        "avgR": 0.047
+        "nTrades": 1885,
+        "winRate": 0.3544,
+        "avgR": 0.049
       },
       {
         "bucket": "40-60%",
-        "nTrades": 1886,
-        "winRate": 0.3484,
+        "nTrades": 1885,
+        "winRate": 0.348,
         "avgR": 0.058
       },
       {
         "bucket": "60-80%",
-        "nTrades": 1886,
-        "winRate": 0.3664,
-        "avgR": 0.067
+        "nTrades": 1885,
+        "winRate": 0.3671,
+        "avgR": 0.071
       },
       {
         "bucket": "RS 最高20%",
-        "nTrades": 1887,
-        "winRate": 0.3201,
-        "avgR": 0.081
+        "nTrades": 1885,
+        "winRate": 0.3178,
+        "avgR": 0.062
       }
     ],
     "equityCurve": [
       {
-        "date": "2011-06-13",
+        "date": "2011-06-20",
         "equity": 1.0
       },
       {
-        "date": "2011-07-27",
+        "date": "2011-08-03",
         "equity": 1.0
       },
       {
-        "date": "2011-09-09",
+        "date": "2011-09-16",
         "equity": 1.0
       },
       {
-        "date": "2011-10-24",
+        "date": "2011-10-31",
         "equity": 1.0
       },
       {
-        "date": "2011-12-07",
+        "date": "2011-12-14",
         "equity": 1.0
       },
       {
-        "date": "2012-01-24",
+        "date": "2012-01-31",
         "equity": 1.0
       },
       {
-        "date": "2012-03-08",
+        "date": "2012-03-15",
         "equity": 1.0
       },
       {
-        "date": "2012-04-23",
+        "date": "2012-04-30",
         "equity": 1.0
       },
       {
-        "date": "2012-06-06",
+        "date": "2012-06-13",
         "equity": 1.0
       },
       {
-        "date": "2012-07-20",
-        "equity": 0.9978
+        "date": "2012-07-27",
+        "equity": 0.9591
       },
       {
-        "date": "2012-09-04",
-        "equity": 1.0559
+        "date": "2012-09-11",
+        "equity": 1.0258
       },
       {
-        "date": "2012-10-17",
-        "equity": 1.1164
+        "date": "2012-10-24",
+        "equity": 1.0675
       },
       {
-        "date": "2012-12-04",
-        "equity": 1.055
+        "date": "2012-12-11",
+        "equity": 1.0049
       },
       {
-        "date": "2013-01-18",
-        "equity": 1.0996
+        "date": "2013-01-28",
+        "equity": 1.0696
       },
       {
-        "date": "2013-03-06",
-        "equity": 1.2052
+        "date": "2013-03-13",
+        "equity": 1.1664
       },
       {
-        "date": "2013-04-19",
-        "equity": 1.2558
+        "date": "2013-04-26",
+        "equity": 1.2116
       },
       {
-        "date": "2013-06-04",
-        "equity": 1.3711
+        "date": "2013-06-11",
+        "equity": 1.3349
       },
       {
-        "date": "2013-07-18",
-        "equity": 1.4671
+        "date": "2013-07-25",
+        "equity": 1.4263
       },
       {
-        "date": "2013-08-30",
-        "equity": 1.5864
+        "date": "2013-09-09",
+        "equity": 1.5433
       },
       {
-        "date": "2013-10-15",
-        "equity": 1.7316
+        "date": "2013-10-22",
+        "equity": 1.6636
       },
       {
-        "date": "2013-11-27",
-        "equity": 1.7186
+        "date": "2013-12-05",
+        "equity": 1.6543
       },
       {
-        "date": "2014-01-14",
-        "equity": 1.8705
+        "date": "2014-01-22",
+        "equity": 1.8187
       },
       {
-        "date": "2014-02-28",
-        "equity": 2.0515
+        "date": "2014-03-07",
+        "equity": 2.0118
       },
       {
-        "date": "2014-04-14",
-        "equity": 2.17
+        "date": "2014-04-22",
+        "equity": 2.077
       },
       {
-        "date": "2014-05-29",
-        "equity": 2.0988
+        "date": "2014-06-05",
+        "equity": 2.0251
       },
       {
-        "date": "2014-07-14",
-        "equity": 2.1887
+        "date": "2014-07-21",
+        "equity": 2.1297
       },
       {
-        "date": "2014-08-26",
-        "equity": 2.3269
+        "date": "2014-09-03",
+        "equity": 2.2421
       },
       {
-        "date": "2014-10-09",
-        "equity": 2.3592
+        "date": "2014-10-16",
+        "equity": 2.2548
       },
       {
-        "date": "2014-11-21",
-        "equity": 2.4473
+        "date": "2014-12-01",
+        "equity": 2.383
       },
       {
-        "date": "2015-01-08",
-        "equity": 2.6766
+        "date": "2015-01-15",
+        "equity": 2.5568
       },
       {
-        "date": "2015-02-24",
-        "equity": 2.7774
+        "date": "2015-03-03",
+        "equity": 2.6785
       },
       {
-        "date": "2015-04-09",
-        "equity": 2.9574
+        "date": "2015-04-16",
+        "equity": 2.8552
       },
       {
-        "date": "2015-05-22",
-        "equity": 2.8573
+        "date": "2015-06-01",
+        "equity": 2.7687
       },
       {
-        "date": "2015-07-08",
-        "equity": 2.9898
+        "date": "2015-07-15",
+        "equity": 2.8951
       },
       {
-        "date": "2015-08-20",
-        "equity": 2.8477
+        "date": "2015-08-27",
+        "equity": 2.6919
       },
       {
-        "date": "2015-10-05",
-        "equity": 2.615
+        "date": "2015-10-12",
+        "equity": 2.5087
       },
       {
-        "date": "2015-11-17",
-        "equity": 2.6896
+        "date": "2015-11-24",
+        "equity": 2.6078
       },
       {
-        "date": "2016-01-04",
-        "equity": 2.6132
+        "date": "2016-01-11",
+        "equity": 2.424
       },
       {
-        "date": "2016-02-18",
-        "equity": 2.4345
+        "date": "2016-02-25",
+        "equity": 2.3557
       },
       {
-        "date": "2016-04-04",
-        "equity": 2.5459
+        "date": "2016-04-11",
+        "equity": 2.4528
       },
       {
-        "date": "2016-05-17",
-        "equity": 2.6202
+        "date": "2016-05-24",
+        "equity": 2.5101
       },
       {
-        "date": "2016-06-30",
-        "equity": 2.8424
+        "date": "2016-07-08",
+        "equity": 2.7792
       },
       {
-        "date": "2016-08-15",
-        "equity": 3.1428
+        "date": "2016-08-22",
+        "equity": 3.0556
       },
       {
-        "date": "2016-09-28",
-        "equity": 3.2271
+        "date": "2016-10-05",
+        "equity": 3.0746
       },
       {
-        "date": "2016-11-10",
-        "equity": 3.076
+        "date": "2016-11-17",
+        "equity": 2.9508
       },
       {
-        "date": "2016-12-27",
-        "equity": 3.143
+        "date": "2017-01-04",
+        "equity": 3.0429
       },
       {
-        "date": "2017-02-10",
-        "equity": 3.3112
+        "date": "2017-02-17",
+        "equity": 3.1951
       },
       {
-        "date": "2017-03-28",
-        "equity": 3.2937
+        "date": "2017-04-04",
+        "equity": 3.1612
       },
       {
-        "date": "2017-05-11",
-        "equity": 3.3578
+        "date": "2017-05-18",
+        "equity": 3.2641
       },
       {
-        "date": "2017-06-26",
-        "equity": 3.6464
+        "date": "2017-07-03",
+        "equity": 3.4851
       },
       {
-        "date": "2017-08-09",
-        "equity": 3.5084
+        "date": "2017-08-16",
+        "equity": 3.3311
       },
       {
-        "date": "2017-09-22",
-        "equity": 3.5526
+        "date": "2017-09-29",
+        "equity": 3.4885
       },
       {
-        "date": "2017-11-06",
-        "equity": 3.5953
+        "date": "2017-11-13",
+        "equity": 3.4496
       },
       {
-        "date": "2017-12-20",
-        "equity": 3.9513
+        "date": "2017-12-28",
+        "equity": 3.9273
       },
       {
-        "date": "2018-02-06",
-        "equity": 4.2713
+        "date": "2018-02-13",
+        "equity": 4.2997
       },
       {
-        "date": "2018-03-22",
-        "equity": 4.5945
+        "date": "2018-03-29",
+        "equity": 4.5704
       },
       {
-        "date": "2018-05-07",
-        "equity": 4.5652
+        "date": "2018-05-14",
+        "equity": 4.5978
       },
       {
-        "date": "2018-06-20",
-        "equity": 5.2428
+        "date": "2018-06-27",
+        "equity": 5.2442
       },
       {
-        "date": "2018-08-03",
-        "equity": 5.2381
+        "date": "2018-08-10",
+        "equity": 5.1334
       },
       {
-        "date": "2018-09-18",
-        "equity": 5.3323
+        "date": "2018-09-25",
+        "equity": 5.3029
       },
       {
-        "date": "2018-10-31",
-        "equity": 4.6285
+        "date": "2018-11-07",
+        "equity": 4.5327
       },
       {
-        "date": "2018-12-17",
-        "equity": 4.2814
+        "date": "2018-12-24",
+        "equity": 4.1573
       },
       {
-        "date": "2019-02-01",
-        "equity": 4.308
+        "date": "2019-02-08",
+        "equity": 4.3058
       },
       {
-        "date": "2019-03-19",
-        "equity": 4.7201
+        "date": "2019-03-26",
+        "equity": 4.6865
       },
       {
-        "date": "2019-05-02",
-        "equity": 4.79
+        "date": "2019-05-09",
+        "equity": 4.7394
       },
       {
-        "date": "2019-06-17",
-        "equity": 5.1098
+        "date": "2019-06-24",
+        "equity": 5.0713
       },
       {
-        "date": "2019-07-31",
-        "equity": 5.4814
+        "date": "2019-08-07",
+        "equity": 5.4657
       },
       {
-        "date": "2019-09-13",
-        "equity": 5.1447
+        "date": "2019-09-20",
+        "equity": 5.0082
       },
       {
-        "date": "2019-10-28",
-        "equity": 4.9235
+        "date": "2019-11-04",
+        "equity": 4.9163
       },
       {
-        "date": "2019-12-11",
-        "equity": 5.5864
+        "date": "2019-12-18",
+        "equity": 5.6667
       },
       {
-        "date": "2020-01-28",
-        "equity": 6.1602
+        "date": "2020-02-04",
+        "equity": 6.1589
       },
       {
-        "date": "2020-03-12",
-        "equity": 5.0892
+        "date": "2020-03-19",
+        "equity": 4.86
       },
       {
-        "date": "2020-04-27",
-        "equity": 4.43
+        "date": "2020-05-04",
+        "equity": 4.4485
       },
       {
-        "date": "2020-06-10",
-        "equity": 5.1766
+        "date": "2020-06-17",
+        "equity": 5.2339
       },
       {
-        "date": "2020-07-24",
-        "equity": 6.3164
+        "date": "2020-07-31",
+        "equity": 6.4976
       },
       {
-        "date": "2020-09-08",
-        "equity": 6.9199
+        "date": "2020-09-15",
+        "equity": 7.0269
       },
       {
-        "date": "2020-10-21",
-        "equity": 7.8707
+        "date": "2020-10-28",
+        "equity": 7.8433
       },
       {
-        "date": "2020-12-04",
-        "equity": 9.735
+        "date": "2020-12-11",
+        "equity": 10.0651
       },
       {
-        "date": "2021-01-21",
-        "equity": 13.3317
+        "date": "2021-01-28",
+        "equity": 13.7491
       },
       {
-        "date": "2021-03-08",
-        "equity": 16.5518
+        "date": "2021-03-15",
+        "equity": 16.4802
       },
       {
-        "date": "2021-04-21",
-        "equity": 14.3813
+        "date": "2021-04-28",
+        "equity": 14.2041
       },
       {
-        "date": "2021-06-04",
-        "equity": 14.4229
+        "date": "2021-06-11",
+        "equity": 14.2644
       },
       {
-        "date": "2021-07-20",
-        "equity": 14.0877
+        "date": "2021-07-27",
+        "equity": 14.0928
       },
       {
-        "date": "2021-09-01",
-        "equity": 14.4868
+        "date": "2021-09-09",
+        "equity": 14.4313
       },
       {
-        "date": "2021-10-15",
-        "equity": 15.7515
+        "date": "2021-10-22",
+        "equity": 15.6245
       },
       {
-        "date": "2021-11-30",
-        "equity": 16.6271
+        "date": "2021-12-07",
+        "equity": 15.1367
       },
       {
-        "date": "2022-01-13",
-        "equity": 13.3235
+        "date": "2022-01-21",
+        "equity": 12.9879
       },
       {
-        "date": "2022-03-01",
-        "equity": 13.0126
+        "date": "2022-03-08",
+        "equity": 12.7608
       },
       {
-        "date": "2022-04-13",
-        "equity": 13.9549
+        "date": "2022-04-21",
+        "equity": 13.7774
       },
       {
-        "date": "2022-05-27",
-        "equity": 12.368
+        "date": "2022-06-06",
+        "equity": 12.2272
       },
       {
-        "date": "2022-07-14",
-        "equity": 11.4648
+        "date": "2022-07-21",
+        "equity": 11.4607
       },
       {
-        "date": "2022-08-26",
-        "equity": 12.0818
+        "date": "2022-09-02",
+        "equity": 12.0262
       },
       {
-        "date": "2022-10-11",
-        "equity": 9.9017
+        "date": "2022-10-18",
+        "equity": 9.8336
       },
       {
-        "date": "2022-11-23",
-        "equity": 10.4841
+        "date": "2022-12-01",
+        "equity": 10.4392
       },
       {
-        "date": "2023-01-10",
-        "equity": 10.5078
+        "date": "2023-01-18",
+        "equity": 10.412
       },
       {
-        "date": "2023-02-24",
-        "equity": 10.6381
+        "date": "2023-03-03",
+        "equity": 10.4394
       },
       {
-        "date": "2023-04-11",
-        "equity": 10.0578
+        "date": "2023-04-18",
+        "equity": 9.9331
       },
       {
-        "date": "2023-05-24",
-        "equity": 10.9238
+        "date": "2023-06-01",
+        "equity": 10.9289
       },
       {
-        "date": "2023-07-11",
-        "equity": 11.2475
+        "date": "2023-07-18",
+        "equity": 11.2371
       },
       {
-        "date": "2023-08-23",
-        "equity": 11.1865
+        "date": "2023-08-30",
+        "equity": 11.1055
       },
       {
-        "date": "2023-10-06",
-        "equity": 10.9172
+        "date": "2023-10-13",
+        "equity": 10.6134
       },
       {
-        "date": "2023-11-20",
-        "equity": 10.3322
+        "date": "2023-11-28",
+        "equity": 10.2554
       },
       {
-        "date": "2024-01-05",
-        "equity": 11.9972
+        "date": "2024-01-12",
+        "equity": 11.9344
       },
       {
-        "date": "2024-02-21",
-        "equity": 13.5864
+        "date": "2024-02-28",
+        "equity": 13.6705
       },
       {
-        "date": "2024-04-05",
-        "equity": 14.6499
+        "date": "2024-04-12",
+        "equity": 13.8467
       },
       {
-        "date": "2024-05-20",
-        "equity": 13.5378
+        "date": "2024-05-28",
+        "equity": 13.5551
       },
       {
-        "date": "2024-07-05",
-        "equity": 12.945
+        "date": "2024-07-12",
+        "equity": 12.767
       },
       {
-        "date": "2024-08-19",
-        "equity": 12.1913
+        "date": "2024-08-26",
+        "equity": 11.8861
       },
       {
-        "date": "2024-10-02",
-        "equity": 10.9161
+        "date": "2024-10-09",
+        "equity": 10.9883
       },
       {
-        "date": "2024-11-14",
-        "equity": 11.8184
+        "date": "2024-11-21",
+        "equity": 12.0585
       },
       {
-        "date": "2024-12-31",
-        "equity": 13.4836
+        "date": "2025-01-08",
+        "equity": 12.7688
       },
       {
-        "date": "2025-02-18",
-        "equity": 12.4792
+        "date": "2025-02-25",
+        "equity": 12.3323
       },
       {
-        "date": "2025-04-02",
-        "equity": 11.1083
+        "date": "2025-04-09",
+        "equity": 10.9264
       },
       {
-        "date": "2025-05-16",
-        "equity": 11.6403
+        "date": "2025-05-23",
+        "equity": 11.9504
       },
       {
-        "date": "2025-07-02",
-        "equity": 14.163
+        "date": "2025-07-10",
+        "equity": 14.352
       },
       {
-        "date": "2025-08-15",
-        "equity": 14.5285
+        "date": "2025-08-22",
+        "equity": 14.4526
       },
       {
-        "date": "2025-09-30",
-        "equity": 16.3892
+        "date": "2025-10-07",
+        "equity": 17.0475
       },
       {
-        "date": "2025-11-12",
-        "equity": 18.3916
+        "date": "2025-11-19",
+        "equity": 18.3249
       },
       {
-        "date": "2025-12-29",
-        "equity": 19.591
+        "date": "2026-01-06",
+        "equity": 19.7356
       },
       {
-        "date": "2026-02-12",
-        "equity": 21.226
+        "date": "2026-02-20",
+        "equity": 21.2763
       },
       {
-        "date": "2026-03-30",
-        "equity": 19.3787
+        "date": "2026-04-07",
+        "equity": 19.7068
       },
       {
-        "date": "2026-05-13",
-        "equity": 24.142
+        "date": "2026-05-20",
+        "equity": 23.267
       }
     ],
     "caveats": [
@@ -1298,157 +1297,157 @@
       "無真實滑價 / 借券 / 流動性衝擊建模。",
       "Sharpe 用等權「有部位才投入」的日報酬曲線，空手日報酬為 0（現金拖累）。"
     ],
-    "verdict": "勝率 35.7%、每筆期望 0.91%（0.11R）。 Deflated Sharpe 1.00 —— 扣多重測試偏差後仍顯著，是這份報告裡少見的好兆頭。 年化 24.2% vs SPY 14.5%，有超額報酬。",
+    "verdict": "勝率 35.6%、每筆期望 0.87%（0.11R）。 Deflated Sharpe 1.00 —— 扣多重測試偏差後仍顯著，是這份報告裡少見的好兆頭。 年化 21.7% vs SPY 14.5%，有超額報酬。",
     "label": "跌破 20日均線出場"
   },
-  "spyCagr": 14.46,
+  "spyCagr": 14.49,
   "strategyLab": {
-    "split_date": "2020-11-02",
-    "spyCagr": 14.46,
+    "split_date": "2020-11-09",
+    "spyCagr": 14.49,
     "strategies": [
       {
         "name": "mom_long",
         "label": "學術動能(月換·持有3月)",
-        "nTrades": 2132,
-        "winRate": 0.546,
-        "expectancyPct": 7.235,
+        "nTrades": 2122,
+        "winRate": 0.5311,
+        "expectancyPct": 7.435,
         "profitFactor": 1.89,
-        "annSharpe": 2.8,
-        "dsr": 1.0,
-        "cagr": 12.39,
-        "maxDrawdownPct": -42.5,
+        "annSharpe": 2.15,
+        "dsr": 0.9995,
+        "cagr": 10.04,
+        "maxDrawdownPct": -52.9,
         "beatsSPY": false,
         "robust": true,
         "persists": true,
         "tradeable": false,
         "inSample": {
-          "n": 1237,
-          "winRate": 0.6023,
-          "expectancyPct": 7.874,
-          "profitFactor": 2.21
+          "n": 1250,
+          "winRate": 0.5872,
+          "expectancyPct": 8.437,
+          "profitFactor": 2.29
         },
         "outOfSample": {
-          "n": 895,
-          "winRate": 0.4682,
-          "expectancyPct": 6.352,
-          "profitFactor": 1.61
+          "n": 872,
+          "winRate": 0.4507,
+          "expectancyPct": 5.998,
+          "profitFactor": 1.55
         }
       },
       {
         "name": "meanrev",
         "label": "均值回歸(RSI2超賣)",
-        "nTrades": 6789,
-        "winRate": 0.6438,
-        "expectancyPct": 0.041,
-        "profitFactor": 1.03,
-        "annSharpe": -4.05,
+        "nTrades": 6783,
+        "winRate": 0.6429,
+        "expectancyPct": 0.033,
+        "profitFactor": 1.02,
+        "annSharpe": -4.11,
         "dsr": 0.0,
-        "cagr": -44.75,
+        "cagr": -45.3,
         "maxDrawdownPct": -100.0,
         "beatsSPY": false,
         "robust": false,
         "persists": false,
         "tradeable": false,
         "inSample": {
-          "n": 4049,
-          "winRate": 0.6513,
-          "expectancyPct": -0.002,
+          "n": 4052,
+          "winRate": 0.6498,
+          "expectancyPct": -0.0,
           "profitFactor": 1.0
         },
         "outOfSample": {
-          "n": 2740,
-          "winRate": 0.6328,
-          "expectancyPct": 0.104,
-          "profitFactor": 1.06
+          "n": 2731,
+          "winRate": 0.6327,
+          "expectancyPct": 0.081,
+          "profitFactor": 1.05
         }
       },
       {
         "name": "breakout52",
         "label": "52週新高突破",
-        "nTrades": 5020,
-        "winRate": 0.4811,
-        "expectancyPct": 2.828,
-        "profitFactor": 1.58,
-        "annSharpe": 2.72,
-        "dsr": 1.0,
-        "cagr": 4.34,
-        "maxDrawdownPct": -28.7,
+        "nTrades": 4952,
+        "winRate": 0.479,
+        "expectancyPct": 2.813,
+        "profitFactor": 1.57,
+        "annSharpe": 1.75,
+        "dsr": 0.9938,
+        "cagr": 3.42,
+        "maxDrawdownPct": -28.6,
         "beatsSPY": false,
         "robust": true,
         "persists": false,
         "tradeable": false,
         "inSample": {
-          "n": 3052,
-          "winRate": 0.5121,
-          "expectancyPct": 3.597,
-          "profitFactor": 1.79
+          "n": 3050,
+          "winRate": 0.5131,
+          "expectancyPct": 3.664,
+          "profitFactor": 1.8
         },
         "outOfSample": {
-          "n": 1968,
-          "winRate": 0.4329,
-          "expectancyPct": 1.635,
-          "profitFactor": 1.31
+          "n": 1902,
+          "winRate": 0.4243,
+          "expectancyPct": 1.447,
+          "profitFactor": 1.27
         }
       },
       {
         "name": "pead",
         "label": "財報跳空漂移(代理)",
-        "nTrades": 12090,
-        "winRate": 0.3002,
-        "expectancyPct": -1.738,
+        "nTrades": 12035,
+        "winRate": 0.298,
+        "expectancyPct": -1.776,
         "profitFactor": 0.66,
-        "annSharpe": -4.16,
+        "annSharpe": -3.82,
         "dsr": 0.0,
-        "cagr": -22.0,
-        "maxDrawdownPct": -97.8,
+        "cagr": -23.99,
+        "maxDrawdownPct": -98.5,
         "beatsSPY": false,
         "robust": false,
         "persists": false,
         "tradeable": false,
         "inSample": {
-          "n": 5854,
-          "winRate": 0.3411,
-          "expectancyPct": -1.231,
-          "profitFactor": 0.76
+          "n": 5888,
+          "winRate": 0.3421,
+          "expectancyPct": -1.16,
+          "profitFactor": 0.77
         },
         "outOfSample": {
-          "n": 6236,
-          "winRate": 0.2619,
-          "expectancyPct": -2.214,
-          "profitFactor": 0.58
+          "n": 6147,
+          "winRate": 0.2557,
+          "expectancyPct": -2.366,
+          "profitFactor": 0.56
         }
       },
       {
         "name": "attack_sys",
         "label": "進攻系統(突破+量+regime+快砍慢抱·40bps)",
-        "nTrades": 3680,
-        "winRate": 0.4076,
-        "expectancyPct": 0.744,
-        "profitFactor": 1.18,
-        "annSharpe": -0.28,
-        "dsr": 0.0015,
-        "cagr": -0.83,
-        "maxDrawdownPct": -51.5,
+        "nTrades": 3658,
+        "winRate": 0.4046,
+        "expectancyPct": 0.704,
+        "profitFactor": 1.17,
+        "annSharpe": -0.58,
+        "dsr": 0.0,
+        "cagr": -2.1,
+        "maxDrawdownPct": -51.2,
         "beatsSPY": false,
         "robust": false,
-        "persists": true,
+        "persists": false,
         "tradeable": false,
         "inSample": {
           "n": 2282,
-          "winRate": 0.4281,
-          "expectancyPct": 0.877,
-          "profitFactor": 1.22
+          "winRate": 0.4277,
+          "expectancyPct": 0.902,
+          "profitFactor": 1.23
         },
         "outOfSample": {
-          "n": 1398,
-          "winRate": 0.3741,
-          "expectancyPct": 0.527,
-          "profitFactor": 1.12
+          "n": 1376,
+          "winRate": 0.3663,
+          "expectancyPct": 0.377,
+          "profitFactor": 1.09
         }
       }
     ],
     "indexTiming": {
-      "cagr": 10.53,
+      "cagr": 10.59,
       "annSharpe": 1.04,
       "maxDrawdownPct": -19.8,
       "pctTimeInMarket": 80.9,
@@ -1459,83 +1458,135 @@
       "buckets": [
         {
           "tranche": "Q1 最小",
-          "n": 427,
-          "medianDollarVolM": 5.6,
-          "winRate": 0.5222,
-          "expectancyPct": 8.269
+          "n": 425,
+          "medianDollarVolM": 5.4,
+          "winRate": 0.4941,
+          "expectancyPct": 8.015
         },
         {
           "tranche": "Q2",
-          "n": 426,
-          "medianDollarVolM": 21.3,
-          "winRate": 0.5376,
-          "expectancyPct": 6.997
+          "n": 424,
+          "medianDollarVolM": 20.1,
+          "winRate": 0.5377,
+          "expectancyPct": 8.475
         },
         {
           "tranche": "Q3",
-          "n": 426,
-          "medianDollarVolM": 54.0,
-          "winRate": 0.5305,
-          "expectancyPct": 4.943
+          "n": 424,
+          "medianDollarVolM": 52.3,
+          "winRate": 0.5047,
+          "expectancyPct": 4.829
         },
         {
           "tranche": "Q4",
-          "n": 426,
-          "medianDollarVolM": 146.1,
-          "winRate": 0.5587,
-          "expectancyPct": 5.884
+          "n": 424,
+          "medianDollarVolM": 145.7,
+          "winRate": 0.5637,
+          "expectancyPct": 5.114
         },
         {
           "tranche": "Q5 最大",
-          "n": 427,
-          "medianDollarVolM": 663.9,
-          "winRate": 0.5808,
-          "expectancyPct": 10.074
+          "n": 425,
+          "medianDollarVolM": 611.0,
+          "winRate": 0.5553,
+          "expectancyPct": 10.732
         }
       ],
       "edgeConcentratesInSmall": false
     },
-    "verdict": "⨯ 4 個不同假設都不算數(全期贏SPY+DSR≥0.9+樣本外持續，無一全中)。連全期都沒人贏過 SPY。 指數擇時(SPY>200MA)：CAGR 10.53% vs 買進持有 SPY 14.46%，但最大回撤只有 -19.8%(買進持有約 -24%)——降回撤是它唯一的價值。"
+    "verdict": "⨯ 4 個不同假設都不算數(全期贏SPY+DSR≥0.9+樣本外持續，無一全中)。連全期都沒人贏過 SPY。 指數擇時(SPY>200MA)：CAGR 10.59% vs 買進持有 SPY 14.49%，但最大回撤只有 -19.8%(買進持有約 -24%)——降回撤是它唯一的價值。"
   },
   "factorLab": {
-    "spyCagr": 14.46,
+    "spyCagr": 14.49,
     "costBps": 40,
-    "splitDate": "2020-11-02",
+    "splitDate": "2020-11-09",
     "yearsTested": 15.0,
     "factors": [
       {
         "name": "value",
         "label": "價值(高earnings yield)",
-        "nTrades": 1294,
-        "winRate": 0.5788,
-        "cagr": 17.99,
-        "annSharpe": 4.63,
+        "nTrades": 1265,
+        "winRate": 0.5929,
+        "cagr": 16.37,
+        "annSharpe": 4.72,
         "dsr": 1.0,
-        "maxDrawdownPct": -36.1,
+        "maxDrawdownPct": -33.8,
         "beatsSPY": true,
         "robust": true,
         "persists": true,
         "tradeable": true,
         "inSample": {
-          "n": 754,
-          "winRate": 0.6034,
-          "expectancyPct": 7.944,
-          "profitFactor": 2.6
+          "n": 750,
+          "winRate": 0.628,
+          "expectancyPct": 6.813,
+          "profitFactor": 2.37
         },
         "outOfSample": {
-          "n": 540,
-          "winRate": 0.5444,
-          "expectancyPct": 86.214,
-          "profitFactor": 12.58
+          "n": 515,
+          "winRate": 0.5417,
+          "expectancyPct": 7.271,
+          "profitFactor": 2.0
         }
       },
       {
         "name": "quality",
         "label": "品質(高ROE+FCF正)",
-        "nTrades": 1171,
-        "winRate": 0.5841,
-        "cagr": 6.7,
-        "annSharpe": 2.5,
+        "nTrades": 1151,
+        "winRate": 0.5586,
+        "cagr": 6.24,
+        "annSharpe": 2.36,
+        "dsr": 1.0,
+        "maxDrawdownPct": -28.6,
+        "beatsSPY": false,
+        "robust": true,
+        "persists": true,
+        "tradeable": false,
+        "inSample": {
+          "n": 686,
+          "winRate": 0.5933,
+          "expectancyPct": 3.709,
+          "profitFactor": 1.81
+        },
+        "outOfSample": {
+          "n": 465,
+          "winRate": 0.5075,
+          "expectancyPct": 2.82,
+          "profitFactor": 1.43
+        }
+      },
+      {
+        "name": "qual_mom",
+        "label": "品質×動能",
+        "nTrades": 1484,
+        "winRate": 0.6031,
+        "cagr": 9.49,
+        "annSharpe": 4.56,
+        "dsr": 1.0,
+        "maxDrawdownPct": -26.1,
+        "beatsSPY": false,
+        "robust": true,
+        "persists": true,
+        "tradeable": false,
+        "inSample": {
+          "n": 879,
+          "winRate": 0.6405,
+          "expectancyPct": 4.443,
+          "profitFactor": 2.19
+        },
+        "outOfSample": {
+          "n": 605,
+          "winRate": 0.5488,
+          "expectancyPct": 2.995,
+          "profitFactor": 1.56
+        }
+      },
+      {
+        "name": "val_mom",
+        "label": "價值×動能",
+        "nTrades": 1558,
+        "winRate": 0.6072,
+        "cagr": 11.06,
+        "annSharpe": 4.63,
         "dsr": 1.0,
         "maxDrawdownPct": -28.7,
         "beatsSPY": false,
@@ -1543,132 +1594,80 @@
         "persists": true,
         "tradeable": false,
         "inSample": {
-          "n": 682,
-          "winRate": 0.6056,
-          "expectancyPct": 4.58,
-          "profitFactor": 2.08
+          "n": 925,
+          "winRate": 0.6497,
+          "expectancyPct": 4.692,
+          "profitFactor": 2.29
         },
         "outOfSample": {
-          "n": 489,
-          "winRate": 0.5542,
-          "expectancyPct": 2.185,
-          "profitFactor": 1.33
-        }
-      },
-      {
-        "name": "qual_mom",
-        "label": "品質×動能",
-        "nTrades": 1505,
-        "winRate": 0.61,
-        "cagr": 8.87,
-        "annSharpe": 4.87,
-        "dsr": 1.0,
-        "maxDrawdownPct": -20.9,
-        "beatsSPY": false,
-        "robust": true,
-        "persists": true,
-        "tradeable": false,
-        "inSample": {
-          "n": 888,
-          "winRate": 0.6408,
-          "expectancyPct": 3.844,
-          "profitFactor": 2.11
-        },
-        "outOfSample": {
-          "n": 617,
-          "winRate": 0.5656,
-          "expectancyPct": 3.57,
-          "profitFactor": 1.67
-        }
-      },
-      {
-        "name": "val_mom",
-        "label": "價值×動能",
-        "nTrades": 1561,
-        "winRate": 0.6086,
-        "cagr": 11.65,
-        "annSharpe": 5.78,
-        "dsr": 1.0,
-        "maxDrawdownPct": -23.3,
-        "beatsSPY": false,
-        "robust": true,
-        "persists": true,
-        "tradeable": false,
-        "inSample": {
-          "n": 900,
-          "winRate": 0.6644,
-          "expectancyPct": 4.718,
-          "profitFactor": 2.48
-        },
-        "outOfSample": {
-          "n": 661,
-          "winRate": 0.5325,
-          "expectancyPct": 3.644,
-          "profitFactor": 1.7
+          "n": 633,
+          "winRate": 0.545,
+          "expectancyPct": 4.084,
+          "profitFactor": 1.74
         }
       },
       {
         "name": "qmv",
         "label": "QMV 綜合(品質+動能+價值)",
-        "nTrades": 1279,
-        "winRate": 0.5872,
-        "cagr": 11.99,
-        "annSharpe": 4.16,
+        "nTrades": 1233,
+        "winRate": 0.5961,
+        "cagr": 13.76,
+        "annSharpe": 5.73,
         "dsr": 1.0,
-        "maxDrawdownPct": -29.4,
+        "maxDrawdownPct": -22.8,
         "beatsSPY": false,
         "robust": true,
         "persists": true,
         "tradeable": false,
         "inSample": {
-          "n": 761,
-          "winRate": 0.6045,
-          "expectancyPct": 5.604,
-          "profitFactor": 2.23
+          "n": 743,
+          "winRate": 0.6366,
+          "expectancyPct": 5.305,
+          "profitFactor": 2.35
         },
         "outOfSample": {
-          "n": 518,
-          "winRate": 0.5618,
-          "expectancyPct": 5.133,
-          "profitFactor": 1.89
+          "n": 490,
+          "winRate": 0.5347,
+          "expectancyPct": 5.649,
+          "profitFactor": 1.93
         }
       }
     ],
     "eraBreakdown": [
       {
-        "era": "2012-06-12 ~ 2015-12-09",
-        "spyCagrPct": 15.6,
-        "qmvMeanRetPct": 3.65,
-        "qmvWinRate": 0.6,
-        "nTrades": 315,
+        "era": "2012-06-19 ~ 2015-12-16",
+        "spyCagrPct": 15.2,
+        "qmvMeanRetPct": 4.26,
+        "qmvWinRate": 0.65,
+        "nTrades": 308,
         "qmvFavorable": false
       },
       {
-        "era": "2015-12-10 ~ 2019-06-11",
-        "spyCagrPct": 12.4,
-        "qmvMeanRetPct": 3.22,
-        "qmvWinRate": 0.6,
-        "nTrades": 312,
+        "era": "2015-12-17 ~ 2019-06-18",
+        "spyCagrPct": 12.9,
+        "qmvMeanRetPct": 4.82,
+        "qmvWinRate": 0.63,
+        "nTrades": 308,
         "qmvFavorable": false
       },
       {
-        "era": "2019-06-12 ~ 2022-12-06",
-        "spyCagrPct": 11.2,
-        "qmvMeanRetPct": 10.6,
-        "qmvWinRate": 0.62,
-        "nTrades": 322,
+        "era": "2019-06-19 ~ 2022-12-13",
+        "spyCagrPct": 11.3,
+        "qmvMeanRetPct": 7.41,
+        "qmvWinRate": 0.58,
+        "nTrades": 313,
         "qmvFavorable": false
       },
       {
-        "era": "2022-12-07 ~ 2026-06-12",
-        "spyCagrPct": 21.4,
-        "qmvMeanRetPct": 4.11,
+        "era": "2022-12-14 ~ 2026-06-19",
+        "spyCagrPct": 21.2,
+        "qmvMeanRetPct": 5.24,
         "qmvWinRate": 0.53,
-        "nTrades": 330,
+        "nTrades": 304,
         "qmvFavorable": false
       }
     ],
-    "verdict": "✓✓ 基本面因子找到 edge：「價值(高earnings yield)」全期贏 SPY(17.99% vs 14.46%)、DSR 1.0≥0.90、樣本外仍正。扣 40bps 元大成本後依然成立 —— 這是整段唯一通過的東西。",
-    "coverage": 951
+    "verdict": "✓✓ 基本面因子找到 edge：「價值(高earnings yield)」全期贏 SPY(16.37% vs 14.49%)、DSR 1.0≥0.90、樣本外仍正。扣 40bps 元大成本後依然成立 —— 這是整段唯一通過的東西。",
+    "coverage": 950
   }
 }
