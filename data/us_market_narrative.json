@@ -1,127 +1,130 @@
 {
-  "generatedAt": 1781903189489,
+  "generatedAt": 1782151719733,
   "market": "US",
-  "scanAt": "2026-06-19T20:58:22.011Z",
-  "session": "POST-CLOSE (market closed)",
-  "sessionShort": "post-close",
-  "watchLabel": "明日關注",
+  "scanAt": "2026-06-22T17:59:46.933Z",
+  "session": "AFTERNOON SESSION (last 2 hours before close)",
+  "sessionShort": "afternoon",
+  "watchLabel": "收盤前關注",
   "macros": {
     "spy": {
-      "last": 746.74,
-      "changePct": 0.78
+      "last": 744.78,
+      "changePct": -0.26
     },
     "vix": {
-      "last": 16.78,
-      "changePct": 2.32
+      "last": 17.18,
+      "changePct": 4.76
     },
-    "tnx": null,
+    "tnx": {
+      "last": 4.51,
+      "changePct": 1.39
+    },
     "dxy": {
-      "last": 100.85,
-      "changePct": 0
+      "last": 101,
+      "changePct": 0.15
     }
   },
   "sectorLeaders": [
     {
+      "etf": "IBB",
+      "last": 177.07,
+      "changePct": 1.98
+    },
+    {
       "etf": "SMH",
-      "last": 659.88,
-      "changePct": 5.76
+      "last": 665.2,
+      "changePct": 0.81
     },
     {
-      "etf": "XLK",
-      "last": 191.44,
-      "changePct": 3.04
-    },
-    {
-      "etf": "XLY",
-      "last": 117.16,
-      "changePct": 1.45
+      "etf": "XLV",
+      "last": 150.26,
+      "changePct": 0.58
     }
   ],
   "sectorLaggards": [
     {
-      "etf": "GDX",
-      "last": 82.51,
-      "changePct": -2.19
+      "etf": "XAR",
+      "last": 277.28,
+      "changePct": -2.47
     },
     {
-      "etf": "XLE",
-      "last": 53.77,
-      "changePct": -1.65
+      "etf": "XLC",
+      "last": 106.82,
+      "changePct": -2.4
     },
     {
-      "etf": "XLF",
-      "last": 53.57,
-      "changePct": -0.89
+      "etf": "IGV",
+      "last": 87.25,
+      "changePct": -2.07
     }
   ],
   "gainers": [
     {
-      "symbol": "BFLY",
-      "name": "Butterfly Network, Inc.",
-      "changePct": 55.87
+      "symbol": "DFTX",
+      "name": "Definium Therapeutics, Inc.",
+      "changePct": 52.74
     },
     {
-      "symbol": "WOLF",
-      "name": "Wolfspeed, Inc.",
-      "changePct": 17.91
+      "symbol": "APGE",
+      "name": "Apogee Therapeutics, Inc.",
+      "changePct": 46.72
     },
     {
-      "symbol": "QS",
-      "name": "QuantumScape Corporation",
-      "changePct": 16.52
+      "symbol": "ORKA",
+      "name": "Oruka Therapeutics, Inc.",
+      "changePct": 22.27
     },
     {
-      "symbol": "BE",
-      "name": "Bloom Energy Corporation",
-      "changePct": 15.41
+      "symbol": "HQ",
+      "name": "Horizon Quantum Holdings Ltd.",
+      "changePct": 22.17
     },
     {
-      "symbol": "OUST",
-      "name": "Ouster, Inc.",
-      "changePct": 14.37
+      "symbol": "BWIN",
+      "name": "The Baldwin Insurance Group, I",
+      "changePct": 21.1
     }
   ],
   "losers": [
     {
-      "symbol": "RGC",
-      "name": "Regencell Bioscience Holdings ",
-      "changePct": -18.96
+      "symbol": "AGI",
+      "name": "Alamos Gold Inc.",
+      "changePct": -14.13
     },
     {
-      "symbol": "ACN",
-      "name": "Accenture plc",
-      "changePct": -17.97
+      "symbol": "SPCX",
+      "name": "Space Exploration Technologies",
+      "changePct": -10.46
     },
     {
-      "symbol": "LEGN",
-      "name": "Legend Biotech Corporation",
-      "changePct": -16.68
+      "symbol": "AVAV",
+      "name": "AeroVironment, Inc.",
+      "changePct": -10.31
     },
     {
-      "symbol": "TNGX",
-      "name": "Tango Therapeutics, Inc.",
-      "changePct": -13.38
+      "symbol": "GFI",
+      "name": "Gold Fields Limited",
+      "changePct": -10.01
     },
     {
-      "symbol": "EPAM",
-      "name": "EPAM Systems, Inc.",
-      "changePct": -12.61
+      "symbol": "RBLX",
+      "name": "Roblox Corporation",
+      "changePct": -9.53
     }
   ],
-  "narrative": "今日市場呈現風險偏好態勢,科技類股領漲。半導體ETF SMH漲幅5.76%,BFLY飆漲55.87%創驚人漲幅,WDC、STX等晶片股也表現強勢。軟體股XLK上漲3.04%。相反地,能源XLE下跌1.65%,金融XLF小幅下跌0.89%。VIX微升至16.78,反映市場保持謹慎樂觀。大盤SPY緩步上漲0.78%。資金流向成長科技題材,規避傳統防守型產業,典型的成長股接力行情。",
-  "headline": "科技領漲帶動大盤溫和上漲,晶片股表現亮眼",
-  "regime": "risk-on",
+  "narrative": "今日市場呈現明顯的板塊輪動。生技(IBB +1.98%)和半導體(SMH +0.81%)領漲，醫療保健(XLV +0.58%)防禦股走強，顯示資金在科技與防禦間切換。航太防務(XAR -2.47%)和通訊(XLC -2.40%)重挫，軟體(IGV -2.07%)也走弱。VIX上升4.76%至17.18，10年期殖利率升至4.51%，暗示市場對利率敏感性提升。動能股BFLY、WDC領漲，但整體SPY微跌-0.26%，缺乏方向性。美元小漲0.15%。收盤前兩小時應觀察科技是否延續強勢，或因殖利率上升而回檔。",
+  "headline": "科技分化領漲，防禦股走強，市場呈現輪動格局",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
-      "SMH",
-      "XLK",
-      "XLY"
+      "IBB",
+      "XLV",
+      "SMH"
     ],
     "outOf": [
-      "XLE",
-      "GDX",
-      "XLF"
+      "XAR",
+      "XLC",
+      "IGV"
     ]
   },
-  "tomorrowWatch": "密切觀察科技股能否延續漲勢,留意BFLY、WDC等個股是否出現獲利了結,同時留意能源股是否觸底反彈。"
+  "tomorrowWatch": "監控10年期殖利率4.51%能否守住；科技防禦輪動是否延續，關鍵看明日開盤動能股表現"
 }
