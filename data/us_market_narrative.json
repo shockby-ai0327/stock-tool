@@ -1,124 +1,124 @@
 {
-  "generatedAt": 1782240448500,
+  "generatedAt": 1782250223957,
   "market": "US",
-  "scanAt": "2026-06-23T18:38:40.285Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-23T21:22:35.022Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 733.66,
-      "changePct": -1.44
+      "last": 733.58,
+      "changePct": -1.45
     },
     "vix": {
-      "last": 19.18,
-      "changePct": 11
+      "last": 19.49,
+      "changePct": 12.79
     },
     "tnx": {
       "last": 4.49,
-      "changePct": 0.99
+      "changePct": 0.94
     },
     "dxy": {
-      "last": 101.41,
-      "changePct": 0.39
+      "last": 101.36,
+      "changePct": 0.33
     }
   },
   "sectorLeaders": [
     {
       "etf": "XLP",
-      "last": 83.67,
-      "changePct": 1.81
+      "last": 83.72,
+      "changePct": 1.87
+    },
+    {
+      "etf": "XLV",
+      "last": 152.18,
+      "changePct": 1.41
     },
     {
       "etf": "XLRE",
       "last": 44.64,
       "changePct": 1.41
-    },
-    {
-      "etf": "XLV",
-      "last": 151.79,
-      "changePct": 1.15
     }
   ],
   "sectorLaggards": [
     {
       "etf": "SMH",
-      "last": 618.82,
-      "changePct": -7.49
+      "last": 622.05,
+      "changePct": -7.01
     },
     {
       "etf": "GDX",
-      "last": 77.79,
-      "changePct": -4.48
+      "last": 77.66,
+      "changePct": -4.64
     },
     {
       "etf": "XLK",
-      "last": 183.89,
-      "changePct": -4.3
+      "last": 184.19,
+      "changePct": -4.14
     }
   ],
   "gainers": [
     {
       "symbol": "MAAS",
       "name": "Maase Inc.",
-      "changePct": 30.31
+      "changePct": 18.99
     },
     {
       "symbol": "QNT",
       "name": "Quantinuum Inc.",
-      "changePct": 12.07
+      "changePct": 13.46
     },
     {
       "symbol": "INFQ",
       "name": "Infleqtion, Inc.",
-      "changePct": 9.64
+      "changePct": 12.32
     },
     {
       "symbol": "QURE",
       "name": "uniQure N.V.",
-      "changePct": 8.06
+      "changePct": 10.48
     },
     {
-      "symbol": "WAY",
-      "name": "Waystar Holding Corp.",
-      "changePct": 7.08
+      "symbol": "VKTX",
+      "name": "Viking Therapeutics, Inc.",
+      "changePct": 7.54
     }
   ],
   "losers": [
     {
       "symbol": "PRIM",
       "name": "Primoris Services Corporation",
-      "changePct": -24.04
-    },
-    {
-      "symbol": "AXTI",
-      "name": "AXT Inc",
-      "changePct": -17.27
+      "changePct": -21.59
     },
     {
       "symbol": "FLNC",
       "name": "Fluence Energy, Inc.",
-      "changePct": -15.44
+      "changePct": -15.8
+    },
+    {
+      "symbol": "AXTI",
+      "name": "AXT Inc",
+      "changePct": -15.72
     },
     {
       "symbol": "AAOI",
       "name": "Applied Optoelectronics, Inc.",
-      "changePct": -14.59
+      "changePct": -13.89
     },
     {
       "symbol": "SNDK",
       "name": "Sandisk Corporation",
-      "changePct": -14.1
+      "changePct": -13.64
     }
   ],
-  "narrative": "今日主軸為科技股大幅拋售（SMH -7.49%、XLK -4.3%），拖累SPY下跌1.44%。VIX上升11%至19.18，顯示風險情緒升溫。資金明顯流向防守性資產——必需消費品(XLP +1.81%)與房地產(XLRE +1.41%)領漲，反映風險規避情緒。10Y殖利率升至4.49%加重科技股壓力。半導體與黃金雙雙重挫，確認避險轉向。收盤前2小時應留意科技股能否止跌，或繼續延伸賣壓。",
-  "headline": "科技崩跌帶動大盤下挫，防守型資金搶進必需消費",
+  "narrative": "今日市場呈現明顯的風險規避格局。標普500下跌1.45%，波動率大幅上升至19.49，反映投資者恐慌情緒升溫。科技股遭重創，半導體ETF（SMH）暴跌7.01%，科技股（XLK）下挫4.14%，成為最大拖累。相反地，消費必需品（XLP）上漲1.87%，醫療保健（XLV）和房地產（XLRE）各漲1.41%，典型防禦性輪動。美債殖利率上升至4.49%，美元升值0.33%，均反映流動性緊縮環境。動能指標中BFLY領漲，但無三重共鳴信號出現。",
+  "headline": "科技股崩跌拖累大盤，防禦性產業逆勢上漲",
   "regime": "risk-off",
   "sectorRotation": {
     "into": [
       "XLP",
-      "XLRE",
-      "XLV"
+      "XLV",
+      "XLRE"
     ],
     "outOf": [
       "XLK",
@@ -126,5 +126,5 @@
       "GDX"
     ]
   },
-  "tomorrowWatch": "觀察科技股是否築底反彈，或進一步破底；留意VIX是否持續上行突破20"
+  "tomorrowWatch": "留意美債殖利率走勢與聯準會政策預期，科技股是否出現反彈或進一步下殺"
 }
