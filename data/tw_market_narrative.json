@@ -1,130 +1,130 @@
 {
-  "generatedAt": 1782326270563,
+  "generatedAt": 1782336529014,
   "market": "TW",
-  "scanAt": "2026-06-24T18:27:55.535Z",
-  "session": "AFTERNOON SESSION (last 2 hours before close)",
-  "sessionShort": "afternoon",
-  "watchLabel": "收盤前關注",
+  "scanAt": "2026-06-24T21:18:04.272Z",
+  "session": "POST-CLOSE (market closed)",
+  "sessionShort": "post-close",
+  "watchLabel": "明日關注",
   "macros": {
     "spy": {
-      "last": 733.89,
-      "changePct": 0.04
+      "last": 733.24,
+      "changePct": -0.05
     },
     "vix": {
-      "last": 19.44,
-      "changePct": -0.26
+      "last": 18.63,
+      "changePct": -4.41
     },
     "tnx": {
       "last": 4.4,
       "changePct": -1.1
     },
     "dxy": {
-      "last": 101.59,
+      "last": 101.58,
       "changePct": 0.17
     }
   },
   "sectorLeaders": [
     {
       "etf": "IBB",
-      "last": 182.71,
-      "changePct": 2.59
-    },
-    {
-      "etf": "XLY",
-      "last": 115.85,
-      "changePct": 1.84
+      "last": 181.53,
+      "changePct": 1.93
     },
     {
       "etf": "XLI",
-      "last": 180.5,
-      "changePct": 1.32
+      "last": 180.21,
+      "changePct": 1.16
+    },
+    {
+      "etf": "XLY",
+      "last": 115.07,
+      "changePct": 1.15
     }
   ],
   "sectorLaggards": [
     {
       "etf": "GDX",
-      "last": 74.17,
-      "changePct": -4.49
+      "last": 74.59,
+      "changePct": -3.95
     },
     {
       "etf": "XLE",
-      "last": 53.38,
-      "changePct": -1.97
+      "last": 53.57,
+      "changePct": -1.63
     },
     {
-      "etf": "SMH",
-      "last": 613.28,
-      "changePct": -1.41
+      "etf": "IGV",
+      "last": 86.17,
+      "changePct": -1.32
     }
   ],
   "gainers": [
     {
-      "symbol": "RUN",
-      "name": "Sunrun Inc.",
-      "changePct": 18.63
+      "symbol": "KBH",
+      "name": "KB Home",
+      "changePct": 16.65
     },
     {
       "symbol": "DFTX",
       "name": "Definium Therapeutics, Inc.",
-      "changePct": 18.44
-    },
-    {
-      "symbol": "KBH",
-      "name": "KB Home",
-      "changePct": 17.04
+      "changePct": 16.45
     },
     {
       "symbol": "FOUR",
       "name": "Shift4 Payments, Inc.",
-      "changePct": 13.06
+      "changePct": 14.35
     },
     {
-      "symbol": "ADPT",
-      "name": "Adaptive Biotechnologies Corpo",
-      "changePct": 12.71
+      "symbol": "MANE",
+      "name": "Veradermics, Incorporated",
+      "changePct": 13.21
+    },
+    {
+      "symbol": "RUN",
+      "name": "Sunrun Inc.",
+      "changePct": 12.57
     }
   ],
   "losers": [
     {
       "symbol": "RGC",
       "name": "Regencell Bioscience Holdings ",
-      "changePct": -19.54
+      "changePct": -22.74
     },
     {
       "symbol": "CBRS",
       "name": "Cerebras Systems Inc.",
-      "changePct": -17.3
+      "changePct": -19.61
     },
     {
       "symbol": "NVTS",
       "name": "Navitas Semiconductor Corporat",
-      "changePct": -16.59
+      "changePct": -14.39
     },
     {
-      "symbol": "MAAS",
-      "name": "Maase Inc.",
-      "changePct": -14.6
+      "symbol": "CHRN",
+      "name": "ChronoScale Corporation",
+      "changePct": -14.29
     },
     {
       "symbol": "NG",
       "name": "Novagold Resources Inc.",
-      "changePct": -13.92
+      "changePct": -14.13
     }
   ],
-  "narrative": "今日呈現明確的風險資產輪動格局。IBB生科領漲2.59%，反映科技成長股受惠於10年期殖利率下跌110基點至4.4%的利好。消費可選XLY上漲1.84%、工業XLI漲1.32%，顯示資金流向成長與周期股。能源XLE暴跌1.97%、貴金屬GDX跌4.49%，傳統避險資產遭拋售。美元小幅走強(DXY +0.17%)、VIX略降至19.44，市場風險偏好溫和。台股科技股領漲(2327.TW漲58.85%)印證全球成長股共振。收盤前預期強勢收尾，殖利率下行動能未盡。",
-  "headline": "生科領漲、能源重挫，殖利率下跌推動風險資產輪動",
-  "regime": "risk-on",
+  "narrative": "今日大盤微跌(-0.05%)，但風險指標轉向友善：VIX下跌4.41%至18.63，10年期公債殖利率下行110基點至4.4%，反映市場風險胃口改善。生技(IBB +1.93%)與工業(XLI +1.16%)領漲，消費(XLY +1.15%)跟進，顯示成長與週期輪動。能源(XLE -1.63%)與貴金屬(GDX -3.95%)重挫，套利資金流向高成長股。台股三檔漲幅逾45%(2344.TW、2327.TW)動能強勁。明日關注降息預期深化與科技股能否延續動能。",
+  "headline": "風險情緒回溫，生技領漲，能源重挫",
+  "regime": "rotation",
   "sectorRotation": {
     "into": [
       "IBB",
-      "XLY",
-      "XLI"
+      "XLI",
+      "XLY"
     ],
     "outOf": [
       "XLE",
       "GDX",
-      "SMH"
+      "IGV"
     ]
   },
-  "tomorrowWatch": "監測殖利率是否續跌至4.3%，確認成長股強勢能否延續至明日開盤"
+  "tomorrowWatch": "殖利率持續下行將強化成長股吸引力，留意科技與生技能否守住漲幅、能源是否觸底反彈。"
 }
