@@ -1,20 +1,20 @@
 name: AI Stock Forward Analysis
 
 on:
-  # Auto-run AFTER News Sentiment Scan completes — ensures news data is
-  # fresh when ai_analysis.js builds catalyst-aware prompts.
-  # Chain: Stock Scan → News Scan → AI Analysis (this) → Backtest (separate)
-  workflow_run:
-    workflows: ["News Sentiment Scan"]
-    types: [completed]
-
-  # On-demand trigger (for testing / manual refresh)
+  # 2026-06-30: 改為「只在使用者開網站時」按需觸發 — 前端用 PAT 打 workflow_dispatch。
+  # 移除了原本的 workflow_run 自動串接（News Scan 跑完就接力），那是「人不在也照打 Claude」
+  # 的花費來源。現在市場敘事 + 個股 AI 判讀都是 on-demand：開站才生成那天的，離開期間零 API。
+  # 注意：backtest.yml 串接的是「Stock RS Leader Scan」不是本工作流，移除這裡不影響回測。
   workflow_dispatch:
     inputs:
       market:
         description: 'Market to analyze: us / tw / all'
         required: false
         default: 'us'
+      days:
+        description: 'Days since last visit (>=2 ⇒ generate catch-up recap)'
+        required: false
+        default: '1'
 
 permissions:
   contents: write   # write back analysis results to data/
@@ -23,13 +23,6 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
-    # Run regardless of news-scan outcome — fresh news is preferred but not required.
-    # If news-scan fails, ai_analysis still works using older cached news data.
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success' ||
-      github.event.workflow_run.conclusion == 'failure'
 
     steps:
       - name: Checkout (always use latest — scan just committed)
@@ -56,11 +49,10 @@ jobs:
         if: ${{ github.event.inputs.market != 'tw' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: node scripts/market_narrative.js us
+        run: node scripts/market_narrative.js us ${{ github.event.inputs.days || '1' }}
 
-      # 2026-05-19 fix: same pattern as US — runs by default for workflow_run
-      # (where inputs.market is undefined). Only skipped when user explicitly
-      # dispatches with market=us.
+      # 前端按市場觸發：dispatch 時帶 market=us 或 tw，只生成「正在看的那個市場」省一半。
+      # 預設 default='us' ⇒ 不帶 market 的手動 dispatch 只跑美股（跟原本一致）。
       - name: Analyze TW leaders
         if: ${{ github.event.inputs.market != 'us' }}
         env:
@@ -71,7 +63,7 @@ jobs:
         if: ${{ github.event.inputs.market != 'us' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: node scripts/market_narrative.js tw
+        run: node scripts/market_narrative.js tw ${{ github.event.inputs.days || '1' }}
 
       - name: Commit analysis results
         run: |

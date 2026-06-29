@@ -43,6 +43,21 @@ async function getDayChange(symbol) {
   return { last: +cur.toFixed(2), changePct: +((cur - prev) / prev * 100).toFixed(2) };
 }
 
+// 2026-06-30 catch-up：使用者離開 N 個交易日的累計變化（視窗第一根 → 最後一根收盤）。
+// 用途是「我超過兩天沒開網站，這幾天市場到底發生了什麼」的回顧 — 數字全來自 yfinance（免費）。
+async function getRangeChange(symbol, tradingDays) {
+  const range = tradingDays <= 5 ? '1mo' : tradingDays <= 20 ? '3mo' : '6mo';
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=${range}`;
+  const d = await yfFetch(url);
+  const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null);
+  if (!closes || closes.length < 2) return { last: null, changePct: null };
+  const last = closes[closes.length - 1];
+  const startIdx = Math.max(0, closes.length - 1 - tradingDays);  // N 根之前
+  const start = closes[startIdx];
+  if (!start) return { last: +last.toFixed(2), changePct: null };
+  return { last: +last.toFixed(2), changePct: +((last - start) / start * 100).toFixed(2) };
+}
+
 async function fetchScreenerTop5(scrId) {
   const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=${scrId}&start=0&count=5&formatted=false`;
   const d = await yfFetch(url);
@@ -77,7 +92,7 @@ function _writeUsage(scriptName) {
   } catch(e) { console.warn('  writeUsage fail:', e.message); }
 }
 
-async function callClaude(prompt) {
+async function callClaude(prompt, maxTokens = 800) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -87,7 +102,7 @@ async function callClaude(prompt) {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5',
-      max_tokens: 800,
+      max_tokens: maxTokens,   // catch-up 模式回 narrative + recap 兩段，拉高上限避免被截斷
       messages: [{ role: 'user', content: prompt }],
     }),
     signal: AbortSignal.timeout(30000),
@@ -104,6 +119,9 @@ async function callClaude(prompt) {
 
 async function main() {
   const market = process.argv[2] || 'us';
+  // 2026-06-30: argv[3] = 距上次開站幾個交易日（前端帶入）。>=2 ⇒ 多生成一段「離開期間回顧」。
+  const daysAway = Math.max(1, Math.min(30, parseInt(process.argv[3], 10) || 1));
+  const catchup = daysAway >= 2;
   const scanFile = join(DATA_DIR, `${market}_scan.json`);
   let scan;
   try {
@@ -130,6 +148,21 @@ async function main() {
   validSectors.sort((a, b) => b.changePct - a.changePct);
   const sectorTop3 = validSectors.slice(0, 3);
   const sectorBot3 = validSectors.slice(-3).reverse();
+
+  // 2026-06-30 catch-up：離開 >=2 天 → 額外抓「這段期間」的累計指數/板塊變化（真實數字，免費）。
+  let rangeMacros = null, rangeSectorTop = null, rangeSectorBot = null;
+  if (catchup) {
+    console.log(`Catch-up mode: computing ${daysAway}-day moves...`);
+    const [spyR, qqqR, ...sectorsR] = await Promise.all([
+      getRangeChange('SPY', daysAway),
+      getRangeChange('QQQ', daysAway),
+      ...SECTOR_ETFS.map(async s => ({ etf: s, ...(await getRangeChange(s, daysAway)) })),
+    ]);
+    rangeMacros = { spy: spyR, qqq: qqqR };
+    const validR = sectorsR.filter(s => s.changePct != null).sort((a, b) => b.changePct - a.changePct);
+    rangeSectorTop = validR.slice(0, 3);
+    rangeSectorBot = validR.slice(-3).reverse();
+  }
 
   const top5Leaders = (scan.leaders || []).slice(0, 5).map(l => ({
     symbol: l.symbol, ret1m: l.ret1m, rs: l.rsRating, accel: l.accel,
@@ -203,6 +236,16 @@ async function main() {
     watchLabel = '明日關注';
   }
 
+  // 2026-06-30 catch-up：離開 >=2 天，先給 Claude「這段期間累計變化」並要求多回一段 recap。
+  if (catchup) {
+    promptParts.push(`*** The user has been AWAY for ${daysAway} trading days — they just reopened the site. ***`);
+    promptParts.push(`Cumulative market move over those ${daysAway} trading days:`);
+    promptParts.push(`  SPY ${rangeMacros.spy?.changePct ?? 'N/A'}% | QQQ ${rangeMacros.qqq?.changePct ?? 'N/A'}%`);
+    if (rangeSectorTop) promptParts.push('  Sector leaders (period): ' + rangeSectorTop.map(s => `${s.etf} ${s.changePct}%`).join(', '));
+    if (rangeSectorBot) promptParts.push('  Sector laggards (period): ' + rangeSectorBot.map(s => `${s.etf} ${s.changePct}%`).join(', '));
+    promptParts.push('');
+  }
+
   promptParts.push('CURRENT SESSION: ' + sessionLabel);
   promptParts.push('');
   promptParts.push(...questionBlock);
@@ -215,13 +258,14 @@ async function main() {
   promptParts.push('  "sectorRotation": {"into": ["XLK","XLF"], "outOf": ["XLE","XLP"]},');
   promptParts.push('  "session": "' + sessionLabel + '",');
   promptParts.push('  "watchLabel": "' + watchLabel + '",');
-  promptParts.push('  "tomorrowWatch": "<one-line actionable item in 繁體中文>"');
+  promptParts.push('  "tomorrowWatch": "<one-line actionable item in 繁體中文>"' + (catchup ? ',' : ''));
+  if (catchup) promptParts.push('  "recap": "<60-80 word 繁體中文 回顧 of the last ' + daysAway + ' trading days using the cumulative moves above — be concrete with the numbers and which sectors led/lagged>"');
   promptParts.push('}');
   const prompt = promptParts.join('\n');
 
-  console.log('Calling Claude haiku...');
+  console.log('Calling Claude haiku...' + (catchup ? ` (catch-up ${daysAway}d)` : ''));
   try {
-    const raw = await callClaude(prompt);
+    const raw = await callClaude(prompt, catchup ? 1100 : 800);
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response');
     const parsed = JSON.parse(jsonMatch[0]);
@@ -242,6 +286,8 @@ async function main() {
       regime: parsed.regime || 'neutral',
       sectorRotation: parsed.sectorRotation || { into: [], outOf: [] },
       tomorrowWatch: parsed.tomorrowWatch,
+      // 2026-06-30 catch-up：只有離開 >=2 天才帶這幾欄，前端據此顯示「這幾天回顧」橫幅。
+      ...(catchup ? { catchupDays: daysAway, recap: parsed.recap || null, rangeMacros, rangeSectorTop, rangeSectorBot } : {}),
     };
 
     const outFile = join(DATA_DIR, `${market}_market_narrative.json`);

@@ -11027,15 +11027,131 @@ function _hydrateCalmHero() {
 // ── Market Narrative (Wave 6) — daily AI commentary on the macro picture ──
 async function loadMarketNarrative(market) {
  market = market || 'us';
+ let data = null;
  try {
   const file = market === 'tw' ? 'tw_market_narrative.json' : 'us_market_narrative.json';
   const r = await fetch(GH_RAW + file + '?t=' + Math.floor(Date.now() / 600000));
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
+  data = await r.json();
   renderMarketNarrative(data);
  } catch (e) {
   renderMarketNarrative(null);
  }
+ // 2026-06-30: 只有「我開網站時」才生成那天的敘事 → 離開期間零 API。今日已生成則直接沿用。
+ try { _maybeRefreshNarrativeOnOpen(market, data); } catch (e) {}
+}
+
+// ── On-demand 市場敘事（Wave 7）─────────────────────────────────────────────
+// 移除了 GitHub 端「News Scan 跑完自動接力打 Claude」的串接（見 ai-analysis.yml）。
+// 改成只有「使用者開站、且今天還沒生成」時，前端用 PAT 觸發 ai-analysis.yml 一次。
+// 人不在 = 零 Claude 花費。離開 >=2 天 → 帶 days=N，後端多生成一段「這幾天回顧」。
+// 為何走 workflow_dispatch 而不前端直接打 Claude？(1) API key 只能在伺服器端，(2) 中國連
+// api.anthropic.com 被牆，但連 GitHub 沒問題 → 讓 GitHub Actions 代打最穩。
+function _etDate(ms) {
+ // 粗略換算美東日期（-5h，不處理 DST，誤差 1h 不影響「是不是今天」的判斷）
+ return new Date(ms - 5 * 3600000).toISOString().slice(0, 10);
+}
+function _narrativeIsToday(genMs) {
+ if (!genMs) return false;
+ const g = genMs < 1e12 ? genMs * 1000 : genMs;
+ return _etDate(g) === _etDate(Date.now());
+}
+async function _maybeRefreshNarrativeOnOpen(market, data) {
+ // 同一個 market 整頁只檢查一次，避免重複觸發
+ window._narrativeOnOpenDone = window._narrativeOnOpenDone || {};
+ if (window._narrativeOnOpenDone[market]) return;
+ window._narrativeOnOpenDone[market] = true;
+
+ // 「距上次開站幾天」整頁只算一次快照，多市場共用（避免看完美股再看台股把天數歸零）
+ if (window._daysAwaySnapshot == null) {
+  try {
+   const prev = parseInt(localStorage.getItem('last_visit_ms'), 10);
+   window._daysAwaySnapshot = prev ? Math.max(1, Math.round((Date.now() - prev) / 86400000)) : 1;
+   localStorage.setItem('last_visit_ms', String(Date.now()));
+  } catch (e) { window._daysAwaySnapshot = 1; }
+ }
+ const daysAway = window._daysAwaySnapshot;
+
+ if (_narrativeIsToday(data && data.generatedAt)) return;   // 今天已生成 → $0，直接用
+ const dow = new Date(Date.now() - 5 * 3600000).getUTCDay();
+ if (dow === 0 || dow === 6) return;                        // 美股週末不自動生成
+
+ const token = (() => { try { return localStorage.getItem(GH_TOKEN_KEY); } catch (e) { return null; } })();
+ if (!token) { _narrativeManualHint(); return; }            // 沒 token → 提示，維持看上一份
+ _dispatchNarrative(market, token, daysAway, data && data.generatedAt);
+}
+
+function _narrativeManualHint() {
+ const metaEl = document.getElementById('narrative-meta');
+ if (metaEl && !metaEl.innerHTML.trim()) {
+  metaEl.innerHTML = '<a href="javascript:void(0)" onclick="showRescanTokenModal()" style="color:var(--accent);text-decoration:none" title="設定 GitHub token 後，開站會自動生成當天敘事，離開期間零 API">啟用今日敘事自動生成 →</a>';
+ }
+}
+
+async function _dispatchNarrative(market, token, daysAway, beforeGenMs) {
+ if (window._narrativeGenRunning) return;
+ window._narrativeGenRunning = true;
+ const metaEl = document.getElementById('narrative-meta');
+ const bodyEl = document.getElementById('narrative-body');
+ const hadOld = beforeGenMs != null;
+ const note = (msg, color) => { if (metaEl) metaEl.innerHTML = '<span style="color:' + (color || 'var(--accent)') + '">' + msg + '</span>'; };
+ const bodyNote = (msg) => { if (bodyEl && !hadOld) bodyEl.innerHTML = '<span style="color:var(--muted)">' + msg + '</span>'; };
+
+ const apiBase = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO;
+ const headers = { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' };
+ const genMsg = daysAway >= 2 ? ('生成 ' + daysAway + ' 天回顧中…約 1–2 分鐘') : '生成今日敘事中…約 1–2 分鐘';
+ note(genMsg); bodyNote(genMsg);
+
+ try {
+  const res = await fetch(apiBase + '/actions/workflows/' + GH_AI_WORKFLOW + '/dispatches', {
+   method: 'POST', headers,
+   body: JSON.stringify({ ref: 'main', inputs: { market, days: String(daysAway) } }),
+   signal: AbortSignal.timeout(15000),
+  });
+  if (res.status === 401 || res.status === 403) { note('Token 權限不足，無法自動生成（需此 repo 的 Actions 讀寫）', 'var(--bear)'); window._narrativeGenRunning = false; return; }
+  if (res.status !== 204) { note('觸發失敗 HTTP ' + res.status, 'var(--bear)'); window._narrativeGenRunning = false; return; }
+ } catch (e) {
+  note('無法連線 GitHub API：' + (e.message || '').slice(0, 40), 'var(--bear)'); window._narrativeGenRunning = false; return;
+ }
+
+ // 直接輪詢新 JSON 的 generatedAt（免查 run 狀態；只需連 raw CDN，中國也走得通）
+ const file = market === 'tw' ? 'tw_market_narrative.json' : 'us_market_narrative.json';
+ const deadline = Date.now() + 6 * 60 * 1000;
+ const poll = async () => {
+  try {
+   const r = await fetch(GH_RAW + file + '?t=' + Date.now(), { signal: AbortSignal.timeout(8000) });
+   if (r.ok) {
+    const d = await r.json();
+    if (d && d.generatedAt && (!beforeGenMs || d.generatedAt > beforeGenMs)) {
+     renderMarketNarrative(d);
+     window._narrativeGenRunning = false;
+     return;
+    }
+   }
+  } catch (e) {}
+  if (Date.now() < deadline) { setTimeout(poll, 20000); }
+  else { note('仍在生成，稍後重整即可看到', 'var(--muted)'); window._narrativeGenRunning = false; }
+ };
+ setTimeout(poll, 25000);   // 給 workflow 起步 + 跑完的時間
+}
+
+// 2026-06-30: ETF → 中文產業板塊。資金流入/流出區塊只有代號看不懂是哪個板塊 → 每個 chip 補中文。
+// 涵蓋 market_narrative.js 餵給 Claude 的 SECTOR_ETFS + Claude 常回的主題型 ETF。
+const ETF_SECTOR_ZH = {
+ XLK:'科技', XLF:'金融', XLE:'能源', XLV:'醫療保健', XLY:'非必需消費', XLP:'必需消費',
+ XLI:'工業', XLB:'原物料', XLU:'公用事業', XLC:'通訊服務', XLRE:'房地產',
+ IGV:'軟體', SMH:'半導體', SOXX:'半導體', IBB:'生技', XBI:'生技', GDX:'黃金礦業', GDXJ:'小型金礦',
+ XAR:'航太國防', ITA:'國防軍工', XRT:'零售', XHB:'房屋建築', KRE:'區域銀行', KBE:'銀行',
+ ICLN:'潔淨能源', TAN:'太陽能', JETS:'航空', XME:'金屬礦業', XOP:'油氣探勘', OIH:'油田服務',
+ IWM:'小型股', QQQ:'那斯達克100', SPY:'標普500', DIA:'道瓊', VNQ:'房地產', GLD:'黃金', SLV:'白銀',
+ ARKK:'創新成長', HACK:'網路安全', CIBR:'網路安全', SKYY:'雲端', LIT:'鋰電池', URA:'鈾核能',
+ FDN:'網路', PAVE:'基建', MOO:'農業', SLX:'鋼鐵', COPX:'銅礦', REMX:'稀土', TLT:'長天期公債', HYG:'高收益債',
+};
+function _etfChip(sym, cls) {
+ const s = String(sym || '').toUpperCase();
+ const zh = ETF_SECTOR_ZH[s];
+ return '<span class="cp ' + cls + '">' + escapeHtml(s) +
+  (zh ? ' <span style="opacity:.72;font-weight:400">' + zh + '</span>' : '') + '</span>';
 }
 
 function renderMarketNarrative(data) {
@@ -11072,7 +11188,22 @@ function renderMarketNarrative(data) {
  const ss = sessionMap[data.sessionShort] || null;
  const sessionPill = ss ? '<span class="cp ' + ss.cls + '" style="margin-right:6px">' + ss.label + '</span>' : '';
  headEl.innerHTML = sessionPill + '<span class="cp ' + rg.cls + '" style="margin-right:8px;vertical-align:middle">' + rg.label + '</span>' + escapeHtml(data.headline || '');
- bodyEl.textContent = data.narrative || '';
+ // 2026-06-30: 離開 >=2 天 → 在今日敘事上方加一段「這幾天市場回顧」橫幅（數字來自 yfinance N 日累計）。
+ if (data.recap && data.catchupDays >= 2) {
+  const rm = data.rangeMacros || {};
+  const moveBits = [];
+  if (rm.spy && rm.spy.changePct != null) moveBits.push('SPY ' + (rm.spy.changePct >= 0 ? '+' : '') + rm.spy.changePct + '%');
+  if (rm.qqq && rm.qqq.changePct != null) moveBits.push('QQQ ' + (rm.qqq.changePct >= 0 ? '+' : '') + rm.qqq.changePct + '%');
+  const moveLine = moveBits.length ? '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px">' + moveBits.join('　·　') + '　（' + data.catchupDays + ' 個交易日累計）</div>' : '';
+  bodyEl.innerHTML =
+   '<div style="padding:10px 12px;margin-bottom:10px;background:rgba(245,158,11,.06);border-left:3px solid #f59e0b;border-radius:4px">' +
+    '<div style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#f59e0b;margin-bottom:5px">你已 ' + data.catchupDays + ' 天沒來 · 這段期間市場回顧</div>' +
+    '<div style="font-size:12px;line-height:1.75;color:var(--text)">' + escapeHtml(data.recap) + '</div>' + moveLine +
+   '</div>' +
+   '<div style="font-size:13px;line-height:1.75">' + escapeHtml(data.narrative || '') + '</div>';
+ } else {
+  bodyEl.textContent = data.narrative || '';
+ }
 
  if (metaEl) {
   const tsMs = data.generatedAt ? (data.generatedAt < 1e12 ? data.generatedAt * 1000 : data.generatedAt) : null;
@@ -11087,12 +11218,12 @@ function renderMarketNarrative(data) {
   let html = '';
   if (into.length) {
    html += '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-right:6px">流入</span>' +
-    into.map(s => '<span class="cp bull">' + escapeHtml(s) + '</span>').join('');
+    into.map(s => _etfChip(s, 'bull')).join('');
   }
   if (outOf.length) {
    if (into.length) html += '<span style="display:inline-block;width:8px"></span>';
    html += '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-right:6px">流出</span>' +
-    outOf.map(s => '<span class="cp bear">' + escapeHtml(s) + '</span>').join('');
+    outOf.map(s => _etfChip(s, 'bear')).join('');
   }
   rotateEl.innerHTML = html;
  }
@@ -11537,6 +11668,7 @@ const SCAN_JSON_MAX_AGE_MS = 15 * 60 * 60 * 1000; // treat JSON stale after 15h 
 const GH_OWNER = 'shockby-ai0327';
 const GH_REPO  = 'stock-tool';
 const GH_SCAN_WORKFLOW = 'stock-scan.yml';
+const GH_AI_WORKFLOW = 'ai-analysis.yml';  // 2026-06-30: 市場敘事 + 個股 AI 判讀，開站按需觸發
 const GH_TOKEN_KEY = 'gh_actions_token'; // localStorage key（fine-grained, 僅 Actions 權限）
 
 async function fetchPrecomputedScan(market) {
