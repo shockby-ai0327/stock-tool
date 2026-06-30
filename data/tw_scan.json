@@ -1,8 +1,8 @@
 {
-  "scannedAt": "2026-06-30T18:29:57.579Z",
+  "scannedAt": "2026-06-30T21:21:23.068Z",
   "universeSize": 104,
   "scannedCount": 104,
-  "passedCount": 54,
+  "passedCount": 53,
   "benchmark": {
     "symbol": "0050.TW",
     "ret12_1": 117.95
@@ -58,7 +58,7 @@
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": 3.0,
+          "actual": 3,
           "estimate": 1.99911,
           "surprisePct": 0.5007
         }
@@ -292,7 +292,7 @@
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": 2.0,
+          "actual": 2,
           "estimate": 1.90061,
           "surprisePct": 0.0523
         }
@@ -313,84 +313,6 @@
       "epsRevisionCounts": {
         "up7d": 2,
         "up30d": 4,
-        "down7d": 0,
-        "down30d": 0
-      },
-      "sector": "Technology",
-      "industry": "Semiconductors",
-      "sectorEtf": "0052.TW"
-    },
-    {
-      "symbol": "2408.TW",
-      "name": "\u5357\u4e9e\u79d1",
-      "price": 452.5,
-      "changePct": -0.11,
-      "ret1m": 18.61,
-      "ret3m": 105.22,
-      "ret12_1": 645.12,
-      "rs12_1": 527.17,
-      "accel": 0.53,
-      "volExpand": 0.92,
-      "ma50": 332.11,
-      "avgVol20": 120966906,
-      "high52w": 505,
-      "high3m": 505,
-      "vcpScore": 3,
-      "vcpDepth": 16,
-      "vcpBaseNumber": 3,
-      "vcpPivot": 505,
-      "vcpBaseDays": 7,
-      "vcpPriorPullbackPct": 5.3,
-      "rsRating": 94,
-      "compositeScore": 76,
-      "earningsDate": 1783641600,
-      "daysToEarnings": 10,
-      "shortPctOfFloat": null,
-      "shortRatio": null,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-06-30 00:00:00",
-          "actual": -1.32,
-          "estimate": -0.3527,
-          "surprisePct": -2.7426002
-        },
-        {
-          "qtr": "2025-09-30 00:00:00",
-          "actual": 0.5,
-          "estimate": 0.28356,
-          "surprisePct": 0.7633
-        },
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 3.58,
-          "estimate": 2.12072,
-          "surprisePct": 0.6881
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 8.0,
-          "estimate": 6.85744,
-          "surprisePct": 0.1666
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 3,
-        "buy": 6,
-        "hold": 2,
-        "sell": 1,
-        "strongSell": 0
-      },
-      "epsRevision": {
-        "current": 47.627,
-        "pct90d": 73.52,
-        "pct30d": 5.88,
-        "pct7d": 1.3
-      },
-      "epsRevisionCounts": {
-        "up7d": 1,
-        "up30d": 2,
         "down7d": 0,
         "down30d": 0
       },
@@ -477,6 +399,84 @@
       "sectorEtf": "0052.TW"
     },
     {
+      "symbol": "2408.TW",
+      "name": "\u5357\u4e9e\u79d1",
+      "price": 452.5,
+      "changePct": -0.11,
+      "ret1m": 18.61,
+      "ret3m": 105.22,
+      "ret12_1": 645.12,
+      "rs12_1": 527.17,
+      "accel": 0.53,
+      "volExpand": 0.92,
+      "ma50": 332.11,
+      "avgVol20": 120966906,
+      "high52w": 505,
+      "high3m": 505,
+      "vcpScore": 3,
+      "vcpDepth": 16,
+      "vcpBaseNumber": 3,
+      "vcpPivot": 505,
+      "vcpBaseDays": 7,
+      "vcpPriorPullbackPct": 5.3,
+      "rsRating": 93,
+      "compositeScore": 75,
+      "earningsDate": 1783641600,
+      "daysToEarnings": 10,
+      "shortPctOfFloat": null,
+      "shortRatio": null,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-06-30 00:00:00",
+          "actual": -1.32,
+          "estimate": -0.3527,
+          "surprisePct": -2.7426002
+        },
+        {
+          "qtr": "2025-09-30 00:00:00",
+          "actual": 0.5,
+          "estimate": 0.28356,
+          "surprisePct": 0.7633
+        },
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 3.58,
+          "estimate": 2.12072,
+          "surprisePct": 0.6881
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 8,
+          "estimate": 6.85744,
+          "surprisePct": 0.1666
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 3,
+        "buy": 6,
+        "hold": 2,
+        "sell": 1,
+        "strongSell": 0
+      },
+      "epsRevision": {
+        "current": 47.627,
+        "pct90d": 73.52,
+        "pct30d": 5.88,
+        "pct7d": 1.3
+      },
+      "epsRevisionCounts": {
+        "up7d": 1,
+        "up30d": 2,
+        "down7d": 0,
+        "down30d": 0
+      },
+      "sector": "Technology",
+      "industry": "Semiconductors",
+      "sectorEtf": "0052.TW"
+    },
+    {
       "symbol": "2454.TW",
       "name": "\u806f\u767c\u79d1",
       "price": 4245,
@@ -497,7 +497,7 @@
       "vcpPivot": null,
       "vcpBaseDays": 0,
       "vcpPriorPullbackPct": null,
-      "rsRating": 83,
+      "rsRating": 82,
       "compositeScore": 72,
       "earningsDate": 1785283200,
       "daysToEarnings": 29,
@@ -605,7 +605,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -748,7 +748,7 @@
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": 14.0,
+          "actual": 14,
           "estimate": 15.07732,
           "surprisePct": -0.0715
         }
@@ -833,7 +833,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -869,7 +869,7 @@
       "vcpPivot": null,
       "vcpBaseDays": 0,
       "vcpPriorPullbackPct": null,
-      "rsRating": 74,
+      "rsRating": 73,
       "compositeScore": 68,
       "earningsDate": null,
       "daysToEarnings": null,
@@ -905,7 +905,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -977,7 +977,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1110,7 +1110,7 @@
           "qtr": "2018-09-30 00:00:00",
           "actual": -1.19,
           "estimate": 0.07,
-          "surprisePct": -18.0
+          "surprisePct": -18
         },
         {
           "qtr": "2018-12-31 00:00:00",
@@ -1127,7 +1127,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1163,8 +1163,8 @@
       "vcpPivot": null,
       "vcpBaseDays": 0,
       "vcpPriorPullbackPct": null,
-      "rsRating": 70,
-      "compositeScore": 61,
+      "rsRating": 69,
+      "compositeScore": 60,
       "earningsDate": null,
       "daysToEarnings": null,
       "shortPctOfFloat": null,
@@ -1174,7 +1174,7 @@
       "surpriseHistory": [],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1288,8 +1288,8 @@
       "vcpPivot": 70.1,
       "vcpBaseDays": 5,
       "vcpPriorPullbackPct": 21.4,
-      "rsRating": 72,
-      "compositeScore": 54,
+      "rsRating": 71,
+      "compositeScore": 53,
       "earningsDate": null,
       "daysToEarnings": null,
       "shortPctOfFloat": null,
@@ -1318,7 +1318,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1354,8 +1354,8 @@
       "vcpPivot": 112.3,
       "vcpBaseDays": 26,
       "vcpPriorPullbackPct": 2.4,
-      "rsRating": 65,
-      "compositeScore": 54,
+      "rsRating": 64,
+      "compositeScore": 53,
       "earningsDate": null,
       "daysToEarnings": null,
       "shortPctOfFloat": null,
@@ -1469,10 +1469,10 @@
       "vcpPivot": 233.5,
       "vcpBaseDays": 5,
       "vcpPriorPullbackPct": 23.3,
-      "rsRating": 59,
-      "compositeScore": 48,
+      "rsRating": 58,
+      "compositeScore": 47,
       "earningsDate": 1785283200,
-      "daysToEarnings": 30,
+      "daysToEarnings": 29,
       "shortPctOfFloat": null,
       "shortRatio": null,
       "recentUpgrades": [],
@@ -1498,7 +1498,7 @@
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": 1,
+          "actual": 1.0,
           "estimate": 1.69,
           "surprisePct": -0.4083
         }
@@ -1550,7 +1550,7 @@
       "rsRating": 55,
       "compositeScore": 47,
       "earningsDate": 1785369600,
-      "daysToEarnings": 31,
+      "daysToEarnings": 30,
       "shortPctOfFloat": null,
       "shortRatio": null,
       "recentUpgrades": [],
@@ -1592,7 +1592,7 @@
         "current": 0.3266,
         "pct90d": -11.42,
         "pct30d": -5.54,
-        "pct7d": 0
+        "pct7d": 0.0
       },
       "epsRevisionCounts": {
         "up7d": 0,
@@ -1625,7 +1625,7 @@
       "vcpPivot": 322,
       "vcpBaseDays": 8,
       "vcpPriorPullbackPct": 8.6,
-      "rsRating": 61,
+      "rsRating": 60,
       "compositeScore": 46,
       "earningsDate": null,
       "daysToEarnings": null,
@@ -1661,7 +1661,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1697,8 +1697,8 @@
       "vcpPivot": 570,
       "vcpBaseDays": 6,
       "vcpPriorPullbackPct": 16.7,
-      "rsRating": 57,
-      "compositeScore": 46,
+      "rsRating": 56,
+      "compositeScore": 45,
       "earningsDate": 1785974400,
       "daysToEarnings": 37,
       "shortPctOfFloat": null,
@@ -1775,7 +1775,7 @@
       "vcpPivot": 14.9,
       "vcpBaseDays": 9,
       "vcpPriorPullbackPct": 25.3,
-      "rsRating": 63,
+      "rsRating": 62,
       "compositeScore": 44,
       "earningsDate": null,
       "daysToEarnings": null,
@@ -1879,7 +1879,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -1915,8 +1915,8 @@
       "vcpPivot": 33.55,
       "vcpBaseDays": 12,
       "vcpPriorPullbackPct": 1.7,
-      "rsRating": 41,
-      "compositeScore": 29,
+      "rsRating": 40,
+      "compositeScore": 28,
       "earningsDate": 1787875200,
       "daysToEarnings": 59,
       "shortPctOfFloat": null,
@@ -1993,7 +1993,7 @@
       "vcpPivot": 73.6,
       "vcpBaseDays": 19,
       "vcpPriorPullbackPct": 0.2,
-      "rsRating": 32,
+      "rsRating": 31,
       "compositeScore": 24,
       "earningsDate": 1787270400,
       "daysToEarnings": 52,
@@ -2149,7 +2149,7 @@
       "vcpPivot": 851,
       "vcpBaseDays": 5,
       "vcpPriorPullbackPct": 24.1,
-      "rsRating": 6,
+      "rsRating": 7,
       "compositeScore": 13,
       "earningsDate": 1785369600,
       "daysToEarnings": 30,
@@ -2251,7 +2251,7 @@
       ],
       "recommendation": null,
       "epsRevision": {
-        "current": 0.0,
+        "current": 0,
         "pct90d": null,
         "pct30d": null,
         "pct7d": null
@@ -2272,8 +2272,8 @@
       "symbol": "2408.TW",
       "name": "\u5357\u4e9e\u79d1",
       "price": 452.5,
-      "rsRating": 94,
-      "compositeScore": 76,
+      "rsRating": 93,
+      "compositeScore": 75,
       "daysToEarnings": 10,
       "vcpScore": 3,
       "recentUpgradeCount": 0,
@@ -2284,7 +2284,7 @@
       "reasons": [
         "\u8ca1\u5831\u5012\u6578 10 \u5929",
         "VCP 3/6 (\u57fa\u5e95 3)",
-        "RS 94",
+        "RS 93",
         "EPS \u9810\u4f30\u4e0a\u4fee +5.9%/30d"
       ]
     }
