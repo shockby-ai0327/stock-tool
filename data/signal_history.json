@@ -31410,11 +31410,11 @@
       "symbol": "VSAT",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 73.02,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 73.02,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 67.1784,
       "target": 83.973,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-17_MGNX",
@@ -31422,11 +31422,11 @@
       "symbol": "MGNX",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 4.5,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 4.5,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 4.14,
       "target": 5.175,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-17_LASR",
@@ -31434,11 +31434,11 @@
       "symbol": "LASR",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 70.68,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 70.68,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 65.0256,
       "target": 81.282,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-17_URGN",
@@ -31446,11 +31446,11 @@
       "symbol": "URGN",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 40.91,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 40.91,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 37.6372,
       "target": 47.0465,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-17_GPRE",
@@ -31458,11 +31458,11 @@
       "symbol": "GPRE",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 18.98,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 18.98,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 17.4616,
       "target": 21.827,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "discovery_2026-07-17_ATAI",
@@ -31470,11 +31470,11 @@
       "symbol": "ATAI",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 7.18,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 7.18,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 6.6056,
       "target": 8.257,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "vcp_breakout_2026-07-17_VSAT",
@@ -31482,11 +31482,11 @@
       "symbol": "VSAT",
       "triggeredAt": "2026-07-17T17:52:39.092Z",
       "entryPrice": 73.02,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 73.02,
+      "exitDate": "2026-09-15T20:00:19.259Z",
       "stopLoss": 67.1784,
       "target": 83.973,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-17_CHRW",
@@ -66082,6 +66082,66 @@
       "exitDate": null,
       "stopLoss": 132.1672,
       "target": 165.209,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-15_VLO",
+      "type": "rs_leader",
+      "symbol": "VLO",
+      "triggeredAt": "2026-09-15T19:56:57.168Z",
+      "entryPrice": 395.4,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 363.768,
+      "target": 454.71,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-15_TVTX",
+      "type": "rs_leader",
+      "symbol": "TVTX",
+      "triggeredAt": "2026-09-15T19:56:57.168Z",
+      "entryPrice": 62.39,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 57.3988,
+      "target": 71.7485,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-15_CNTA",
+      "type": "rs_leader",
+      "symbol": "CNTA",
+      "triggeredAt": "2026-09-15T19:56:57.168Z",
+      "entryPrice": 39.59,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 36.4228,
+      "target": 45.5285,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-09-15_TVTX",
+      "type": "vcp_breakout",
+      "symbol": "TVTX",
+      "triggeredAt": "2026-09-15T19:56:57.168Z",
+      "entryPrice": 62.39,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 57.3988,
+      "target": 71.7485,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-09-15_CNTA",
+      "type": "vcp_breakout",
+      "symbol": "CNTA",
+      "triggeredAt": "2026-09-15T19:56:57.168Z",
+      "entryPrice": 39.59,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 36.4228,
+      "target": 45.5285,
       "status": "open"
     }
   ]
