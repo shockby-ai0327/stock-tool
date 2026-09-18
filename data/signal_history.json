@@ -32190,11 +32190,11 @@
       "symbol": "AMD",
       "triggeredAt": "2026-07-20T18:39:01.980Z",
       "entryPrice": 514.76,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 514.76,
+      "exitDate": "2026-09-18T19:22:49.713Z",
       "stopLoss": 473.5792,
       "target": 591.974,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "discovery_2026-07-20_STIM",
@@ -32202,11 +32202,11 @@
       "symbol": "STIM",
       "triggeredAt": "2026-07-20T18:39:01.980Z",
       "entryPrice": 2.03,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 2.03,
+      "exitDate": "2026-09-18T19:22:49.713Z",
       "stopLoss": 1.8676,
       "target": 2.3345,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-07-20_FSLY",
@@ -68482,6 +68482,102 @@
       "exitDate": null,
       "stopLoss": 105.846,
       "target": 132.3075,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-18_DOCN",
+      "type": "rs_leader",
+      "symbol": "DOCN",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 129.38,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 119.0296,
+      "target": 148.787,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-18_COHR",
+      "type": "rs_leader",
+      "symbol": "COHR",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 313.81,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 288.7052,
+      "target": 360.8815,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-18_FSLY",
+      "type": "rs_leader",
+      "symbol": "FSLY",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 23.98,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.0616,
+      "target": 27.577,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-09-18_UMC",
+      "type": "rs_leader",
+      "symbol": "UMC",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 24.42,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.4664,
+      "target": 28.083,
+      "status": "open"
+    },
+    {
+      "id": "triple_resonance_2026-09-18_DOCN",
+      "type": "triple_resonance",
+      "symbol": "DOCN",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 129.38,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 119.0296,
+      "target": 148.787,
+      "status": "open"
+    },
+    {
+      "id": "triple_resonance_2026-09-18_FSLY",
+      "type": "triple_resonance",
+      "symbol": "FSLY",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 23.98,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.0616,
+      "target": 27.577,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-09-18_FSLY",
+      "type": "vcp_breakout",
+      "symbol": "FSLY",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 23.98,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.0616,
+      "target": 27.577,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-09-18_UMC",
+      "type": "vcp_breakout",
+      "symbol": "UMC",
+      "triggeredAt": "2026-09-18T19:19:27.957Z",
+      "entryPrice": 24.42,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.4664,
+      "target": 28.083,
       "status": "open"
     }
   ]
