@@ -62706,11 +62706,11 @@
       "symbol": "HUT",
       "triggeredAt": "2026-09-08T19:41:16.317Z",
       "entryPrice": 99.23,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 89.63,
+      "exitDate": "2026-10-02T23:23:03.147Z",
       "stopLoss": 91.2916,
       "target": 114.1145,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "rs_leader_2026-09-08_NRIX",
@@ -67674,11 +67674,11 @@
       "symbol": "HUT",
       "triggeredAt": "2026-09-17T19:56:54.440Z",
       "entryPrice": 102.47,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 89.63,
+      "exitDate": "2026-10-02T23:23:03.147Z",
       "stopLoss": 94.2724,
       "target": 117.8405,
-      "status": "open"
+      "status": "hit_stop"
     },
     {
       "id": "rs_leader_2026-09-17_URG",
@@ -75922,6 +75922,42 @@
       "exitDate": null,
       "stopLoss": 19.8076,
       "target": 24.7595,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-10-02_NRGV",
+      "type": "rs_leader",
+      "symbol": "NRGV",
+      "triggeredAt": "2026-10-02T23:19:55.218Z",
+      "entryPrice": 5.93,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 5.4556,
+      "target": 6.8195,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-10-02_NVCT",
+      "type": "rs_leader",
+      "symbol": "NVCT",
+      "triggeredAt": "2026-10-02T23:19:55.218Z",
+      "entryPrice": 21.92,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 20.1664,
+      "target": 25.208,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-10-02_NVCT",
+      "type": "vcp_breakout",
+      "symbol": "NVCT",
+      "triggeredAt": "2026-10-02T23:19:55.218Z",
+      "entryPrice": 21.92,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 20.1664,
+      "target": 25.208,
       "status": "open"
     }
   ]
