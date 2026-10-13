@@ -49554,11 +49554,11 @@
       "symbol": "WBD",
       "triggeredAt": "2026-08-14T20:12:42.136Z",
       "entryPrice": 27.99,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 27.99,
+      "exitDate": "2026-10-13T23:33:23.920Z",
       "stopLoss": 25.7508,
       "target": 32.1885,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "discovery_2026-08-14_ABNB",
@@ -49578,11 +49578,11 @@
       "symbol": "PTLO",
       "triggeredAt": "2026-08-14T20:12:42.136Z",
       "entryPrice": 5.16,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 5.16,
+      "exitDate": "2026-10-13T23:33:23.920Z",
       "stopLoss": 4.7472,
       "target": 5.934,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "vcp_breakout_2026-08-14_ABNB",
@@ -80950,6 +80950,42 @@
       "exitDate": null,
       "stopLoss": 419.9248,
       "target": 524.906,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-10-13_RNG",
+      "type": "rs_leader",
+      "symbol": "RNG",
+      "triggeredAt": "2026-10-13T23:29:44.801Z",
+      "entryPrice": 78.69,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 72.3948,
+      "target": 90.4935,
+      "status": "open"
+    },
+    {
+      "id": "triple_resonance_2026-10-13_RNG",
+      "type": "triple_resonance",
+      "symbol": "RNG",
+      "triggeredAt": "2026-10-13T23:29:44.801Z",
+      "entryPrice": 78.69,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 72.3948,
+      "target": 90.4935,
+      "status": "open"
+    },
+    {
+      "id": "earnings_play_2026-10-13_RNG",
+      "type": "earnings_play",
+      "symbol": "RNG",
+      "triggeredAt": "2026-10-13T23:29:44.801Z",
+      "entryPrice": 78.69,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 72.3948,
+      "target": 90.4935,
       "status": "open"
     }
   ]
