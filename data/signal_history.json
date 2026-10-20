@@ -53418,11 +53418,11 @@
       "symbol": "RCUS",
       "triggeredAt": "2026-08-21T20:00:29.780Z",
       "entryPrice": 30.11,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 30.11,
+      "exitDate": "2026-10-20T20:17:45.055Z",
       "stopLoss": 27.7012,
       "target": 34.6265,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "vcp_breakout_2026-08-21_RCUS",
@@ -53430,11 +53430,11 @@
       "symbol": "RCUS",
       "triggeredAt": "2026-08-21T20:00:29.780Z",
       "entryPrice": 30.11,
-      "exitPrice": null,
-      "exitDate": null,
+      "exitPrice": 30.11,
+      "exitDate": "2026-10-20T20:17:45.055Z",
       "stopLoss": 27.7012,
       "target": 34.6265,
-      "status": "open"
+      "status": "timed_out"
     },
     {
       "id": "rs_leader_2026-08-24_MRNA",
@@ -84802,6 +84802,90 @@
       "exitDate": null,
       "stopLoss": 148.258,
       "target": 185.3225,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-10-20_FOSL",
+      "type": "rs_leader",
+      "symbol": "FOSL",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 6.81,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 6.2652,
+      "target": 7.8315,
+      "status": "open"
+    },
+    {
+      "id": "rs_leader_2026-10-20_PR",
+      "type": "rs_leader",
+      "symbol": "PR",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 24.85,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.862,
+      "target": 28.5775,
+      "status": "open"
+    },
+    {
+      "id": "triple_resonance_2026-10-20_FOSL",
+      "type": "triple_resonance",
+      "symbol": "FOSL",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 6.81,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 6.2652,
+      "target": 7.8315,
+      "status": "open"
+    },
+    {
+      "id": "triple_resonance_2026-10-20_PR",
+      "type": "triple_resonance",
+      "symbol": "PR",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 24.85,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.862,
+      "target": 28.5775,
+      "status": "open"
+    },
+    {
+      "id": "earnings_play_2026-10-20_MPC",
+      "type": "earnings_play",
+      "symbol": "MPC",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 475.02,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 437.0184,
+      "target": 546.273,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-10-20_FOSL",
+      "type": "vcp_breakout",
+      "symbol": "FOSL",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 6.81,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 6.2652,
+      "target": 7.8315,
+      "status": "open"
+    },
+    {
+      "id": "vcp_breakout_2026-10-20_PR",
+      "type": "vcp_breakout",
+      "symbol": "PR",
+      "triggeredAt": "2026-10-20T20:14:12.582Z",
+      "entryPrice": 24.85,
+      "exitPrice": null,
+      "exitDate": null,
+      "stopLoss": 22.862,
+      "target": 28.5775,
       "status": "open"
     }
   ]
