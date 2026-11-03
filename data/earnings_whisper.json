@@ -1,26 +1,31 @@
 {
-  "generatedAt": 1793736938979,
-  "count": 47,
+  "generatedAt": 1793743824377,
+  "count": 48,
   "bySymbol": {
     "CAKE": {
       "whisperEPS": 1.1,
       "consensusEPS": 1.2,
       "whisperBeat": -0.1
     },
-    "LFST": {
-      "whisperEPS": 0.03,
-      "consensusEPS": 0.03,
-      "whisperBeat": 0.0
-    },
     "LFUS": {
       "whisperEPS": 4.95,
       "consensusEPS": 5.15,
       "whisperBeat": -0.2
     },
+    "LFST": {
+      "whisperEPS": 0.03,
+      "consensusEPS": 0.03,
+      "whisperBeat": 0.0
+    },
     "PACS": {
-      "whisperEPS": 0.55,
+      "whisperEPS": 0.56,
       "consensusEPS": 0.56,
-      "whisperBeat": -0.01
+      "whisperBeat": 0.0
+    },
+    "PEB": {
+      "whisperEPS": 0.57,
+      "consensusEPS": 0.25,
+      "whisperBeat": 0.32
     },
     "OGN": {
       "reportTime": "BMO",
@@ -28,30 +33,30 @@
       "consensusEPS": 0.8,
       "whisperBeat": 0.18
     },
-    "CNC": {
-      "whisperEPS": 0.1,
-      "consensusEPS": 1.14,
-      "whisperBeat": -1.04
-    },
-    "MITK": {
-      "whisperEPS": 0.28,
-      "consensusEPS": 0.11,
-      "whisperBeat": 0.17
+    "TXN": {
+      "whisperEPS": 2.48,
+      "consensusEPS": 2.61,
+      "whisperBeat": -0.13
     },
     "VRA": {
       "whisperEPS": 0.08,
       "consensusEPS": 0.2,
       "whisperBeat": -0.12
     },
-    "PEB": {
-      "whisperEPS": 0.57,
-      "consensusEPS": 0.25,
-      "whisperBeat": 0.32
-    },
     "MPC": {
       "whisperEPS": 6.62,
       "consensusEPS": 25.74,
       "whisperBeat": -19.12
+    },
+    "MITK": {
+      "whisperEPS": 0.28,
+      "consensusEPS": 0.11,
+      "whisperBeat": 0.17
+    },
+    "OSPN": {
+      "whisperEPS": 0.24,
+      "consensusEPS": 0.26,
+      "whisperBeat": -0.02
     },
     "APA": {
       "reportTime": "AMC",
@@ -59,30 +64,25 @@
       "consensusEPS": 1.44,
       "whisperBeat": 0.67
     },
+    "CNC": {
+      "whisperEPS": 0.1,
+      "consensusEPS": 1.14,
+      "whisperBeat": -1.04
+    },
+    "ZIM": {
+      "whisperEPS": 0.1,
+      "consensusEPS": 4.77,
+      "whisperBeat": -4.67
+    },
     "TRGP": {
       "whisperEPS": 2.92,
       "consensusEPS": 2.74,
       "whisperBeat": 0.18
     },
-    "OSPN": {
-      "whisperEPS": 0.24,
-      "consensusEPS": 0.26,
-      "whisperBeat": -0.02
-    },
-    "TXN": {
-      "whisperEPS": 2.48,
-      "consensusEPS": 2.61,
-      "whisperBeat": -0.13
-    },
     "PSX": {
       "whisperEPS": 2.16,
       "consensusEPS": 10.21,
       "whisperBeat": -8.05
-    },
-    "CRL": {
-      "whisperEPS": 2.79,
-      "consensusEPS": 2.98,
-      "whisperBeat": -0.19
     },
     "KOD": {
       "whisperEPS": 0.95,
@@ -93,6 +93,11 @@
       "whisperEPS": 0.13,
       "consensusEPS": 0.17,
       "whisperBeat": -0.04
+    },
+    "PR": {
+      "whisperEPS": 0.59,
+      "consensusEPS": 0.6,
+      "whisperBeat": -0.01
     },
     "GDYN": {
       "whisperEPS": 0.13,
@@ -119,11 +124,6 @@
       "consensusEPS": 0.7,
       "whisperBeat": 0.4
     },
-    "ICLR": {
-      "whisperEPS": 2.71,
-      "consensusEPS": 2.6,
-      "whisperBeat": 0.11
-    },
     "REGN": {
       "whisperEPS": 7.16,
       "consensusEPS": 17.58,
@@ -135,20 +135,25 @@
       "consensusEPS": 0.36,
       "whisperBeat": 0.06
     },
+    "ICLR": {
+      "whisperEPS": 2.71,
+      "consensusEPS": 2.6,
+      "whisperBeat": 0.11
+    },
     "MANH": {
       "whisperEPS": 1.48,
       "consensusEPS": 0.92,
       "whisperBeat": 0.56
     },
-    "TYL": {
-      "whisperEPS": 3.53,
-      "consensusEPS": 2.65,
-      "whisperBeat": 0.88
-    },
     "SIBN": {
       "whisperEPS": 0.12,
       "consensusEPS": 0.11,
       "whisperBeat": 0.01
+    },
+    "TYL": {
+      "whisperEPS": 3.53,
+      "consensusEPS": 2.65,
+      "whisperBeat": 0.88
     },
     "EXEL": {
       "whisperEPS": 0.93,
@@ -191,9 +196,9 @@
       "whisperBeat": -0.25
     },
     "AMD": {
-      "whisperEPS": 1.72,
+      "whisperEPS": 2.1,
       "consensusEPS": 1.94,
-      "whisperBeat": -0.22
+      "whisperBeat": 0.16
     },
     "AVGO": {
       "whisperEPS": 3.28,
