@@ -1,31 +1,31 @@
 {
-  "scannedAt": "2026-11-17T23:43:30.570Z",
+  "scannedAt": "2026-11-18T01:55:05.664Z",
   "universeSize": 1213,
   "scannedCount": 1213,
-  "passedCount": 268,
+  "passedCount": 275,
   "benchmark": {
     "symbol": "SPY",
-    "ret12_1": 19.51
+    "ret12_1": 16.12
   },
   "leaders": [
     {
       "symbol": "FOSL",
       "name": "Fossil Group, Inc.",
-      "price": 8.03,
-      "changePct": -2.43,
-      "ret1m": 17.91,
-      "ret3m": 43.91,
-      "ret6m": 103.29,
-      "ret12_1": 258.42,
-      "rs12_1": 238.91,
+      "price": 8.23,
+      "changePct": -2.37,
+      "ret1m": 21.93,
+      "ret3m": 44.64,
+      "ret6m": 112.11,
+      "ret12_1": 255.26,
+      "rs12_1": 239.14,
       "sector": "Consumer Cyclical",
       "industry": "Footwear & Accessories",
       "sectorEtf": "XLY",
       "sectorRS": null,
-      "accel": 1.22,
+      "accel": 1.47,
       "volExpand": 1.94,
       "volTrend": 1.26,
-      "ma50": 6.73,
+      "ma50": 6.67,
       "avgVol20": 1344862,
       "high52w": 10.55,
       "high3m": 10.55,
@@ -35,17 +35,8 @@
       "vcpPivot": null,
       "vcpBaseDays": 0,
       "vcpPriorPullbackPct": null,
-      "qlibScore": 35,
-      "qlibSubs": {
-        "kmid": 48,
-        "breakout": 0,
-        "roc20": 65,
-        "contract": 1,
-        "volExp": 43,
-        "chip": 48,
-        "align": 74,
-        "accel": 1
-      },
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": true,
       "earningsDate": 1794268800,
@@ -59,7 +50,7 @@
           "qtr": "2025-12-31 00:00:00",
           "actual": -0.33,
           "estimate": -0.005,
-          "surprisePct": -65.0
+          "surprisePct": -65
         },
         {
           "qtr": "2026-03-31 00:00:00",
@@ -103,6 +94,100 @@
       }
     },
     {
+      "symbol": "AMAT",
+      "name": "Applied Materials, Inc.",
+      "price": 436.62,
+      "changePct": -0.89,
+      "ret1m": 10,
+      "ret3m": 21.58,
+      "ret6m": 95.59,
+      "ret12_1": 139.74,
+      "rs12_1": 123.62,
+      "sector": "Technology",
+      "industry": "Semiconductor Equipment & Materials",
+      "sectorEtf": "SMH",
+      "sectorRS": 75.18,
+      "accel": 1.39,
+      "volExpand": 1.46,
+      "volTrend": 1.06,
+      "ma50": 380.81,
+      "avgVol20": 7276215,
+      "high52w": 448.45,
+      "high3m": 448.45,
+      "vcpScore": 4,
+      "vcpDepth": 17,
+      "vcpBaseNumber": 2,
+      "vcpPivot": 448.45,
+      "vcpBaseDays": 12,
+      "vcpPriorPullbackPct": 8.5,
+      "qlibScore": 45,
+      "qlibSubs": {
+        "kmid": 55,
+        "breakout": 82,
+        "roc20": 42,
+        "contract": 38,
+        "volExp": 12,
+        "chip": 56,
+        "align": 74,
+        "accel": 0
+      },
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1802304000,
+      "daysToEarnings": 85,
+      "shortPctOfFloat": 0.0183,
+      "shortRatio": 2.04,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2026-01-31 00:00:00",
+          "actual": 2.38,
+          "estimate": 2.206,
+          "surprisePct": 0.0789
+        },
+        {
+          "qtr": "2026-04-30 00:00:00",
+          "actual": 2.86,
+          "estimate": 2.68545,
+          "surprisePct": 0.065
+        },
+        {
+          "qtr": "2026-07-31 00:00:00",
+          "actual": 3.5,
+          "estimate": 3.3944,
+          "surprisePct": 0.0311
+        },
+        {
+          "qtr": "2026-10-31 00:00:00",
+          "actual": 4.16,
+          "estimate": 4.0544,
+          "surprisePct": 0.025999999
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 5,
+        "buy": 28,
+        "hold": 7,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 93,
+      "compositeScore": 84,
+      "epsRevision": {
+        "current": 19.2851,
+        "pct90d": 4.74,
+        "pct30d": 3.75,
+        "pct7d": 3.18
+      },
+      "epsRevisionCounts": {
+        "up7d": 1,
+        "up30d": 6,
+        "down7d": 0,
+        "down30d": 3
+      }
+    },
+    {
       "symbol": "EXAS",
       "name": "EXAS",
       "price": 104.91,
@@ -111,7 +196,7 @@
       "ret3m": 3.03,
       "ret6m": 95.87,
       "ret12_1": 83.27,
-      "rs12_1": 63.76,
+      "rs12_1": 67.15,
       "sector": null,
       "industry": null,
       "sectorEtf": null,
@@ -150,7 +235,7 @@
       "recentDowngrades": [],
       "surpriseHistory": [],
       "recommendation": null,
-      "rsRating": 89,
+      "rsRating": 88,
       "compositeScore": 84,
       "epsRevision": null,
       "epsRevisionCounts": null
@@ -158,21 +243,21 @@
     {
       "symbol": "ETON",
       "name": "Eton Pharmaceuticals, Inc.",
-      "price": 63.65,
-      "changePct": -0.36,
-      "ret1m": 26.82,
-      "ret3m": 6.24,
-      "ret6m": 84.76,
-      "ret12_1": 191.8,
-      "rs12_1": 172.29,
+      "price": 63.88,
+      "changePct": -0.08,
+      "ret1m": 29.78,
+      "ret3m": 3.9,
+      "ret6m": 94.22,
+      "ret12_1": 186.16,
+      "rs12_1": 170.04,
       "sector": "Healthcare",
       "industry": "Drug Manufacturers - Specialty & Generic",
       "sectorEtf": "XLV",
-      "sectorRS": 173.96,
+      "sectorRS": 171.05,
       "accel": 5,
       "volExpand": 1.26,
       "volTrend": 1,
-      "ma50": 55.46,
+      "ma50": 55.37,
       "avgVol20": 617659,
       "high52w": 70.64,
       "high3m": 70.64,
@@ -180,19 +265,10 @@
       "vcpDepth": 16,
       "vcpBaseNumber": 1,
       "vcpPivot": 70.64,
-      "vcpBaseDays": 6,
+      "vcpBaseDays": 5,
       "vcpPriorPullbackPct": 5.3,
-      "qlibScore": 32,
-      "qlibSubs": {
-        "kmid": 20,
-        "breakout": 34,
-        "roc20": 90,
-        "contract": 7,
-        "volExp": 14,
-        "chip": 44,
-        "align": 50,
-        "accel": 0
-      },
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": false,
       "earningsDate": 1793836800,
@@ -212,7 +288,7 @@
           "qtr": "2026-03-31 00:00:00",
           "actual": 0.14,
           "estimate": 0.14,
-          "surprisePct": 0.0
+          "surprisePct": 0
         },
         {
           "qtr": "2026-06-30 00:00:00",
@@ -234,7 +310,7 @@
         "sell": 0,
         "strongSell": 0
       },
-      "rsRating": 96,
+      "rsRating": 95,
       "compositeScore": 83,
       "epsRevision": {
         "current": 1.775,
@@ -250,103 +326,690 @@
       }
     },
     {
-      "symbol": "CAT",
-      "name": "Caterpillar, Inc.",
-      "price": 888.31,
-      "changePct": -3.47,
-      "ret1m": 11.79,
-      "ret3m": 16.16,
-      "ret6m": 60.48,
-      "ret12_1": 124.74,
-      "rs12_1": 105.23,
-      "sector": "Industrials",
-      "industry": "Farm & Heavy Construction Machinery",
-      "sectorEtf": "XLI",
-      "sectorRS": 113.43,
-      "accel": 2.19,
-      "volExpand": 0.98,
-      "volTrend": 1.02,
-      "ma50": 782.14,
-      "avgVol20": 2480440,
-      "high52w": 931.35,
-      "high3m": 931.35,
-      "vcpScore": 2,
-      "vcpDepth": 17,
-      "vcpBaseNumber": 6,
-      "vcpPivot": 931.35,
-      "vcpBaseDays": 19,
-      "vcpPriorPullbackPct": 0.5,
-      "qlibScore": 40,
+      "symbol": "SITM",
+      "name": "SiTime Corporation",
+      "price": 774.06,
+      "changePct": -5.63,
+      "ret1m": 53.7,
+      "ret3m": 86.95,
+      "ret6m": 168.16,
+      "ret12_1": 139.06,
+      "rs12_1": 122.94,
+      "sector": "Technology",
+      "industry": "Semiconductors",
+      "sectorEtf": "SMH",
+      "sectorRS": 74.5,
+      "accel": 1.85,
+      "volExpand": 1.19,
+      "volTrend": 0.93,
+      "ma50": 482.27,
+      "avgVol20": 485775,
+      "high52w": 901.81,
+      "high3m": 901.81,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": 41,
       "qlibSubs": {
-        "kmid": 46,
-        "breakout": 68,
-        "roc20": 47,
-        "contract": 40,
-        "volExp": 5,
-        "chip": 38,
+        "kmid": 74,
+        "breakout": 6,
+        "roc20": 99,
+        "contract": 2,
+        "volExp": 19,
+        "chip": 50,
         "align": 74,
         "accel": 0
       },
       "isLeader": true,
       "isDiscovery": false,
-      "earningsDate": 1801094400,
-      "daysToEarnings": 72,
-      "shortPctOfFloat": 0.02,
-      "shortRatio": 2.68,
-      "recentUpgrades": [],
+      "earningsDate": 1801612800,
+      "daysToEarnings": 77,
+      "shortPctOfFloat": 0.0797,
+      "shortRatio": 3.29,
+      "recentUpgrades": [
+        {
+          "firm": "Seaport Global",
+          "action": "up",
+          "date": "2026-11-06"
+        },
+        {
+          "firm": "Rosenblatt",
+          "action": "init",
+          "date": "2026-10-20"
+        }
+      ],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 1.53,
+          "estimate": 1.2085,
+          "surprisePct": 0.266
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 1.44,
+          "estimate": 1.15716,
+          "surprisePct": 0.24440001
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 2.34,
+          "estimate": 1.95425,
+          "surprisePct": 0.1974
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 4.01,
+          "estimate": 3.55526,
+          "surprisePct": 0.1279
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 4,
+        "buy": 8,
+        "hold": 0,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 93,
+      "compositeScore": 81,
+      "epsRevision": {
+        "current": 12.7294,
+        "pct90d": 14.52,
+        "pct30d": 14.32,
+        "pct7d": 13.67
+      },
+      "epsRevisionCounts": {
+        "up7d": 12,
+        "up30d": 11,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
+      "symbol": "GLW",
+      "name": "Corning Incorporated",
+      "price": 191.81,
+      "changePct": -7.91,
+      "ret1m": 16.69,
+      "ret3m": 46.96,
+      "ret6m": 132.89,
+      "ret12_1": 240.9,
+      "rs12_1": 224.78,
+      "sector": "Technology",
+      "industry": "Electronic Components",
+      "sectorEtf": "XLK",
+      "sectorRS": 207.61,
+      "accel": 1.07,
+      "volExpand": 1.24,
+      "volTrend": 1.08,
+      "ma50": 156.97,
+      "avgVol20": 14400330,
+      "high52w": 211.79,
+      "high3m": 211.79,
+      "vcpScore": 3,
+      "vcpDepth": 14,
+      "vcpBaseNumber": 3,
+      "vcpPivot": 211.79,
+      "vcpBaseDays": 6,
+      "vcpPriorPullbackPct": 5.5,
+      "qlibScore": 55,
+      "qlibSubs": {
+        "kmid": 55,
+        "breakout": 37,
+        "roc20": 61,
+        "contract": 14,
+        "volExp": 20,
+        "chip": 78,
+        "align": 74,
+        "accel": 99
+      },
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1800921600,
+      "daysToEarnings": 69,
+      "shortPctOfFloat": 0.0217,
+      "shortRatio": 1.83,
+      "recentUpgrades": [
+        {
+          "firm": "Jefferies",
+          "action": "init",
+          "date": "2026-11-11"
+        }
+      ],
       "recentDowngrades": [
         {
           "firm": "Truist Securities",
           "action": "reit",
-          "date": "2026-10-30"
+          "date": "2026-10-28"
         }
       ],
       "surpriseHistory": [
         {
           "qtr": "2025-12-31 00:00:00",
-          "actual": 5.16,
-          "estimate": 4.71207,
-          "surprisePct": 0.0951
+          "actual": 0.72,
+          "estimate": 0.70535,
+          "surprisePct": 0.0208
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": 5.54,
-          "estimate": 4.64388,
-          "surprisePct": 0.19299999
+          "actual": 0.7,
+          "estimate": 0.6916,
+          "surprisePct": 0.0121
         },
         {
           "qtr": "2026-06-30 00:00:00",
-          "actual": 8.17,
-          "estimate": 6.19742,
-          "surprisePct": 0.3183
+          "actual": 0.78,
+          "estimate": 0.75378,
+          "surprisePct": 0.0348
         },
         {
           "qtr": "2026-09-30 00:00:00",
-          "actual": 7.2,
-          "estimate": 7.03346,
-          "surprisePct": 0.023699999
+          "actual": 0.91,
+          "estimate": 0.88003,
+          "surprisePct": 0.0341
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 1,
+        "buy": 14,
+        "hold": 4,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 97,
+      "compositeScore": 81,
+      "epsRevision": {
+        "current": 3.3767,
+        "pct90d": 3.1,
+        "pct30d": 2.58,
+        "pct7d": 0.07
+      },
+      "epsRevisionCounts": {
+        "up7d": 14,
+        "up30d": 13,
+        "down7d": 1,
+        "down30d": 1
+      }
+    },
+    {
+      "symbol": "STRL",
+      "name": "Sterling Infrastructure, Inc.",
+      "price": 848.84,
+      "changePct": -4.52,
+      "ret1m": 83.08,
+      "ret3m": 101.53,
+      "ret6m": 159.9,
+      "ret12_1": 145.88,
+      "rs12_1": 129.76,
+      "sector": "Industrials",
+      "industry": "Engineering & Construction",
+      "sectorEtf": "XLI",
+      "sectorRS": 134.65,
+      "accel": 2.45,
+      "volExpand": 0.89,
+      "volTrend": 1.14,
+      "ma50": 516.03,
+      "avgVol20": 653275,
+      "high52w": 893.13,
+      "high3m": 893.13,
+      "vcpScore": 3,
+      "vcpDepth": 11,
+      "vcpBaseNumber": 3,
+      "vcpPivot": 893.13,
+      "vcpBaseDays": 8,
+      "vcpPriorPullbackPct": 0.2,
+      "qlibScore": 58,
+      "qlibSubs": {
+        "kmid": 66,
+        "breakout": 66,
+        "roc20": 99,
+        "contract": 0,
+        "volExp": 29,
+        "chip": 70,
+        "align": 74,
+        "accel": null
+      },
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793145600,
+      "daysToEarnings": -21,
+      "shortPctOfFloat": 0.053600002,
+      "shortRatio": 1.81,
+      "recentUpgrades": [
+        {
+          "firm": "JP Morgan",
+          "action": "init",
+          "date": "2026-11-10"
+        }
+      ],
+      "recentDowngrades": [
+        {
+          "firm": "Cantor Fitzgerald",
+          "action": "reit",
+          "date": "2026-10-29"
+        }
+      ],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 3.08,
+          "estimate": 2.63167,
+          "surprisePct": 0.17040001
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 3.59,
+          "estimate": 2.19,
+          "surprisePct": 0.6393
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 5.8,
+          "estimate": 5.25333,
+          "surprisePct": 0.1041
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 7.58,
+          "estimate": 6.17143,
+          "surprisePct": 0.2282
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 1,
+        "buy": 8,
+        "hold": 0,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 94,
+      "compositeScore": 79,
+      "epsRevision": {
+        "current": 21.8339,
+        "pct90d": 8.63,
+        "pct30d": 8.69,
+        "pct7d": -0.02
+      },
+      "epsRevisionCounts": {
+        "up7d": 6,
+        "up30d": 6,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
+      "symbol": "SNDK",
+      "name": "Sandisk Corporation",
+      "price": 1407.61,
+      "changePct": 1.8,
+      "ret1m": 52.84,
+      "ret3m": 138.34,
+      "ret6m": 477.91,
+      "ret12_1": 2177.42,
+      "rs12_1": 2161.3,
+      "sector": "Technology",
+      "industry": "Computer Hardware",
+      "sectorEtf": "XLK",
+      "sectorRS": 2144.13,
+      "accel": 1.15,
+      "volExpand": 0.93,
+      "volTrend": 0.9,
+      "ma50": 922.65,
+      "avgVol20": 15226135,
+      "high52w": 1600,
+      "high3m": 1600,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": 58,
+      "qlibSubs": {
+        "kmid": 92,
+        "breakout": 20,
+        "roc20": 99,
+        "contract": 7,
+        "volExp": 0,
+        "chip": 70,
+        "align": 74,
+        "accel": 99
+      },
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793232000,
+      "daysToEarnings": -20,
+      "shortPctOfFloat": 0.0346,
+      "shortRatio": 0.57,
+      "recentUpgrades": [],
+      "recentDowngrades": [
+        {
+          "firm": "Fox Advisors",
+          "action": "down",
+          "date": "2026-11-02"
+        }
+      ],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 6.2,
+          "estimate": 3.54338,
+          "surprisePct": 0.7497
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 23.41,
+          "estimate": 14.66111,
+          "surprisePct": 0.59669995
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 39.25,
+          "estimate": 34.515,
+          "surprisePct": 0.1372
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 49.51,
+          "estimate": 46.40613,
+          "surprisePct": 0.0669
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 4,
+        "buy": 17,
+        "hold": 4,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 99,
+      "compositeScore": 79,
+      "epsRevision": {
+        "current": 227.4808,
+        "pct90d": 6.68,
+        "pct30d": 5.89,
+        "pct7d": -0.14
+      },
+      "epsRevisionCounts": {
+        "up7d": 18,
+        "up30d": 18,
+        "down7d": 2,
+        "down30d": 2
+      }
+    },
+    {
+      "symbol": "SLAB",
+      "name": "Silicon Laboratories, Inc.",
+      "price": 221.65,
+      "changePct": 0.1,
+      "ret1m": 0.3,
+      "ret3m": 1.25,
+      "ret6m": 2.4,
+      "ret12_1": 89.38,
+      "rs12_1": 73.26,
+      "sector": "Technology",
+      "industry": "Semiconductors",
+      "sectorEtf": "SMH",
+      "sectorRS": 24.82,
+      "accel": null,
+      "volExpand": 1.43,
+      "volTrend": 1.17,
+      "ma50": 221.33,
+      "avgVol20": 444459,
+      "high52w": 223.5,
+      "high3m": 223.5,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1801612800,
+      "daysToEarnings": 78,
+      "shortPctOfFloat": 0.0846,
+      "shortRatio": 5.4,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 0.56,
+          "estimate": 0.54778,
+          "surprisePct": 0.0223
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 0.53,
+          "estimate": 0.50354,
+          "surprisePct": 0.0525
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": -0.32,
+          "estimate": -0.22202,
+          "surprisePct": -0.4413
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 1.05,
+          "estimate": 0.84838,
+          "surprisePct": 0.2377
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 0,
+        "buy": 0,
+        "hold": 8,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 90,
+      "compositeScore": 78,
+      "epsRevision": {
+        "current": 3.2106,
+        "pct90d": 9.52,
+        "pct30d": 11.59,
+        "pct7d": 11.59
+      },
+      "epsRevisionCounts": {
+        "up7d": 0,
+        "up30d": 3,
+        "down7d": 1,
+        "down30d": 2
+      }
+    },
+    {
+      "symbol": "PACS",
+      "name": "PACS Group, Inc.",
+      "price": 49,
+      "changePct": 1.41,
+      "ret1m": 6.87,
+      "ret3m": 10.71,
+      "ret6m": 33.44,
+      "ret12_1": 217.74,
+      "rs12_1": 201.62,
+      "sector": "Healthcare",
+      "industry": "Medical Care Facilities",
+      "sectorEtf": "XLV",
+      "sectorRS": 202.63,
+      "accel": 1.92,
+      "volExpand": 0.7,
+      "volTrend": 1.05,
+      "ma50": 45.36,
+      "avgVol20": 876367,
+      "high52w": 51.68,
+      "high3m": 51.68,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793664000,
+      "daysToEarnings": -14,
+      "shortPctOfFloat": 0.0881,
+      "shortRatio": 5.25,
+      "recentUpgrades": [],
+      "recentDowngrades": [
+        {
+          "firm": "Truist Securities",
+          "action": "reit",
+          "date": "2026-11-05"
+        }
+      ],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 0.572,
+          "estimate": 0.45525,
+          "surprisePct": 0.2565
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 0.6385,
+          "estimate": 0.4072,
+          "surprisePct": 0.568
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 0.6261,
+          "estimate": 0.56046,
+          "surprisePct": 0.1171
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 0.63,
+          "estimate": 0.58286,
+          "surprisePct": 0.0809
         }
       ],
       "recommendation": {
         "strongBuy": 2,
-        "buy": 15,
-        "hold": 11,
-        "sell": 1,
+        "buy": 4,
+        "hold": 0,
+        "sell": 0,
         "strongSell": 0
       },
-      "rsRating": 93,
-      "compositeScore": 79,
+      "rsRating": 96,
+      "compositeScore": 78,
       "epsRevision": {
-        "current": 27.0285,
-        "pct90d": -0.13,
-        "pct30d": -0.63,
-        "pct7d": -0.34
+        "current": 2.6064,
+        "pct90d": 3.48,
+        "pct30d": 4.07,
+        "pct7d": 0.42
       },
       "epsRevisionCounts": {
-        "up7d": 5,
-        "up30d": 6,
-        "down7d": 12,
-        "down30d": 12
+        "up7d": 3,
+        "up30d": 2,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
+      "symbol": "KOD",
+      "name": "Kodiak Sciences Inc",
+      "price": 37.02,
+      "changePct": -4.34,
+      "ret1m": -17.55,
+      "ret3m": 63.37,
+      "ret6m": 96.18,
+      "ret12_1": 1182.86,
+      "rs12_1": 1166.74,
+      "sector": "Healthcare",
+      "industry": "Biotechnology",
+      "sectorEtf": "IBB",
+      "sectorRS": 1137.05,
+      "accel": -0.83,
+      "volExpand": 1.14,
+      "volTrend": 0.44,
+      "ma50": 36.82,
+      "avgVol20": 587510,
+      "high52w": 47.84,
+      "high3m": 47.84,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": 20,
+      "qlibSubs": {
+        "kmid": 42,
+        "breakout": 0,
+        "roc20": 0,
+        "contract": 36,
+        "volExp": 0,
+        "chip": 54,
+        "align": 25,
+        "accel": 0
+      },
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1794441600,
+      "daysToEarnings": -5,
+      "shortPctOfFloat": 0.19709998,
+      "shortRatio": 5.03,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": -1.04,
+          "estimate": -1.05315,
+          "surprisePct": 0.0125
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": -0.94,
+          "estimate": -1.01146,
+          "surprisePct": 0.070700005
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": -1.05,
+          "estimate": -0.95588,
+          "surprisePct": -0.098500006
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": -1.05,
+          "estimate": -1.01066,
+          "surprisePct": -0.038900003
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 1,
+        "buy": 5,
+        "hold": 1,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 99,
+      "compositeScore": 78,
+      "epsRevision": {
+        "current": -4.0004,
+        "pct90d": -1.26,
+        "pct30d": -0.49,
+        "pct7d": -0.49
+      },
+      "epsRevisionCounts": {
+        "up7d": 2,
+        "up30d": 2,
+        "down7d": 0,
+        "down30d": 0
       }
     },
     {
@@ -358,7 +1021,7 @@
       "ret3m": -13.77,
       "ret6m": -9.64,
       "ret12_1": 87.28,
-      "rs12_1": 67.77,
+      "rs12_1": 71.16,
       "sector": "Healthcare",
       "industry": "Biotechnology",
       "sectorEtf": "IBB",
@@ -428,113 +1091,19 @@
         "sell": 0,
         "strongSell": 0
       },
-      "rsRating": 90,
+      "rsRating": 89,
       "compositeScore": 78,
       "epsRevision": {
         "current": 0.21,
-        "pct90d": 0.0,
-        "pct30d": 0.0,
-        "pct7d": 0.0
+        "pct90d": 0,
+        "pct30d": 0,
+        "pct7d": 0
       },
       "epsRevisionCounts": {
         "up7d": 0,
         "up30d": 0,
         "down7d": 0,
         "down30d": 0
-      }
-    },
-    {
-      "symbol": "SLAB",
-      "name": "Silicon Laboratories, Inc.",
-      "price": 221.5,
-      "changePct": -0.07,
-      "ret1m": 0.18,
-      "ret3m": 1.56,
-      "ret6m": 2.13,
-      "ret12_1": 89.48,
-      "rs12_1": 69.96,
-      "sector": "Technology",
-      "industry": "Semiconductors",
-      "sectorEtf": "SMH",
-      "sectorRS": 25.55,
-      "accel": null,
-      "volExpand": 1.43,
-      "volTrend": 1.17,
-      "ma50": 221.36,
-      "avgVol20": 444459,
-      "high52w": 223.5,
-      "high3m": 223.5,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 47,
-      "qlibSubs": {
-        "kmid": 37,
-        "breakout": 93,
-        "roc20": 15,
-        "contract": 99,
-        "volExp": 42,
-        "chip": 42,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1801612800,
-      "daysToEarnings": 78,
-      "shortPctOfFloat": 0.0846,
-      "shortRatio": 5.4,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.56,
-          "estimate": 0.54778,
-          "surprisePct": 0.0223
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.53,
-          "estimate": 0.50354,
-          "surprisePct": 0.0525
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": -0.32,
-          "estimate": -0.22202,
-          "surprisePct": -0.4413
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 1.05,
-          "estimate": 0.84838,
-          "surprisePct": 0.2377
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 0,
-        "hold": 8,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 90,
-      "compositeScore": 78,
-      "epsRevision": {
-        "current": 3.2106,
-        "pct90d": 9.52,
-        "pct30d": 11.59,
-        "pct7d": 11.59
-      },
-      "epsRevisionCounts": {
-        "up7d": 0,
-        "up30d": 3,
-        "down7d": 1,
-        "down30d": 2
       }
     },
     {
@@ -546,11 +1115,11 @@
       "ret3m": 5.78,
       "ret6m": 23.23,
       "ret12_1": 188.36,
-      "rs12_1": 168.85,
+      "rs12_1": 172.24,
       "sector": "Healthcare",
       "industry": "Drug Manufacturers - Specialty & Generic",
       "sectorEtf": "XLV",
-      "sectorRS": 170.51,
+      "sectorRS": 173.25,
       "accel": 5,
       "volExpand": 0.8,
       "volTrend": 1.05,
@@ -638,23 +1207,193 @@
       }
     },
     {
+      "symbol": "RCEL",
+      "name": "Avita Medical, Inc.",
+      "price": 15.22,
+      "changePct": -2.62,
+      "ret1m": 15.83,
+      "ret3m": 47.2,
+      "ret6m": 262.38,
+      "ret12_1": 232.66,
+      "rs12_1": 216.54,
+      "sector": "Healthcare",
+      "industry": "Medical Devices",
+      "sectorEtf": "XLV",
+      "sectorRS": 217.55,
+      "accel": 1.01,
+      "volExpand": 0.96,
+      "volTrend": 1.28,
+      "ma50": 13.48,
+      "avgVol20": 612648,
+      "high52w": 18.43,
+      "high3m": 18.43,
+      "vcpScore": 0,
+      "vcpDepth": null,
+      "vcpBaseNumber": 0,
+      "vcpPivot": null,
+      "vcpBaseDays": 0,
+      "vcpPriorPullbackPct": null,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793836800,
+      "daysToEarnings": -12,
+      "shortPctOfFloat": 0.0904,
+      "shortRatio": 6.77,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": -0.53572,
+          "estimate": -0.55102,
+          "surprisePct": 0.0278
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": -0.48454,
+          "estimate": -0.3805,
+          "surprisePct": -0.2734
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": -0.3554,
+          "estimate": -0.38589,
+          "surprisePct": 0.079
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": -0.28738,
+          "estimate": -0.29428,
+          "surprisePct": 0.0234
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 0,
+        "buy": 3,
+        "hold": 0,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 96,
+      "compositeScore": 77,
+      "epsRevision": {
+        "current": 0.1773,
+        "pct90d": 133.6,
+        "pct30d": -29.95,
+        "pct7d": -29.95
+      },
+      "epsRevisionCounts": {
+        "up7d": 1,
+        "up30d": 4,
+        "down7d": 1,
+        "down30d": 2
+      }
+    },
+    {
+      "symbol": "HUM",
+      "name": "Humana Inc.",
+      "price": 461.25,
+      "changePct": 2.5,
+      "ret1m": 11.15,
+      "ret3m": 22.02,
+      "ret6m": 48.53,
+      "ret12_1": 77.27,
+      "rs12_1": 61.15,
+      "sector": "Healthcare",
+      "industry": "Healthcare Plans",
+      "sectorEtf": "XLV",
+      "sectorRS": 62.15,
+      "accel": 1.52,
+      "volExpand": 1.17,
+      "volTrend": 0.96,
+      "ma50": 409.87,
+      "avgVol20": 1561078,
+      "high52w": 462.87,
+      "high3m": 462.87,
+      "vcpScore": 4,
+      "vcpDepth": 16,
+      "vcpBaseNumber": 1,
+      "vcpPivot": 462.87,
+      "vcpBaseDays": 27,
+      "vcpPriorPullbackPct": 3.9,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793923200,
+      "daysToEarnings": -12,
+      "shortPctOfFloat": 0.026300002,
+      "shortRatio": 1.78,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": -3.96,
+          "estimate": -3.98724,
+          "surprisePct": 0.0068
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 10.31,
+          "estimate": 10.20257,
+          "surprisePct": 0.0105
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 7.61,
+          "estimate": 6.99512,
+          "surprisePct": 0.0879
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": -0.7,
+          "estimate": -1.00467,
+          "surprisePct": 0.3033
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 4,
+        "buy": 13,
+        "hold": 8,
+        "sell": 1,
+        "strongSell": 0
+      },
+      "rsRating": 88,
+      "compositeScore": 76,
+      "epsRevision": {
+        "current": 9.5432,
+        "pct90d": 4.27,
+        "pct30d": 4.19,
+        "pct7d": 1.87
+      },
+      "epsRevisionCounts": {
+        "up7d": 2,
+        "up30d": 4,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
       "symbol": "LFST",
       "name": "LifeStance Health Group, Inc.",
-      "price": 14.17,
-      "changePct": -2.14,
-      "ret1m": 15.96,
-      "ret3m": 12.02,
-      "ret6m": 84.51,
-      "ret12_1": 97.1,
-      "rs12_1": 77.58,
+      "price": 14.48,
+      "changePct": 2.84,
+      "ret1m": 23.02,
+      "ret3m": 12.86,
+      "ret6m": 87.32,
+      "ret12_1": 89.84,
+      "rs12_1": 73.72,
       "sector": "Healthcare",
       "industry": "Medical Care Facilities",
       "sectorEtf": "XLV",
-      "sectorRS": 79.25,
-      "accel": 3.98,
+      "sectorRS": 74.73,
+      "accel": 5,
       "volExpand": 0.9,
       "volTrend": 1.32,
-      "ma50": 12.85,
+      "ma50": 12.83,
       "avgVol20": 6866767,
       "high52w": 15.66,
       "high3m": 15.66,
@@ -662,19 +1401,10 @@
       "vcpDepth": 13,
       "vcpBaseNumber": 6,
       "vcpPivot": 14.91,
-      "vcpBaseDays": 8,
+      "vcpBaseDays": 7,
       "vcpPriorPullbackPct": 15.7,
-      "qlibScore": 46,
-      "qlibSubs": {
-        "kmid": 50,
-        "breakout": 36,
-        "roc20": 59,
-        "contract": 44,
-        "volExp": 44,
-        "chip": 15,
-        "align": 74,
-        "accel": null
-      },
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": false,
       "earningsDate": 1793836800,
@@ -716,8 +1446,8 @@
         "sell": 0,
         "strongSell": 0
       },
-      "rsRating": 92,
-      "compositeScore": 77,
+      "rsRating": 90,
+      "compositeScore": 76,
       "epsRevision": {
         "current": 0.4035,
         "pct90d": -2.64,
@@ -740,7 +1470,7 @@
       "ret3m": 1.4,
       "ret6m": 67.13,
       "ret12_1": 124.11,
-      "rs12_1": 104.59,
+      "rs12_1": 107.99,
       "sector": null,
       "industry": null,
       "sectorEtf": null,
@@ -779,198 +1509,10 @@
       "recentDowngrades": [],
       "surpriseHistory": [],
       "recommendation": null,
-      "rsRating": 93,
-      "compositeScore": 76,
+      "rsRating": 92,
+      "compositeScore": 75,
       "epsRevision": null,
       "epsRevisionCounts": null
-    },
-    {
-      "symbol": "HZO",
-      "name": "MarineMax, Inc.  (FL)",
-      "price": 52.83,
-      "changePct": 0.04,
-      "ret1m": 0.9,
-      "ret3m": 1.11,
-      "ret6m": 57.28,
-      "ret12_1": 131.37,
-      "rs12_1": 111.86,
-      "sector": "Consumer Cyclical",
-      "industry": "Specialty Retail",
-      "sectorEtf": "XLY",
-      "sectorRS": 128.48,
-      "accel": null,
-      "volExpand": 0.91,
-      "volTrend": 1.03,
-      "ma50": 52.47,
-      "avgVol20": 770471,
-      "high52w": 52.89,
-      "high3m": 52.89,
-      "vcpScore": 1,
-      "vcpDepth": 2,
-      "vcpBaseNumber": 4,
-      "vcpPivot": 52.89,
-      "vcpBaseDays": 60,
-      "vcpPriorPullbackPct": 0.9,
-      "qlibScore": 60,
-      "qlibSubs": {
-        "kmid": 38,
-        "breakout": 98,
-        "roc20": 17,
-        "contract": 99,
-        "volExp": 8,
-        "chip": 58,
-        "align": 99,
-        "accel": null
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1801094400,
-      "daysToEarnings": 72,
-      "shortPctOfFloat": 0.1007,
-      "shortRatio": 2.44,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": -0.21,
-          "estimate": -0.08191,
-          "surprisePct": -1.5638001
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.04,
-          "estimate": 0.02687,
-          "surprisePct": 0.48860002
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 0.81,
-          "estimate": 0.83203,
-          "surprisePct": -0.026500002
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": -0.08,
-          "estimate": 0.04745,
-          "surprisePct": -2.686
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 1,
-        "hold": 8,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 94,
-      "compositeScore": 76,
-      "epsRevision": {
-        "current": 1.4574,
-        "pct90d": -7.43,
-        "pct30d": -7.43,
-        "pct7d": -7.43
-      },
-      "epsRevisionCounts": {
-        "up7d": 0,
-        "up30d": 0,
-        "down7d": 2,
-        "down30d": 2
-      }
-    },
-    {
-      "symbol": "CIFR",
-      "name": "Cipher Digital Inc.",
-      "price": 20.33,
-      "changePct": -8.79,
-      "ret1m": 4.96,
-      "ret3m": 29.99,
-      "ret6m": 36.17,
-      "ret12_1": 401.81,
-      "rs12_1": 382.3,
-      "sector": "Technology",
-      "industry": "Information Technology Services",
-      "sectorEtf": "XLK",
-      "sectorRS": 368.9,
-      "accel": 0.5,
-      "volExpand": 0.98,
-      "volTrend": 1.01,
-      "ma50": 16.72,
-      "avgVol20": 26712890,
-      "high52w": 25.52,
-      "high3m": 22.97,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 28,
-      "qlibSubs": {
-        "kmid": 59,
-        "breakout": 23,
-        "roc20": 28,
-        "contract": 4,
-        "volExp": 8,
-        "chip": 31,
-        "align": 74,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793577600,
-      "daysToEarnings": -15,
-      "shortPctOfFloat": 0.22049999,
-      "shortRatio": 1.77,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": -0.14,
-          "estimate": 0.07333,
-          "surprisePct": -2.9092002
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": -0.1881,
-          "estimate": -0.035,
-          "surprisePct": -4.3743
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": -0.1496,
-          "estimate": -0.135,
-          "surprisePct": -0.108100004
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": -0.0821,
-          "estimate": -0.16,
-          "surprisePct": 0.48689997
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 4,
-        "buy": 15,
-        "hold": 3,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 99,
-      "compositeScore": 76,
-      "epsRevision": {
-        "current": -0.645,
-        "pct90d": -11.59,
-        "pct30d": -6.77,
-        "pct7d": -7.36
-      },
-      "epsRevisionCounts": {
-        "up7d": 1,
-        "up30d": 2,
-        "down7d": 0,
-        "down30d": 0
-      }
     },
     {
       "symbol": "DAWN",
@@ -981,7 +1523,7 @@
       "ret3m": 78.97,
       "ret6m": 192.53,
       "ret12_1": 242.4,
-      "rs12_1": 222.89,
+      "rs12_1": 226.28,
       "sector": null,
       "industry": null,
       "sectorEtf": null,
@@ -1026,43 +1568,210 @@
       "epsRevisionCounts": null
     },
     {
+      "symbol": "HZO",
+      "name": "MarineMax, Inc.  (FL)",
+      "price": 52.81,
+      "changePct": 0.02,
+      "ret1m": 1.54,
+      "ret3m": 1.13,
+      "ret6m": 67.17,
+      "ret12_1": 129.83,
+      "rs12_1": 113.71,
+      "sector": "Consumer Cyclical",
+      "industry": "Specialty Retail",
+      "sectorEtf": "XLY",
+      "sectorRS": 127.86,
+      "accel": null,
+      "volExpand": 0.91,
+      "volTrend": 1.03,
+      "ma50": 52.46,
+      "avgVol20": 770471,
+      "high52w": 52.89,
+      "high3m": 52.89,
+      "vcpScore": 1,
+      "vcpDepth": 2,
+      "vcpBaseNumber": 4,
+      "vcpPivot": 52.89,
+      "vcpBaseDays": 60,
+      "vcpPriorPullbackPct": 0.9,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1801094400,
+      "daysToEarnings": 72,
+      "shortPctOfFloat": 0.1007,
+      "shortRatio": 2.44,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": -0.21,
+          "estimate": -0.08191,
+          "surprisePct": -1.5638001
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 0.04,
+          "estimate": 0.02687,
+          "surprisePct": 0.48860002
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 0.81,
+          "estimate": 0.83203,
+          "surprisePct": -0.026500002
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": -0.08,
+          "estimate": 0.04745,
+          "surprisePct": -2.686
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 0,
+        "buy": 1,
+        "hold": 8,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "rsRating": 92,
+      "compositeScore": 75,
+      "epsRevision": {
+        "current": 1.4574,
+        "pct90d": -7.43,
+        "pct30d": -7.43,
+        "pct7d": -7.43
+      },
+      "epsRevisionCounts": {
+        "up7d": 0,
+        "up30d": 0,
+        "down7d": 2,
+        "down30d": 2
+      }
+    },
+    {
+      "symbol": "CNC",
+      "name": "Centene Corporation",
+      "price": 74.77,
+      "changePct": 4.91,
+      "ret1m": 8.95,
+      "ret3m": 15.56,
+      "ret6m": 26.41,
+      "ret12_1": 85.84,
+      "rs12_1": 69.72,
+      "sector": "Healthcare",
+      "industry": "Healthcare Plans",
+      "sectorEtf": "XLV",
+      "sectorRS": 70.73,
+      "accel": 1.72,
+      "volExpand": 0.85,
+      "volTrend": 1.2,
+      "ma50": 67.23,
+      "avgVol20": 6202175,
+      "high52w": 78.08,
+      "high3m": 78.08,
+      "vcpScore": 2,
+      "vcpDepth": 16,
+      "vcpBaseNumber": 6,
+      "vcpPivot": 78.08,
+      "vcpBaseDays": 9,
+      "vcpPriorPullbackPct": 6.9,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793059200,
+      "daysToEarnings": -22,
+      "shortPctOfFloat": 0.024300002,
+      "shortRatio": 2.24,
+      "recentUpgrades": [],
+      "recentDowngrades": [
+        {
+          "firm": "Truist Securities",
+          "action": "reit",
+          "date": "2026-11-02"
+        }
+      ],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": -1.19,
+          "estimate": -1.22007,
+          "surprisePct": 0.024600001
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": 3.37,
+          "estimate": 2.13406,
+          "surprisePct": 0.5791
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 2.51,
+          "estimate": 1.07891,
+          "surprisePct": 1.3264
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 0.58,
+          "estimate": 0.09721,
+          "surprisePct": 4.9665
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 1,
+        "buy": 7,
+        "hold": 12,
+        "sell": 1,
+        "strongSell": 0
+      },
+      "rsRating": 89,
+      "compositeScore": 74,
+      "epsRevision": {
+        "current": 5.2944,
+        "pct90d": 8.35,
+        "pct30d": 8.39,
+        "pct7d": 0.21
+      },
+      "epsRevisionCounts": {
+        "up7d": 17,
+        "up30d": 17,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
       "symbol": "DCTH",
       "name": "Delcath Systems, Inc.",
-      "price": 19.37,
-      "changePct": -2.52,
-      "ret1m": 31.23,
-      "ret3m": 15.64,
-      "ret6m": 72.48,
-      "ret12_1": 70.64,
-      "rs12_1": 51.12,
+      "price": 19.87,
+      "changePct": -3.31,
+      "ret1m": 38.27,
+      "ret3m": 15.86,
+      "ret6m": 83.13,
+      "ret12_1": 66.13,
+      "rs12_1": 50.01,
       "sector": "Healthcare",
       "industry": "Medical Devices",
       "sectorEtf": "XLV",
-      "sectorRS": 52.79,
+      "sectorRS": 51.01,
       "accel": 5,
       "volExpand": 1.33,
       "volTrend": 1.45,
-      "ma50": 16.02,
+      "ma50": 15.95,
       "avgVol20": 793854,
       "high52w": 22.51,
       "high3m": 22.51,
       "vcpScore": 2,
-      "vcpDepth": 16,
+      "vcpDepth": 15,
       "vcpBaseNumber": 5,
       "vcpPivot": 22.51,
-      "vcpBaseDays": 6,
-      "vcpPriorPullbackPct": 4.8,
-      "qlibScore": 37,
-      "qlibSubs": {
-        "kmid": 27,
-        "breakout": 7,
-        "roc20": 99,
-        "contract": 0,
-        "volExp": 50,
-        "chip": 38,
-        "align": 74,
-        "accel": 0
-      },
+      "vcpBaseDays": 5,
+      "vcpPriorPullbackPct": 3.9,
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": false,
       "earningsDate": 1794182400,
@@ -1104,8 +1813,8 @@
         "sell": 0,
         "strongSell": 0
       },
-      "rsRating": 85,
-      "compositeScore": 75,
+      "rsRating": 84,
+      "compositeScore": 74,
       "epsRevision": {
         "current": 0.18,
         "pct90d": 233.33,
@@ -1120,91 +1829,167 @@
       }
     },
     {
-      "symbol": "KOD",
-      "name": "Kodiak Sciences Inc",
-      "price": 96.8,
-      "changePct": -3.9,
-      "ret1m": 4.12,
-      "ret3m": 142.97,
-      "ret6m": 167.26,
-      "ret12_1": 383.71,
-      "rs12_1": 364.2,
+      "symbol": "VTRS",
+      "name": "Viatris Inc.",
+      "price": 20.74,
+      "changePct": -0.38,
+      "ret1m": 13.58,
+      "ret3m": 27.63,
+      "ret6m": 28.26,
+      "ret12_1": 70.49,
+      "rs12_1": 54.38,
       "sector": "Healthcare",
-      "industry": "Biotechnology",
-      "sectorEtf": "IBB",
-      "sectorRS": 337.91,
-      "accel": 0.09,
-      "volExpand": 0.94,
-      "volTrend": 0.35,
-      "ma50": 79.26,
-      "avgVol20": 850237,
-      "high52w": 112.79,
-      "high3m": 112.79,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 37,
-      "qlibSubs": {
-        "kmid": 74,
-        "breakout": 5,
-        "roc20": 26,
-        "contract": 19,
-        "volExp": 0,
-        "chip": 99,
-        "align": 74,
-        "accel": 0
-      },
+      "industry": "Drug Manufacturers - Specialty & Generic",
+      "sectorEtf": "XLV",
+      "sectorRS": 55.38,
+      "accel": 1.47,
+      "volExpand": 1.17,
+      "volTrend": 0.99,
+      "ma50": 18.19,
+      "avgVol20": 9571913,
+      "high52w": 21.2,
+      "high3m": 21.2,
+      "vcpScore": 2,
+      "vcpDepth": 7,
+      "vcpBaseNumber": 4,
+      "vcpPivot": 21.2,
+      "vcpBaseDays": 6,
+      "vcpPriorPullbackPct": 0.3,
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": false,
-      "earningsDate": 1794441600,
-      "daysToEarnings": -5,
-      "shortPctOfFloat": 0.19709998,
-      "shortRatio": 5.03,
+      "earningsDate": 1793836800,
+      "daysToEarnings": -12,
+      "shortPctOfFloat": 0.0308,
+      "shortRatio": 4.02,
       "recentUpgrades": [],
       "recentDowngrades": [],
       "surpriseHistory": [
         {
           "qtr": "2025-12-31 00:00:00",
-          "actual": -1.04,
-          "estimate": -1.05315,
-          "surprisePct": 0.0125
+          "actual": 0.57,
+          "estimate": 0.53078,
+          "surprisePct": 0.0739
         },
         {
           "qtr": "2026-03-31 00:00:00",
-          "actual": -0.94,
-          "estimate": -1.01146,
-          "surprisePct": 0.070700005
+          "actual": 0.59,
+          "estimate": 0.50197,
+          "surprisePct": 0.1754
         },
         {
           "qtr": "2026-06-30 00:00:00",
-          "actual": -1.05,
-          "estimate": -0.95588,
-          "surprisePct": -0.098500006
+          "actual": 0.69,
+          "estimate": 0.59979,
+          "surprisePct": 0.1504
         },
         {
           "qtr": "2026-09-30 00:00:00",
-          "actual": -1.05,
-          "estimate": -1.01066,
-          "surprisePct": -0.038900003
+          "actual": 0.71,
+          "estimate": 0.63802,
+          "surprisePct": 0.112799995
         }
       ],
       "recommendation": {
         "strongBuy": 1,
-        "buy": 5,
-        "hold": 1,
+        "buy": 6,
+        "hold": 4,
         "sell": 0,
-        "strongSell": 0
+        "strongSell": 1
       },
-      "rsRating": 98,
-      "compositeScore": 75,
+      "rsRating": 86,
+      "compositeScore": 74,
       "epsRevision": {
-        "current": -4.0004,
-        "pct90d": -1.26,
-        "pct30d": -0.49,
-        "pct7d": -0.49
+        "current": 2.5949,
+        "pct90d": 3.77,
+        "pct30d": 2.94,
+        "pct7d": 0.14
+      },
+      "epsRevisionCounts": {
+        "up7d": 5,
+        "up30d": 5,
+        "down7d": 0,
+        "down30d": 0
+      }
+    },
+    {
+      "symbol": "MTW",
+      "name": "Manitowoc Company, Inc. (The)",
+      "price": 22.86,
+      "changePct": -3.99,
+      "ret1m": 5.3,
+      "ret3m": 19.19,
+      "ret6m": 101.41,
+      "ret12_1": 105.78,
+      "rs12_1": 89.66,
+      "sector": "Industrials",
+      "industry": "Farm & Heavy Construction Machinery",
+      "sectorEtf": "XLI",
+      "sectorRS": 94.55,
+      "accel": 0.83,
+      "volExpand": 0.8,
+      "volTrend": 0.94,
+      "ma50": 22.39,
+      "avgVol20": 399319,
+      "high52w": 25.31,
+      "high3m": 25.31,
+      "vcpScore": 3,
+      "vcpDepth": 17,
+      "vcpBaseNumber": 5,
+      "vcpPivot": 25.31,
+      "vcpBaseDays": 7,
+      "vcpPriorPullbackPct": 14.3,
+      "qlibScore": null,
+      "qlibSubs": null,
+      "isLeader": true,
+      "isDiscovery": false,
+      "earningsDate": 1793664000,
+      "daysToEarnings": -15,
+      "shortPctOfFloat": 0.050100002,
+      "shortRatio": 4.68,
+      "recentUpgrades": [],
+      "recentDowngrades": [],
+      "surpriseHistory": [
+        {
+          "qtr": "2025-12-31 00:00:00",
+          "actual": 0.26,
+          "estimate": 0.268,
+          "surprisePct": -0.0299
+        },
+        {
+          "qtr": "2026-03-31 00:00:00",
+          "actual": -0.13,
+          "estimate": 0.0445,
+          "surprisePct": -3.9213
+        },
+        {
+          "qtr": "2026-06-30 00:00:00",
+          "actual": 0.46,
+          "estimate": 0.1105,
+          "surprisePct": 3.1629
+        },
+        {
+          "qtr": "2026-09-30 00:00:00",
+          "actual": 0.31,
+          "estimate": 0.1965,
+          "surprisePct": 0.5776
+        }
+      ],
+      "recommendation": {
+        "strongBuy": 0,
+        "buy": 0,
+        "hold": 0,
+        "sell": 1,
+        "strongSell": 1
+      },
+      "rsRating": 91,
+      "compositeScore": 73,
+      "epsRevision": {
+        "current": 1.0915,
+        "pct90d": 128.35,
+        "pct30d": 19.03,
+        "pct7d": 19.03
       },
       "epsRevisionCounts": {
         "up7d": 2,
@@ -1214,260 +1999,19 @@
       }
     },
     {
-      "symbol": "RCEL",
-      "name": "Avita Medical, Inc.",
-      "price": 15.77,
-      "changePct": 3.61,
-      "ret1m": 14.28,
-      "ret3m": 56.29,
-      "ret6m": 265.05,
-      "ret12_1": 249.37,
-      "rs12_1": 229.86,
-      "sector": "Healthcare",
-      "industry": "Medical Devices",
-      "sectorEtf": "XLV",
-      "sectorRS": 231.52,
-      "accel": 0.76,
-      "volExpand": 0.96,
-      "volTrend": 1.28,
-      "ma50": 13.59,
-      "avgVol20": 612648,
-      "high52w": 18.43,
-      "high3m": 18.43,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 41,
-      "qlibSubs": {
-        "kmid": 67,
-        "breakout": 4,
-        "roc20": 55,
-        "contract": 21,
-        "volExp": 31,
-        "chip": 87,
-        "align": 50,
-        "accel": 12
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793836800,
-      "daysToEarnings": -12,
-      "shortPctOfFloat": 0.0904,
-      "shortRatio": 6.77,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": -0.53572,
-          "estimate": -0.55102,
-          "surprisePct": 0.0278
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": -0.48454,
-          "estimate": -0.3805,
-          "surprisePct": -0.2734
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": -0.3554,
-          "estimate": -0.38589,
-          "surprisePct": 0.079
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": -0.28738,
-          "estimate": -0.29428,
-          "surprisePct": 0.0234
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 3,
-        "hold": 0,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 97,
-      "compositeScore": 75,
-      "epsRevision": {
-        "current": 0.1773,
-        "pct90d": 133.6,
-        "pct30d": -29.95,
-        "pct7d": -29.95
-      },
-      "epsRevisionCounts": {
-        "up7d": 1,
-        "up30d": 4,
-        "down7d": 1,
-        "down30d": 2
-      }
-    },
-    {
-      "symbol": "OPRT",
-      "name": "Oportun Financial Corporation",
-      "price": 11.47,
-      "changePct": 0.35,
-      "ret1m": 25.36,
-      "ret3m": 56.48,
-      "ret6m": 110.46,
-      "ret12_1": 95.93,
-      "rs12_1": 76.42,
-      "sector": "Financial Services",
-      "industry": "Credit Services",
-      "sectorEtf": "XLF",
-      "sectorRS": 87.46,
-      "accel": 1.35,
-      "volExpand": 0.67,
-      "volTrend": 0.99,
-      "ma50": 9.32,
-      "avgVol20": 736393,
-      "high52w": 13.34,
-      "high3m": 13.34,
-      "vcpScore": 2,
-      "vcpDepth": 9,
-      "vcpBaseNumber": 5,
-      "vcpPivot": 11.98,
-      "vcpBaseDays": 8,
-      "vcpPriorPullbackPct": 17.7,
-      "qlibScore": 51,
-      "qlibSubs": {
-        "kmid": 53,
-        "breakout": 7,
-        "roc20": 86,
-        "contract": 3,
-        "volExp": 27,
-        "chip": 81,
-        "align": 50,
-        "accel": 99
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793664000,
-      "daysToEarnings": -14,
-      "shortPctOfFloat": 0.0358,
-      "shortRatio": 2.05,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.27,
-          "estimate": 0.245,
-          "surprisePct": 0.102
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.21,
-          "estimate": 0.16556,
-          "surprisePct": 0.2684
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 0.42,
-          "estimate": 0.32667,
-          "surprisePct": 0.2857
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 0.51,
-          "estimate": 0.448,
-          "surprisePct": 0.1384
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 2,
-        "hold": 2,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 92,
-      "compositeScore": 75,
-      "epsRevision": {
-        "current": 1.6625,
-        "pct90d": 4.56,
-        "pct30d": 4.23,
-        "pct7d": 4.56
-      },
-      "epsRevisionCounts": {
-        "up7d": 4,
-        "up30d": 4,
-        "down7d": 0,
-        "down30d": 0
-      }
-    },
-    {
-      "symbol": "CNTA",
-      "name": "CNTA",
-      "price": 39.59,
-      "changePct": -0.03,
-      "ret1m": -0.18,
-      "ret3m": 58.74,
-      "ret6m": 52.45,
-      "ret12_1": 217.03,
-      "rs12_1": 197.51,
-      "sector": null,
-      "industry": null,
-      "sectorEtf": null,
-      "sectorRS": null,
-      "accel": -0.01,
-      "volExpand": 0.83,
-      "volTrend": 0.46,
-      "ma50": 35.53,
-      "avgVol20": 1545010,
-      "high52w": 40.26,
-      "high3m": 40.26,
-      "vcpScore": 4,
-      "vcpDepth": 3,
-      "vcpBaseNumber": 2,
-      "vcpPivot": 40.26,
-      "vcpBaseDays": 33,
-      "vcpPriorPullbackPct": -28.6,
-      "qlibScore": 50,
-      "qlibSubs": {
-        "kmid": 51,
-        "breakout": 88,
-        "roc20": 14,
-        "contract": 99,
-        "volExp": 0,
-        "chip": 99,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": null,
-      "daysToEarnings": null,
-      "shortPctOfFloat": null,
-      "shortRatio": null,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [],
-      "recommendation": null,
-      "rsRating": 96,
-      "compositeScore": 73,
-      "epsRevision": null,
-      "epsRevisionCounts": null
-    },
-    {
       "symbol": "OGN",
       "name": "Organon & Co.",
       "price": 13.9,
       "changePct": 0,
-      "ret1m": 1.02,
-      "ret3m": 1.16,
-      "ret6m": 3.27,
-      "ret12_1": 78.47,
-      "rs12_1": 58.96,
+      "ret1m": 1.09,
+      "ret3m": 1.24,
+      "ret6m": 3.58,
+      "ret12_1": 78.34,
+      "rs12_1": 62.22,
       "sector": "Healthcare",
       "industry": "Drug Manufacturers - General",
       "sectorEtf": "XLV",
-      "sectorRS": 60.62,
+      "sectorRS": 63.23,
       "accel": null,
       "volExpand": 1.2,
       "volTrend": 1.13,
@@ -1481,17 +2025,8 @@
       "vcpPivot": null,
       "vcpBaseDays": 0,
       "vcpPriorPullbackPct": null,
-      "qlibScore": 53,
-      "qlibSubs": {
-        "kmid": 39,
-        "breakout": 99,
-        "roc20": 17,
-        "contract": 99,
-        "volExp": 15,
-        "chip": 5,
-        "align": 99,
-        "accel": null
-      },
+      "qlibScore": null,
+      "qlibSubs": null,
       "isLeader": true,
       "isDiscovery": false,
       "earningsDate": 1793318400,
@@ -1549,970 +2084,140 @@
       }
     },
     {
-      "symbol": "VRA",
-      "name": "Vera Bradley, Inc.",
-      "price": 6.53,
-      "changePct": -11.88,
-      "ret1m": 8.47,
-      "ret3m": 114.8,
-      "ret6m": 97.88,
-      "ret12_1": 109.03,
-      "rs12_1": 89.52,
-      "sector": "Consumer Cyclical",
-      "industry": "Footwear & Accessories",
-      "sectorEtf": "XLY",
-      "sectorRS": 106.13,
-      "accel": 0.22,
-      "volExpand": 0.91,
-      "volTrend": 1.06,
-      "ma50": 5.53,
-      "avgVol20": 538319,
-      "high52w": 8.36,
-      "high3m": 8.36,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 36,
+      "symbol": "CNTA",
+      "name": "CNTA",
+      "price": 39.59,
+      "changePct": -0.03,
+      "ret1m": -0.18,
+      "ret3m": 58.74,
+      "ret6m": 52.45,
+      "ret12_1": 217.03,
+      "rs12_1": 200.91,
+      "sector": null,
+      "industry": null,
+      "sectorEtf": null,
+      "sectorRS": null,
+      "accel": -0.01,
+      "volExpand": 0.83,
+      "volTrend": 0.46,
+      "ma50": 35.53,
+      "avgVol20": 1545010,
+      "high52w": 40.26,
+      "high3m": 40.26,
+      "vcpScore": 4,
+      "vcpDepth": 3,
+      "vcpBaseNumber": 2,
+      "vcpPivot": 40.26,
+      "vcpBaseDays": 33,
+      "vcpPriorPullbackPct": -28.6,
+      "qlibScore": 50,
       "qlibSubs": {
-        "kmid": 70,
-        "breakout": 0,
-        "roc20": 38,
-        "contract": 14,
-        "volExp": 17,
+        "kmid": 51,
+        "breakout": 88,
+        "roc20": 14,
+        "contract": 99,
+        "volExp": 0,
         "chip": 99,
         "align": 50,
         "accel": 0
       },
       "isLeader": true,
       "isDiscovery": false,
-      "earningsDate": 1796860800,
-      "daysToEarnings": 23,
-      "shortPctOfFloat": 0.0615,
-      "shortRatio": 2.42,
+      "earningsDate": null,
+      "daysToEarnings": null,
+      "shortPctOfFloat": null,
+      "shortRatio": null,
       "recentUpgrades": [],
       "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-10-31 00:00:00",
-          "actual": -0.3,
-          "estimate": -0.11,
-          "surprisePct": -1.7272999
-        },
-        {
-          "qtr": "2026-01-31 00:00:00",
-          "actual": 0.09,
-          "estimate": 0.01,
-          "surprisePct": 8.0
-        },
-        {
-          "qtr": "2026-04-30 00:00:00",
-          "actual": -0.09,
-          "estimate": -0.33,
-          "surprisePct": 0.72730005
-        },
-        {
-          "qtr": "2026-07-31 00:00:00",
-          "actual": 0.11,
-          "estimate": -0.08,
-          "surprisePct": 2.375
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 1,
-        "hold": 0,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 93,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": -0.22,
-        "pct90d": 21.43,
-        "pct30d": 21.43,
-        "pct7d": 0.0
-      },
-      "epsRevisionCounts": {
-        "up7d": 1,
-        "up30d": 1,
-        "down7d": 0,
-        "down30d": 0
-      }
-    },
-    {
-      "symbol": "PACS",
-      "name": "PACS Group, Inc.",
-      "price": 48.55,
-      "changePct": -0.92,
-      "ret1m": 1.74,
-      "ret3m": 11.4,
-      "ret6m": 31.22,
-      "ret12_1": 230.7,
-      "rs12_1": 211.19,
-      "sector": "Healthcare",
-      "industry": "Medical Care Facilities",
-      "sectorEtf": "XLV",
-      "sectorRS": 212.85,
-      "accel": 0.46,
-      "volExpand": 0.7,
-      "volTrend": 1.05,
-      "ma50": 45.45,
-      "avgVol20": 876367,
-      "high52w": 51.68,
-      "high3m": 51.68,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 33,
-      "qlibSubs": {
-        "kmid": 36,
-        "breakout": 59,
-        "roc20": 19,
-        "contract": 42,
-        "volExp": 18,
-        "chip": 43,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793664000,
-      "daysToEarnings": -14,
-      "shortPctOfFloat": 0.0881,
-      "shortRatio": 5.25,
-      "recentUpgrades": [],
-      "recentDowngrades": [
-        {
-          "firm": "Truist Securities",
-          "action": "reit",
-          "date": "2026-11-05"
-        }
-      ],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.572,
-          "estimate": 0.45525,
-          "surprisePct": 0.2565
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.6385,
-          "estimate": 0.4072,
-          "surprisePct": 0.568
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 0.6261,
-          "estimate": 0.56046,
-          "surprisePct": 0.1171
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 0.63,
-          "estimate": 0.58286,
-          "surprisePct": 0.0809
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 2,
-        "buy": 4,
-        "hold": 0,
-        "sell": 0,
-        "strongSell": 0
-      },
+      "surpriseHistory": [],
+      "recommendation": null,
       "rsRating": 96,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": 2.6064,
-        "pct90d": 3.48,
-        "pct30d": 4.07,
-        "pct7d": 0.42
-      },
-      "epsRevisionCounts": {
-        "up7d": 3,
-        "up30d": 2,
-        "down7d": 0,
-        "down30d": 0
-      }
-    },
-    {
-      "symbol": "VTRS",
-      "name": "Viatris Inc.",
-      "price": 20.45,
-      "changePct": -1.4,
-      "ret1m": 9.65,
-      "ret3m": 26.86,
-      "ret6m": 23.27,
-      "ret12_1": 74.14,
-      "rs12_1": 54.62,
-      "sector": "Healthcare",
-      "industry": "Drug Manufacturers - Specialty & Generic",
-      "sectorEtf": "XLV",
-      "sectorRS": 56.29,
-      "accel": 1.08,
-      "volExpand": 1.17,
-      "volTrend": 0.99,
-      "ma50": 18.26,
-      "avgVol20": 9571913,
-      "high52w": 21.2,
-      "high3m": 21.2,
-      "vcpScore": 2,
-      "vcpDepth": 7,
-      "vcpBaseNumber": 4,
-      "vcpPivot": 21.2,
-      "vcpBaseDays": 7,
-      "vcpPriorPullbackPct": 0.3,
-      "qlibScore": 60,
-      "qlibSubs": {
-        "kmid": 48,
-        "breakout": 76,
-        "roc20": 41,
-        "contract": 61,
-        "volExp": 13,
-        "chip": 64,
-        "align": 74,
-        "accel": 99
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793836800,
-      "daysToEarnings": -12,
-      "shortPctOfFloat": 0.0308,
-      "shortRatio": 4.02,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.57,
-          "estimate": 0.53078,
-          "surprisePct": 0.0739
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.59,
-          "estimate": 0.50197,
-          "surprisePct": 0.1754
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 0.69,
-          "estimate": 0.59979,
-          "surprisePct": 0.1504
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 0.71,
-          "estimate": 0.63802,
-          "surprisePct": 0.112799995
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 1,
-        "buy": 6,
-        "hold": 4,
-        "sell": 0,
-        "strongSell": 1
-      },
-      "rsRating": 87,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": 2.5949,
-        "pct90d": 3.77,
-        "pct30d": 2.94,
-        "pct7d": 0.14
-      },
-      "epsRevisionCounts": {
-        "up7d": 5,
-        "up30d": 5,
-        "down7d": 0,
-        "down30d": 0
-      }
-    },
-    {
-      "symbol": "MRNA",
-      "name": "Moderna, Inc.",
-      "price": 206.8,
-      "changePct": -3.93,
-      "ret1m": -14.57,
-      "ret3m": 55.12,
-      "ret6m": 329.76,
-      "ret12_1": 871.43,
-      "rs12_1": 851.92,
-      "sector": "Healthcare",
-      "industry": "Biotechnology",
-      "sectorEtf": "IBB",
-      "sectorRS": 825.62,
-      "accel": -0.79,
-      "volExpand": 0.55,
-      "volTrend": 0.87,
-      "ma50": 204.39,
-      "avgVol20": 13834970,
-      "high52w": 280.8,
-      "high3m": 280.8,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 27,
-      "qlibSubs": {
-        "kmid": 99,
-        "breakout": 0,
-        "roc20": 0,
-        "contract": 8,
-        "volExp": 0,
-        "chip": 58,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793923200,
-      "daysToEarnings": -11,
-      "shortPctOfFloat": 0.0999,
-      "shortRatio": 1.75,
-      "recentUpgrades": [],
-      "recentDowngrades": [
-        {
-          "firm": "Piper Sandler",
-          "action": "reit",
-          "date": "2026-11-09"
-        },
-        {
-          "firm": "William Blair",
-          "action": "down",
-          "date": "2026-10-27"
-        },
-        {
-          "firm": "Piper Sandler",
-          "action": "reit",
-          "date": "2026-10-26"
-        }
-      ],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": -2.11,
-          "estimate": -2.60104,
-          "surprisePct": 0.18879999
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": -3.4,
-          "estimate": -3.87993,
-          "surprisePct": 0.1237
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": -1.97,
-          "estimate": -2.05918,
-          "surprisePct": 0.0433
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 0.38,
-          "estimate": -1.25456,
-          "surprisePct": 1.3029
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 1,
-        "buy": 3,
-        "hold": 16,
-        "sell": 2,
-        "strongSell": 1
-      },
-      "rsRating": 99,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": -7.292,
-        "pct90d": 15.02,
-        "pct30d": 13,
-        "pct7d": 1.25
-      },
-      "epsRevisionCounts": {
-        "up7d": 3,
-        "up30d": 6,
-        "down7d": 0,
-        "down30d": 2
-      }
-    },
-    {
-      "symbol": "APA",
-      "name": "APA Corporation",
-      "price": 38.98,
-      "changePct": 5.04,
-      "ret1m": 9.07,
-      "ret3m": 42.57,
-      "ret6m": 57.88,
-      "ret12_1": 103.18,
-      "rs12_1": 83.67,
-      "sector": "Energy",
-      "industry": "Oil & Gas E&P",
-      "sectorEtf": "XLE",
-      "sectorRS": 53.9,
-      "accel": 0.64,
-      "volExpand": 0.93,
-      "volTrend": 0.77,
-      "ma50": 38.32,
-      "avgVol20": 6685290,
-      "high52w": 45.66,
-      "high3m": 45.66,
-      "vcpScore": 4,
-      "vcpDepth": 13,
-      "vcpBaseNumber": 1,
-      "vcpPivot": 39.85,
-      "vcpBaseDays": 8,
-      "vcpPriorPullbackPct": 16.4,
-      "qlibScore": 34,
-      "qlibSubs": {
-        "kmid": 67,
-        "breakout": 2,
-        "roc20": 40,
-        "contract": 35,
-        "volExp": 0,
-        "chip": 77,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793750400,
-      "daysToEarnings": -13,
-      "shortPctOfFloat": 0.0907,
-      "shortRatio": 4.53,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.91,
-          "estimate": 0.64206,
-          "surprisePct": 0.4173
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 1.38,
-          "estimate": 1.14143,
-          "surprisePct": 0.20899999
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 1.89,
-          "estimate": 1.87114,
-          "surprisePct": 0.0101
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 1.94,
-          "estimate": 1.59192,
-          "surprisePct": 0.2187
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 2,
-        "buy": 8,
-        "hold": 15,
-        "sell": 3,
-        "strongSell": 0
-      },
-      "rsRating": 92,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": 7.0609,
-        "pct90d": 25.25,
-        "pct30d": 10.55,
-        "pct7d": 2.06
-      },
-      "epsRevisionCounts": {
-        "up7d": 6,
-        "up30d": 16,
-        "down7d": 0,
-        "down30d": 4
-      }
-    },
-    {
-      "symbol": "CAKE",
-      "name": "The Cheesecake Factory Incorpor",
-      "price": 111.96,
-      "changePct": 2.03,
-      "ret1m": -3.84,
-      "ret3m": 5.1,
-      "ret6m": 85.67,
-      "ret12_1": 158.85,
-      "rs12_1": 139.34,
-      "sector": "Consumer Cyclical",
-      "industry": "Restaurants",
-      "sectorEtf": "XLY",
-      "sectorRS": 155.95,
-      "accel": -2.26,
-      "volExpand": 0.77,
-      "volTrend": 1.14,
-      "ma50": 107.93,
-      "avgVol20": 1628127,
-      "high52w": 118.63,
-      "high3m": 118.63,
-      "vcpScore": 4,
-      "vcpDepth": 12,
-      "vcpBaseNumber": 2,
-      "vcpPivot": 117.96,
-      "vcpBaseDays": 14,
-      "vcpPriorPullbackPct": 11.2,
-      "qlibScore": 31,
-      "qlibSubs": {
-        "kmid": 36,
-        "breakout": 62,
-        "roc20": 3,
-        "contract": 39,
-        "volExp": 13,
-        "chip": 42,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793059200,
-      "daysToEarnings": -21,
-      "shortPctOfFloat": 0.35689998,
-      "shortRatio": 6.42,
-      "recentUpgrades": [],
-      "recentDowngrades": [
-        {
-          "firm": "Stephens & Co.",
-          "action": "reit",
-          "date": "2026-10-28"
-        }
-      ],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 1,
-          "estimate": 0.98556,
-          "surprisePct": 0.0147
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 1.05,
-          "estimate": 1.01459,
-          "surprisePct": 0.0349
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 1.44,
-          "estimate": 1.18119,
-          "surprisePct": 0.2191
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 1.02,
-          "estimate": 0.9572,
-          "surprisePct": 0.0656
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 0,
-        "buy": 4,
-        "hold": 13,
-        "sell": 1,
-        "strongSell": 1
-      },
-      "rsRating": 95,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": 4.7037,
-        "pct90d": 4.68,
-        "pct30d": 3.45,
-        "pct7d": 0.09
-      },
-      "epsRevisionCounts": {
-        "up7d": 8,
-        "up30d": 11,
-        "down7d": 4,
-        "down30d": 1
-      }
-    },
-    {
-      "symbol": "EME",
-      "name": "EMCOR Group, Inc.",
-      "price": 913.11,
-      "changePct": -1.82,
-      "ret1m": 13.28,
-      "ret3m": 14.5,
-      "ret6m": 47.52,
-      "ret12_1": 71.34,
-      "rs12_1": 51.83,
-      "sector": "Industrials",
-      "industry": "Engineering & Construction",
-      "sectorEtf": "XLI",
-      "sectorRS": null,
-      "accel": 2.75,
-      "volExpand": 0.93,
-      "volTrend": 1.04,
-      "ma50": 809.54,
-      "avgVol20": 385370,
-      "high52w": 951.96,
-      "high3m": 951.96,
-      "vcpScore": 3,
-      "vcpDepth": 18,
-      "vcpBaseNumber": 3,
-      "vcpPivot": 951.96,
-      "vcpBaseDays": 20,
-      "vcpPriorPullbackPct": 2,
-      "qlibScore": 43,
-      "qlibSubs": {
-        "kmid": 43,
-        "breakout": 72,
-        "roc20": 52,
-        "contract": 52,
-        "volExp": 14,
-        "chip": 62,
-        "align": 50,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": false,
-      "earningsDate": 1793232000,
-      "daysToEarnings": -19,
-      "shortPctOfFloat": 0.0173,
-      "shortRatio": 1.82,
-      "recentUpgrades": [
-        {
-          "firm": "JP Morgan",
-          "action": "init",
-          "date": "2026-11-10"
-        }
-      ],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 7.19,
-          "estimate": 6.68125,
-          "surprisePct": 0.0761
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 6.84,
-          "estimate": 5.90443,
-          "surprisePct": 0.1585
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 9.06,
-          "estimate": 7.23108,
-          "surprisePct": 0.2529
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 9.6,
-          "estimate": 8.3568,
-          "surprisePct": 0.1488
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 1,
-        "buy": 7,
-        "hold": 5,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 86,
-      "compositeScore": 72,
-      "epsRevision": {
-        "current": 34.9351,
-        "pct90d": 6.33,
-        "pct30d": 5.9,
-        "pct7d": 0.07
-      },
-      "epsRevisionCounts": {
-        "up7d": 8,
-        "up30d": 8,
-        "down7d": 0,
-        "down30d": 0
-      }
+      "compositeScore": 73,
+      "epsRevision": null,
+      "epsRevisionCounts": null
     }
   ],
-  "discoveries": [
-    {
-      "symbol": "BILL",
-      "name": "BILL Holdings, Inc.",
-      "price": 64.88,
-      "changePct": 12.58,
-      "ret1m": 32.17,
-      "ret3m": 36.88,
-      "ret6m": 69.22,
-      "ret12_1": 1.22,
-      "rs12_1": -18.3,
-      "sector": "Technology",
-      "industry": "Software - Application",
-      "sectorEtf": "IGV",
-      "sectorRS": null,
-      "accel": 2.62,
-      "volExpand": 1.66,
-      "volTrend": 1.15,
-      "ma50": 48.26,
-      "avgVol20": 1944862,
-      "high52w": 65.43,
-      "high3m": 65.43,
-      "vcpScore": 0,
-      "vcpDepth": null,
-      "vcpBaseNumber": 0,
-      "vcpPivot": null,
-      "vcpBaseDays": 0,
-      "vcpPriorPullbackPct": null,
-      "qlibScore": 57,
-      "qlibSubs": {
-        "kmid": 62,
-        "breakout": 93,
-        "roc20": 99,
-        "contract": 34,
-        "volExp": 11,
-        "chip": 60,
-        "align": 99,
-        "accel": 0
-      },
-      "isLeader": true,
-      "isDiscovery": true,
-      "earningsDate": 1801699200,
-      "daysToEarnings": 79,
-      "shortPctOfFloat": 0.1887,
-      "shortRatio": 8.06,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-12-31 00:00:00",
-          "actual": 0.64,
-          "estimate": 0.5605,
-          "surprisePct": 0.1418
-        },
-        {
-          "qtr": "2026-03-31 00:00:00",
-          "actual": 0.68,
-          "estimate": 0.55219,
-          "surprisePct": 0.2315
-        },
-        {
-          "qtr": "2026-06-30 00:00:00",
-          "actual": 0.84,
-          "estimate": 0.70893,
-          "surprisePct": 0.1849
-        },
-        {
-          "qtr": "2026-09-30 00:00:00",
-          "actual": 1.18,
-          "estimate": 0.97739,
-          "surprisePct": 0.20729999
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 3,
-        "buy": 11,
-        "hold": 8,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 5,
-      "compositeScore": 30,
-      "discoScore": 63,
-      "epsRevision": {
-        "current": 4.1067,
-        "pct90d": 21.31,
-        "pct30d": 10.19,
-        "pct7d": 0.79
-      },
-      "epsRevisionCounts": {
-        "up7d": 9,
-        "up30d": 10,
-        "down7d": 0,
-        "down30d": 0
-      }
-    },
-    {
-      "symbol": "HPE",
-      "name": "Hewlett Packard Enterprise Comp",
-      "price": 33.1,
-      "changePct": -3.02,
-      "ret1m": 25.19,
-      "ret3m": 50.66,
-      "ret6m": 44.35,
-      "ret12_1": 48.96,
-      "rs12_1": 29.45,
-      "sector": "Technology",
-      "industry": "Communication Equipment",
-      "sectorEtf": "XLK",
-      "sectorRS": null,
-      "accel": 1.49,
-      "volExpand": 1.32,
-      "volTrend": 0.9,
-      "ma50": 25.95,
-      "avgVol20": 15700445,
-      "high52w": 34.69,
-      "high3m": 34.69,
-      "vcpScore": 3,
-      "vcpDepth": 18,
-      "vcpBaseNumber": 3,
-      "vcpPivot": 34.69,
-      "vcpBaseDays": 6,
-      "vcpPriorPullbackPct": 3.1,
-      "qlibScore": 67,
-      "qlibSubs": {
-        "kmid": 64,
-        "breakout": 69,
-        "roc20": 85,
-        "contract": 38,
-        "volExp": 5,
-        "chip": 79,
-        "align": 99,
-        "accel": 99
-      },
-      "isLeader": true,
-      "isDiscovery": true,
-      "earningsDate": 1795392000,
-      "daysToEarnings": 6,
-      "shortPctOfFloat": 0.0398,
-      "shortRatio": 2.44,
-      "recentUpgrades": [],
-      "recentDowngrades": [],
-      "surpriseHistory": [
-        {
-          "qtr": "2025-10-31 00:00:00",
-          "actual": 0.62,
-          "estimate": 0.5819,
-          "surprisePct": 0.0655
-        },
-        {
-          "qtr": "2026-01-31 00:00:00",
-          "actual": 0.65,
-          "estimate": 0.58689,
-          "surprisePct": 0.1075
-        },
-        {
-          "qtr": "2026-04-30 00:00:00",
-          "actual": 0.79,
-          "estimate": 0.53369,
-          "surprisePct": 0.48029998
-        },
-        {
-          "qtr": "2026-07-31 00:00:00",
-          "actual": 1.11,
-          "estimate": 0.93739,
-          "surprisePct": 0.1841
-        }
-      ],
-      "recommendation": {
-        "strongBuy": 5,
-        "buy": 10,
-        "hold": 9,
-        "sell": 0,
-        "strongSell": 0
-      },
-      "rsRating": 76,
-      "compositeScore": 68,
-      "discoScore": 48,
-      "epsRevision": {
-        "current": 3.8339,
-        "pct90d": 11.69,
-        "pct30d": 0.2,
-        "pct7d": 0.08
-      },
-      "epsRevisionCounts": {
-        "up7d": 2,
-        "up30d": 2,
-        "down7d": 0,
-        "down30d": 0
-      }
-    }
-  ],
+  "discoveries": [],
   "tripleResonance": [
     {
-      "symbol": "EME",
-      "name": "EMCOR Group, Inc.",
-      "price": 913.11,
-      "rsRating": 86,
-      "compositeScore": 72,
-      "daysToEarnings": -19,
+      "symbol": "STRL",
+      "name": "Sterling Infrastructure, Inc.",
+      "price": 848.84,
+      "rsRating": 94,
+      "compositeScore": 79,
+      "daysToEarnings": -21,
       "vcpScore": 3,
       "recentUpgradeCount": 1,
-      "epsRevisionPct30d": 5.9,
-      "epsRevisionNet7d": 8,
+      "epsRevisionPct30d": 8.69,
+      "epsRevisionNet7d": 6,
       "isDiscovery": false,
       "stars": 5,
       "reasons": [
         "VCP 3/6 (\u57fa\u5e95 3)",
         "1 \u4f4d\u5206\u6790\u5e2b\u5347\u8a55",
-        "RS 86",
-        "EPS \u9810\u4f30\u4e0a\u4fee +5.9%/30d",
-        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +8/7d"
-      ]
-    },
-    {
-      "symbol": "OPRT",
-      "name": "Oportun Financial Corporation",
-      "price": 11.47,
-      "rsRating": 92,
-      "compositeScore": 75,
-      "daysToEarnings": -14,
-      "vcpScore": 2,
-      "recentUpgradeCount": 0,
-      "epsRevisionPct30d": 4.23,
-      "epsRevisionNet7d": 4,
-      "isDiscovery": false,
-      "stars": 4,
-      "reasons": [
-        "VCP 2/6 (\u57fa\u5e95 5)",
-        "RS 92",
-        "EPS \u9810\u4f30\u4e0a\u4fee +4.2%/30d",
-        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +4/7d"
-      ]
-    },
-    {
-      "symbol": "APA",
-      "name": "APA Corporation",
-      "price": 38.98,
-      "rsRating": 92,
-      "compositeScore": 72,
-      "daysToEarnings": -13,
-      "vcpScore": 4,
-      "recentUpgradeCount": 0,
-      "epsRevisionPct30d": 10.55,
-      "epsRevisionNet7d": 6,
-      "isDiscovery": false,
-      "stars": 4,
-      "reasons": [
-        "VCP 4/6 (\u57fa\u5e95 1)",
-        "RS 92",
-        "EPS \u9810\u4f30\u4e0a\u4fee +10.6%/30d",
+        "RS 94",
+        "EPS \u9810\u4f30\u4e0a\u4fee +8.7%/30d",
         "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +6/7d"
       ]
     },
     {
-      "symbol": "CAKE",
-      "name": "The Cheesecake Factory Incorpor",
-      "price": 111.96,
-      "rsRating": 95,
-      "compositeScore": 72,
-      "daysToEarnings": -21,
-      "vcpScore": 4,
-      "recentUpgradeCount": 0,
-      "epsRevisionPct30d": 3.45,
-      "epsRevisionNet7d": 4,
+      "symbol": "SITM",
+      "name": "SiTime Corporation",
+      "price": 774.06,
+      "rsRating": 93,
+      "compositeScore": 81,
+      "daysToEarnings": 77,
+      "vcpScore": 0,
+      "recentUpgradeCount": 2,
+      "epsRevisionPct30d": 14.32,
+      "epsRevisionNet7d": 12,
       "isDiscovery": false,
       "stars": 4,
       "reasons": [
-        "VCP 4/6 (\u57fa\u5e95 2)",
-        "RS 95",
-        "EPS \u9810\u4f30\u4e0a\u4fee +3.5%/30d",
-        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +4/7d"
+        "2 \u4f4d\u5206\u6790\u5e2b\u5347\u8a55",
+        "RS 93",
+        "EPS \u9810\u4f30\u4e0a\u4fee +14.3%/30d",
+        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +12/7d"
+      ]
+    },
+    {
+      "symbol": "GLW",
+      "name": "Corning Incorporated",
+      "price": 191.81,
+      "rsRating": 97,
+      "compositeScore": 81,
+      "daysToEarnings": 69,
+      "vcpScore": 3,
+      "recentUpgradeCount": 1,
+      "epsRevisionPct30d": 2.58,
+      "epsRevisionNet7d": 13,
+      "isDiscovery": false,
+      "stars": 4,
+      "reasons": [
+        "VCP 3/6 (\u57fa\u5e95 3)",
+        "1 \u4f4d\u5206\u6790\u5e2b\u5347\u8a55",
+        "RS 97",
+        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +13/7d"
+      ]
+    },
+    {
+      "symbol": "CNC",
+      "name": "Centene Corporation",
+      "price": 74.77,
+      "rsRating": 89,
+      "compositeScore": 74,
+      "daysToEarnings": -22,
+      "vcpScore": 2,
+      "recentUpgradeCount": 0,
+      "epsRevisionPct30d": 8.39,
+      "epsRevisionNet7d": 17,
+      "isDiscovery": false,
+      "stars": 4,
+      "reasons": [
+        "VCP 2/6 (\u57fa\u5e95 6)",
+        "RS 89",
+        "EPS \u9810\u4f30\u4e0a\u4fee +8.4%/30d",
+        "\u5206\u6790\u5e2b\u9810\u4f30\u6de8\u4e0a\u4fee +17/7d"
       ]
     }
   ]
